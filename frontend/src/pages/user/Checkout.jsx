@@ -50,8 +50,11 @@ export default function Checkout() {
           return;
         }
 
+        const keyRes = await fetch(`${import.meta.env.VITE_API_URL}/api/payment/key`);
+        const { key } = await keyRes.json();
+
         const options = {
-          key: import.meta.env.VITE_RAZORPAY_KEY_ID || "YOUR_TEST_KEY_ID",
+          key: key,
           amount: orderData.order.amount,
           currency: orderData.order.currency,
           name: "ByteBite",
