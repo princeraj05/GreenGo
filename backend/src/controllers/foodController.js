@@ -13,7 +13,7 @@ export const addFood = async (req, res) => {
       name,
       price,
       description,
-      image: req.file.filename,
+      image: req.file.path, // Save the full Cloudinary URL
     });
 
     res.json(food);

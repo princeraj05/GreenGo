@@ -32,7 +32,77 @@ export default function Checkout() {
         return;
       }
 
-      // Add payment method to the order, backend might just ignore it if schema doesn't have it, but it simulates the flow
+      if (paymentMethod !== "COD") {
+        // Razorpay flow
+        const orderRes = await fetch("http://localhost:5000/api/payment/create-order", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ amount: total }),
+        });
+
+        const orderData = await orderRes.json();
+
+        if (!orderData.success) {
+          alert("Could not initiate payment");
+          return;
+        }
+
+        const options = {
+          key: import.meta.env.VITE_RAZORPAY_KEY_ID || "YOUR_TEST_KEY_ID",
+          amount: orderData.order.amount,
+          currency: orderData.order.currency,
+          name: "ByteBite",
+          description: "Food Order Payment",
+          order_id: orderData.order.id,
+          handler: async function (response) {
+            const verifyRes = await fetch("http://localhost:5000/api/payment/verify", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              }),
+            });
+
+            const verifyData = await verifyRes.json();
+            if (verifyData.success) {
+              await createFinalOrder(token);
+            } else {
+              alert("Payment Verification Failed!");
+            }
+          },
+          prefill: {
+            contact: phone,
+          },
+          theme: {
+            color: "#f97316",
+          },
+        };
+        const rzp1 = new window.Razorpay(options);
+        
+        rzp1.on('payment.failed', function (response){
+          alert("Payment Failed: " + response.error.description);
+        });
+        
+        rzp1.open();
+      } else {
+        await createFinalOrder(token);
+      }
+    } catch (err) {
+      console.error("Checkout error:", err);
+      alert("Server error occurred.");
+    }
+  };
+
+  const createFinalOrder = async (token) => {
+    try {
       const res = await fetch("http://localhost:5000/api/orders", {
         method: "POST",
         headers: {
@@ -58,8 +128,8 @@ export default function Checkout() {
       localStorage.removeItem("cart");
       navigate("/user/orders");
     } catch (err) {
-      console.error("Checkout error:", err);
-      alert("Server error occurred.");
+      console.error("Final Order Error:", err);
+      alert("Server error occurred while placing the final order.");
     }
   };
 

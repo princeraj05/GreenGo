@@ -102,7 +102,7 @@ export default function Orders() {
               <div key={idx} style={row}>
 
                 <img
-                src={`http://localhost:5000/uploads/${i.image}`}
+                src={i.image?.startsWith('http') ? i.image : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/uploads/${i.image}`}
                 alt={i.name}
                 style={img}
                 onError={(e)=>e.target.style.display="none"}

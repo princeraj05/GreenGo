@@ -53,7 +53,7 @@ export default function Cart() {
             {cart.map((item) => (
               <div key={item._id} className="bg-white rounded-2xl p-4 flex flex-col sm:flex-row items-center gap-5 border border-gray-100 shadow-sm transition-all hover:shadow-md">
                 <img
-                  src={`http://localhost:5000/uploads/${item.image}`}
+                  src={item.image?.startsWith('http') ? item.image : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/uploads/${item.image}`}
                   alt={item.name}
                   className="w-24 h-24 object-cover rounded-xl bg-gray-100"
                   onError={(e) => { e.target.src = 'https://placehold.co/100x100?text=Food'; }}

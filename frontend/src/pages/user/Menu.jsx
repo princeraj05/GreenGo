@@ -92,7 +92,7 @@ export default function Menu() {
               <div key={food._id} className="group bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col">
                 <div className="relative h-48 overflow-hidden bg-gray-100">
                   <img
-                    src={`${API}/uploads/${food.image}`}
+                    src={food.image?.startsWith('http') ? food.image : `${API}/uploads/${food.image}`}
                     alt={food.name}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     onError={(e) => { e.target.src = 'https://placehold.co/400x300?text=Food'; }}

@@ -153,7 +153,7 @@ export default function ManageFoods() {
           <div key={f._id} className="group bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all duration-300 flex flex-col">
             
             <div className="relative h-48 overflow-hidden bg-slate-100">
-              <img src={`${import.meta.env.VITE_API_URL}/uploads/${f.image}`}
+              <img src={f.image?.startsWith('http') ? f.image : `${import.meta.env.VITE_API_URL}/uploads/${f.image}`}
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" alt={f.name} />
                 
               {/* Exposed Options Floating on the Image */}
