@@ -1,247 +1,126 @@
-// ================= FRONTEND =================
-// ✅ src/pages/user/Contact.jsx (RESPONSIVE + MODERN UI)
-
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { getToken } from "../../utils/getToken";
 
 export default function Contact() {
+  const [form, setForm] = useState({ name: "", email: "", message: "" });
+  const [contacts, setContacts] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const chatEndRef = useRef(null);
 
-  const [form,setForm] = useState({
-    name:"",
-    email:"",
-    message:""
-  });
+  useEffect(() => { loadMyContacts(); }, []);
+  
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [contacts]);
 
-  const [msg,setMsg] = useState("");
-  const [contacts,setContacts] = useState([]);
-  const [hoverId,setHoverId] = useState(null);
-
-  useEffect(()=>{
-    loadMyContacts();
-  },[]);
-
-  const loadMyContacts = async()=>{
-
+  const loadMyContacts = async () => {
     const token = await getToken();
-    if(!token) return;
-
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/contact/my`,{
-      headers:{Authorization:`Bearer ${token}`}
+    if (!token) return;
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/contact/my`, {
+      headers: { Authorization: `Bearer ${token}` }
     });
-
     const data = await res.json();
-    setContacts(data);
-
+    setContacts(Array.isArray(data) ? data : []);
   };
 
-  const handleChange = (e)=>{
-    setForm({...form,[e.target.name]:e.target.value});
-  };
-
-  const handleSubmit = async(e)=>{
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
+    setLoading(true);
     const token = await getToken();
-    if(!token) return alert("Login required");
+    if (!token) return alert("Login required");
 
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/contact`,{
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json",
-        Authorization:`Bearer ${token}`
-      },
-      body:JSON.stringify(form)
+    await fetch(`${import.meta.env.VITE_API_URL}/api/contact`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify(form)
     });
 
-    const data = await res.json();
-
-    setMsg(data.message);
-
-    if(data.success){
-      setForm({name:"",email:"",message:""});
-      loadMyContacts();
-    }
-
+    setForm({ ...form, message: "" });
+    await loadMyContacts();
+    setLoading(false);
   };
 
-  return(
-
-    <div style={page}>
-
-      <h2 style={title}>📩 Contact Support</h2>
-      <p style={subtitle}>Send your message and track admin reply</p>
-
-      {msg && <p style={success}>{msg}</p>}
-
-      {/* FORM */}
-
-      <form onSubmit={handleSubmit} style={card}>
-
-        <input
-        style={input}
-        placeholder="Your Name"
-        name="name"
-        value={form.name}
-        onChange={handleChange}
-        required
-        />
-
-        <input
-        style={input}
-        placeholder="Your Email"
-        name="email"
-        value={form.email}
-        onChange={handleChange}
-        required
-        />
-
-        <textarea
-        style={{...input,height:120}}
-        placeholder="Your Message"
-        name="message"
-        value={form.message}
-        onChange={handleChange}
-        required
-        />
-
-        <button style={btn}>Send Message</button>
-
-      </form>
-
-      {/* USER MESSAGES */}
-
-      <h3 style={sectionTitle}>📨 Your Messages</h3>
-
-      {contacts.map(c=>(
-
-        <div
-        key={c._id}
-        style={{
-          ...msgCard,
-          transform:hoverId===c._id ? "translateY(-4px)" : "none"
-        }}
-        onMouseEnter={()=>setHoverId(c._id)}
-        onMouseLeave={()=>setHoverId(null)}
-        >
-
-          <p style={userMsg}>
-            <b>You:</b> {c.message}
-          </p>
-
-          {c.reply ? (
-
-            <div style={replyBox}>
-              <p style={replyLabel}>Admin Reply</p>
-              <p style={replyText}>{c.reply}</p>
-            </div>
-
-          ) : (
-
-            <p style={pending}>⏳ Waiting for admin reply</p>
-
-          )}
-
+  return (
+    <div className="max-w-6xl mx-auto w-full animate-fade-in pb-10 flex flex-col lg:flex-row gap-8">
+      
+      {/* Form Side */}
+      <div className="flex-1">
+        <div className="mb-8">
+          <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
+            <span className="text-4xl">💬</span> Support
+          </h2>
+          <p className="text-slate-500 mt-2 text-lg">We're here to help. Send us a message.</p>
         </div>
 
-      ))}
+        <form onSubmit={handleSubmit} className="bg-white rounded-3xl p-6 md:p-8 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+          <div className="space-y-5">
+            <div>
+              <label className="text-sm font-bold text-slate-700 mb-2 block">Name</label>
+              <input required name="name" value={form.name} onChange={e=>setForm({...form, name: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none" placeholder="Your Name" />
+            </div>
+            <div>
+              <label className="text-sm font-bold text-slate-700 mb-2 block">Email</label>
+              <input type="email" required name="email" value={form.email} onChange={e=>setForm({...form, email: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none" placeholder="Your Email" />
+            </div>
+            <div>
+              <label className="text-sm font-bold text-slate-700 mb-2 block">Message</label>
+              <textarea required name="message" value={form.message} onChange={e=>setForm({...form, message: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none h-32 resize-none" placeholder="How can we help?" />
+            </div>
+            <button disabled={loading} className="w-full py-4 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 transition-all active:scale-95 flex items-center justify-center gap-2">
+              {loading ? "Sending..." : "Send Message"}
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {/* Chat Interface Side */}
+      <div className="flex-1 bg-white rounded-3xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden flex flex-col h-[600px]">
+        <div className="bg-slate-50 border-b border-slate-100 p-6">
+          <h3 className="font-bold text-slate-900 flex items-center gap-2">
+            <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+            Live Inbox
+          </h3>
+        </div>
+        
+        <div className="flex-1 p-6 overflow-y-auto space-y-6 bg-slate-50/50">
+          {contacts.length === 0 ? (
+            <div className="h-full flex items-center justify-center text-slate-400 font-medium">No messages yet.</div>
+          ) : (
+            contacts.map(c => (
+              <div key={c._id} className="flex flex-col gap-4">
+                {/* User Message (Right) */}
+                <div className="flex justify-end">
+                  <div className="bg-blue-500 text-white p-4 rounded-2xl rounded-tr-sm max-w-[80%] shadow-md">
+                    <p className="text-sm leading-relaxed">{c.message}</p>
+                    <p className="text-[10px] text-blue-100 text-right mt-1">{new Date(c.createdAt || Date.now()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                  </div>
+                </div>
+
+                {/* Admin Reply (Left) */}
+                <div className="flex justify-start">
+                  {c.reply ? (
+                    <div className="bg-white border border-slate-200 text-slate-800 p-4 rounded-2xl rounded-tl-sm max-w-[80%] shadow-sm">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center text-white text-xs font-bold shadow-sm">B</div>
+                        <span className="text-xs font-bold text-slate-500">ByteBite Support</span>
+                      </div>
+                      <p className="text-sm leading-relaxed mt-2">{c.reply}</p>
+                    </div>
+                  ) : (
+                     <div className="bg-white border border-slate-100 text-slate-400 p-3 rounded-2xl rounded-tl-sm shadow-sm text-xs italic flex items-center gap-2">
+                        <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                        Admin is typing...
+                     </div>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+          <div ref={chatEndRef} />
+        </div>
+      </div>
 
     </div>
-
   );
-
 }
-
-/* ================= STYLES ================= */
-
-const page={
-maxWidth:900,
-margin:"auto",
-padding:"30px 20px"
-};
-
-const title={
-fontSize:24,
-fontWeight:800,
-color:"#0f172a"
-};
-
-const subtitle={
-marginBottom:20,
-color:"#64748b"
-};
-
-const success={
-color:"#16a34a",
-fontWeight:600
-};
-
-const card={
-marginTop:20,
-padding:24,
-background:"#ffffff",
-borderRadius:18,
-boxShadow:"0 10px 25px rgba(0,0,0,0.08)"
-};
-
-const input={
-width:"100%",
-padding:12,
-marginBottom:14,
-borderRadius:10,
-border:"1px solid #e2e8f0",
-fontSize:14
-};
-
-const btn={
-width:"100%",
-padding:14,
-borderRadius:12,
-border:"none",
-background:"linear-gradient(135deg,#22c55e,#16a34a)",
-color:"#fff",
-fontWeight:700,
-cursor:"pointer"
-};
-
-const sectionTitle={
-marginTop:30,
-fontSize:18,
-fontWeight:700
-};
-
-const msgCard={
-marginTop:14,
-padding:16,
-background:"#ffffff",
-borderRadius:14,
-boxShadow:"0 8px 20px rgba(0,0,0,0.08)",
-transition:"0.3s"
-};
-
-const userMsg={
-fontSize:14
-};
-
-const replyBox={
-marginTop:10,
-padding:12,
-borderRadius:10,
-background:"#ecfdf5"
-};
-
-const replyLabel={
-fontSize:12,
-fontWeight:700,
-color:"#166534"
-};
-
-const replyText={
-fontSize:14,
-color:"#065f46"
-};
-
-const pending={
-marginTop:8,
-color:"#94a3b8",
-fontSize:13
-};
