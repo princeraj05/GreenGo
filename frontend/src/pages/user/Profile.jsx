@@ -1,224 +1,154 @@
-import { useEffect,useState } from "react";
+import { useEffect, useState } from "react";
+import { getToken } from "../../utils/getToken";
 
-export default function Profile(){
+export default function Profile() {
+  const [form, setForm] = useState({
+    name: "",
+    phone: "",
+    address: "",
+    foodPreference: "",
+    deliveryTime: "",
+    notifications: ""
+  });
 
-const [form,setForm] = useState({
-name:"",
-phone:"",
-address:"",
-foodPreference:"",
-deliveryTime:"",
-notifications:""
-});
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("");
+  const [msgType, setMsgType] = useState(""); // "success" or "error"
 
-const [loading,setLoading] = useState(true);
-const [message,setMessage] = useState("");
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = await getToken();
+        if (!token) return;
 
-useEffect(()=>{
+        const res = await fetch("http://localhost:5000/api/users/me", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
 
-const fetchProfile = async()=>{
+        const data = await res.json();
+        setForm({
+          name: data.name || "",
+          phone: data.phone || "",
+          address: data.address || "",
+          foodPreference: data.foodPreference || "",
+          deliveryTime: data.deliveryTime || "",
+          notifications: data.notifications || ""
+        });
+      } catch {
+        setMessage("Failed to load profile");
+        setMsgType("error");
+      }
+      setLoading(false);
+    };
 
-try{
+    fetchProfile();
+  }, []);
 
-const token = localStorage.getItem("token");
+  const handleChange = e => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
-const res = await fetch(
-"http://localhost:5000/api/users/me",
-{
-headers:{Authorization:`Bearer ${token}`}
-}
-);
+  const handleSave = async () => {
+    try {
+      const token = await getToken();
+      if (!token) return;
 
-const data = await res.json();
+      const res = await fetch("http://localhost:5000/api/users/profile", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(form)
+      });
 
-setForm({
-name:data.name||"",
-phone:data.phone||"",
-address:data.address||"",
-foodPreference:data.foodPreference||"",
-deliveryTime:data.deliveryTime||"",
-notifications:data.notifications||""
-});
+      if (res.ok) {
+        setMessage("Profile updated successfully");
+        setMsgType("success");
+      } else {
+        setMessage("Failed to update profile");
+        setMsgType("error");
+      }
+    } catch {
+      setMessage("Failed to update profile");
+      setMsgType("error");
+    }
 
-}catch{
+    setTimeout(() => setMessage(""), 3000);
+  };
 
-setMessage("❌ Failed to load profile");
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-full min-h-[50vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+      </div>
+    );
+  }
 
-}
+  return (
+    <div className="max-w-4xl mx-auto w-full">
+      <div className="mb-8">
+        <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">👤 My Profile</h1>
+        <p className="text-gray-500 mt-2">Manage your personal information and preferences.</p>
+      </div>
 
-setLoading(false);
+      {message && (
+        <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 shadow-sm ${msgType === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+          {msgType === 'success' ? (
+            <svg className="w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+          ) : (
+            <svg className="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+          )}
+          <span className="font-semibold text-sm">{message}</span>
+        </div>
+      )}
 
-};
+      <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 p-6 md:p-8 border border-gray-100">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Input label="Full Name" name="name" value={form.name} onChange={handleChange} placeholder="John Doe" />
+          <Input label="Mobile Number" name="phone" value={form.phone} onChange={handleChange} placeholder="+1 234 567 890" />
+          <Input label="Food Preference" name="foodPreference" value={form.foodPreference} onChange={handleChange} placeholder="Veg, Non-Veg, Vegan..." />
+          <Input label="Preferred Delivery Time" name="deliveryTime" value={form.deliveryTime} onChange={handleChange} placeholder="e.g. 7:00 PM" />
+        </div>
 
-fetchProfile();
+        <div className="mt-6">
+          <Input label="Delivery Address" name="address" value={form.address} onChange={handleChange} textarea placeholder="Enter your full street address..." />
+        </div>
 
-},[]);
+        <div className="mt-6">
+          <Input label="Notification Preferences" name="notifications" value={form.notifications} onChange={handleChange} placeholder="Email, SMS, Push..." />
+        </div>
 
-const handleChange = e=>{
-setForm({...form,[e.target.name]:e.target.value});
-};
-
-const handleSave = async()=>{
-
-try{
-
-const token = localStorage.getItem("token");
-
-await fetch(
-"http://localhost:5000/api/users/profile",
-{
-method:"PUT",
-headers:{
-"Content-Type":"application/json",
-Authorization:`Bearer ${token}`
-},
-body:JSON.stringify(form)
-}
-);
-
-setMessage("✅ Profile updated successfully");
-
-}catch{
-
-setMessage("❌ Failed to update profile");
-
-}
-
-};
-
-if(loading) return <p style={{padding:40}}>Loading profile...</p>;
-
-return(
-
-<div style={page}>
-
-<h1 style={title}>👤 My Profile</h1>
-<p style={subtitle}>Manage your personal information</p>
-
-{message && <p style={msg}>{message}</p>}
-
-<div style={card}>
-
-<div style={grid}>
-
-<Input label="Full Name" name="name" value={form.name} onChange={handleChange}/>
-<Input label="Mobile Number" name="phone" value={form.phone} onChange={handleChange}/>
-<Input label="Food Preference" name="foodPreference" value={form.foodPreference} onChange={handleChange}/>
-<Input label="Preferred Delivery Time" name="deliveryTime" value={form.deliveryTime} onChange={handleChange}/>
-
-</div>
-
-<Input label="Address" name="address" value={form.address} onChange={handleChange} textarea/>
-
-<Input label="Notifications" name="notifications" value={form.notifications} onChange={handleChange}/>
-
-<button style={btn} onClick={handleSave}>
-💾 Save Changes
-</button>
-
-</div>
-
-</div>
-
-);
-
+        <div className="mt-8 flex justify-end">
+          <button
+            onClick={handleSave}
+            className="flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold rounded-xl shadow-lg shadow-orange-500/30 transition-all active:scale-95"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+            </svg>
+            Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 /* INPUT COMPONENT */
-
-const Input = ({label,textarea,...props})=>(
-
-<div style={{marginBottom:18,width:"100%"}}>
-
-<label style={labelStyle}>{label}</label>
-
-{textarea ?
-
-<textarea {...props} style={textareaStyle}/>
-
-:
-
-<input {...props} style={inputStyle}/>
-
-}
-
-</div>
-
+const Input = ({ label, textarea, ...props }) => (
+  <div className="flex flex-col w-full">
+    <label className="text-sm font-semibold text-gray-700 mb-2">{label}</label>
+    {textarea ? (
+      <textarea
+        {...props}
+        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all outline-none resize-y min-h-[100px] text-gray-800"
+      />
+    ) : (
+      <input
+        {...props}
+        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all outline-none text-gray-800"
+      />
+    )}
+  </div>
 );
-
-/* ================= STYLES ================= */
-
-const page={
-width:"100%",
-padding:"16px"
-};
-
-const title={
-marginBottom:6,
-color:"#0f172a"
-};
-
-const subtitle={
-marginBottom:20,
-color:"#64748b"
-};
-
-const msg={
-marginBottom:14,
-fontWeight:600
-};
-
-const card={
-maxWidth:600,
-margin:"auto",
-background:"#fff",
-padding:"20px",
-borderRadius:18,
-boxShadow:"0 8px 20px rgba(0,0,0,0.08)"
-};
-
-const grid={
-display:"grid",
-gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",
-gap:14
-};
-
-const labelStyle={
-display:"block",
-fontSize:14,
-fontWeight:600,
-marginBottom:6,
-color:"#334155"
-};
-
-const inputStyle={
-width:"100%",
-padding:12,
-borderRadius:10,
-border:"1px solid #e2e8f0",
-fontSize:14,
-boxSizing:"border-box"
-};
-
-const textareaStyle={
-width:"100%",
-padding:12,
-borderRadius:10,
-border:"1px solid #e2e8f0",
-minHeight:90,
-resize:"vertical",
-boxSizing:"border-box"
-};
-
-const btn={
-marginTop:20,
-width:"100%",
-padding:14,
-borderRadius:14,
-border:"none",
-cursor:"pointer",
-fontSize:16,
-fontWeight:700,
-color:"#fff",
-background:"linear-gradient(135deg,#22c55e,#16a34a)"
-};

@@ -1,279 +1,155 @@
-import { Link, Outlet } from "react-router-dom";
+import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { getToken } from "../../utils/getToken";
 
-export default function UserLayout(){
+export default function UserLayout() {
+  const navigate = useNavigate();
+  const [name, setName] = useState("");
+  const [open, setOpen] = useState(false);
 
-const [name,setName] = useState("");
-const [open,setOpen] = useState(false);
-const [mobile,setMobile] = useState(false);
+  useEffect(() => { loadUser(); }, []);
 
-useEffect(()=>{
-loadUser();
-checkScreen();
+  const loadUser = async () => {
+    const token = await getToken();
+    if (!token) return;
+    const res = await fetch("http://localhost:5000/api/users/me", {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const data = await res.json();
+    setName(data.name);
+  };
 
-window.addEventListener("resize",checkScreen);
-return ()=> window.removeEventListener("resize",checkScreen);
+  const navLinks = [
+    {
+      to: "/user", end: true, label: "Dashboard",
+      icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+    },
+    {
+      to: "/user/menu", label: "Menu",
+      icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
+    },
+    {
+      to: "/user/cart", label: "Cart",
+      icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+    },
+    {
+      to: "/user/orders", label: "My Orders",
+      icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+    },
+    {
+      to: "/user/profile", label: "Profile",
+      icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+    },
+    {
+      to: "/user/contact", label: "Contact",
+      icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+    },
+  ];
 
-},[]);
+  return (
+    <div className="flex min-h-screen">
+      {/* Overlay */}
+      {open && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[900]"
+          onClick={() => setOpen(false)}
+        />
+      )}
 
-const checkScreen=()=>{
+      {/* Sidebar */}
+      <div className={`fixed top-0 left-0 bottom-0 w-64 z-[1000] flex flex-col transition-transform duration-300 ease-in-out
+        bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border-r border-white/5
+        ${open ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}>
+        
+        {/* Brand */}
+        <div className="px-6 pt-7 pb-5 border-b border-white/10">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center shadow-lg">
+              <span className="text-white text-lg">🍔</span>
+            </div>
+            <span className="text-white font-extrabold text-lg tracking-tight">ByteBite</span>
+          </div>
+        </div>
 
-if(window.innerWidth < 900){
-setMobile(true);
-setOpen(false);
-}else{
-setMobile(false);
-setOpen(true);
+        {/* User Info */}
+        <div className="px-6 py-4 border-b border-white/10">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500/20 to-red-500/20 border border-orange-500/30 flex items-center justify-center">
+              <svg className="w-5 h-5 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-white text-sm font-semibold">{name || "User"}</p>
+              <p className="text-gray-500 text-xs">Food Lover</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Nav Links */}
+        <nav className="flex-1 px-4 py-5 flex flex-col gap-1 overflow-y-auto">
+          {navLinks.map(({ to, end, label, icon }) => (
+            <NavLink
+              key={to}
+              to={to}
+              end={end}
+              onClick={() => setOpen(false)}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+                  isActive
+                    ? "bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg shadow-orange-900/40"
+                    : "text-gray-400 hover:text-white hover:bg-white/5"
+                }`
+              }
+            >
+              {icon}
+              {label}
+            </NavLink>
+          ))}
+        </nav>
+
+        {/* Logout */}
+        <div className="px-4 pb-6">
+          <button
+            onClick={() => navigate("/login")}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 hover:text-red-300 font-semibold text-sm transition-all"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            Logout
+          </button>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col w-full md:pl-64 min-h-screen transition-all duration-300">
+        
+        {/* Topbar */}
+        <div className="sticky top-0 z-50 h-16 flex items-center gap-4 px-5 bg-white/80 backdrop-blur-xl border-b border-gray-200/60 shadow-sm md:hidden">
+          <button
+            onClick={() => setOpen(!open)}
+            className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-gray-100 transition-colors text-gray-600"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center">
+              <span className="text-white text-xs">🍔</span>
+            </div>
+            <span className="font-extrabold text-gray-800 tracking-tight">ByteBite</span>
+          </div>
+        </div>
+
+        {/* Page Content */}
+        <div className="flex-1 bg-gradient-to-br from-orange-50 via-rose-50 to-pink-50 p-4 sm:p-6 lg:p-8">
+          <Outlet />
+        </div>
+
+      </div>
+    </div>
+  );
 }
-
-};
-
-const loadUser = async()=>{
-
-const token = await getToken();
-if(!token) return;
-
-const res = await fetch(
-"http://localhost:5000/api/users/me",
-{
-headers:{Authorization:`Bearer ${token}`}
-}
-);
-
-const data = await res.json();
-setName(data.name);
-
-};
-
-const closeSidebar=()=>{
-if(mobile) setOpen(false);
-};
-
-return(
-
-<div style={layout}>
-
-{/* OVERLAY */}
-
-{mobile && open && (
-<div
-style={overlay}
-onClick={()=>setOpen(false)}
-/>
-)}
-
-{/* SIDEBAR */}
-
-<aside
-style={{
-...sidebar,
-transform: open ? "translateX(0)" : "translateX(-100%)"
-}}
->
-
-<h2 style={brand}>🍔 Food Startup</h2>
-
-<nav style={nav}>
-
-<NavItem to="/user" close={closeSidebar}>🏠 Dashboard</NavItem>
-<NavItem to="/user/menu" close={closeSidebar}>🍽 Menu</NavItem>
-<NavItem to="/user/cart" close={closeSidebar}>🛒 Cart</NavItem>
-<NavItem to="/user/orders" close={closeSidebar}>📦 My Orders</NavItem>
-<NavItem to="/user/profile" close={closeSidebar}>👤 Profile</NavItem>
-<NavItem to="/user/contact" close={closeSidebar}>📞 Contact</NavItem>
-<LogoutItem to="/login">🚪 Logout</LogoutItem>
-
-</nav>
-
-</aside>
-
-{/* MAIN */}
-
-<main
-style={{
-...main,
-marginLeft: mobile ? 0 : 260
-}}
->
-
-{/* MENU BUTTON */}
-
-{mobile && (
-<button
-style={menuBtn}
-onClick={()=>setOpen(!open)}
->
-☰
-</button>
-)}
-
-<div style={pageCard}>
-
-<h2 style={welcome}>
-Welcome, <span style={nameStyle}>{name}</span> 👋
-</h2>
-
-<Outlet/>
-
-</div>
-
-</main>
-
-</div>
-
-);
-
-}
-
-/* COMPONENTS */
-
-function NavItem({to,children,close}){
-
-const [hover,setHover] = useState(false);
-
-return(
-
-<Link
-to={to}
-onClick={close}
-style={{
-...navLink,
-background:hover
-? "linear-gradient(135deg,#22c55e,#16a34a)"
-: "transparent",
-color:hover ? "#fff" : "#e5e7eb"
-}}
-onMouseEnter={()=>setHover(true)}
-onMouseLeave={()=>setHover(false)}
->
-{children}
-</Link>
-
-);
-
-}
-
-function LogoutItem({to,children}){
-
-const [hover,setHover] = useState(false);
-
-return(
-
-<Link
-to={to}
-style={{
-...logout,
-background:hover
-? "linear-gradient(135deg,#ef4444,#b91c1c)"
-: "transparent",
-color:hover ? "#fff" : "#fecaca"
-}}
-onMouseEnter={()=>setHover(true)}
-onMouseLeave={()=>setHover(false)}
->
-{children}
-</Link>
-
-);
-
-}
-
-/* STYLES */
-
-const layout={
-display:"flex",
-minHeight:"100vh",
-background:"linear-gradient(135deg,#f0fdf4,#ecfeff,#eef2ff)"
-};
-
-const overlay={
-position:"fixed",
-top:0,
-left:0,
-right:0,
-bottom:0,
-background:"rgba(0,0,0,0.45)",
-zIndex:999
-};
-
-const sidebar={
-position:"fixed",
-top:0,
-left:0,
-bottom:0,
-width:260,
-padding:"26px 22px",
-background:"linear-gradient(180deg,#020617,#0f172a)",
-color:"#fff",
-transition:"transform 0.3s ease",
-zIndex:1000
-};
-
-const brand={
-marginBottom:40,
-fontSize:22,
-fontWeight:800,
-background:"linear-gradient(90deg,#22c55e,#38bdf8)",
-WebkitBackgroundClip:"text",
-WebkitTextFillColor:"transparent"
-};
-
-const nav={
-display:"flex",
-flexDirection:"column",
-gap:14
-};
-
-const navLink={
-textDecoration:"none",
-padding:"12px 16px",
-borderRadius:12,
-fontSize:15,
-transition:"0.25s"
-};
-
-const logout={
-marginTop:20,
-padding:"12px 16px",
-borderRadius:12,
-textDecoration:"none",
-fontWeight:700,
-transition:"0.25s"
-};
-
-const main={
-flex:1,
-padding:"20px",
-width:"100%"
-};
-
-const menuBtn={
-position:"fixed",
-top:15,
-left:15,
-fontSize:22,
-background:"white",
-border:"none",
-borderRadius:10,
-padding:"8px 12px",
-cursor:"pointer",
-boxShadow:"0 4px 10px rgba(0,0,0,0.15)",
-zIndex:1100
-};
-
-const pageCard={
-background:"linear-gradient(180deg,#ffffff,#f8fafc)",
-borderRadius:20,
-padding:30
-};
-
-const welcome={
-marginBottom:20,
-color:"#0f172a"
-};
-
-const nameStyle={
-color:"#16a34a",
-fontWeight:700
-};
