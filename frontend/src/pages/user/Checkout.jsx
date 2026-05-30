@@ -8,15 +8,25 @@ export default function Checkout() {
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("COD"); // Payment Method state
+  const [deliveryCharge, setDeliveryCharge] = useState(40); // Default, updated by settings
 
   useEffect(() => {
     const data = JSON.parse(localStorage.getItem("cart")) || [];
     if (data.length === 0) navigate("/user/cart");
     setCart(data);
+
+    // Fetch dynamic delivery settings
+    fetch(`${import.meta.env.VITE_API_URL}/api/settings`)
+      .then(res => res.json())
+      .then(settingsData => {
+        if (settingsData && settingsData.isDeliveryChargeEnabled !== undefined) {
+          setDeliveryCharge(settingsData.isDeliveryChargeEnabled ? settingsData.deliveryChargeAmount : 0);
+        }
+      })
+      .catch(err => console.error("Could not fetch settings", err));
   }, [navigate]);
 
   const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
-  const deliveryCharge = 40;
   const total = subtotal + deliveryCharge;
 
   const placeOrder = async () => {

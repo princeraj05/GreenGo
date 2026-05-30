@@ -27,6 +27,7 @@ import ManageFoods from "../pages/admin/ManageFoods";
 import ManageOrders from "../pages/admin/ManageOrders";
 import ManageUsers from "../pages/admin/ManageUsers";
 import Contacts from "../pages/admin/Contacts";
+import ManageSettings from "../pages/admin/ManageSettings";
 
 /* ROUTE GUARDS */
 import PrivateRoute from "./PrivateRoute";
@@ -105,6 +106,8 @@ element={
 <Route path="users" element={<ManageUsers />} />
 
 <Route path="contacts" element={<Contacts />} />
+
+<Route path="settings" element={<ManageSettings />} />
 
 </Route>
 

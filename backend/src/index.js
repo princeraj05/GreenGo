@@ -14,6 +14,7 @@ import adminUserRoutes from "./routes/adminUserRoutes.js";
 import contactRoutes from "./routes/contactRoutes.js";
 import adminContactRoutes from "./routes/adminContactRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
+import settingsRoutes from "./routes/settingsRoutes.js";
 
 dotenv.config();
 connectDB();
@@ -71,6 +72,7 @@ app.use("/api/admin/contacts", adminContactRoutes);
 
 app.use("/api/contact", contactRoutes);
 app.use("/api/payment", paymentRoutes);
+app.use("/api/settings", settingsRoutes);
 
 /* ================= TEST ROUTE ================= */
 
