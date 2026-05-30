@@ -25,7 +25,7 @@ export default function Contact() {
     const token = await getToken();
     if(!token) return;
 
-    const res = await fetch("http://localhost:5000/api/contact/my",{
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/contact/my`,{
       headers:{Authorization:`Bearer ${token}`}
     });
 
@@ -44,7 +44,7 @@ export default function Contact() {
     const token = await getToken();
     if(!token) return alert("Login required");
 
-    const res = await fetch("http://localhost:5000/api/contact",{
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/contact`,{
       method:"POST",
       headers:{
         "Content-Type":"application/json",

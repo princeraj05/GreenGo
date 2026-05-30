@@ -34,7 +34,7 @@ export default function Checkout() {
 
       if (paymentMethod !== "COD") {
         // Razorpay flow
-        const orderRes = await fetch("http://localhost:5000/api/payment/create-order", {
+        const orderRes = await fetch(`${import.meta.env.VITE_API_URL}/api/payment/create-order`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -58,7 +58,7 @@ export default function Checkout() {
           description: "Food Order Payment",
           order_id: orderData.order.id,
           handler: async function (response) {
-            const verifyRes = await fetch("http://localhost:5000/api/payment/verify", {
+            const verifyRes = await fetch(`${import.meta.env.VITE_API_URL}/api/payment/verify`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -103,7 +103,7 @@ export default function Checkout() {
 
   const createFinalOrder = async (token) => {
     try {
-      const res = await fetch("http://localhost:5000/api/orders", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/orders`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
