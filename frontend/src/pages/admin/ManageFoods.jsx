@@ -6,6 +6,7 @@ export default function ManageFoods() {
   const [foods, setFoods] = useState([]);
   const [form, setForm] = useState({ name: "", price: "", description: "", image: null });
   const [preview, setPreview] = useState(null); // Image preview state
+  const [editingId, setEditingId] = useState(null);
 
   useEffect(() => { loadFoods(); }, []);
 
@@ -34,7 +35,7 @@ export default function ManageFoods() {
 
   const addFood = async (e) => {
     e.preventDefault();
-    if (!form.name || !form.price || !form.description || !form.image) {
+    if (!form.name || !form.price || !form.description || (!form.image && !editingId)) {
       alert("All fields are required."); return;
     }
     try {
@@ -43,17 +44,32 @@ export default function ManageFoods() {
       fd.append("name", form.name);
       fd.append("price", form.price);
       fd.append("description", form.description);
-      fd.append("image", form.image);
+      if (form.image) fd.append("image", form.image);
       
-      await API.post("/api/foods", fd, { headers: { Authorization: `Bearer ${token}` } });
+      if (editingId) {
+        await API.put(`/api/foods/${editingId}`, fd, { headers: { Authorization: `Bearer ${token}` } });
+      } else {
+        await API.post("/api/foods", fd, { headers: { Authorization: `Bearer ${token}` } });
+      }
       
-      // Reset form and preview
-      setForm({ name: "", price: "", description: "", image: null });
-      setPreview(null);
-      document.getElementById("foodImageInput").value = ""; // Clear file input
-      
+      resetForm();
       loadFoods();
     } catch (err) { console.log(err); }
+  };
+
+  const resetForm = () => {
+    setForm({ name: "", price: "", description: "", image: null });
+    setPreview(null);
+    setEditingId(null);
+    const input = document.getElementById("foodImageInput");
+    if (input) input.value = "";
+  };
+
+  const startEdit = (food) => {
+    setForm({ name: food.name, price: food.price, description: food.description, image: null });
+    setPreview(food.image?.startsWith('http') ? food.image : `${import.meta.env.VITE_API_URL}/uploads/${food.image}`);
+    setEditingId(food._id);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const deleteFood = async (id) => {
@@ -80,7 +96,7 @@ export default function ManageFoods() {
           <svg className="w-6 h-6 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
           </svg>
-          Add New Item
+          {editingId ? "Edit Item" : "Add New Item"}
         </h2>
         
         <form onSubmit={addFood} className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -136,8 +152,14 @@ export default function ManageFoods() {
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" />
               </svg>
-              Publish Item
+              {editingId ? "Update Item" : "Publish Item"}
             </button>
+            {editingId && (
+              <button type="button" onClick={resetForm}
+                className="w-full py-3 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 font-bold transition-all flex items-center justify-center mt-2">
+                Cancel Edit
+              </button>
+            )}
           </div>
           
         </form>
@@ -159,8 +181,9 @@ export default function ManageFoods() {
               {/* Exposed Options Floating on the Image */}
               <div className="absolute top-3 right-3 flex gap-2">
                 <button 
+                   onClick={() => startEdit(f)}
                    className="w-10 h-10 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-blue-600 shadow-lg hover:bg-blue-50 transition-colors"
-                   title="Edit (Coming soon)"
+                   title="Edit"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                 </button>

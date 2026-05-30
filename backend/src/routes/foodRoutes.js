@@ -3,6 +3,7 @@ import express from "express";
 import {
   getFoods,
   addFood,
+  updateFood,
   deleteFood
 } from "../controllers/foodController.js";
 
@@ -22,6 +23,15 @@ router.post(
   adminOnly,
   upload.single("image"),
   addFood
+);
+
+/* UPDATE FOOD */
+router.put(
+  "/:id",
+  protect,
+  adminOnly,
+  upload.single("image"),
+  updateFood
 );
 
 /* DELETE FOOD */
