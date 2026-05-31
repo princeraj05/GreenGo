@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { getToken } from "../../utils/getToken";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
+import { Users, Package, UtensilsCrossed, IndianRupee } from "lucide-react";
+import { motion } from "framer-motion";
+import Card from "../../components/ui/Card";
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -49,124 +52,129 @@ export default function AdminDashboard() {
     {
       label: "Total Users",
       value: stats.users,
-      icon: (
-        <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2h5M12 12a4 4 0 100-8 4 4 0 000 8z" />
-        </svg>
-      ),
-      gradient: "from-blue-500 to-indigo-600",
-      shadow: "shadow-blue-500/30",
+      icon: <Users size={28} className="text-blue-600" />,
+      bg: "bg-blue-100",
+      accent: "from-blue-500 to-blue-600"
     },
     {
       label: "Total Orders",
       value: stats.orders,
-      icon: (
-        <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-        </svg>
-      ),
-      gradient: "from-emerald-500 to-teal-600",
-      shadow: "shadow-emerald-500/30",
+      icon: <Package size={28} className="text-emerald-600" />,
+      bg: "bg-emerald-100",
+      accent: "from-emerald-500 to-emerald-600"
     },
     {
       label: "Food Items",
       value: stats.foods,
-      icon: (
-        <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-        </svg>
-      ),
-      gradient: "from-orange-500 to-red-600",
-      shadow: "shadow-orange-500/30",
+      icon: <UtensilsCrossed size={28} className="text-orange-600" />,
+      bg: "bg-orange-100",
+      accent: "from-orange-500 to-orange-600"
     },
     {
       label: "Total Revenue",
       value: `₹${stats.revenue}`,
-      icon: (
-        <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ),
-      gradient: "from-purple-500 to-pink-600",
-      shadow: "shadow-purple-500/30",
+      icon: <IndianRupee size={28} className="text-purple-600" />,
+      bg: "bg-purple-100",
+      accent: "from-purple-500 to-purple-600"
     },
   ];
 
   return (
-    <div className="w-full h-full animate-fade-in">
+    <div className="w-full pb-10">
       {/* Header section */}
-      <div className="mb-10">
-        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Overview</h1>
-        <p className="text-slate-500 mt-1">Here is the latest snapshot of your business today.</p>
-      </div>
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
+        <h1 className="text-4xl font-black text-slate-900 tracking-tight">Overview</h1>
+        <p className="text-slate-500 mt-2 text-lg font-medium">Here is the latest snapshot of your business today.</p>
+      </motion.div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {cards.map((card, i) => (
-          <div key={i} className="group relative bg-white rounded-3xl p-6 overflow-hidden border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all duration-300 transform hover:-translate-y-1">
-            <div className={`absolute -right-6 -top-6 w-32 h-32 bg-gradient-to-br ${card.gradient} opacity-[0.08] group-hover:opacity-15 rounded-full blur-2xl transition-opacity duration-300`}></div>
-            <div className="relative z-10 flex flex-col gap-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-bold text-slate-500 uppercase tracking-widest">{card.label}</span>
-                <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${card.gradient} shadow-lg ${card.shadow} flex items-center justify-center transform group-hover:rotate-6 transition-transform duration-300`}>
+          <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
+            <Card className="relative overflow-hidden group border-slate-100 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className={`w-14 h-14 rounded-2xl ${card.bg} flex items-center justify-center transition-transform duration-300 group-hover:scale-110`}>
                   {card.icon}
                 </div>
+                <div className={`w-2 h-2 rounded-full bg-gradient-to-br ${card.accent} animate-pulse`}></div>
               </div>
               <div>
-                <p className={`text-4xl font-black text-slate-900 tracking-tight mt-2`}>{card.value}</p>
+                <p className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-1">{card.label}</p>
+                <p className="text-4xl font-black text-slate-900 tracking-tight">{card.value}</p>
               </div>
-            </div>
-          </div>
+              <div className={`absolute bottom-0 left-0 h-1 w-0 bg-gradient-to-r ${card.accent} group-hover:w-full transition-all duration-500`}></div>
+            </Card>
+          </motion.div>
         ))}
       </div>
 
       {/* Charts Section */}
-      <div className="mt-12 grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="mt-10 grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Revenue Chart */}
-        <div className="bg-white rounded-3xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-8">
-          <h2 className="text-xl font-bold text-slate-900 mb-6">Monthly Revenue</h2>
-          <div className="h-72">
-            {chartData.revenueByMonth.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData.revenueByMonth}>
-                  <defs>
-                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8'}} />
-                  <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8'}} />
-                  <Tooltip contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.1)'}} />
-                  <Area type="monotone" dataKey="revenue" stroke="#8b5cf6" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
-                </AreaChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-slate-400">No revenue data yet</div>
-            )}
-          </div>
-        </div>
+        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
+          <Card className="p-8 border-slate-100 h-full">
+            <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+              <IndianRupee size={20} className="text-purple-500" /> Monthly Revenue
+            </h2>
+            <div className="h-72">
+              {chartData.revenueByMonth.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={chartData.revenueByMonth} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#a855f7" stopOpacity={0.5}/>
+                        <stop offset="95%" stopColor="#a855f7" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} dy={10} />
+                    <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
+                    <Tooltip 
+                      contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)'}}
+                      cursor={{ stroke: '#e2e8f0', strokeWidth: 2, strokeDasharray: '4 4' }}
+                    />
+                    <Area type="monotone" dataKey="revenue" stroke="#a855f7" strokeWidth={4} fillOpacity={1} fill="url(#colorRevenue)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 gap-2">
+                  <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center">📈</div>
+                  <span className="font-medium text-sm">No revenue data yet</span>
+                </div>
+              )}
+            </div>
+          </Card>
+        </motion.div>
 
         {/* Orders Chart */}
-        <div className="bg-white rounded-3xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-8">
-          <h2 className="text-xl font-bold text-slate-900 mb-6">Orders Per Day</h2>
-          <div className="h-72">
-            {chartData.ordersByDay.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData.ordersByDay}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8'}} />
-                  <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8'}} />
-                  <Tooltip contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.1)'}} cursor={{fill: '#f8fafc'}} />
-                  <Bar dataKey="orders" fill="#10b981" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-slate-400">No orders data yet</div>
-            )}
-          </div>
-        </div>
+        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }}>
+          <Card className="p-8 border-slate-100 h-full">
+            <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+              <Package size={20} className="text-emerald-500" /> Orders Per Day
+            </h2>
+            <div className="h-72">
+              {chartData.ordersByDay.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartData.ordersByDay} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} dy={10} />
+                    <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
+                    <Tooltip 
+                      contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)'}} 
+                      cursor={{fill: '#f8fafc'}} 
+                    />
+                    <Bar dataKey="orders" fill="#10b981" radius={[8, 8, 0, 0]} maxBarSize={50} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 gap-2">
+                  <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center">📊</div>
+                  <span className="font-medium text-sm">No orders data yet</span>
+                </div>
+              )}
+            </div>
+          </Card>
+        </motion.div>
       </div>
       
     </div>

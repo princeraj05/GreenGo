@@ -1,3 +1,5 @@
+import { cn } from "../../utils/cn";
+
 export default function Button({ 
   children, 
   variant = 'primary', 
@@ -22,7 +24,7 @@ export default function Button({
 
   return (
     <button 
-      className={`${base} ${variants[variant]} ${sizes[size]} ${className}`}
+      className={cn(base, variants[variant], sizes[size], className)}
       {...props}
     >
       {children}

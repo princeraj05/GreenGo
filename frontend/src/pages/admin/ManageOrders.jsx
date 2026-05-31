@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Package, Clock, CheckCircle, MapPin, Search } from "lucide-react";
 import API from "../../api/axios";
 import { getToken } from "../../utils/getToken";
+import Card from "../../components/ui/Card";
+import Badge from "../../components/ui/Badge";
+import Button from "../../components/ui/Button";
 
 export default function ManageOrders() {
   const [orders, setOrders] = useState([]);
@@ -38,103 +43,108 @@ export default function ManageOrders() {
     return `${m}m ${s}s`;
   };
 
-  const statusStyle = (status) => {
-    if (status === "Delivered") return "bg-emerald-100 text-emerald-700 border-emerald-200";
-    if (status === "Preparing") return "bg-amber-100 text-amber-700 border-amber-200";
-    return "bg-gray-100 text-gray-600 border-gray-200";
-  };
-
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-100 px-4 py-10">
-      <div className="fixed top-0 left-0 w-72 h-72 bg-emerald-300 opacity-20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
-      <div className="fixed bottom-0 right-0 w-96 h-96 bg-teal-400 opacity-20 rounded-full blur-3xl translate-x-1/3 translate-y-1/3 pointer-events-none" />
+    <div className="w-full pb-10">
 
-      <div className="relative max-w-6xl mx-auto">
-
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-10">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg">
-            <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-            </svg>
-          </div>
-          <div>
-            <h1 className="text-2xl font-extrabold text-gray-800 tracking-tight">Manage Orders</h1>
-            <p className="text-sm text-gray-500 mt-0.5">Track and update all customer orders</p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
-          {orders.map(o => (
-            <div key={o._id} className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-lg shadow-emerald-100 border border-white/60 p-6 space-y-4">
-
-              {/* Order ID + Status */}
-              <div className="flex items-center justify-between">
-                <p className="font-extrabold text-gray-800">#{o._id.slice(-6)}</p>
-                <span className={`text-xs font-semibold px-3 py-1 rounded-full border ${statusStyle(o.status)}`}>
-                  {o.status}
-                </span>
-              </div>
-
-              {/* Status Selector */}
-              <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Update Status</label>
-                <select value={o.status} onChange={(e) => setETA(o._id, e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300">
-                  <option>Pending</option>
-                  <option>Preparing</option>
-                  <option>Delivered</option>
-                </select>
-              </div>
-
-              {/* Address & ETA */}
-              <div className="bg-gray-50 rounded-2xl p-3 border border-gray-100 space-y-1.5">
-                <p className="text-xs text-gray-600 flex items-center gap-1.5">
-                  <span>📍</span> {o.address}
-                </p>
-                <p className="text-xs text-gray-600 flex items-center gap-1.5">
-                  <span>⏱</span> Remaining: <span className="font-semibold text-emerald-600">{remaining(o)}</span>
-                </p>
-              </div>
-
-              {/* ETA Input */}
-              {o.status !== "Delivered" && (
-                <div className="flex gap-2">
-                  <input type="number" placeholder="ETA (min)"
-                    value={etaInput[o._id] || ""}
-                    onChange={(e) => setEtaInput({ ...etaInput, [o._id]: e.target.value })}
-                    className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300" />
-                  <button onClick={() => setETA(o._id, o.status)}
-                    className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold text-sm shadow-md hover:shadow-lg transition-all">
-                    Set
-                  </button>
-                </div>
-              )}
-
-              {/* Items */}
-              <div className="space-y-1.5">
-                {o.items.map((i, idx) => (
-                  <div key={idx} className="flex justify-between text-xs text-gray-600">
-                    <span>{i.name} × {i.qty}</span>
-                    <span className="font-semibold text-gray-800">₹{i.price * i.qty}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Total */}
-              <div className="flex justify-between items-center pt-3 border-t border-gray-100">
-                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total</span>
-                <span className="text-lg font-extrabold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-                  ₹{o.total}
-                </span>
-              </div>
-
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <h1 className="text-4xl font-black text-slate-900 tracking-tight flex items-center gap-4">
+            <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600">
+              <Package size={28} />
             </div>
-          ))}
+            Manage Orders
+          </h1>
+          <p className="text-slate-500 mt-2 text-lg font-medium">Track and update all customer orders in real-time.</p>
         </div>
+      </motion.div>
 
-      </div>
+      <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <AnimatePresence>
+          {orders.map((o, i) => (
+            <motion.div 
+              key={o._id}
+              layout
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ delay: i * 0.05 }}
+            >
+              <Card hover className="p-6 h-full flex flex-col border-slate-100">
+
+                {/* Order ID + Status */}
+                <div className="flex items-center justify-between mb-6">
+                  <p className="font-extrabold text-slate-900 text-lg">
+                    #<span className="text-emerald-600">{o._id.slice(-6).toUpperCase()}</span>
+                  </p>
+                  <Badge variant={o.status === 'Delivered' ? 'success' : o.status === 'Preparing' ? 'warning' : 'default'} className="uppercase tracking-wider">
+                    {o.status}
+                  </Badge>
+                </div>
+
+                {/* Status Selector */}
+                <div className="mb-6">
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Update Status</label>
+                  <select 
+                    value={o.status} 
+                    onChange={(e) => setETA(o._id, e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 font-bold focus:outline-none focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all appearance-none cursor-pointer"
+                  >
+                    <option value="Pending">Pending</option>
+                    <option value="Preparing">Preparing</option>
+                    <option value="Out for Delivery">Out for Delivery</option>
+                    <option value="Delivered">Delivered</option>
+                  </select>
+                </div>
+
+                {/* Address & ETA */}
+                <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 space-y-3 mb-6">
+                  <p className="text-sm font-medium text-slate-600 flex items-start gap-2 leading-tight">
+                    <MapPin size={16} className="text-emerald-500 shrink-0 mt-0.5" /> 
+                    {o.address}
+                  </p>
+                  <p className="text-sm font-medium text-slate-600 flex items-center gap-2">
+                    <Clock size={16} className="text-emerald-500 shrink-0" /> 
+                    Remaining: <span className="font-bold text-slate-900">{remaining(o)}</span>
+                  </p>
+                </div>
+
+                {/* ETA Input */}
+                {o.status !== "Delivered" && (
+                  <div className="flex gap-2 mb-6">
+                    <input type="number" placeholder="ETA (min)"
+                      value={etaInput[o._id] || ""}
+                      onChange={(e) => setEtaInput({ ...etaInput, [o._id]: e.target.value })}
+                      className="flex-1 px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 font-medium focus:outline-none focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all" />
+                    <Button onClick={() => setETA(o._id, o.status)} className="rounded-xl px-6 bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20">
+                      Set
+                    </Button>
+                  </div>
+                )}
+
+                {/* Items */}
+                <div className="space-y-2 mb-6 flex-1">
+                  {o.items.map((i, idx) => (
+                    <div key={idx} className="flex justify-between items-center text-sm font-medium text-slate-600 py-1 border-b border-slate-50 last:border-0">
+                      <span>{i.name} <span className="text-emerald-600 font-bold ml-1">×{i.qty}</span></span>
+                      <span className="font-bold text-slate-900">₹{i.price * i.qty}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Total */}
+                <div className="flex justify-between items-center pt-4 border-t border-slate-100 mt-auto">
+                  <span className="text-sm font-bold text-slate-500 uppercase tracking-wider">Total Amount</span>
+                  <span className="text-2xl font-black text-slate-900">
+                    ₹{o.total}
+                  </span>
+                </div>
+
+              </Card>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </motion.div>
+
     </div>
   );
 }

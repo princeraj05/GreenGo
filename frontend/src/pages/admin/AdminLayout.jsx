@@ -1,6 +1,12 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { 
+  LayoutDashboard, UtensilsCrossed, Package, Users, 
+  MessageSquare, Ticket, Bell, LineChart, Settings, 
+  LogOut, Menu, X
+} from "lucide-react";
 import { getToken } from "../../utils/getToken";
+import { cn } from "../../utils/cn";
 
 export default function AdminLayout() {
   const navigate = useNavigate();
@@ -12,50 +18,29 @@ export default function AdminLayout() {
   const loadAdmin = async () => {
     const token = await getToken();
     if (!token) return;
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/me`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    const data = await res.json();
-    setName(data.name);
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/me`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if(res.ok) {
+        const data = await res.json();
+        setName(data.name);
+      }
+    } catch(e) {
+      console.error(e);
+    }
   };
 
   const navLinks = [
-    {
-      to: "/admin", end: true, label: "Dashboard",
-      icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
-    },
-    {
-      to: "/admin/foods", label: "Manage Foods",
-      icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
-    },
-    {
-      to: "/admin/orders", label: "Orders",
-      icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
-    },
-    {
-      to: "/admin/users", label: "Users",
-      icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2h5M12 12a4 4 0 100-8 4 4 0 000 8z" /></svg>
-    },
-    {
-      to: "/admin/contacts", label: "Messages",
-      icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-    },
-    {
-      to: "/admin/coupons", label: "Coupons",
-      icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" /></svg>
-    },
-    {
-      to: "/admin/notifications", label: "Notifications",
-      icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" /></svg>
-    },
-    {
-      to: "/admin/analytics", label: "Food Analytics",
-      icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
-    },
-    {
-      to: "/admin/settings", label: "Settings",
-      icon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-    },
+    { to: "/admin", end: true, label: "Dashboard", icon: <LayoutDashboard size={20} /> },
+    { to: "/admin/foods", label: "Manage Foods", icon: <UtensilsCrossed size={20} /> },
+    { to: "/admin/orders", label: "Orders", icon: <Package size={20} /> },
+    { to: "/admin/users", label: "Users", icon: <Users size={20} /> },
+    { to: "/admin/contacts", label: "Messages", icon: <MessageSquare size={20} /> },
+    { to: "/admin/coupons", label: "Coupons", icon: <Ticket size={20} /> },
+    { to: "/admin/notifications", label: "Notifications", icon: <Bell size={20} /> },
+    { to: "/admin/analytics", label: "Analytics", icon: <LineChart size={20} /> },
+    { to: "/admin/settings", label: "Settings", icon: <Settings size={20} /> },
   ];
 
   return (
@@ -64,20 +49,22 @@ export default function AdminLayout() {
       {/* Mobile Overlay */}
       {open && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[900] md:hidden"
+          className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[900] md:hidden transition-opacity"
           onClick={() => setOpen(false)}
         />
       )}
 
       {/* Sidebar */}
-      <div className={`fixed top-0 left-0 bottom-0 w-72 z-[1000] flex flex-col transition-transform duration-300 ease-in-out
-        bg-[#0f172a] border-r border-slate-800 shadow-2xl shadow-emerald-900/20
-        ${open ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}>
-
+      <div className={cn(
+        "fixed top-0 left-0 bottom-0 w-72 z-[1000] flex flex-col transition-transform duration-300 ease-in-out",
+        "bg-slate-950 border-r border-slate-800 shadow-2xl",
+        open ? "translate-x-0" : "-translate-x-full",
+        "md:translate-x-0"
+      )}>
         {/* Brand */}
-        <div className="px-8 pt-8 pb-6 border-b border-slate-800">
+        <div className="px-8 pt-8 pb-6 border-b border-slate-800/50">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/30">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center shadow-lg shadow-brand-500/20">
               <span className="text-white text-xl font-black">B</span>
             </div>
             <span className="text-white font-black text-2xl tracking-tight">ByteBite</span>
@@ -85,17 +72,15 @@ export default function AdminLayout() {
         </div>
 
         {/* Admin Profile */}
-        <div className="px-8 py-6 border-b border-slate-800">
+        <div className="px-8 py-6 border-b border-slate-800/50">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-slate-800 border-2 border-emerald-500/50 flex items-center justify-center relative">
-              <svg className="w-6 h-6 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-              <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-[#0f172a]"></div>
+            <div className="w-12 h-12 rounded-full bg-slate-800 border-2 border-brand-500/50 flex items-center justify-center relative">
+              <UserAvatar name={name} />
+              <div className="absolute bottom-0 right-0 w-3 h-3 bg-brand-500 rounded-full border-2 border-slate-950"></div>
             </div>
             <div>
               <p className="text-white text-sm font-bold truncate w-32">{name || "Admin"}</p>
-              <p className="text-emerald-400 text-xs font-semibold tracking-wide uppercase mt-0.5">Administrator</p>
+              <p className="text-brand-400 text-xs font-semibold tracking-wide uppercase mt-0.5">Administrator</p>
             </div>
           </div>
         </div>
@@ -109,11 +94,12 @@ export default function AdminLayout() {
               end={end}
               onClick={() => setOpen(false)}
               className={({ isActive }) =>
-                `flex items-center gap-4 px-4 py-3.5 rounded-2xl text-sm font-bold transition-all duration-200 ${
+                cn(
+                  "flex items-center gap-4 px-4 py-3.5 rounded-2xl text-sm font-bold transition-all duration-200",
                   isActive
-                    ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25 translate-x-1"
-                    : "text-slate-400 hover:text-white hover:bg-slate-800/50"
-                }`
+                    ? "bg-brand-500/10 text-brand-400 shadow-sm"
+                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
+                )
               }
             >
               {icon}
@@ -123,48 +109,42 @@ export default function AdminLayout() {
         </nav>
 
         {/* Logout */}
-        <div className="px-6 pb-8">
+        <div className="px-6 pb-8 pt-4">
           <button
             onClick={() => navigate("/login")}
-            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-slate-800/50 hover:bg-red-500/10 border border-slate-700 hover:border-red-500/30 text-slate-300 hover:text-red-400 font-bold text-sm transition-all duration-200 group"
+            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-slate-800/30 hover:bg-red-500/10 border border-slate-800 hover:border-red-500/30 text-slate-400 hover:text-red-400 font-bold text-sm transition-all duration-200 group"
           >
-            <svg className="w-5 h-5 transition-transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
+            <LogOut size={18} className="transition-transform group-hover:-translate-x-1" />
             Sign Out
           </button>
         </div>
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col w-full md:pl-72 min-h-screen transition-all duration-300 relative">
+      <div className="flex-1 flex flex-col w-full md:pl-72 min-h-screen transition-all duration-300 relative bg-slate-50">
         
         {/* Topbar */}
-        <div className="sticky top-0 z-50 h-20 flex items-center justify-between px-6 lg:px-10 bg-white/70 backdrop-blur-2xl border-b border-slate-200/50 shadow-[0_4px_30px_rgba(0,0,0,0.03)]">
+        <div className="sticky top-0 z-50 h-20 flex items-center justify-between px-6 lg:px-10 bg-white/70 backdrop-blur-xl border-b border-slate-200/50 shadow-sm">
           <div className="flex items-center gap-4">
             <button
               onClick={() => setOpen(!open)}
-              className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-slate-100 transition-colors text-slate-600 md:hidden"
+              className="w-10 h-10 flex items-center justify-center rounded-xl bg-white border border-slate-200 hover:bg-slate-50 transition-colors text-slate-600 md:hidden shadow-sm"
             >
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
+              {open ? <X size={20} /> : <Menu size={20} />}
             </button>
-            <h2 className="text-xl font-bold text-slate-800 hidden sm:block">Control Panel</h2>
+            <h2 className="text-xl font-bold text-slate-800 hidden sm:block tracking-tight">Admin Portal</h2>
           </div>
 
           <div className="flex items-center gap-4">
-             {/* Notification Bell (Decorative) */}
-             <button className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 transition-colors relative">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                </svg>
-                <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-slate-100"></span>
+             {/* Notification Bell */}
+             <button className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-brand-50 hover:text-brand-600 transition-colors relative">
+                <Bell size={18} />
+                <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
              </button>
              
              {/* Profile Avatar (Small) */}
-             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 shadow-sm border-2 border-white flex items-center justify-center cursor-pointer">
-                <span className="text-white font-bold text-sm">{name ? name.charAt(0).toUpperCase() : 'A'}</span>
+             <div className="w-10 h-10 rounded-full bg-brand-100 text-brand-600 shadow-sm flex items-center justify-center cursor-pointer">
+                <span className="font-bold text-sm">{name ? name.charAt(0).toUpperCase() : 'A'}</span>
              </div>
           </div>
         </div>
@@ -172,10 +152,9 @@ export default function AdminLayout() {
         {/* Dynamic Page Content */}
         <div className="flex-1 p-6 lg:p-10 relative overflow-hidden">
            {/* Decorative Background Elements */}
-           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-400/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
-           <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-teal-400/5 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/3 pointer-events-none"></div>
+           <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-brand-50 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
+           <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-50/50 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/3 pointer-events-none"></div>
            
-           {/* Outlet container to keep it above the decorative elements */}
            <div className="relative z-10 w-full h-full max-w-7xl mx-auto">
              <Outlet />
            </div>
@@ -184,4 +163,8 @@ export default function AdminLayout() {
       </div>
     </div>
   );
+}
+
+function UserAvatar({name}) {
+  return <span className="text-brand-400 font-bold">{name ? name.charAt(0).toUpperCase() : 'A'}</span>;
 }

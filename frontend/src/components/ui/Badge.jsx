@@ -1,3 +1,5 @@
+import { cn } from "../../utils/cn";
+
 export default function Badge({ children, variant = 'gray', className = '' }) {
   const variants = {
     brand: "bg-brand-50 text-brand-600 border border-brand-100",
@@ -9,7 +11,7 @@ export default function Badge({ children, variant = 'gray', className = '' }) {
   };
 
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${variants[variant]} ${className}`}>
+    <span className={cn("inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold", variants[variant], className)}>
       {children}
     </span>
   );

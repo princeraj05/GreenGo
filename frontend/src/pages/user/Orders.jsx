@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { Package, Clock, CheckCircle, ChefHat, Truck, ShoppingBag } from "lucide-react";
 import { getToken } from "../../utils/getToken";
+import Card from "../../components/ui/Card";
+import Badge from "../../components/ui/Badge";
 
 export default function Orders() {
   const [orders, setOrders] = useState([]);
@@ -18,7 +22,9 @@ export default function Orders() {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/orders/my`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setOrders(await res.json());
+      if(res.ok) setOrders(await res.json());
+    } catch(e) {
+      console.error(e);
     } finally {
       setLoading(false);
     }
@@ -31,78 +37,115 @@ export default function Orders() {
     return 25; // Pending
   };
 
-  if (loading) return <div className="p-8 flex justify-center"><div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div></div>;
+  const getStatusIcon = (status) => {
+    if (status === "Delivered") return <CheckCircle size={16} />;
+    if (status === "Out for Delivery") return <Truck size={16} />;
+    if (status === "Preparing") return <ChefHat size={16} />;
+    return <Clock size={16} />;
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-32">
+        <div className="w-12 h-12 border-4 border-brand-100 border-t-brand-500 rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-5xl mx-auto w-full animate-fade-in pb-10">
-      <div className="mb-10">
-        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
-          <span className="text-4xl">📦</span> My Orders
+    <div className="max-w-5xl mx-auto w-full pb-10">
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
+        <h1 className="text-4xl font-black text-slate-900 tracking-tight flex items-center gap-4">
+          <div className="w-12 h-12 bg-brand-50 rounded-2xl flex items-center justify-center text-brand-600">
+            <Package size={28} />
+          </div>
+          My Orders
         </h1>
-        <p className="text-slate-500 mt-2 text-lg">Track your delicious food.</p>
-      </div>
+        <p className="text-slate-500 mt-2 text-lg font-medium">Track your delicious food journey.</p>
+      </motion.div>
 
       {orders.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-3xl border border-slate-100 shadow-sm">
-          <span className="text-6xl mb-4 block">😢</span>
-          <h3 className="text-xl font-bold text-slate-900">No orders yet</h3>
-          <p className="text-slate-500 mt-2">Time to order some tasty food!</p>
-        </div>
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
+          <Card className="text-center py-20 border-slate-100">
+            <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-300">
+              <ShoppingBag size={48} />
+            </div>
+            <h3 className="text-2xl font-black text-slate-900 mb-2">No orders yet</h3>
+            <p className="text-slate-500 font-medium">Time to order some tasty food!</p>
+          </Card>
+        </motion.div>
       ) : (
         <div className="space-y-6">
-          {orders.map(o => (
-            <div key={o._id} className="bg-white rounded-3xl p-6 md:p-8 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all">
-              
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-                <div>
-                  <h3 className="text-lg font-bold text-slate-900">Order <span className="text-orange-500">#{o._id.slice(-6)}</span></h3>
-                  <p className="text-slate-500 text-sm mt-1">{new Date(o.createdAt).toLocaleString()}</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className={`px-4 py-1.5 rounded-full text-sm font-bold ${
-                    o.status === "Delivered" ? "bg-emerald-100 text-emerald-700" :
-                    "bg-orange-100 text-orange-700"
-                  }`}>
-                    {o.status}
-                  </span>
-                </div>
-              </div>
-
-              {/* TRACKER */}
-              <div className="mb-10 relative">
-                <div className="overflow-hidden h-3 mb-4 text-xs flex rounded-full bg-slate-100">
-                  <div style={{ width: `${getProgress(o.status)}%` }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-orange-400 to-red-500 transition-all duration-1000"></div>
-                </div>
-                <div className="flex justify-between text-xs font-bold text-slate-400 px-1">
-                  <span className={getProgress(o.status) >= 25 ? "text-orange-600" : ""}>Placed</span>
-                  <span className={getProgress(o.status) >= 50 ? "text-orange-600" : ""}>Preparing</span>
-                  <span className={getProgress(o.status) >= 75 ? "text-orange-600" : ""}>On the way</span>
-                  <span className={getProgress(o.status) >= 100 ? "text-emerald-600" : ""}>Delivered</span>
-                </div>
-              </div>
-
-              <div className="bg-slate-50 rounded-2xl p-4 mb-6">
-                {o.items.map((i, idx) => (
-                  <div key={idx} className="flex items-center gap-4 py-3 border-b border-slate-200 last:border-0">
-                    <img 
-                      src={i.image?.startsWith('http') ? i.image : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/uploads/${i.image}`}
-                      className="w-16 h-16 rounded-xl object-cover" 
-                      onError={(e) => e.target.style.display="none"}
-                    />
-                    <div className="flex-1">
-                      <p className="font-bold text-slate-800">{i.name}</p>
-                      <p className="text-slate-500 text-sm">Qty: {i.qty}</p>
-                    </div>
-                    <p className="font-bold text-slate-900">₹{i.price * i.qty}</p>
+          {orders.map((o, idx) => (
+            <motion.div 
+              key={o._id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.1 }}
+            >
+              <Card className="p-6 md:p-8 border-slate-100">
+                
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-900">
+                      Order <span className="text-brand-500">#{o._id.slice(-6).toUpperCase()}</span>
+                    </h3>
+                    <p className="text-slate-500 text-sm mt-1 font-medium">{new Date(o.createdAt).toLocaleString()}</p>
                   </div>
-                ))}
-              </div>
+                  <Badge variant={o.status === "Delivered" ? "success" : "brand"} className="px-4 py-2 text-sm gap-2 uppercase tracking-wide">
+                    {getStatusIcon(o.status)}
+                    {o.status}
+                  </Badge>
+                </div>
 
-              <div className="flex justify-between items-center border-t border-slate-100 pt-6">
-                <p className="text-slate-500 font-medium">Payment: <span className="text-slate-800 font-bold">{o.paymentMethod || "COD"}</span></p>
-                <h3 className="text-2xl font-black text-slate-900">Total: <span className="text-orange-500">₹{o.total}</span></h3>
-              </div>
-            </div>
+                {/* TRACKER */}
+                <div className="mb-10 relative">
+                  <div className="overflow-hidden h-3 mb-4 text-xs flex rounded-full bg-slate-100 shadow-inner">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${getProgress(o.status)}%` }}
+                      transition={{ duration: 1, ease: "easeOut" }}
+                      className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-brand-400 to-brand-600" 
+                    />
+                  </div>
+                  <div className="flex justify-between text-xs font-bold text-slate-400 px-1 uppercase tracking-wider">
+                    <span className={getProgress(o.status) >= 25 ? "text-brand-600" : ""}>Placed</span>
+                    <span className={getProgress(o.status) >= 50 ? "text-brand-600" : ""}>Preparing</span>
+                    <span className={getProgress(o.status) >= 75 ? "text-brand-600" : ""}>On the way</span>
+                    <span className={getProgress(o.status) >= 100 ? "text-emerald-600" : ""}>Delivered</span>
+                  </div>
+                </div>
+
+                <div className="bg-slate-50/50 rounded-2xl p-2 mb-6 border border-slate-100">
+                  {o.items.map((i, iIdx) => (
+                    <div key={iIdx} className="flex items-center gap-4 p-3 border-b border-slate-100 last:border-0 hover:bg-white rounded-xl transition-colors">
+                      <img 
+                        src={i.image?.startsWith('http') ? i.image : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/uploads/${i.image}`}
+                        className="w-16 h-16 rounded-xl object-cover bg-slate-100" 
+                        onError={(e) => { e.target.src = 'https://placehold.co/400x300?text=Food'; }}
+                        alt={i.name}
+                      />
+                      <div className="flex-1">
+                        <p className="font-bold text-slate-900">{i.name}</p>
+                        <p className="text-slate-500 text-sm font-medium mt-1">Qty: {i.qty}</p>
+                      </div>
+                      <p className="font-bold text-slate-900 text-lg">₹{i.price * i.qty}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex justify-between items-center border-t border-slate-100 pt-6">
+                  <div>
+                    <p className="text-slate-500 font-medium text-sm">Payment Method</p>
+                    <p className="text-slate-900 font-bold">{o.paymentMethod || "COD"}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-slate-500 font-medium text-sm mb-1">Total Amount</p>
+                    <h3 className="text-3xl font-black text-brand-600">₹{o.total}</h3>
+                  </div>
+                </div>
+              </Card>
+            </motion.div>
           ))}
         </div>
       )}

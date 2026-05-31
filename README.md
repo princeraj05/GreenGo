@@ -1,11 +1,11 @@
 <div align="center">
-  <img src="https://img.shields.io/badge/Byte-Bite-orange?style=for-the-badge&logo=burgerking&logoColor=white" alt="ByteBite Logo" />
+  <img src="https://img.shields.io/badge/Byte-Bite-FF5A00?style=for-the-badge&logo=doordash&logoColor=white" alt="ByteBite Logo" />
   
-  <h1>🍔 ByteBite - Premium Food Delivery Platform</h1>
-  <p>A full-stack MERN application for seamless food ordering with an ultra-premium user interface.</p>
+  <h1>🍔 ByteBite - Premium SaaS Food Delivery Platform</h1>
+  <p>A production-ready full-stack MERN application for seamless food ordering with an ultra-premium, mobile-responsive user interface.</p>
 
   <p>
-    <a href="#live-demo"><strong>View Live Demo (Coming Soon)</strong></a> ·
+    <a href="#live-demo"><strong>View Live Demo</strong></a> ·
     <a href="#features"><strong>Explore Features</strong></a> ·
     <a href="#installation"><strong>Installation Guide</strong></a>
   </p>
@@ -15,12 +15,15 @@
   ![Express.js](https://img.shields.io/badge/express.js-%23404d59.svg?style=for-the-badge&logo=express&logoColor=%2361DAFB)
   ![MongoDB](https://img.shields.io/badge/MongoDB-%234ea94b.svg?style=for-the-badge&logo=mongodb&logoColor=white)
   ![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)
+  ![Framer Motion](https://img.shields.io/badge/framer--motion-%230055FF.svg?style=for-the-badge&logo=framer&logoColor=white)
 </div>
 
 <br />
 
 ## 🌟 Overview
-ByteBite is a highly-polished, full-stack food delivery application built using the MERN stack. It features a seamless, modern, and engaging user interface powered by Tailwind CSS. The platform is designed to provide a premium experience for both customers ordering food and administrators managing the restaurant.
+ByteBite is a highly-polished, full-stack food delivery application built using the MERN stack. Recently redesigned with a **Stripe/Apple-inspired premium aesthetic**, it features a seamless, modern, and engaging user interface powered by Tailwind CSS, Lucide Icons, and Framer Motion for buttery-smooth animations. 
+
+The platform is designed to provide a premium experience for both customers ordering food and administrators managing the restaurant. It is completely **mobile-responsive**, performant (with React lazy loading), and highly accessible.
 
 ### 🔗 Live Demo
 > **Live Link:** [Add your deployed Vercel/Netlify link here]
@@ -33,13 +36,13 @@ ByteBite is a highly-polished, full-stack food delivery application built using 
 ### 📱 User Dashboard & Public Pages
 <p align="center">
   <img src="https://via.placeholder.com/800x450.png?text=Home+Page+Screenshot" alt="Home Page" width="48%" />
-  <img src="https://via.placeholder.com/800x450.png?text=User+Dashboard+Screenshot" alt="User Dashboard" width="48%" />
+  <img src="https://via.placeholder.com/800x450.png?text=User+Menu+Screenshot" alt="User Menu" width="48%" />
 </p>
 
 ### 🛠️ Admin Control Panel
 <p align="center">
   <img src="https://via.placeholder.com/800x450.png?text=Admin+Dashboard+Screenshot" alt="Admin Dashboard" width="48%" />
-  <img src="https://via.placeholder.com/800x450.png?text=Manage+Foods+Screenshot" alt="Manage Foods" width="48%" />
+  <img src="https://via.placeholder.com/800x450.png?text=Manage+Orders+Screenshot" alt="Manage Orders" width="48%" />
 </p>
 
 ---
@@ -47,16 +50,21 @@ ByteBite is a highly-polished, full-stack food delivery application built using 
 ## ✨ Features
 
 ### For Customers (User Panel)
-- **Beautiful UI:** Modern, responsive design with smooth gradients and glassmorphism.
-- **Dynamic Cart & Checkout:** Seamless add-to-cart functionality with automatic redirection to a beautiful checkout page.
-- **Payment Selection:** Mock payment integration supporting COD, UPI, and Card.
-- **Order Tracking:** Real-time status updates (Pending, Preparing, Delivered).
+- **Ultra-Premium UI:** Modern, fully mobile-responsive design with glassmorphism, soft drop shadows, and refined typography.
+- **Fluid Animations:** Powered by `framer-motion` for page transitions, hover effects, and interactive feedback.
+- **Dynamic Cart & Secure Checkout:** Seamless add-to-cart functionality with automatic redirection to a beautiful, Stripe-like checkout page.
+- **Payment Integration:** Ready for Razorpay (Card, UPI) and Cash on Delivery integration.
+- **Order Tracking:** Real-time visual status updates (Pending, Preparing, Out for Delivery, Delivered) with dynamic progress bars.
 
 ### For Administrators (Admin Panel)
-- **Premium Dashboard:** High-end dark slate and glowing emerald theme for tracking revenue, orders, and users.
-- **Food Management:** Add, edit, and delete menu items with **live image previews**.
-- **Order Fulfillment:** Update order statuses and set live ETAs for customers.
-- **User Control:** Monitor registered users, handle support messages, and block/unblock accounts.
+- **SaaS-Quality Dashboard:** High-end dark sidebar and clean dashboard for tracking revenue, orders, and users with interactive Recharts.
+- **Food Management:** Add, edit, and delete menu items with **live image previews** and featured toggles.
+- **Order Fulfillment:** Update order statuses and set live ETAs for customers with a single click.
+- **User Control:** Monitor registered users, handle support messages, and securely block/unblock accounts.
+
+### Performance Enhancements
+- **Route Splitting:** Implemented `React.lazy()` and `Suspense` for faster initial page loads.
+- **Custom UI Components:** Extracted reusable `Button`, `Card`, `Input`, and `Badge` components wrapped with `tailwind-merge` (`cn` utility) for clean code.
 
 ---
 
@@ -65,8 +73,9 @@ ByteBite is a highly-polished, full-stack food delivery application built using 
 Follow these steps to run ByteBite locally on your machine.
 
 ### Prerequisites
-- Node.js (v14 or higher)
+- Node.js (v18 or higher recommended)
 - MongoDB (Local instance or MongoDB Atlas cluster)
+- Razorpay API Keys (Optional, for payment gateway)
 
 ### 1. Clone the Repository
 ```bash
@@ -84,6 +93,8 @@ Create a `.env` file in the `backend` directory:
 PORT=5000
 MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_secret_key
+RAZORPAY_KEY_ID=your_razorpay_key
+RAZORPAY_KEY_SECRET=your_razorpay_secret
 ```
 Start the backend server:
 ```bash
