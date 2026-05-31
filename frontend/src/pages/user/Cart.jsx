@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { getToken } from "../../utils/getToken";
 
 export default function Cart() {
   const navigate = useNavigate();
@@ -28,12 +29,34 @@ export default function Cart() {
     localStorage.setItem("cart", JSON.stringify(updated));
   };
 
-  const applyPromo = () => {
-    if (promo.toUpperCase() === "BYTEBITE20") {
-      setDiscount(0.2); // 20% off
-      alert("Promo code applied successfully!");
-    } else {
-      alert("Invalid promo code.");
+  const applyPromo = async () => {
+    if (!promo) return;
+    try {
+      const token = await getToken();
+      const subtotalNow = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/coupons/validate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ code: promo, cartTotal: subtotalNow })
+      });
+      const data = await res.json();
+      
+      if (!res.ok) {
+        alert(data.message || "Invalid promo code.");
+        setDiscount(0);
+      } else {
+        if (data.coupon.discountType === "percentage") {
+          setDiscount(data.coupon.discountValue / 100);
+        } else {
+          setDiscount(data.coupon.discountValue / subtotalNow);
+        }
+        alert("Promo code applied successfully!");
+      }
+    } catch (err) {
+      alert("Error applying promo code");
       setDiscount(0);
     }
   };

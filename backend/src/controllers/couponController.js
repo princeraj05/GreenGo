@@ -63,3 +63,35 @@ export const deleteCoupon = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+/* ================= VALIDATE COUPON ================= */
+export const validateCoupon = async (req, res) => {
+  try {
+    const { code, cartTotal } = req.body;
+    
+    const coupon = await Coupon.findOne({ code: code.toUpperCase() });
+    
+    if (!coupon || !coupon.active) {
+      return res.status(400).json({ message: "Invalid or inactive promo code." });
+    }
+    
+    if (new Date() > new Date(coupon.expiryDate)) {
+      return res.status(400).json({ message: "This promo code has expired." });
+    }
+    
+    if (cartTotal < coupon.minimumOrder) {
+      return res.status(400).json({ message: `Minimum order amount of ₹${coupon.minimumOrder} is required.` });
+    }
+    
+    res.json({
+      success: true,
+      coupon: {
+        code: coupon.code,
+        discountType: coupon.discountType,
+        discountValue: coupon.discountValue
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
