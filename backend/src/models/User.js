@@ -18,6 +18,31 @@ const userSchema = new mongoose.Schema(
     required:true
   },
 
+  phone: {
+    type: String,
+    default: ""
+  },
+
+  address: {
+    type: String,
+    default: ""
+  },
+
+  foodPreference: {
+    type: String,
+    default: ""
+  },
+
+  deliveryTime: {
+    type: String,
+    default: ""
+  },
+
+  notifications: {
+    type: String,
+    default: ""
+  },
+
   role:{
     type:String,
     default:"user"

@@ -8,6 +8,7 @@ export const createOrder = async (req, res) => {
       items,
       address,
       phone,
+      paymentMethod,
       subtotal,
       deliveryCharge,
       total
@@ -26,6 +27,7 @@ export const createOrder = async (req, res) => {
 
       address,
       phone,
+      paymentMethod,
       subtotal,
       deliveryCharge,
       total
