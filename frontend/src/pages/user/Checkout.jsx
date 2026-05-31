@@ -24,6 +24,23 @@ export default function Checkout() {
         }
       })
       .catch(err => console.error("Could not fetch settings", err));
+
+    // Fetch user details for auto-fill
+    getToken().then(token => {
+      if(token) {
+        fetch(`${import.meta.env.VITE_API_URL}/api/users/me`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        .then(res => res.json())
+        .then(userData => {
+          if (userData) {
+            if (userData.phone) setPhone(userData.phone);
+            if (userData.address) setAddress(userData.address);
+          }
+        })
+        .catch(err => console.error("Could not fetch user", err));
+      }
+    });
   }, [navigate]);
 
   const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
