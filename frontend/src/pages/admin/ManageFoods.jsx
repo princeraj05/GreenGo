@@ -81,6 +81,14 @@ export default function ManageFoods() {
     } catch (err) { console.log(err); }
   };
 
+  const toggleFeatured = async (id, currentFeatured) => {
+    try {
+      const token = await getToken();
+      await API.put(`/api/foods/${id}`, { featured: !currentFeatured }, { headers: { Authorization: `Bearer ${token}` } });
+      loadFoods();
+    } catch (err) { console.log(err); }
+  };
+
   return (
     <div className="w-full h-full animate-fade-in pb-10">
       
@@ -180,6 +188,13 @@ export default function ManageFoods() {
                 
               {/* Exposed Options Floating on the Image */}
               <div className="absolute top-3 right-3 flex gap-2">
+                <button 
+                   onClick={() => toggleFeatured(f._id, f.featured)}
+                   className={`w-10 h-10 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center shadow-lg transition-colors ${f.featured ? 'text-amber-500' : 'text-slate-400 hover:text-amber-500'}`}
+                   title={f.featured ? "Remove from Featured" : "Mark as Featured"}
+                >
+                  <svg className="w-5 h-5" fill={f.featured ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>
+                </button>
                 <button 
                    onClick={() => startEdit(f)}
                    className="w-10 h-10 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-blue-600 shadow-lg hover:bg-blue-50 transition-colors"

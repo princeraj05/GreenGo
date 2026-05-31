@@ -12,8 +12,10 @@ import OffersSection from "../../components/dashboard/OffersSection";
 
 export default function UserDashboard() {
   const [orders, setOrders] = useState([]);
-  const [foods, setFoods] = useState([]);
+  const [foods, setFoods] = useState([]); // Recommended Foods
   const [user, setUser] = useState({});
+  const [stats, setStats] = useState({ totalOrders: 0, totalSpent: 0, rewardPoints: 0 });
+  const [offers, setOffers] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -25,21 +27,27 @@ export default function UserDashboard() {
       const token = await getToken();
       if (!token) return;
 
-      const [ordersRes, foodsRes, userRes] = await Promise.all([
+      const [ordersRes, recommendedRes, userRes, statsRes, offersRes] = await Promise.all([
         fetch(`${import.meta.env.VITE_API_URL}/api/orders/my`, { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`${import.meta.env.VITE_API_URL}/api/food`),
-        fetch(`${import.meta.env.VITE_API_URL}/api/users/me`, { headers: { Authorization: `Bearer ${token}` } })
+        fetch(`${import.meta.env.VITE_API_URL}/api/dashboard/recommended`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${import.meta.env.VITE_API_URL}/api/users/me`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${import.meta.env.VITE_API_URL}/api/dashboard/user-stats`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${import.meta.env.VITE_API_URL}/api/dashboard/offers`, { headers: { Authorization: `Bearer ${token}` } })
       ]);
 
-      const [ordersData, foodsData, userData] = await Promise.all([
+      const [ordersData, recommendedData, userData, statsData, offersData] = await Promise.all([
         ordersRes.json(),
-        foodsRes.json(),
-        userRes.json()
+        recommendedRes.json(),
+        userRes.json(),
+        statsRes.json(),
+        offersRes.json()
       ]);
 
       setOrders(Array.isArray(ordersData) ? ordersData : []);
-      setFoods(Array.isArray(foodsData) ? foodsData : []);
+      setFoods(Array.isArray(recommendedData) ? recommendedData : []);
       setUser(userData || {});
+      setStats(statsData || { totalOrders: 0, totalSpent: 0, rewardPoints: 0 });
+      setOffers(Array.isArray(offersData) ? offersData : []);
     } catch (err) {
       console.error("Failed to load dashboard data", err);
     } finally {
@@ -75,9 +83,9 @@ export default function UserDashboard() {
       
       <QuickActions />
       
-      <UserStats totalOrders={totalOrders} totalSpent={totalSpent} />
+      <UserStats totalOrders={stats.totalOrders} totalSpent={stats.totalSpent} points={stats.rewardPoints} />
       
-      <OffersSection />
+      <OffersSection offers={offers} />
       
       <RecommendedFoods foods={foods} />
       

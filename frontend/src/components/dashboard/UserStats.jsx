@@ -1,6 +1,4 @@
-export default function UserStats({ totalOrders, totalSpent }) {
-  const points = Math.floor(totalSpent * 0.1); // 1 point per 10 spent
-
+export default function UserStats({ totalOrders, totalSpent, points }) {
   return (
     <div className="mb-10">
       <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">

@@ -74,26 +74,53 @@ export const getMyOrders = async (req,res)=>{
 };
 
 
+import User from "../models/User.js";
+import Food from "../models/Food.js";
+
 /* ================= UPDATE STATUS ================= */
 
 export const updateOrderStatus = async (req,res)=>{
 
   const {status,etaMinutes} = req.body;
+  const orderId = req.params.id;
 
-  const update = {status};
+  try {
+    const order = await Order.findById(orderId);
+    if(!order) return res.status(404).json({message:"Order not found"});
 
-  if(status!=="Delivered" && etaMinutes){
-    update.etaMinutes = etaMinutes;
-    update.etaSetAt = new Date();
+    // Only apply stats when transitioning to Delivered
+    if (status === "Delivered" && order.status !== "Delivered") {
+      // 1. Update User Stats
+      const user = await User.findById(order.userId);
+      if(user){
+        user.totalOrders = (user.totalOrders || 0) + 1;
+        user.totalSpent = (user.totalSpent || 0) + order.total;
+        user.rewardPoints = (user.rewardPoints || 0) + Math.floor(order.total / 10);
+        await user.save();
+      }
+
+      // 2. Update Food Stats
+      for (const item of order.items) {
+        await Food.findByIdAndUpdate(item.foodId, {
+          $inc: { totalOrders: item.qty, revenueGenerated: item.price * item.qty }
+        });
+      }
+    }
+
+    const update = {status};
+    if(status!=="Delivered" && etaMinutes){
+      update.etaMinutes = etaMinutes;
+      update.etaSetAt = new Date();
+    }
+    if(status==="Delivered"){
+      update.etaMinutes = null;
+      update.etaSetAt = null;
+    }
+
+    await Order.findByIdAndUpdate(orderId, update);
+    res.json({success:true});
+  } catch (err) {
+    console.error("Update status error:", err);
+    res.status(500).json({message:"Server error"});
   }
-
-  if(status==="Delivered"){
-    update.etaMinutes = null;
-    update.etaSetAt = null;
-  }
-
-  await Order.findByIdAndUpdate(req.params.id,update);
-
-  res.json({success:true});
-
 };

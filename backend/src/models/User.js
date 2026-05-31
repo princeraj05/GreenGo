@@ -43,6 +43,12 @@ const userSchema = new mongoose.Schema(
     default: ""
   },
 
+  rewardPoints: { type: Number, default: 0 },
+  totalSpent: { type: Number, default: 0 },
+  totalOrders: { type: Number, default: 0 },
+  favoriteCategory: { type: String, default: "" },
+  blocked: { type: Boolean, default: false },
+
   role:{
     type:String,
     default:"user"

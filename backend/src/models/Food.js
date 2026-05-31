@@ -5,6 +5,11 @@ const foodSchema = new mongoose.Schema({
   price: { type: Number, required: true },
   description: String,
   image: String,
+  featured: { type: Boolean, default: false },
+  totalOrders: { type: Number, default: 0 },
+  revenueGenerated: { type: Number, default: 0 },
+  ratingCount: { type: Number, default: 0 },
+  popularityScore: { type: Number, default: 0 },
 }, { timestamps: true });
 
 export default mongoose.model("Food", foodSchema);

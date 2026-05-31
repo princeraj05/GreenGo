@@ -28,6 +28,9 @@ import ManageOrders from "../pages/admin/ManageOrders";
 import ManageUsers from "../pages/admin/ManageUsers";
 import Contacts from "../pages/admin/Contacts";
 import ManageSettings from "../pages/admin/ManageSettings";
+import ManageCoupons from "../pages/admin/ManageCoupons";
+import ManageNotifications from "../pages/admin/ManageNotifications";
+import FoodAnalytics from "../pages/admin/FoodAnalytics";
 
 /* ROUTE GUARDS */
 import PrivateRoute from "./PrivateRoute";
@@ -108,6 +111,12 @@ element={
 <Route path="contacts" element={<Contacts />} />
 
 <Route path="settings" element={<ManageSettings />} />
+
+<Route path="coupons" element={<ManageCoupons />} />
+
+<Route path="notifications" element={<ManageNotifications />} />
+
+<Route path="analytics" element={<FoodAnalytics />} />
 
 </Route>
 
