@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Edit2, Trash2, Star, ImagePlus, UploadCloud, X } from "lucide-react";
+import { Plus, Edit2, Trash2, Star, ImagePlus, UploadCloud, X, UtensilsCrossed } from "lucide-react";
 import API from "../../api/axios";
 import { getToken } from "../../utils/getToken";
 import Button from "../../components/ui/Button";
