@@ -23,6 +23,30 @@ export default function Register() {
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
+  const useCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser.");
+      return;
+    }
+    
+    navigator.geolocation.getCurrentPosition(async (position) => {
+      try {
+        const { latitude, longitude } = position.coords;
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+        const data = await res.json();
+        if (data && data.display_name) {
+          setForm((prev) => ({ ...prev, address: data.display_name }));
+        } else {
+          setForm((prev) => ({ ...prev, address: `Lat: ${latitude}, Lng: ${longitude}` }));
+        }
+      } catch (err) {
+        setForm((prev) => ({ ...prev, address: `Lat: ${position.coords.latitude}, Lng: ${position.coords.longitude}` }));
+      }
+    }, () => {
+      alert("Unable to retrieve your location. Please check your browser permissions.");
+    });
+  };
+
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-gray-50 px-4 py-10 overflow-hidden relative">
       
@@ -71,8 +95,14 @@ export default function Register() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Delivery Address</label>
-              <textarea name="address" required onChange={handleChange} placeholder="Full address for delivery..." rows={3}
+              <div className="flex justify-between items-center mb-2">
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest">Delivery Address</label>
+                <button type="button" onClick={useCurrentLocation} className="text-xs text-orange-600 bg-orange-50 px-3 py-1.5 rounded-lg font-bold hover:bg-orange-100 flex items-center gap-1.5 transition-colors">
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.243-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg> 
+                  Use Current Location
+                </button>
+              </div>
+              <textarea name="address" required value={form.address} onChange={handleChange} placeholder="Full address for delivery..." rows={3}
                 className="w-full px-5 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all font-medium text-gray-900 resize-none" />
             </div>
 
