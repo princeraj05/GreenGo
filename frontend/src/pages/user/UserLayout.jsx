@@ -123,30 +123,31 @@ export default function UserLayout() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col w-full md:pl-64 min-h-screen transition-all duration-300">
+      <div className="flex-1 flex flex-col w-full md:pl-64 min-h-screen transition-all duration-300 bg-slate-100">
         
-        {/* Topbar */}
-        <div className="sticky top-0 z-50 h-16 flex items-center gap-4 px-5 bg-white/80 backdrop-blur-xl border-b border-gray-200/60 shadow-sm md:hidden">
+        {/* Topbar (Mobile Only) */}
+        <div className="sticky top-0 z-40 h-16 flex items-center justify-between px-5 bg-white/80 backdrop-blur-md border-b border-slate-200/60 shadow-sm md:hidden">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center shadow-md">
+              <span className="text-white text-xs">🍔</span>
+            </div>
+            <span className="font-extrabold text-slate-800 tracking-tight text-lg">ByteBite</span>
+          </div>
           <button
             onClick={() => setOpen(!open)}
-            className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-gray-100 transition-colors text-gray-600"
+            className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors text-slate-600 border border-slate-200"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center">
-              <span className="text-white text-xs">🍔</span>
-            </div>
-            <span className="font-extrabold text-gray-800 tracking-tight">ByteBite</span>
-          </div>
         </div>
 
-        {/* Page Content */}
-        <div className="flex-1 bg-gradient-to-br from-orange-50 via-rose-50 to-pink-50 p-4 sm:p-6 lg:p-8">
-          <Outlet />
+        {/* Page Content Container (Floating Style) */}
+        <div className="flex-1 p-3 sm:p-5 lg:p-6 lg:pl-8 h-[calc(100vh-4rem)] md:h-screen overflow-y-auto">
+          <div className="w-full min-h-full bg-white rounded-[2rem] shadow-premium border border-slate-100 overflow-hidden relative p-4 sm:p-6 lg:p-10 animate-fade-in-up">
+            <Outlet />
+          </div>
         </div>
 
       </div>
