@@ -16,6 +16,10 @@ export default function UserDashboard() {
   const [user, setUser] = useState({});
   const [stats, setStats] = useState({ totalOrders: 0, totalSpent: 0, rewardPoints: 0 });
   const [offers, setOffers] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [dismissedNotifs, setDismissedNotifs] = useState(
+    JSON.parse(localStorage.getItem("dismissedNotifs")) || []
+  );
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -27,20 +31,22 @@ export default function UserDashboard() {
       const token = await getToken();
       if (!token) return;
 
-      const [ordersRes, recommendedRes, userRes, statsRes, offersRes] = await Promise.all([
+      const [ordersRes, recommendedRes, userRes, statsRes, offersRes, notifRes] = await Promise.all([
         fetch(`${import.meta.env.VITE_API_URL}/api/orders/my`, { headers: { Authorization: `Bearer ${token}` } }),
         fetch(`${import.meta.env.VITE_API_URL}/api/dashboard/recommended`, { headers: { Authorization: `Bearer ${token}` } }),
         fetch(`${import.meta.env.VITE_API_URL}/api/users/me`, { headers: { Authorization: `Bearer ${token}` } }),
         fetch(`${import.meta.env.VITE_API_URL}/api/dashboard/user-stats`, { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`${import.meta.env.VITE_API_URL}/api/dashboard/offers`, { headers: { Authorization: `Bearer ${token}` } })
+        fetch(`${import.meta.env.VITE_API_URL}/api/dashboard/offers`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${import.meta.env.VITE_API_URL}/api/notifications/my`, { headers: { Authorization: `Bearer ${token}` } })
       ]);
 
-      const [ordersData, recommendedData, userData, statsData, offersData] = await Promise.all([
+      const [ordersData, recommendedData, userData, statsData, offersData, notifData] = await Promise.all([
         ordersRes.json(),
         recommendedRes.json(),
         userRes.json(),
         statsRes.json(),
-        offersRes.json()
+        offersRes.json(),
+        notifRes.json()
       ]);
 
       setOrders(Array.isArray(ordersData) ? ordersData : []);
@@ -48,6 +54,7 @@ export default function UserDashboard() {
       setUser(userData || {});
       setStats(statsData || { totalOrders: 0, totalSpent: 0, rewardPoints: 0 });
       setOffers(Array.isArray(offersData) ? offersData : []);
+      setNotifications(Array.isArray(notifData) ? notifData : []);
     } catch (err) {
       console.error("Failed to load dashboard data", err);
     } finally {
@@ -73,6 +80,32 @@ export default function UserDashboard() {
 
   return (
     <div className="w-full max-w-6xl mx-auto animate-fade-in pb-10 bg-slate-50 min-h-screen">
+      
+      {/* Notifications Bar */}
+      {notifications.filter(n => !dismissedNotifs.includes(n._id)).map(n => (
+        <div key={n._id} className={`px-4 py-3 rounded-2xl mb-6 shadow-lg flex items-center justify-between animate-fade-in mx-4 sm:mx-0 mt-4 ${n.type === 'Error / Alert' ? 'bg-red-600 text-white' : 'bg-blue-600 text-white'}`}>
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">
+              {n.type === 'Success / Offer' ? '🎉' : n.type === 'Error / Alert' ? '⚠️' : '🔔'}
+            </span>
+            <div>
+              <h4 className="font-bold text-sm">{n.title}</h4>
+              <p className="opacity-90 text-xs">{n.message}</p>
+            </div>
+          </div>
+          <button 
+            onClick={() => {
+              const updated = [...dismissedNotifs, n._id];
+              setDismissedNotifs(updated);
+              localStorage.setItem("dismissedNotifs", JSON.stringify(updated));
+            }}
+            className="w-8 h-8 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+          >
+            ✖
+          </button>
+        </div>
+      ))}
+
       <DashboardHero userName={user.name} />
       
       <ActiveOrdersCard activeOrdersCount={activeOrdersCount} />
