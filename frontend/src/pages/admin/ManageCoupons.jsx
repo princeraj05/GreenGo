@@ -13,7 +13,7 @@ export default function ManageCoupons() {
   const loadCoupons = async () => {
     try {
       const token = await getToken();
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/coupons/all`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/coupons`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
