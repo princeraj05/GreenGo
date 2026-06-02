@@ -8,6 +8,20 @@ const escapeHtml = (value) =>
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
 
+const isPublicEmailDomain = (email) => {
+  const lowercase = String(email || "").toLowerCase();
+  return (
+    lowercase.includes("@gmail.") ||
+    lowercase.includes("@yahoo.") ||
+    lowercase.includes("@outlook.") ||
+    lowercase.includes("@hotmail.") ||
+    lowercase.includes("@icloud.") ||
+    lowercase.includes("@aol.") ||
+    lowercase.includes("@proton.") ||
+    lowercase.includes("@zoho.")
+  );
+};
+
 const getTransporter = () => {
   const host = process.env.SMTP_HOST;
   const service = process.env.SMTP_SERVICE || process.env.EMAIL_SERVICE || "gmail";
@@ -104,18 +118,28 @@ export const sendContactReplyEmail = async ({
     </div>
   `;
 
+  const resendKey = process.env.RESEND_API_KEY || process.env.RESEND_API || process.env.resend_api;
+  const brevoKey = process.env.BREVO_API_KEY || process.env.BREVO_API || process.env.brevo_api;
+
   // 1. Try Resend HTTP API if configured
-  if (process.env.RESEND_API_KEY) {
+  if (resendKey) {
     console.log("Attempting to send email via Resend API...");
     try {
+      let cleanFrom = from;
+      const senderEmail = sender || "";
+      if (isPublicEmailDomain(senderEmail)) {
+        console.log(`Sender "${senderEmail}" is on a public domain. Using Resend onboarding@resend.dev fallback.`);
+        cleanFrom = `"ByteBite Support" <onboarding@resend.dev>`;
+      }
+
       const response = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${process.env.RESEND_API_KEY}`,
+          "Authorization": `Bearer ${resendKey}`,
         },
         body: JSON.stringify({
-          from: from.includes("<") ? from : `"ByteBite Support" <${from}>`,
+          from: cleanFrom,
           to: [to],
           replyTo: replyTo,
           subject: emailSubject,
@@ -137,7 +161,7 @@ export const sendContactReplyEmail = async ({
   }
 
   // 2. Try Brevo HTTP API if configured
-  if (process.env.BREVO_API_KEY) {
+  if (brevoKey) {
     console.log("Attempting to send email via Brevo API...");
     try {
       const response = await fetch("https://api.brevo.com/v3/smtp/email", {
@@ -145,7 +169,7 @@ export const sendContactReplyEmail = async ({
         headers: {
           "accept": "application/json",
           "content-type": "application/json",
-          "api-key": process.env.BREVO_API_KEY,
+          "api-key": brevoKey,
         },
         body: JSON.stringify({
           sender: {
