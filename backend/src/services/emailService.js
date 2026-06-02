@@ -20,25 +20,51 @@ const getTransporter = () => {
     );
   }
 
+  let transporterConfig;
+
   if (host) {
-    return nodemailer.createTransport({
+    const port = Number(process.env.SMTP_PORT || 587);
+    const secure = process.env.SMTP_SECURE === "true";
+    transporterConfig = {
       host,
-      port: Number(process.env.SMTP_PORT || 587),
-      secure: process.env.SMTP_SECURE === "true",
+      port,
+      secure,
+      requireTLS: port === 587,
       auth: { user, pass },
       connectionTimeout: 10000, // 10 seconds
       greetingTimeout: 10000,   // 10 seconds
       socketTimeout: 15000,     // 15 seconds
-    });
+    };
+  } else if (service.toLowerCase() === "gmail") {
+    transporterConfig = {
+      host: "smtp.gmail.com",
+      port: 587,
+      secure: false,
+      requireTLS: true,
+      auth: { user, pass },
+      connectionTimeout: 10000, // 10 seconds
+      greetingTimeout: 10000,   // 10 seconds
+      socketTimeout: 15000,     // 15 seconds
+    };
+  } else {
+    transporterConfig = {
+      service,
+      auth: { user, pass },
+      connectionTimeout: 10000, // 10 seconds
+      greetingTimeout: 10000,   // 10 seconds
+      socketTimeout: 15000,     // 15 seconds
+    };
   }
 
-  return nodemailer.createTransport({
-    service,
-    auth: { user, pass },
-    connectionTimeout: 10000, // 10 seconds
-    greetingTimeout: 10000,   // 10 seconds
-    socketTimeout: 15000,     // 15 seconds
-  });
+  const activeHost = transporterConfig.host || `service:${transporterConfig.service}`;
+  const activePort = transporterConfig.port || "default";
+  console.log(`Configuring SMTP transporter: host/service=${activeHost}, port=${activePort}, user=${user}`);
+
+  return {
+    transporter: nodemailer.createTransport(transporterConfig),
+    host: activeHost,
+    port: activePort,
+  };
 };
 
 export const sendContactReplyEmail = async ({
@@ -148,7 +174,18 @@ export const sendContactReplyEmail = async ({
 
   // 3. Fallback to Nodemailer SMTP
   console.log("Attempting to send email via standard SMTP...");
-  const transporter = getTransporter();
+  const { transporter, host: activeHost, port: activePort } = getTransporter();
+
+  console.log(`Verifying SMTP connection to ${activeHost}:${activePort}...`);
+  try {
+    await transporter.verify();
+    console.log(`SMTP connection verification SUCCEEDED for ${activeHost}:${activePort}`);
+  } catch (verifyErr) {
+    console.error(`SMTP connection verification FAILED for ${activeHost}:${activePort}:`, verifyErr);
+    throw new Error(`SMTP connection verification failed: ${verifyErr.message || verifyErr}`);
+  }
+
+  console.log(`Sending mail from "${from}" to "${to}" via ${activeHost}:${activePort}...`);
   return transporter.sendMail({
     from,
     to,
