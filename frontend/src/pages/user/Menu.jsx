@@ -5,8 +5,9 @@ import { Search, ShoppingCart, UtensilsCrossed } from "lucide-react";
 import Button from "../../components/ui/Button";
 import Card from "../../components/ui/Card";
 import Input from "../../components/ui/Input";
+import { getApiUrl, getImageUrl } from "../../utils/getApiUrl";
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API = getApiUrl();
 
 export default function Menu() {
   const [foods, setFoods] = useState([]);
@@ -152,7 +153,7 @@ export default function Menu() {
                   <Card hover className="h-full flex flex-col overflow-hidden group border-slate-100">
                     <div className="relative h-56 overflow-hidden bg-slate-50 p-2">
                       <img
-                        src={food.image?.startsWith('http') ? food.image : `${API}/uploads/${food.image}`}
+                        src={getImageUrl(food.image)}
                         alt={food.name}
                         className="w-full h-full object-cover rounded-[1.25rem] transition-transform duration-700 group-hover:scale-110"
                         onError={(e) => { e.target.src = 'https://placehold.co/400x300?text=Food'; }}

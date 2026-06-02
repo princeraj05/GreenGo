@@ -6,6 +6,7 @@ import { getToken } from "../../utils/getToken";
 import Button from "../../components/ui/Button";
 import Card from "../../components/ui/Card";
 import Input from "../../components/ui/Input";
+import { getApiUrl, getImageUrl } from "../../utils/getApiUrl";
 
 export default function Cart() {
   const navigate = useNavigate();
@@ -41,7 +42,7 @@ export default function Cart() {
     try {
       const token = await getToken();
       const subtotalNow = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/coupons/validate`, {
+      const res = await fetch(`${getApiUrl()}/api/coupons/validate`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -120,7 +121,7 @@ export default function Cart() {
                 >
                   <Card hover className="p-4 md:p-6 flex flex-col sm:flex-row items-center gap-6 group border-slate-100">
                     <img
-                      src={item.image?.startsWith('http') ? item.image : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/uploads/${item.image}`}
+                      src={getImageUrl(item.image)}
                       alt={item.name}
                       className="w-28 h-28 object-cover rounded-[1.25rem] bg-slate-50 shadow-inner group-hover:scale-105 transition-transform"
                       onError={(e) => { e.target.src = 'https://placehold.co/400x300?text=Food'; }}

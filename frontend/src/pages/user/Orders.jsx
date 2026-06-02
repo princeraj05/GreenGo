@@ -4,6 +4,7 @@ import { Package, Clock, CheckCircle, ChefHat, Truck, ShoppingBag } from "lucide
 import { getToken } from "../../utils/getToken";
 import Card from "../../components/ui/Card";
 import Badge from "../../components/ui/Badge";
+import { getApiUrl, getImageUrl } from "../../utils/getApiUrl";
 
 export default function Orders() {
   const [orders, setOrders] = useState([]);
@@ -19,7 +20,7 @@ export default function Orders() {
     try {
       const token = await getToken();
       if (!token) return;
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/orders/my`, {
+      const res = await fetch(`${getApiUrl()}/api/orders/my`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if(res.ok) setOrders(await res.json());
@@ -120,7 +121,7 @@ export default function Orders() {
                   {o.items.map((i, iIdx) => (
                     <div key={iIdx} className="flex items-center gap-4 p-3 border-b border-slate-100 last:border-0 hover:bg-white rounded-xl transition-colors">
                       <img 
-                        src={i.image?.startsWith('http') ? i.image : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/uploads/${i.image}`}
+                        src={getImageUrl(i.image)}
                         className="w-16 h-16 rounded-xl object-cover bg-slate-100" 
                         onError={(e) => { e.target.src = 'https://placehold.co/400x300?text=Food'; }}
                         alt={i.name}

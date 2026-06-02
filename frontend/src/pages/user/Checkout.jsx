@@ -294,6 +294,13 @@ export default function Checkout() {
                   </label>
                 ))}
               </div>
+
+              <div className="mt-6 p-4 rounded-2xl bg-amber-50/50 border border-amber-100 flex items-start gap-3">
+                <span className="text-sm">ℹ️</span>
+                <p className="text-xs text-amber-800 font-medium leading-relaxed">
+                  If payment icons, UPI logos, or QR codes fail to load, please temporarily disable any ad-blockers, tracking protection, or privacy shields (such as Brave Shield) for this site. Security extensions often mistakenly block secure payment assets.
+                </p>
+              </div>
             </Card>
           </motion.div>
         </div>
