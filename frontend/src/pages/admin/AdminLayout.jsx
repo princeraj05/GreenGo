@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { 
   LayoutDashboard, UtensilsCrossed, Package, Users, 
   MessageSquare, Ticket, Bell, LineChart, Settings, 
-  LogOut, Menu, X
+  LogOut, Menu, X, Star
 } from "lucide-react";
 import { getToken } from "../../utils/getToken";
 import { cn } from "../../utils/cn";
@@ -60,6 +60,7 @@ export default function AdminLayout() {
     { to: "/admin/coupons", label: "Coupons", icon: <Ticket size={20} /> },
     { to: "/admin/notifications", label: "Notifications", icon: <Bell size={20} /> },
     { to: "/admin/analytics", label: "Analytics", icon: <LineChart size={20} /> },
+    { to: "/admin/reviews", label: "Reviews", icon: <Star size={20} /> },
     { to: "/admin/settings", label: "Settings", icon: <Settings size={20} /> },
   ];
 

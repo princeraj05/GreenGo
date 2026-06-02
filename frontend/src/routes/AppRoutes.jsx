@@ -36,6 +36,7 @@ const ManageSettings = lazy(() => import("../pages/admin/ManageSettings"));
 const ManageCoupons = lazy(() => import("../pages/admin/ManageCoupons"));
 const ManageNotifications = lazy(() => import("../pages/admin/ManageNotifications"));
 const FoodAnalytics = lazy(() => import("../pages/admin/FoodAnalytics"));
+const ManageReviews = lazy(() => import("../pages/admin/ManageReviews"));
 
 const SuspenseLoader = () => (
   <div className="flex justify-center items-center h-[60vh]">
@@ -94,6 +95,7 @@ export default function AppRoutes() {
           <Route path="coupons" element={<ManageCoupons />} />
           <Route path="notifications" element={<ManageNotifications />} />
           <Route path="analytics" element={<FoodAnalytics />} />
+          <Route path="reviews" element={<ManageReviews />} />
         </Route>
 
         {/* FALLBACK */}

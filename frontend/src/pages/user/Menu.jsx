@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ShoppingCart, UtensilsCrossed } from "lucide-react";
+import { Search, ShoppingCart, UtensilsCrossed, Star, X } from "lucide-react";
 import Button from "../../components/ui/Button";
 import Card from "../../components/ui/Card";
 import Input from "../../components/ui/Input";
@@ -15,6 +15,21 @@ export default function Menu() {
   const [category, setCategory] = useState("All");
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const [selectedFood, setSelectedFood] = useState(null);
+  const [foodReviews, setFoodReviews] = useState([]);
+
+  const selectFoodDetails = async (food) => {
+    setSelectedFood(food);
+    setFoodReviews([]);
+    try {
+      const res = await fetch(`${API}/api/reviews/food/${food._id}`);
+      if(res.ok) {
+        setFoodReviews(await res.json());
+      }
+    } catch (err) {
+      console.error("Failed to load reviews for food:", err);
+    }
+  };
 
   useEffect(() => {
     loadFoods();
@@ -151,7 +166,10 @@ export default function Menu() {
                   transition={{ duration: 0.3, delay: i * 0.05 }}
                 >
                   <Card hover className="h-full flex flex-col overflow-hidden group border-slate-100">
-                    <div className="relative h-56 overflow-hidden bg-slate-50 p-2">
+                    <div 
+                      onClick={() => selectFoodDetails(food)}
+                      className="relative h-56 overflow-hidden bg-slate-50 p-2 cursor-pointer"
+                    >
                       <img
                         src={getImageUrl(food.image)}
                         alt={food.name}
@@ -164,7 +182,19 @@ export default function Menu() {
                     </div>
 
                     <div className="p-6 flex-1 flex flex-col">
-                      <h3 className="text-xl font-bold text-slate-900 mb-2 line-clamp-1 group-hover:text-brand-600 transition-colors">{food.name}</h3>
+                      <h3 
+                        onClick={() => selectFoodDetails(food)}
+                        className="text-xl font-bold text-slate-900 mb-1 line-clamp-1 group-hover:text-brand-600 transition-colors cursor-pointer"
+                      >
+                        {food.name}
+                      </h3>
+
+                      {/* Ratings stars count */}
+                      <div className="flex items-center gap-1 mb-3 text-[11px] font-bold text-slate-400 bg-slate-50 px-2.5 py-1 rounded-lg w-fit border border-slate-100">
+                        <Star size={12} className={food.rating > 0 ? "text-amber-500 fill-amber-500" : "text-slate-300"} />
+                        <span>{food.rating > 0 ? `${food.rating.toFixed(1)} (${food.ratingCount})` : "No reviews"}</span>
+                      </div>
+
                       <p className="text-sm text-slate-500 line-clamp-2 flex-1 mb-6 font-medium leading-relaxed">{food.description}</p>
                       
                       <Button onClick={() => addToCart(food)} className="w-full gap-2 group-hover:shadow-brand-500/30">
@@ -179,6 +209,105 @@ export default function Menu() {
           </AnimatePresence>
         </motion.div>
       )}
+      {/* ── FOOD DETAILS MODAL ── */}
+      <AnimatePresence>
+        {selectedFood && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[2000] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 w-full max-w-2xl overflow-hidden flex flex-col max-h-[85vh]"
+            >
+              {/* Image & Header */}
+              <div className="relative h-64 sm:h-80 bg-slate-50 shrink-0">
+                <img 
+                  src={getImageUrl(selectedFood.image)} 
+                  alt={selectedFood.name}
+                  className="w-full h-full object-cover"
+                  onError={(e) => { e.target.src = 'https://placehold.co/600x400?text=Food'; }}
+                />
+                <button 
+                  onClick={() => setSelectedFood(null)}
+                  className="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-slate-700 shadow-md hover:bg-white transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Details & Reviews */}
+              <div className="p-6 sm:p-8 flex-1 overflow-y-auto space-y-6">
+                <div>
+                  <div className="flex justify-between items-start gap-4 mb-3">
+                    <h2 className="text-3xl font-black text-slate-900 tracking-tight">{selectedFood.name}</h2>
+                    <span className="text-2xl font-black text-brand-600 shrink-0">₹{selectedFood.price}</span>
+                  </div>
+                  
+                  {/* Rating summary */}
+                  <div className="flex items-center gap-2 text-sm font-extrabold text-slate-600 bg-slate-50 px-3.5 py-2 rounded-xl w-fit border border-slate-100">
+                    <Star size={16} className="text-amber-500 fill-amber-500" />
+                    <span>{selectedFood.rating > 0 ? `${selectedFood.rating.toFixed(1)} ★ (${selectedFood.ratingCount} reviews)` : "No reviews yet"}</span>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Description</h4>
+                  <p className="text-slate-600 leading-relaxed font-medium">{selectedFood.description || "No description available."}</p>
+                </div>
+
+                <hr className="border-slate-100" />
+
+                {/* Reviews List */}
+                <div>
+                  <h3 className="text-xl font-black text-slate-900 tracking-tight mb-4">Customer Reviews</h3>
+                  {foodReviews.length === 0 ? (
+                    <div className="bg-slate-50 rounded-2xl p-6 text-center border border-slate-100">
+                      <p className="text-slate-500 font-medium">No reviews for this dish yet. Be the first to try it and write a review!</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {foodReviews.map((r) => (
+                        <div key={r._id} className="bg-slate-50 rounded-2xl p-5 border border-slate-100/60">
+                          <div className="flex justify-between items-start gap-4 mb-3">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full bg-brand-50 text-brand-600 font-black text-sm flex items-center justify-center border border-brand-100">
+                                {r.userName ? r.userName[0].toUpperCase() : "U"}
+                              </div>
+                              <div>
+                                <h5 className="font-bold text-slate-800 text-sm">{r.userName}</h5>
+                                <span className="text-[10px] font-bold text-slate-400">
+                                  {new Date(r.createdAt).toLocaleDateString()}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex gap-0.5 text-yellow-400 bg-white border border-slate-100 px-2 py-1 rounded-lg">
+                              {[...Array(r.rating)].map((_, idx) => (
+                                <Star key={idx} size={12} fill="currentColor" className="text-yellow-400" />
+                              ))}
+                              {[...Array(5 - r.rating)].map((_, idx) => (
+                                <Star key={idx} size={12} className="text-slate-200" />
+                              ))}
+                            </div>
+                          </div>
+                          <p className="text-slate-600 text-sm leading-relaxed font-medium">"{r.reviewText}"</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Add to Cart button */}
+              <div className="p-6 border-t border-slate-100 bg-white">
+                <Button onClick={() => { addToCart(selectedFood); setSelectedFood(null); }} className="w-full gap-2 py-4 text-base rounded-2xl">
+                  <ShoppingCart size={20} />
+                  Add to Cart • ₹{selectedFood.price}
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

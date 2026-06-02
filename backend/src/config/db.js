@@ -1,9 +1,13 @@
 import mongoose from "mongoose";
+import { seedInitialReviews } from "./seedReviews.js";
 
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI);
     console.log("✅ MongoDB Atlas Connected");
+    
+    // Auto seed reviews if collection is empty
+    await seedInitialReviews();
   } catch (err) {
     console.error("❌ MongoDB error:", err.message);
     process.exit(1);

@@ -1,12 +1,30 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, Star, Clock, ShoppingBag, Smartphone, MapPin } from "lucide-react";
 import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
 import Card from "../../components/ui/Card";
+import { getApiUrl } from "../../utils/getApiUrl";
 
 export default function Home() {
   const navigate = useNavigate();
+  const [reviews, setReviews] = useState([]);
+
+  useEffect(() => {
+    async function fetchReviews() {
+      try {
+        const res = await fetch(`${getApiUrl()}/api/reviews?limit=3`);
+        if (res.ok) {
+          const data = await res.json();
+          setReviews(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch reviews:", err);
+      }
+    }
+    fetchReviews();
+  }, []);
 
   const menuItems = [
     { emoji: "🍔", name: "Classic Burger", price: "₹149", tag: "Bestseller", color: "from-brand-400 to-brand-600" },
@@ -182,25 +200,49 @@ export default function Home() {
           </motion.div>
 
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {testimonials.map((t, i) => (
-              <motion.div variants={fadeIn} key={t.name}>
-                <Card className="p-10 border-slate-100">
-                  <div className="flex gap-1.5 mb-6 text-yellow-400">
-                    {[...Array(t.stars)].map((_, idx) => (
-                      <Star key={idx} size={20} fill="currentColor" className="text-yellow-400" />
-                    ))}
-                  </div>
-                  <p className="text-slate-600 leading-loose font-medium mb-8 text-lg">"{t.text}"</p>
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-full bg-slate-100 text-slate-600 font-black text-xl flex items-center justify-center border border-slate-200">
-                      {t.name[0]}
-                    </div>
-                    <div>
-                      <h5 className="font-bold text-slate-900 text-lg">{t.name}</h5>
-                      <span className="text-sm font-medium text-slate-500 flex items-center gap-1 mt-0.5">
-                        <MapPin size={14} /> {t.city}
+            {(reviews.length > 0 ? reviews : testimonials.map(t => ({
+              _id: t.name,
+              userName: t.name,
+              reviewText: t.text,
+              rating: t.stars,
+              foodName: "General Service",
+              city: t.city,
+              createdAt: new Date().toISOString()
+            }))).map((r, i) => (
+              <motion.div variants={fadeIn} key={r._id}>
+                <Card className="p-10 border-slate-100 h-full flex flex-col justify-between">
+                  <div>
+                    <div className="flex justify-between items-start mb-6 gap-4">
+                      <div className="flex gap-1 text-yellow-400">
+                        {[...Array(r.rating)].map((_, idx) => (
+                          <Star key={idx} size={18} fill="currentColor" className="text-yellow-400" />
+                        ))}
+                        {[...Array(5 - r.rating)].map((_, idx) => (
+                          <Star key={idx} size={18} className="text-slate-200" />
+                        ))}
+                      </div>
+                      <span className="text-xs font-extrabold text-brand-600 uppercase tracking-wider bg-brand-50 border border-brand-100 px-2.5 py-1 rounded-lg truncate max-w-[150px]">
+                        {r.foodName || "General"}
                       </span>
                     </div>
+                    <p className="text-slate-600 leading-relaxed font-medium mb-8 text-base">"{r.reviewText}"</p>
+                  </div>
+                  
+                  <div className="flex items-center justify-between border-t border-slate-100/60 pt-6">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-full bg-slate-50 text-slate-700 font-black text-lg flex items-center justify-center border border-slate-200 shadow-inner">
+                        {r.userName ? r.userName[0].toUpperCase() : "U"}
+                      </div>
+                      <div>
+                        <h5 className="font-bold text-slate-900 text-sm">{r.userName}</h5>
+                        <span className="text-[11px] font-medium text-slate-500 flex items-center gap-1 mt-0.5">
+                          <MapPin size={12} /> {r.city || "Verified Buyer"}
+                        </span>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-bold text-slate-400">
+                      {new Date(r.createdAt).toLocaleDateString()}
+                    </span>
                   </div>
                 </Card>
               </motion.div>

@@ -25,6 +25,7 @@ import dashboardRoutes from "./routes/dashboardRoutes.js";
 import adminAnalyticsRoutes from "./routes/adminAnalyticsRoutes.js";
 import couponRoutes from "./routes/couponRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
+import reviewRoutes from "./routes/reviewRoutes.js";
 
 dotenv.config();
 connectDB();
@@ -83,6 +84,7 @@ app.use("/api/admin/contacts", adminContactRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/settings", settingsRoutes);
+app.use("/api/reviews", reviewRoutes);
 
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/admin/analytics", adminAnalyticsRoutes);
