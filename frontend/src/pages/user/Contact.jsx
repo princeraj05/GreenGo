@@ -8,6 +8,26 @@ export default function Contact() {
   const [loading, setLoading] = useState(false);
   const chatEndRef = useRef(null);
 
+  async function loadUserProfile() {
+    try {
+      const token = await getToken();
+      if (!token) return;
+
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const user = await res.json();
+
+      setForm((prev) => ({
+        ...prev,
+        name: prev.name || user?.name || "",
+        email: prev.email || user?.email || "",
+      }));
+    } catch (err) {
+      console.error("Failed to load user profile", err);
+    }
+  }
+
   async function loadMyContacts() {
     try {
       const token = await getToken();
@@ -24,7 +44,7 @@ export default function Contact() {
   }
 
   useEffect(() => {
-    // Initial fetch restores the user's support chat history.
+    loadUserProfile();
     loadMyContacts();
   }, []);
 
