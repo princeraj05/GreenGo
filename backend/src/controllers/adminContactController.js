@@ -44,8 +44,10 @@ export const replyToContact = async (req, res) => {
         contact.emailReplyStatus = "failed";
         contact.emailReplyError = emailErr.message;
         await contact.save();
-        return res.status(500).json({
-          message: "Reply saved, but email could not be sent",
+        return res.json({
+          success: true,
+          emailSent: false,
+          message: "Reply saved. Email will send after SMTP is configured.",
           error: emailErr.message,
         });
       }
@@ -58,6 +60,7 @@ export const replyToContact = async (req, res) => {
 
     res.json({
       success: true,
+      emailSent: shouldSendEmail,
       message: shouldSendEmail
         ? "Reply sent to user's email"
         : "Reply sent to user's chat",

@@ -112,7 +112,13 @@ export default function Contacts() {
                     </p>
                     <p className="text-sm text-emerald-700 leading-relaxed">{contact.reply}</p>
                     {contact.replyDelivery === "email" && (
-                      <p className="text-[11px] text-emerald-600 font-semibold mt-2">
+                      <p
+                        className={`text-[11px] font-semibold mt-2 ${
+                          contact.emailReplyStatus === "sent"
+                            ? "text-emerald-600"
+                            : "text-amber-600"
+                        }`}
+                      >
                         Email status: {contact.emailReplyStatus || "sent"}
                       </p>
                     )}
