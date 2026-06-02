@@ -204,6 +204,7 @@ export default function Contacts() {
                               }`}
                             >
                               Email status: {message.emailReplyStatus || "sent"}
+                              {message.emailReplyError ? ` - ${message.emailReplyError}` : ""}
                             </p>
                           )}
                         </div>

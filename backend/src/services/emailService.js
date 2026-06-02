@@ -10,17 +10,27 @@ const escapeHtml = (value) =>
 
 const getTransporter = () => {
   const host = process.env.SMTP_HOST;
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
+  const service = process.env.SMTP_SERVICE || process.env.EMAIL_SERVICE || "gmail";
+  const user = process.env.SMTP_USER || process.env.EMAIL_USER || process.env.MAIL_USER;
+  const pass = process.env.SMTP_PASS || process.env.EMAIL_PASS || process.env.MAIL_PASS;
 
-  if (!host || !user || !pass) {
-    throw new Error("SMTP settings missing. Add SMTP_HOST, SMTP_USER and SMTP_PASS.");
+  if (!user || !pass) {
+    throw new Error(
+      "Email settings missing. Add EMAIL_USER and EMAIL_PASS, or SMTP_USER and SMTP_PASS."
+    );
+  }
+
+  if (host) {
+    return nodemailer.createTransport({
+      host,
+      port: Number(process.env.SMTP_PORT || 587),
+      secure: process.env.SMTP_SECURE === "true",
+      auth: { user, pass },
+    });
   }
 
   return nodemailer.createTransport({
-    host,
-    port: Number(process.env.SMTP_PORT || 587),
-    secure: process.env.SMTP_SECURE === "true",
+    service,
     auth: { user, pass },
   });
 };
@@ -33,8 +43,9 @@ export const sendContactReplyEmail = async ({
   originalMessage,
 }) => {
   const transporter = getTransporter();
-  const from = process.env.MAIL_FROM || `"ByteBite Support" <${process.env.SMTP_USER}>`;
-  const replyTo = process.env.ADMIN_REPLY_TO || process.env.SMTP_USER;
+  const sender = process.env.SMTP_USER || process.env.EMAIL_USER || process.env.MAIL_USER;
+  const from = process.env.MAIL_FROM || `"ByteBite Support" <${sender}>`;
+  const replyTo = process.env.ADMIN_REPLY_TO || sender;
   const safeName = name || "there";
 
   return transporter.sendMail({
