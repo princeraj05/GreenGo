@@ -156,6 +156,7 @@ export default function Checkout() {
       }
 
       localStorage.removeItem("cart");
+      window.dispatchEvent(new Event("cart-updated"));
       navigate("/user/orders");
     } catch (err) {
       console.error("Final Order Error:", err);

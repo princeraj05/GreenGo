@@ -1,9 +1,10 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   LayoutDashboard, UtensilsCrossed, Package, Users, 
   MessageSquare, Ticket, Bell, LineChart, Settings, 
-  LogOut, Menu, X, Star
+  LogOut, Menu, X, Star, Plus, MoreHorizontal
 } from "lucide-react";
 import { getToken } from "../../utils/getToken";
 import { cn } from "../../utils/cn";
@@ -14,10 +15,31 @@ export default function AdminLayout() {
   const [open, setOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
+  // Mobile Bottom Navigation and Drawer State
+  const [showBottomNav, setShowBottomNav] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+  const [moreOpen, setMoreOpen] = useState(false);
+
   useEffect(() => { 
     loadAdmin(); 
     loadAlerts();
   }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (typeof window !== "undefined") {
+        if (window.scrollY > lastScrollY && window.scrollY > 80) {
+          setShowBottomNav(false);
+        } else {
+          setShowBottomNav(true);
+        }
+        setLastScrollY(window.scrollY);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [lastScrollY]);
 
   const loadAdmin = async () => {
     const token = await getToken();
@@ -31,7 +53,7 @@ export default function AdminLayout() {
         setName(data.name);
       }
     } catch(e) {
-      console.error(e);
+      console.error("Failed to load admin profile:", e);
     }
   };
 
@@ -47,11 +69,11 @@ export default function AdminLayout() {
         setUnreadCount(data.unreadContacts || 0);
       }
     } catch(e) {
-      console.error(e);
+      console.error("Failed to load admin unread count:", e);
     }
   };
 
-  const navLinks = [
+  const desktopNavLinks = [
     { to: "/admin", end: true, label: "Dashboard", icon: <LayoutDashboard size={20} /> },
     { to: "/admin/foods", label: "Manage Foods", icon: <UtensilsCrossed size={20} /> },
     { to: "/admin/orders", label: "Orders", icon: <Package size={20} /> },
@@ -64,10 +86,34 @@ export default function AdminLayout() {
     { to: "/admin/settings", label: "Settings", icon: <Settings size={20} /> },
   ];
 
+  // Mobile navigation bottom bar buttons (max 5 buttons, with last one being 'More')
+  const mobileNavLinks = [
+    { to: "/admin", end: true, label: "Dashboard", icon: <LayoutDashboard size={20} /> },
+    { to: "/admin/users", label: "Users", icon: <Users size={20} /> },
+    { to: "/admin/foods", label: "Foods", icon: <UtensilsCrossed size={20} /> },
+    { to: "/admin/orders", label: "Orders", icon: <Package size={20} /> },
+    { to: "/admin/reviews", label: "Reviews", icon: <Star size={20} /> },
+  ];
+
+  const handleLogout = () => {
+    setMoreOpen(false);
+    navigate("/login");
+  };
+
+  // List of links in the Mobile Bottom Sheet
+  const moreSheetLinks = [
+    { to: "/admin/contacts", label: "Messages", icon: <MessageSquare size={20} />, badge: unreadCount },
+    { to: "/admin/coupons", label: "Coupons", icon: <Ticket size={20} /> },
+    { to: "/admin/notifications", label: "Alerts", icon: <Bell size={20} /> },
+    { to: "/admin/analytics", label: "Analytics", icon: <LineChart size={20} /> },
+    { to: "/admin/settings", label: "Settings", icon: <Settings size={20} /> },
+    { label: "Sign Out", icon: <LogOut size={20} />, action: handleLogout, danger: true },
+  ];
+
   return (
     <div className="flex min-h-screen bg-slate-50 font-sans text-slate-900">
-
-      {/* Mobile Overlay */}
+      
+      {/* Mobile Overlay (drawer closing toggle fallback) */}
       {open && (
         <div
           className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[900] md:hidden transition-opacity"
@@ -75,13 +121,8 @@ export default function AdminLayout() {
         />
       )}
 
-      {/* Sidebar */}
-      <div className={cn(
-        "fixed top-0 left-0 bottom-0 w-72 z-[1000] flex flex-col transition-transform duration-300 ease-in-out",
-        "bg-slate-950 border-r border-slate-800 shadow-2xl",
-        open ? "translate-x-0" : "-translate-x-full",
-        "md:translate-x-0"
-      )}>
+      {/* Desktop Sidebar (Always hidden on mobile, visible from md up) */}
+      <div className="fixed top-0 left-0 bottom-0 w-72 z-[1000] hidden md:flex flex-col bg-slate-950 border-r border-slate-800 shadow-2xl">
         {/* Brand */}
         <div className="px-8 pt-8 pb-6 border-b border-slate-800/50">
           <div className="flex items-center gap-3">
@@ -108,12 +149,11 @@ export default function AdminLayout() {
 
         {/* Navigation */}
         <nav className="flex-1 px-4 py-6 flex flex-col gap-2 overflow-y-auto">
-          {navLinks.map(({ to, end, label, icon }) => (
+          {desktopNavLinks.map(({ to, end, label, icon }) => (
             <NavLink
               key={to}
               to={to}
               end={end}
-              onClick={() => setOpen(false)}
               className={({ isActive }) =>
                 cn(
                   "flex items-center gap-4 px-4 py-3.5 rounded-2xl text-sm font-bold transition-all duration-200",
@@ -144,17 +184,29 @@ export default function AdminLayout() {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col w-full md:pl-72 min-h-screen transition-all duration-300 relative bg-slate-50">
         
-        {/* Topbar */}
-        <div className="sticky top-0 z-50 h-20 flex items-center justify-between px-6 lg:px-10 bg-white/70 backdrop-blur-xl border-b border-slate-200/50 shadow-sm">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setOpen(!open)}
-              className="w-10 h-10 flex items-center justify-center rounded-xl bg-white border border-slate-200 hover:bg-slate-50 transition-colors text-slate-600 md:hidden shadow-sm"
-            >
-              {open ? <X size={20} /> : <Menu size={20} />}
-            </button>
-            <h2 className="text-xl font-bold text-slate-800 hidden sm:block tracking-tight">Admin Portal</h2>
+        {/* Mobile Topbar */}
+        <div className="sticky top-0 z-40 h-16 flex items-center justify-between px-4 bg-white/80 backdrop-blur-md border-b border-slate-200 md:hidden">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center shadow-md">
+              <span className="text-white text-sm font-black">B</span>
+            </div>
+            <span className="font-extrabold text-slate-900 text-lg">ByteBite Admin</span>
           </div>
+          {/* Messages shortcut on header for instant access */}
+          <button 
+            onClick={() => navigate("/admin/contacts")}
+            className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 transition-colors border border-slate-100 shadow-sm relative"
+          >
+            <MessageSquare size={18} />
+            {unreadCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-brand-500 rounded-full border-2 border-white animate-pulse" />
+            )}
+          </button>
+        </div>
+
+        {/* Topbar for Desktop viewports */}
+        <div className="sticky top-0 z-30 h-20 hidden md:flex items-center justify-between px-6 lg:px-10 bg-white/70 backdrop-blur-xl border-b border-slate-200/50 shadow-sm">
+          <h2 className="text-xl font-bold text-slate-800 tracking-tight">Admin Portal</h2>
 
           <div className="flex items-center gap-4">
              {/* Notification Bell */}
@@ -176,8 +228,8 @@ export default function AdminLayout() {
           </div>
         </div>
 
-        {/* Dynamic Page Content */}
-        <div className="flex-1 p-6 lg:p-10 relative overflow-hidden">
+        {/* Dynamic Page Content - adjusted padding at the bottom for mobile */}
+        <div className="flex-1 p-6 lg:p-10 pb-28 md:pb-10 relative overflow-hidden">
            {/* Decorative Background Elements */}
            <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-brand-50 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
            <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-50/50 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/3 pointer-events-none"></div>
@@ -188,6 +240,128 @@ export default function AdminLayout() {
         </div>
 
       </div>
+
+      {/* Admin Mobile Floating Bottom Navigation */}
+      <div className={cn(
+        "fixed bottom-4 left-4 right-4 z-[800] transition-all duration-300 transform md:hidden",
+        showBottomNav ? "translate-y-0 opacity-100" : "translate-y-28 opacity-0 pointer-events-none"
+      )}>
+        <nav className="bg-slate-905 bg-slate-900 border border-slate-800 shadow-[0_8px_32px_rgba(0,0,0,0.3)] rounded-2xl flex items-center justify-around py-2.5 px-3">
+          {mobileNavLinks.map(({ to, end, label, icon }) => (
+            <NavLink
+              key={to}
+              to={to}
+              end={end}
+              className={({ isActive }) => cn(
+                "flex flex-col items-center justify-center relative py-1.5 px-3 rounded-xl transition-all duration-300 active:scale-90",
+                isActive 
+                  ? "text-brand-400 scale-105 bg-slate-800/80 font-black" 
+                  : "text-slate-500 hover:text-slate-300 font-bold"
+              )}
+            >
+              {icon}
+              <span className="text-[10px] mt-1 tracking-tight select-none">{label}</span>
+            </NavLink>
+          ))}
+
+          {/* Plus / More Options Button */}
+          <button
+            onClick={() => setMoreOpen(true)}
+            className={cn(
+              "flex flex-col items-center justify-center relative py-1.5 px-3 rounded-xl transition-all duration-300 active:scale-90",
+              moreOpen ? "text-brand-400 bg-slate-800/80" : "text-slate-500 hover:text-slate-300 font-bold"
+            )}
+          >
+            <Plus size={20} />
+            <span className="text-[10px] mt-1 tracking-tight select-none">More</span>
+          </button>
+        </nav>
+      </div>
+
+      {/* Mobile Drawer (Bottom Sheet Options) */}
+      <AnimatePresence>
+        {moreOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setMoreOpen(false)}
+              className="fixed inset-0 bg-slate-950/65 backdrop-blur-sm z-[900] md:hidden"
+            />
+
+            {/* Bottom Sheet Drawer */}
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 220 }}
+              className="fixed bottom-0 left-0 right-0 bg-slate-950 border-t border-slate-800 rounded-t-[2rem] z-[1000] p-6 pb-12 shadow-2xl md:hidden text-white"
+            >
+              {/* Drag Handle Decoration */}
+              <div className="w-12 h-1 bg-slate-800 rounded-full mx-auto mb-6" />
+
+              {/* Header */}
+              <div className="flex items-center justify-between mb-8 px-2">
+                <h3 className="text-lg font-black tracking-tight flex items-center gap-2">
+                  <span className="text-brand-400">⚡</span> More Functions
+                </h3>
+                <button
+                  onClick={() => setMoreOpen(false)}
+                  className="w-8 h-8 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              {/* Grid Content */}
+              <div className="grid grid-cols-3 gap-y-8 gap-x-4 mb-4">
+                {moreSheetLinks.map(({ label, icon, to, action, badge, danger }) => {
+                  const content = (
+                    <div className="flex flex-col items-center justify-center relative p-3 rounded-2xl bg-slate-900/60 border border-slate-900/80 hover:border-slate-800 hover:bg-slate-900 active:scale-95 transition-all text-center">
+                      <div className="relative text-slate-300">
+                        {icon}
+                        {badge !== undefined && badge > 0 && (
+                          <span className="absolute -top-1.5 -right-2 bg-brand-500 text-white text-[9px] font-black h-4 min-w-[16px] px-1 rounded-full flex items-center justify-center border border-slate-950">
+                            {badge}
+                          </span>
+                        )}
+                      </div>
+                      <span className={cn(
+                        "text-[11px] font-semibold mt-2 tracking-tight select-none truncate w-full",
+                        danger ? "text-red-400" : "text-slate-200"
+                      )}>
+                        {label}
+                      </span>
+                    </div>
+                  );
+
+                  if (action) {
+                    return (
+                      <button key={label} onClick={action} className="w-full">
+                        {content}
+                      </button>
+                    );
+                  }
+
+                  return (
+                    <NavLink
+                      key={to}
+                      to={to}
+                      onClick={() => setMoreOpen(false)}
+                      className="w-full block"
+                    >
+                      {content}
+                    </NavLink>
+                  );
+                })}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }

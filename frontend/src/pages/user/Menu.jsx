@@ -72,6 +72,7 @@ export default function Menu() {
     }
 
     localStorage.setItem("cart", JSON.stringify(cart));
+    window.dispatchEvent(new Event("cart-updated"));
     // Provide a tiny vibration/feedback or visual cue (could add toast later)
     navigate("/user/checkout");
   };

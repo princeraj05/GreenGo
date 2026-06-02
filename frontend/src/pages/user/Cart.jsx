@@ -28,12 +28,14 @@ export default function Cart() {
     );
     setCart(updated);
     localStorage.setItem("cart", JSON.stringify(updated));
+    window.dispatchEvent(new Event("cart-updated"));
   };
 
   const removeItem = (id) => {
     const updated = cart.filter((item) => item._id !== id);
     setCart(updated);
     localStorage.setItem("cart", JSON.stringify(updated));
+    window.dispatchEvent(new Event("cart-updated"));
   };
 
   const applyPromo = async () => {
