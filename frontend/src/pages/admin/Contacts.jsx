@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Mail, MessageSquare, Send } from "lucide-react";
+import { ArrowLeft, Mail, MessageSquare, Send } from "lucide-react";
 import API from "../../api/axios";
 import { getToken } from "../../utils/getToken";
 
@@ -139,8 +139,12 @@ export default function Contacts() {
             <p className="text-gray-400 font-medium">No contact messages found</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-5 h-[calc(100vh-220px)] min-h-[620px]">
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+          <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-5 lg:h-[calc(100vh-220px)] lg:min-h-[620px]">
+            <div
+              className={`bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex-col lg:flex ${
+                selectedKey ? "hidden" : "flex"
+              }`}
+            >
               <div className="px-5 py-4 border-b border-slate-100">
                 <p className="font-bold text-slate-900">Conversations</p>
                 <p className="text-xs text-slate-400 mt-1">{conversations.length} active chats</p>
@@ -180,22 +184,36 @@ export default function Contacts() {
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
-              <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between gap-4">
-                <div className="min-w-0">
-                  <p className="font-extrabold text-slate-900 truncate">{selectedConversation.name}</p>
-                  <p className="text-sm text-slate-500 truncate">{selectedConversation.email}</p>
+            <div
+              className={`bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex-col min-h-[620px] lg:flex ${
+                selectedKey ? "flex" : "hidden"
+              }`}
+            >
+              <div className="px-4 sm:px-6 py-4 border-b border-slate-100 flex items-center justify-between gap-4">
+                <div className="min-w-0 flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedKey("")}
+                    className="lg:hidden shrink-0 rounded-xl border border-slate-200 bg-white p-2 text-slate-600 shadow-sm"
+                    aria-label="Back to conversations"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                  </button>
+                  <div className="min-w-0">
+                    <p className="font-extrabold text-slate-900 truncate">{selectedConversation.name}</p>
+                    <p className="text-sm text-slate-500 truncate">{selectedConversation.email}</p>
+                  </div>
                 </div>
                 <span className="shrink-0 rounded-full bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-wider text-slate-500">
                   {selectedConversation.isUserChat ? "Chat" : "Email"}
                 </span>
               </div>
 
-              <div className="flex-1 overflow-y-auto bg-slate-50 p-6 space-y-5">
+              <div className="flex-1 overflow-y-auto bg-slate-50 p-4 sm:p-6 space-y-5">
                 {selectedConversation.messages.map((message) => (
                   <div key={message._id} className="space-y-3">
                     <div className="flex justify-start">
-                      <div className="max-w-[78%] rounded-2xl rounded-tl-sm border border-slate-200 bg-white p-4 shadow-sm">
+                      <div className="max-w-[92%] sm:max-w-[78%] rounded-2xl rounded-tl-sm border border-slate-200 bg-white p-4 shadow-sm">
                         {message.subject && (
                           <p className="text-xs font-bold text-slate-500 mb-1">{message.subject}</p>
                         )}
@@ -208,7 +226,7 @@ export default function Contacts() {
 
                     {message.reply && (
                       <div className="flex justify-end">
-                        <div className="max-w-[78%] rounded-2xl rounded-tr-sm bg-emerald-500 p-4 text-white shadow-sm">
+                        <div className="max-w-[92%] sm:max-w-[78%] rounded-2xl rounded-tr-sm bg-emerald-500 p-4 text-white shadow-sm">
                           <div className="flex items-center justify-end gap-2 mb-1">
                             <span className="text-xs font-bold text-emerald-50">Admin Reply</span>
                             <MessageSquare className="w-4 h-4" />
