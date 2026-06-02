@@ -1,6 +1,23 @@
 import Contact from "../models/Contact.js";
 import { sendContactReplyEmail } from "../services/emailService.js";
 
+const getSafeEmailError = (error) => {
+  const message = String(error?.message || error || "");
+
+  if (
+    message.includes("Email settings missing") ||
+    message.includes("SMTP settings missing")
+  ) {
+    return "Email setup missing on backend.";
+  }
+
+  if (message.includes("Invalid login") || message.includes("Username and Password not accepted")) {
+    return "Email login failed. Check the app password.";
+  }
+
+  return "Email could not be sent. Check email settings.";
+};
+
 export const getAllContacts = async (req, res) => {
   try {
     const contacts = await Contact.find().sort({ createdAt: -1 });
@@ -42,13 +59,13 @@ export const replyToContact = async (req, res) => {
         contact.emailReplyError = "";
       } catch (emailErr) {
         contact.emailReplyStatus = "failed";
-        contact.emailReplyError = emailErr.message;
+        contact.emailReplyError = getSafeEmailError(emailErr);
         await contact.save();
         return res.json({
           success: true,
           emailSent: false,
-          message: "Reply saved. Email will send after SMTP is configured.",
-          error: emailErr.message,
+          message: "Reply saved, but email could not be sent.",
+          error: contact.emailReplyError,
         });
       }
     } else {

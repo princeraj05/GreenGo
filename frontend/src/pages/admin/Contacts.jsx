@@ -3,6 +3,25 @@ import { Mail, MessageSquare, Send } from "lucide-react";
 import API from "../../api/axios";
 import { getToken } from "../../utils/getToken";
 
+function getEmailStatusText(message) {
+  if (message.emailReplyStatus === "sent") return "Email sent";
+
+  const error = String(message.emailReplyError || "");
+  if (
+    error.includes("Email settings missing") ||
+    error.includes("SMTP settings missing") ||
+    error.includes("Email setup missing")
+  ) {
+    return "Email setup missing on backend";
+  }
+
+  if (error.includes("Invalid login") || error.includes("Password not accepted")) {
+    return "Email login failed";
+  }
+
+  return message.emailReplyStatus === "failed" ? "Email failed" : "Email pending";
+}
+
 export default function Contacts() {
   const [contacts, setContacts] = useState([]);
   const [selectedKey, setSelectedKey] = useState("");
@@ -203,8 +222,7 @@ export default function Contacts() {
                                   : "text-amber-100"
                               }`}
                             >
-                              Email status: {message.emailReplyStatus || "sent"}
-                              {message.emailReplyError ? ` - ${message.emailReplyError}` : ""}
+                              {getEmailStatusText(message)}
                             </p>
                           )}
                         </div>
