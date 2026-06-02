@@ -26,6 +26,11 @@ const contactSchema = new mongoose.Schema(
       default: "",
     },
     emailReplyError: { type: String, default: "" },
+    status: {
+      type: String,
+      enum: ["Pending", "Replied"],
+      default: "Pending",
+    },
   },
   { timestamps: true }
 );

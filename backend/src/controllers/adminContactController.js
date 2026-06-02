@@ -13,19 +13,10 @@ const getSafeEmailError = (error) => {
   }
 
   if (message.includes("Invalid login") || message.includes("Username and Password not accepted")) {
-    return "Email login failed. Check the app password.";
+    return "Email login failed. Check credentials.";
   }
 
-  if (
-    message.includes("ETIMEDOUT") ||
-    message.includes("timeout") ||
-    message.includes("ECONNREFUSED") ||
-    message.includes("ECONNRESET")
-  ) {
-    return "SMTP connection timed out. Render Free Tier blocks SMTP ports. Please add a RESEND_API_KEY or BREVO_API_KEY environment variable to use HTTP email API.";
-  }
-
-  return `Email failed: ${message}`;
+  return "Email delivery failed. Please check SMTP settings.";
 };
 
 export const getAllContacts = async (req, res) => {
@@ -55,6 +46,7 @@ export const replyToContact = async (req, res) => {
     contact.reply = cleanReply;
     contact.repliedAt = new Date();
     contact.replyDelivery = shouldSendEmail ? "email" : "chat";
+    contact.status = "Replied";
 
     if (shouldSendEmail) {
       try {
