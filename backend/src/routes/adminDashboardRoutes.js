@@ -2,6 +2,7 @@ import express from "express";
 import Order from "../models/Order.js";
 import User from "../models/User.js";
 import Food from "../models/Food.js";
+import Contact from "../models/Contact.js";
 
 const router = express.Router();
 
@@ -36,6 +37,19 @@ router.get("/stats", async (req, res) => {
       message: "Server error"
     });
 
+  }
+});
+
+/* ================= UNREAD ALERTS ================= */
+router.get("/unread-alerts", async (req, res) => {
+  try {
+    const unreadContacts = await Contact.countDocuments({ 
+      $or: [ { reply: { $exists: false } }, { reply: "" }, { reply: null } ] 
+    });
+    res.json({ unreadContacts });
+  } catch (err) {
+    console.error("Unread alerts error:", err);
+    res.status(500).json({ message: "Server error" });
   }
 });
 

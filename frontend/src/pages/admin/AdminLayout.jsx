@@ -12,8 +12,12 @@ export default function AdminLayout() {
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [open, setOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
-  useEffect(() => { loadAdmin(); }, []);
+  useEffect(() => { 
+    loadAdmin(); 
+    loadAlerts();
+  }, []);
 
   const loadAdmin = async () => {
     const token = await getToken();
@@ -25,6 +29,22 @@ export default function AdminLayout() {
       if(res.ok) {
         const data = await res.json();
         setName(data.name);
+      }
+    } catch(e) {
+      console.error(e);
+    }
+  };
+
+  const loadAlerts = async () => {
+    const token = await getToken();
+    if (!token) return;
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/unread-alerts`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if(res.ok) {
+        const data = await res.json();
+        setUnreadCount(data.unreadContacts || 0);
       }
     } catch(e) {
       console.error(e);
@@ -137,9 +157,15 @@ export default function AdminLayout() {
 
           <div className="flex items-center gap-4">
              {/* Notification Bell */}
-             <button className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-brand-50 hover:text-brand-600 transition-colors relative">
+             <button 
+               onClick={() => navigate("/admin/contacts")}
+               className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-brand-50 hover:text-brand-600 transition-colors relative"
+               title={unreadCount > 0 ? `${unreadCount} unread messages` : "No new messages"}
+             >
                 <Bell size={18} />
-                <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+                {unreadCount > 0 && (
+                  <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>
+                )}
              </button>
              
              {/* Profile Avatar (Small) */}

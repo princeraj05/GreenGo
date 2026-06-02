@@ -6,12 +6,12 @@ import {
   createContact,
   getMyContacts,
 } from "../controllers/contactController.js";
-import { protect } from "../middleware/authMiddleware.js";
+import { protect, optionalProtect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
 // send contact
-router.post("/", protect, createContact);
+router.post("/", optionalProtect, createContact);
 
 // 🔥 get user contacts + admin reply
 router.get("/my", protect, getMyContacts);

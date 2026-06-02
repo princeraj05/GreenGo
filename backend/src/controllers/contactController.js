@@ -9,7 +9,7 @@ export const createContact = async (req, res) => {
     const { name, email, message } = req.body;
 
     await Contact.create({
-      uid: req.user.uid,
+      uid: req.user ? req.user.id || req.user.uid : null,
       name,
       email,
       message,
