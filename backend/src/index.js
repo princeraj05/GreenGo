@@ -40,28 +40,27 @@ const allowedOrigins = [
   "https://byte-bite-dd1g7omzo-princes-projects-d7be7534.vercel.app",
 ];
 
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      // Postman/mobile apps
-      if (!origin) return callback(null, true);
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Postman/mobile apps
+    if (!origin) return callback(null, true);
 
-      if (
-        allowedOrigins.includes(origin) ||
-        /^https:\/\/.*\.vercel\.app$/.test(origin)
-      ) {
-        return callback(null, true);
-      }
+    if (
+      allowedOrigins.includes(origin) ||
+      /^https:\/\/.*\.vercel\.app$/.test(origin)
+    ) {
+      return callback(null, true);
+    }
 
-      return callback(new Error("CORS not allowed"));
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+    return callback(new Error("CORS not allowed"));
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
 
-app.options("*", cors());
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 /* ================= MIDDLEWARE ================= */
 

@@ -53,6 +53,7 @@ export default function ManageReviews() {
   };
 
   const handleToggleVisibility = async (id, currentHidden) => {
+    const isHidden = !!currentHidden;
     try {
       const token = await getToken();
       const res = await fetch(`${getApiUrl()}/api/reviews/${id}/visibility`, {
@@ -61,11 +62,12 @@ export default function ManageReviews() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ hidden: !currentHidden })
+        body: JSON.stringify({ hidden: !isHidden })
       });
 
       if (res.ok) {
-        setReviews(prev => prev.map(r => r._id === id ? { ...r, hidden: !currentHidden } : r));
+        const data = await res.json();
+        setReviews(prev => prev.map(r => r._id === id ? data.review : r));
       } else {
         alert("Failed to update visibility");
       }
