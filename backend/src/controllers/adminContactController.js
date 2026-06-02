@@ -16,6 +16,10 @@ const getSafeEmailError = (error) => {
     return "Email login failed. Check credentials.";
   }
 
+  if (message.includes("ETIMEDOUT") || message.includes("timeout") || message.includes("ENETUNREACH")) {
+    return "SMTP port blocked on host. Please configure RESEND_API_KEY or BREVO_API_KEY on Render.";
+  }
+
   return "Email delivery failed. Please check SMTP settings.";
 };
 
