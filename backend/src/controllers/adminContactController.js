@@ -2,6 +2,7 @@ import Contact from "../models/Contact.js";
 import { sendContactReplyEmail } from "../services/emailService.js";
 
 const getSafeEmailError = (error) => {
+  console.error("Original email sending error details:", error);
   const message = String(error?.message || error || "");
 
   if (
@@ -15,7 +16,16 @@ const getSafeEmailError = (error) => {
     return "Email login failed. Check the app password.";
   }
 
-  return "Email could not be sent. Check email settings.";
+  if (
+    message.includes("ETIMEDOUT") ||
+    message.includes("timeout") ||
+    message.includes("ECONNREFUSED") ||
+    message.includes("ECONNRESET")
+  ) {
+    return "SMTP connection timed out. Render Free Tier blocks SMTP ports. Please add a RESEND_API_KEY or BREVO_API_KEY environment variable to use HTTP email API.";
+  }
+
+  return `Email failed: ${message}`;
 };
 
 export const getAllContacts = async (req, res) => {

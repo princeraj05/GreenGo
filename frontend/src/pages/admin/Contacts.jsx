@@ -6,17 +6,9 @@ import { getToken } from "../../utils/getToken";
 function getEmailStatusText(message) {
   if (message.emailReplyStatus === "sent") return "Email sent";
 
-  const error = String(message.emailReplyError || "");
-  if (
-    error.includes("Email settings missing") ||
-    error.includes("SMTP settings missing") ||
-    error.includes("Email setup missing")
-  ) {
-    return "Email setup missing on backend";
-  }
-
-  if (error.includes("Invalid login") || error.includes("Password not accepted")) {
-    return "Email login failed";
+  const error = String(message.emailReplyError || "").trim();
+  if (error) {
+    return error;
   }
 
   return message.emailReplyStatus === "failed" ? "Email failed" : "Email pending";
