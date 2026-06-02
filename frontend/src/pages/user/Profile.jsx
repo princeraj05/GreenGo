@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { User, Save, MapPin, Bell, CheckCircle, XCircle, Settings, Phone, Clock, Utensils } from "lucide-react";
+import { User, Save, MapPin, Bell, CheckCircle, XCircle, Settings, Phone, Clock, Utensils, Navigation } from "lucide-react";
 import { getToken } from "../../utils/getToken";
 import Button from "../../components/ui/Button";
 import Card from "../../components/ui/Card";
@@ -38,6 +38,49 @@ export default function Profile() {
     };
     fetchProfile();
   }, []);
+
+  const [locationLoading, setLocationLoading] = useState(false);
+
+  const useCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser.");
+      return;
+    }
+    
+    setLocationLoading(true);
+    navigator.geolocation.getCurrentPosition(async (position) => {
+      try {
+        const { latitude, longitude } = position.coords;
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+        const data = await res.json();
+        const addressText = data && data.display_name ? data.display_name : `Lat: ${latitude}, Lng: ${longitude}`;
+        
+        const type = getAddressType(form.address);
+        if (type === "home") {
+          setForm(f => ({ ...f, address: `Home: ${addressText}` }));
+        } else if (type === "office") {
+          setForm(f => ({ ...f, address: `Office: ${addressText}` }));
+        } else {
+          setForm(f => ({ ...f, address: addressText }));
+        }
+      } catch (err) {
+        const fallbackText = `Lat: ${position.coords.latitude}, Lng: ${position.coords.longitude}`;
+        const type = getAddressType(form.address);
+        if (type === "home") {
+          setForm(f => ({ ...f, address: `Home: ${fallbackText}` }));
+        } else if (type === "office") {
+          setForm(f => ({ ...f, address: `Office: ${fallbackText}` }));
+        } else {
+          setForm(f => ({ ...f, address: fallbackText }));
+        }
+      } finally {
+        setLocationLoading(false);
+      }
+    }, () => {
+      alert("Unable to retrieve your location. Please check your browser permissions.");
+      setLocationLoading(false);
+    });
+  };
 
   const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -275,7 +318,21 @@ export default function Profile() {
                   })}
                 </div>
                 
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1 block">Delivery Address Details</label>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1 block">Delivery Address Details</label>
+                  <button
+                    type="button"
+                    onClick={useCurrentLocation}
+                    className="flex items-center gap-1.5 px-3.5 py-1.5 bg-brand-50 hover:bg-brand-100 text-brand-600 rounded-xl text-xs font-bold transition-all shadow-sm"
+                  >
+                    {locationLoading ? (
+                      <div className="w-3.5 h-3.5 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Navigation size={12} />
+                    )}
+                    Use Current Location
+                  </button>
+                </div>
                 <textarea
                   name="address"
                   value={getCleanAddressText(form.address)}
