@@ -41,6 +41,43 @@ export default function Profile() {
 
   const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
 
+  const getAddressType = (addr) => {
+    const a = String(addr || "");
+    if (a.startsWith("Home: ")) return "home";
+    if (a.startsWith("Office: ")) return "office";
+    return "custom";
+  };
+
+  const getCleanAddressText = (addr) => {
+    const a = String(addr || "");
+    if (a.startsWith("Home: ")) return a.substring(6);
+    if (a.startsWith("Office: ")) return a.substring(8);
+    return a;
+  };
+
+  const handleAddressTypeChange = (type) => {
+    const cleanText = getCleanAddressText(form.address);
+    if (type === "home") {
+      setForm({ ...form, address: `Home: ${cleanText}` });
+    } else if (type === "office") {
+      setForm({ ...form, address: `Office: ${cleanText}` });
+    } else {
+      setForm({ ...form, address: cleanText });
+    }
+  };
+
+  const handleAddressTextChange = (e) => {
+    const type = getAddressType(form.address);
+    const text = e.target.value;
+    if (type === "home") {
+      setForm({ ...form, address: `Home: ${text}` });
+    } else if (type === "office") {
+      setForm({ ...form, address: `Office: ${text}` });
+    } else {
+      setForm({ ...form, address: text });
+    }
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
@@ -116,18 +153,91 @@ export default function Profile() {
                   <Input name="phone" value={form.phone} onChange={handleChange} placeholder="+1 234 567 890" className="pl-12" />
                 </div>
               </div>
+              
               <div className="relative">
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1 block">Food Preference</label>
-                <div className="relative">
+                <div className="relative mb-3">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400"><Utensils size={18} /></div>
                   <Input name="foodPreference" value={form.foodPreference} onChange={handleChange} placeholder="Veg, Non-Veg, Vegan..." className="pl-12" />
                 </div>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { label: "🟢 Veg", value: "Veg" },
+                    { label: "🔴 Non-Veg", value: "Non-Veg" },
+                    { label: "🍰 Sweets", value: "Sweets" },
+                    { label: "🌶️ Spicy", value: "Spicy" },
+                    { label: "🥗 Vegan", value: "Vegan" }
+                  ].map((p) => {
+                    const currentPrefs = form.foodPreference
+                      ? form.foodPreference.split(",").map(item => item.trim().toLowerCase())
+                      : [];
+                    const active = currentPrefs.includes(p.value.toLowerCase());
+                    return (
+                      <button
+                        key={p.value}
+                        type="button"
+                        onClick={() => {
+                          const list = form.foodPreference
+                            ? form.foodPreference.split(",").map(item => item.trim()).filter(Boolean)
+                            : [];
+                          let newList;
+                          if (list.some(item => item.toLowerCase() === p.value.toLowerCase())) {
+                            newList = list.filter(item => item.toLowerCase() !== p.value.toLowerCase());
+                          } else {
+                            newList = [...list, p.value];
+                          }
+                          setForm({ ...form, foodPreference: newList.join(", ") });
+                        }}
+                        className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
+                          active
+                            ? "bg-brand-500 text-white border-brand-500 shadow-sm"
+                            : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
+                        }`}
+                      >
+                        {p.label}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
+
               <div className="relative">
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1 block">Delivery Time</label>
-                <div className="relative">
+                <div className="relative mb-3">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400"><Clock size={18} /></div>
                   <Input name="deliveryTime" value={form.deliveryTime} onChange={handleChange} placeholder="e.g. 7:00 PM" className="pl-12" />
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  {[
+                    { label: "ASAP", value: "ASAP" },
+                    { label: "1:00 PM", value: "1:00 PM" },
+                    { label: "8:00 PM", value: "8:00 PM" }
+                  ].map((t) => (
+                    <button
+                      key={t.value}
+                      type="button"
+                      onClick={() => setForm({ ...form, deliveryTime: t.value })}
+                      className="px-3 py-1.5 rounded-full text-xs font-bold border bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 transition-all"
+                    >
+                      🕒 {t.label}
+                    </button>
+                  ))}
+                  
+                  <div className="relative flex items-center border border-slate-200 rounded-full px-3 py-1.5 bg-slate-50 hover:bg-slate-100 transition-all">
+                    <span className="text-xs font-bold text-slate-500 mr-2">Custom:</span>
+                    <input
+                      type="time"
+                      onChange={(e) => {
+                        if (!e.target.value) return;
+                        const [h, m] = e.target.value.split(":");
+                        const hours = parseInt(h);
+                        const ampm = hours >= 12 ? "PM" : "AM";
+                        const formattedHours = hours % 12 || 12;
+                        setForm({ ...form, deliveryTime: `${formattedHours}:${m} ${ampm}` });
+                      }}
+                      className="bg-transparent text-xs font-bold text-slate-700 outline-none cursor-pointer"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -139,29 +249,97 @@ export default function Profile() {
             </h3>
             <div className="space-y-6">
               <div className="relative">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1 block">Delivery Address</label>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 ml-1 block">Address Type</label>
+                <div className="flex flex-wrap gap-3 mb-4">
+                  {[
+                    { id: "home", label: "Home", icon: "🏠" },
+                    { id: "office", label: "Office", icon: "🏢" },
+                    { id: "custom", label: "Own Address", icon: "📍" }
+                  ].map((t) => {
+                    const active = getAddressType(form.address) === t.id;
+                    return (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => handleAddressTypeChange(t.id)}
+                        className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold border transition-all ${
+                          active
+                            ? "bg-brand-500 text-white border-brand-500 shadow-md shadow-brand-500/20"
+                            : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                        }`}
+                      >
+                        <span>{t.icon}</span>
+                        <span>{t.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1 block">Delivery Address Details</label>
                 <textarea
                   name="address"
-                  value={form.address}
-                  onChange={handleChange}
-                  placeholder="Enter your full street address..."
+                  value={getCleanAddressText(form.address)}
+                  onChange={handleAddressTextChange}
+                  placeholder={
+                    getAddressType(form.address) === "home"
+                      ? "Enter your Home address details..."
+                      : getAddressType(form.address) === "office"
+                      ? "Enter your Office address details..."
+                      : "Enter your custom / own street address..."
+                  }
                   className="w-full px-5 py-4 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 transition-all outline-none resize-y min-h-[120px] text-slate-900 font-medium placeholder-slate-400 shadow-sm"
                 />
               </div>
             </div>
           </div>
 
-          <div>
+          <div className="mb-6">
             <h3 className="font-bold text-slate-900 mb-6 flex items-center gap-3 text-xl pb-4 border-b border-slate-100">
               <Settings size={24} className="text-brand-500" /> Preferences
             </h3>
-            <div className="space-y-6">
-              <div className="relative">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1 block">Notifications</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400"><Bell size={18} /></div>
-                  <Input name="notifications" value={form.notifications} onChange={handleChange} placeholder="Email, SMS, Push..." className="pl-12" />
-                </div>
+            <div className="space-y-4">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1 block">Notification Channels</label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {[
+                  { label: "Email Notifications", value: "Email", icon: "📧" },
+                  { label: "SMS Notifications", value: "SMS", icon: "💬" },
+                  { label: "Push Notifications", value: "Push", icon: "📱" }
+                ].map((n) => {
+                  const currentChannels = form.notifications
+                    ? form.notifications.split(",").map(c => c.trim().toLowerCase())
+                    : [];
+                  const active = currentChannels.includes(n.value.toLowerCase());
+                  
+                  return (
+                    <button
+                      key={n.value}
+                      type="button"
+                      onClick={() => {
+                        const list = form.notifications
+                          ? form.notifications.split(",").map(c => c.trim()).filter(Boolean)
+                          : [];
+                        let newList;
+                        if (list.some(c => c.toLowerCase() === n.value.toLowerCase())) {
+                          newList = list.filter(c => c.toLowerCase() !== n.value.toLowerCase());
+                        } else {
+                          newList = [...list, n.value];
+                        }
+                        setForm({ ...form, notifications: newList.join(", ") });
+                      }}
+                      className={`flex flex-col items-center justify-center p-5 rounded-2xl border transition-all ${
+                        active
+                          ? "bg-brand-50/50 border-brand-500 text-brand-700 shadow-sm"
+                          : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+                      }`}
+                    >
+                      <span className="text-2xl mb-2">{n.icon}</span>
+                      <span className="text-sm font-bold">{n.label}</span>
+                      <span className="text-[11px] font-semibold mt-1 text-slate-400">
+                        {active ? "Enabled" : "Disabled"}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
