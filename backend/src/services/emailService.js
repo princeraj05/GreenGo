@@ -259,9 +259,12 @@ export const sendEmail = async ({ to, subject, text, html }) => {
           html,
         }),
       });
+      const resData = await response.json();
       if (response.ok) {
         console.log("Generic email sent via Resend API.");
-        return await response.json();
+        return resData;
+      } else {
+        console.error("Resend API failed with status:", response.status, resData);
       }
     } catch (err) {
       console.error("Resend sendEmail failed:", err);
@@ -288,9 +291,12 @@ export const sendEmail = async ({ to, subject, text, html }) => {
           htmlContent: html,
         }),
       });
+      const resData = await response.json();
       if (response.ok) {
         console.log("Generic email sent via Brevo API.");
-        return await response.json();
+        return resData;
+      } else {
+        console.error("Brevo API failed with status:", response.status, resData);
       }
     } catch (err) {
       console.error("Brevo sendEmail failed:", err);
