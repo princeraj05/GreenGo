@@ -14,6 +14,8 @@ const Contact = lazy(() => import("../pages/common/Contact"));
 /* AUTH */
 const Login = lazy(() => import("../pages/auth/Login"));
 const Register = lazy(() => import("../pages/auth/Register"));
+const ForgotPassword = lazy(() => import("../pages/auth/ForgotPassword"));
+const ResetPassword = lazy(() => import("../pages/auth/ResetPassword"));
 
 /* USER */
 import UserLayout from "../pages/user/UserLayout";
@@ -55,6 +57,8 @@ export default function AppRoutes() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
         </Route>
 
         {/* USER PANEL */}

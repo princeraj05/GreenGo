@@ -219,3 +219,88 @@ export const sendContactReplyEmail = async ({
     html: emailHtml,
   });
 };
+
+/* ================= GENERIC SEND EMAIL ================= */
+
+export const sendEmail = async ({ to, subject, text, html }) => {
+  const sender = process.env.SMTP_USER || process.env.EMAIL_USER || process.env.MAIL_USER;
+  const from = process.env.MAIL_FROM || `"ByteBite Support" <${sender || "support@bytebite.com"}>`;
+  const replyTo = process.env.ADMIN_REPLY_TO || sender || "support@bytebite.com";
+
+  const resendKey = process.env.RESEND_API_KEY || process.env.RESEND_API || process.env.resend_api;
+  const brevoKey = process.env.BREVO_API_KEY || process.env.BREVO_API || process.env.brevo_api;
+
+  // 1. Try Resend
+  if (resendKey) {
+    console.log("Attempting to send generic email via Resend API...");
+    try {
+      let cleanFrom = from;
+      const senderEmail = sender || "";
+      if (isPublicEmailDomain(senderEmail)) {
+        cleanFrom = `"ByteBite Support" <onboarding@resend.dev>`;
+      }
+      const response = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${resendKey}`,
+        },
+        body: JSON.stringify({
+          from: cleanFrom,
+          to: [to],
+          replyTo,
+          subject,
+          text,
+          html,
+        }),
+      });
+      if (response.ok) {
+        console.log("Generic email sent via Resend API.");
+        return await response.json();
+      }
+    } catch (err) {
+      console.error("Resend sendEmail failed:", err);
+    }
+  }
+
+  // 2. Try Brevo
+  if (brevoKey) {
+    console.log("Attempting to send generic email via Brevo API...");
+    try {
+      const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+        method: "POST",
+        headers: {
+          "accept": "application/json",
+          "content-type": "application/json",
+          "api-key": brevoKey,
+        },
+        body: JSON.stringify({
+          sender: { email: sender || "support@bytebite.com", name: "ByteBite Support" },
+          to: [{ email: to }],
+          replyTo: { email: replyTo },
+          subject,
+          textContent: text,
+          htmlContent: html,
+        }),
+      });
+      if (response.ok) {
+        console.log("Generic email sent via Brevo API.");
+        return await response.json();
+      }
+    } catch (err) {
+      console.error("Brevo sendEmail failed:", err);
+    }
+  }
+
+  // 3. Nodemailer SMTP
+  console.log("Attempting to send generic email via standard SMTP...");
+  const { transporter } = getTransporter();
+  return transporter.sendMail({
+    from,
+    to,
+    replyTo,
+    subject,
+    text,
+    html,
+  });
+};

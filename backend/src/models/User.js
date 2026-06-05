@@ -14,8 +14,31 @@ const userSchema = new mongoose.Schema(
   },
 
   password:{
-    type:String,
-    required:true
+    type:String
+  },
+
+  uid: {
+    type: String,
+    default: ""
+  },
+
+  provider: {
+    type: String,
+    default: "email"
+  },
+
+  avatar: {
+    type: String,
+    default: ""
+  },
+
+  resetPasswordToken: {
+    type: String,
+    default: ""
+  },
+
+  resetPasswordExpire: {
+    type: Date
   },
 
   phone: {
