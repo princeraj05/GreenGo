@@ -215,13 +215,6 @@ export default function ManageFoods() {
                     
                   <div className="absolute top-3 right-3 flex gap-2">
                     <button 
-                       onClick={() => toggleFeatured(f._id, f.featured)}
-                       className={`w-10 h-10 rounded-xl backdrop-blur-md flex items-center justify-center shadow-sm transition-all ${f.featured ? 'bg-amber-500 text-white shadow-amber-500/30' : 'bg-white/90 text-slate-400 hover:text-amber-500'}`}
-                       title={f.featured ? "Remove from Featured" : "Mark as Featured"}
-                    >
-                      <Star size={18} fill={f.featured ? "currentColor" : "none"} />
-                    </button>
-                    <button 
                        onClick={() => startEdit(f)}
                        className="w-10 h-10 rounded-xl bg-white/90 backdrop-blur-md flex items-center justify-center text-blue-600 shadow-sm hover:bg-blue-500 hover:text-white transition-all"
                        title="Edit"
