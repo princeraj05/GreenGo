@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import dns from "dns";
 
 const escapeHtml = (value) =>
   String(value || "")
@@ -22,7 +23,7 @@ const isPublicEmailDomain = (email) => {
   );
 };
 
-const getTransporter = () => {
+const getTransporter = async () => {
   const host = process.env.SMTP_HOST;
   const service = process.env.SMTP_SERVICE || process.env.EMAIL_SERVICE || "gmail";
   const user = process.env.SMTP_USER || process.env.EMAIL_USER || process.env.MAIL_USER;
@@ -34,13 +35,26 @@ const getTransporter = () => {
     );
   }
 
+  let activeHost = host || (service.toLowerCase() === "gmail" ? "smtp.gmail.com" : null);
+  let resolvedHost = activeHost;
+  const port = Number(process.env.SMTP_PORT || 587);
+  const secure = process.env.SMTP_SECURE === "true";
+
+  if (activeHost) {
+    try {
+      const { address } = await dns.promises.lookup(activeHost, { family: 4 });
+      resolvedHost = address;
+      console.log(`DNS lookup: resolved ${activeHost} to IPv4 ${resolvedHost}`);
+    } catch (dnsErr) {
+      console.error(`DNS lookup failed for ${activeHost}, using host string directly:`, dnsErr);
+    }
+  }
+
   let transporterConfig;
 
-  if (host) {
-    const port = Number(process.env.SMTP_PORT || 587);
-    const secure = process.env.SMTP_SECURE === "true";
+  if (activeHost) {
     transporterConfig = {
-      host,
+      host: resolvedHost,
       port,
       secure,
       requireTLS: port === 587,
@@ -48,36 +62,27 @@ const getTransporter = () => {
       connectionTimeout: 10000, // 10 seconds
       greetingTimeout: 10000,   // 10 seconds
       socketTimeout: 15000,     // 15 seconds
-    };
-  } else if (service.toLowerCase() === "gmail") {
-    transporterConfig = {
-      host: "smtp.gmail.com",
-      port: 587,
-      secure: false,
-      requireTLS: true,
-      auth: { user, pass },
-      connectionTimeout: 10000, // 10 seconds
-      greetingTimeout: 10000,   // 10 seconds
-      socketTimeout: 15000,     // 15 seconds
+      tls: {
+        servername: activeHost, // Make sure certificate validates the host name
+      }
     };
   } else {
     transporterConfig = {
       service,
       auth: { user, pass },
-      connectionTimeout: 10000, // 10 seconds
-      greetingTimeout: 10000,   // 10 seconds
-      socketTimeout: 15000,     // 15 seconds
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 15000,
     };
   }
 
-  const activeHost = transporterConfig.host || `service:${transporterConfig.service}`;
-  const activePort = transporterConfig.port || "default";
-  console.log(`Configuring SMTP transporter: host/service=${activeHost}, port=${activePort}, user=${user}`);
+  const printHost = resolvedHost || `service:${service}`;
+  console.log(`Configuring SMTP transporter: host/service=${printHost}, port=${port || "default"}, user=${user}`);
 
   return {
     transporter: nodemailer.createTransport(transporterConfig),
-    host: activeHost,
-    port: activePort,
+    host: printHost,
+    port: port || "default",
   };
 };
 
@@ -198,7 +203,7 @@ export const sendContactReplyEmail = async ({
 
   // 3. Fallback to Nodemailer SMTP
   console.log("Attempting to send email via standard SMTP...");
-  const { transporter, host: activeHost, port: activePort } = getTransporter();
+  const { transporter, host: activeHost, port: activePort } = await getTransporter();
 
   console.log(`Verifying SMTP connection to ${activeHost}:${activePort}...`);
   try {
@@ -294,7 +299,7 @@ export const sendEmail = async ({ to, subject, text, html }) => {
 
   // 3. Nodemailer SMTP
   console.log("Attempting to send generic email via standard SMTP...");
-  const { transporter } = getTransporter();
+  const { transporter } = await getTransporter();
   return transporter.sendMail({
     from,
     to,
