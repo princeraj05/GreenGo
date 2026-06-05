@@ -7,12 +7,13 @@ export const getFoods = async (req, res) => {
 
 export const addFood = async (req, res) => {
   try {
-    const { name, price, description } = req.body;
+    const { name, price, description, category } = req.body;
 
     const food = await Food.create({
       name,
       price,
       description,
+      category,
       image: req.file.path, // Save the full Cloudinary URL
     });
 
@@ -24,8 +25,8 @@ export const addFood = async (req, res) => {
 
 export const updateFood = async (req, res) => {
   try {
-    const { name, price, description } = req.body;
-    let updateData = { name, price, description };
+    const { name, price, description, category } = req.body;
+    let updateData = { name, price, description, category };
     
     if (req.file) {
       updateData.image = req.file.path; // Update with new Cloudinary URL

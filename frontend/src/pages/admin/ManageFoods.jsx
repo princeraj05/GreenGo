@@ -9,7 +9,7 @@ import Card from "../../components/ui/Card";
 
 export default function ManageFoods() {
   const [foods, setFoods] = useState([]);
-  const [form, setForm] = useState({ name: "", price: "", description: "", image: null });
+  const [form, setForm] = useState({ name: "", price: "", description: "", category: "Veg", image: null });
   const [preview, setPreview] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -50,6 +50,7 @@ export default function ManageFoods() {
       fd.append("name", form.name);
       fd.append("price", form.price);
       fd.append("description", form.description);
+      fd.append("category", form.category || "Veg");
       if (form.image) fd.append("image", form.image);
       
       if (editingId) {
@@ -64,7 +65,7 @@ export default function ManageFoods() {
   };
 
   const resetForm = () => {
-    setForm({ name: "", price: "", description: "", image: null });
+    setForm({ name: "", price: "", description: "", category: "Veg", image: null });
     setPreview(null);
     setEditingId(null);
     const input = document.getElementById("foodImageInput");
@@ -72,7 +73,7 @@ export default function ManageFoods() {
   };
 
   const startEdit = (food) => {
-    setForm({ name: food.name, price: food.price, description: food.description, image: null });
+    setForm({ name: food.name, price: food.price, description: food.description, category: food.category || "Veg", image: null });
     setPreview(food.image?.startsWith('http') ? food.image : `${import.meta.env.VITE_API_URL}/uploads/${food.image}`);
     setEditingId(food._id);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -115,7 +116,7 @@ export default function ManageFoods() {
           <form onSubmit={addFood} className="grid grid-cols-1 lg:grid-cols-12 gap-10">
             
             <div className="lg:col-span-8 space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Food Name</label>
                   <Input name="name" placeholder="e.g. Spicy Chicken Burger" value={form.name} onChange={handleChange} className="bg-slate-50" />
@@ -123,6 +124,21 @@ export default function ManageFoods() {
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Price (₹)</label>
                   <Input name="price" type="number" placeholder="e.g. 249" value={form.price} onChange={handleChange} className="bg-slate-50" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Category</label>
+                  <select 
+                    name="category" 
+                    value={form.category || "Veg"} 
+                    onChange={handleChange} 
+                    className="w-full px-5 py-3.5 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 transition-all outline-none text-slate-900 font-medium"
+                  >
+                    <option value="Veg">Veg</option>
+                    <option value="Non-Veg">Non-Veg</option>
+                    <option value="Spicy">Spicy</option>
+                    <option value="Sweet">Sweet</option>
+                    <option value="Beverages">Beverages</option>
+                  </select>
                 </div>
               </div>
               
@@ -223,8 +239,13 @@ export default function ManageFoods() {
                 </div>
                 
                 <div className="p-6 flex-1 flex flex-col">
-                  <div className="flex justify-between items-start mb-2 gap-2">
+                  <div className="flex justify-between items-start mb-1 gap-2">
                     <h3 className="font-bold text-slate-900 text-xl leading-tight group-hover:text-brand-600 transition-colors">{f.name}</h3>
+                  </div>
+                  <div className="flex gap-2 mb-2">
+                    <span className="px-2.5 py-0.5 text-xs font-bold bg-brand-50 text-brand-600 rounded-md">
+                      {f.category || "Veg"}
+                    </span>
                   </div>
                   <p className="text-slate-500 text-sm line-clamp-2 mt-1 mb-4 flex-1 font-medium">{f.description}</p>
                   <div className="flex items-center justify-between mt-auto border-t border-slate-100 pt-4">
