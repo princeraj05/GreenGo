@@ -11,9 +11,9 @@ export default function Button({
   
   const variants = {
     primary: "bg-brand-600 text-white shadow-premium hover:bg-brand-700 hover:shadow-premium-hover",
-    secondary: "bg-white text-slate-700 border border-slate-200 shadow-sm hover:bg-slate-50 hover:border-slate-300 hover:shadow",
+    secondary: "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow",
     danger: "bg-red-500 text-white shadow-premium hover:bg-red-600 hover:shadow-premium-hover",
-    ghost: "bg-transparent text-slate-600 hover:bg-slate-100",
+    ghost: "bg-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900",
   };
 
   const sizes = {

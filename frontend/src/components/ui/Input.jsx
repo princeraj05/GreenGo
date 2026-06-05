@@ -7,8 +7,8 @@ const Input = forwardRef(({ className = '', error, ...props }, ref) => {
       <input
         ref={ref}
         className={cn(
-          "w-full px-4 py-3 bg-slate-50 border rounded-xl outline-none transition-all duration-300 focus:ring-4 focus:bg-white text-slate-900 placeholder:text-slate-400",
-          error ? "border-red-300 focus:border-red-500 focus:ring-red-500/20" : "border-slate-200 focus:border-brand-500 focus:ring-brand-500/20",
+          "w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border rounded-xl outline-none transition-all duration-300 focus:ring-4 focus:bg-white dark:focus:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500",
+          error ? "border-red-300 focus:border-red-500 focus:ring-red-500/20" : "border-slate-200 dark:border-slate-800 focus:border-brand-500 focus:ring-brand-500/20",
           className
         )}
         {...props}

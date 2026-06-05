@@ -56,12 +56,12 @@ export default function Home() {
   };
 
   return (
-    <div className="w-full flex flex-col overflow-hidden bg-slate-50">
+    <div className="w-full flex flex-col overflow-hidden bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
 
       {/* ── Hero Section ── */}
       <section className="relative w-full min-h-[90vh] flex items-center justify-center px-4 py-20 overflow-hidden">
         {/* Modern Background Elements */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-brand-50 via-slate-50 to-slate-50" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-brand-50 via-slate-50 to-slate-50 dark:from-slate-900/10 dark:via-slate-950 dark:to-slate-950 transition-colors duration-300" />
         <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-brand-500/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/3 pointer-events-none" />
         
         <div className="relative z-10 max-w-5xl mx-auto text-center flex flex-col items-center">
@@ -77,14 +77,14 @@ export default function Home() {
               </Badge>
             </motion.div>
 
-            <motion.h1 variants={fadeIn} className="text-6xl md:text-8xl font-black text-slate-900 tracking-tighter leading-[1.05] mb-8">
+            <motion.h1 variants={fadeIn} className="text-6xl md:text-8xl font-black text-slate-900 dark:text-white tracking-tighter leading-[1.05] mb-8">
               Craving Something? <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-orange-500">
                 Order in Minutes.
               </span>
             </motion.h1>
 
-            <motion.p variants={fadeIn} className="text-lg md:text-2xl text-slate-600 mb-12 max-w-3xl mx-auto font-medium">
+            <motion.p variants={fadeIn} className="text-lg md:text-2xl text-slate-600 dark:text-slate-400 mb-12 max-w-3xl mx-auto font-medium">
               Experience the best local flavors delivered directly to your doorstep. Premium food, lightning-fast delivery, and zero hassle.
             </motion.p>
 
@@ -98,15 +98,15 @@ export default function Home() {
               </Button>
             </motion.div>
             
-            <motion.div variants={fadeIn} className="flex justify-center gap-12 mt-20 pt-12 border-t border-slate-200/60 max-w-3xl mx-auto w-full">
+            <motion.div variants={fadeIn} className="flex justify-center gap-12 mt-20 pt-12 border-t border-slate-200/60 dark:border-slate-800/60 max-w-3xl mx-auto w-full">
               {[
                 { val: "10K+", label: "Happy Foodies" },
                 { val: "500+", label: "Premium Dishes" },
                 { val: "30 min", label: "Avg. Delivery" }
               ].map((stat, i) => (
                 <div key={i} className="flex flex-col items-center">
-                  <span className="text-4xl font-black text-slate-900">{stat.val}</span>
-                  <span className="text-sm font-bold text-slate-500 uppercase tracking-widest mt-2">{stat.label}</span>
+                  <span className="text-4xl font-black text-slate-900 dark:text-white">{stat.val}</span>
+                  <span className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-2">{stat.label}</span>
                 </div>
               ))}
             </motion.div>
@@ -115,15 +115,15 @@ export default function Home() {
       </section>
 
       {/* ── How It Works ── */}
-      <section className="w-full py-32 bg-white relative">
+      <section className="w-full py-32 bg-white dark:bg-slate-950 relative transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <motion.div 
             initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeIn}
             className="text-center max-w-2xl mx-auto mb-20"
           >
             <h2 className="text-sm font-bold text-brand-600 uppercase tracking-widest mb-4">Simple Process</h2>
-            <h3 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight">How ByteBite Works</h3>
-            <p className="mt-6 text-xl text-slate-500 font-medium">From browsing to your first bite, it takes just a few taps.</p>
+            <h3 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight">How ByteBite Works</h3>
+            <p className="mt-6 text-xl text-slate-500 dark:text-slate-400 font-medium">From browsing to your first bite, it takes just a few taps.</p>
           </motion.div>
 
           <motion.div 
@@ -132,12 +132,12 @@ export default function Home() {
           >
             {steps.map((step, i) => (
               <motion.div variants={fadeIn} key={step.title}>
-                <Card hover className="p-10 text-center h-full border-slate-100 group">
-                  <div className="mx-auto w-20 h-20 bg-brand-50 rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 group-hover:bg-brand-100 transition-all duration-300">
+                <Card hover className="p-10 text-center h-full border-slate-100 dark:border-slate-800 group">
+                  <div className="mx-auto w-20 h-20 bg-brand-50 dark:bg-brand-950/20 rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 group-hover:bg-brand-100 dark:group-hover:bg-brand-900/30 transition-all duration-300">
                     {step.icon}
                   </div>
-                  <h4 className="text-2xl font-bold text-slate-900 mb-4">{step.title}</h4>
-                  <p className="text-slate-500 leading-relaxed font-medium">{step.desc}</p>
+                  <h4 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">{step.title}</h4>
+                  <p className="text-slate-500 dark:text-slate-400 leading-relaxed font-medium">{step.desc}</p>
                 </Card>
               </motion.div>
             ))}
@@ -146,13 +146,13 @@ export default function Home() {
       </section>
 
       {/* ── Menu Highlights ── */}
-      <section className="w-full py-32 bg-slate-50 relative overflow-hidden">
+      <section className="w-full py-32 bg-slate-50 dark:bg-slate-900/10 relative overflow-hidden transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-16">
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeIn}>
               <h2 className="text-sm font-bold text-brand-600 uppercase tracking-widest mb-4">Fan Favorites</h2>
-              <h3 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight">Most Loved Dishes</h3>
-              <p className="mt-6 text-xl text-slate-500 font-medium max-w-xl">Try what thousands of our customers are already enjoying.</p>
+              <h3 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight">Most Loved Dishes</h3>
+              <p className="mt-6 text-xl text-slate-500 dark:text-slate-400 font-medium max-w-xl">Try what thousands of our customers are already enjoying.</p>
             </motion.div>
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeIn} className="mt-8 md:mt-0">
               <Button variant="secondary" onClick={() => navigate("/login")}>
@@ -167,18 +167,18 @@ export default function Home() {
           >
             {menuItems.map((item, i) => (
               <motion.div variants={fadeIn} key={item.name}>
-                <Card hover className="p-4 border-slate-100 group overflow-hidden">
+                <Card hover className="p-4 border-slate-100 dark:border-slate-800 group overflow-hidden">
                   <div className={`w-full h-56 rounded-2xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-6 group-hover:scale-105 transition-transform duration-500 shadow-inner relative`}>
                     <span className="text-8xl drop-shadow-2xl">{item.emoji}</span>
                   </div>
                   <div className="px-2 pb-2">
-                    <h4 className="font-bold text-slate-900 text-xl mb-3">{item.name}</h4>
+                    <h4 className="font-bold text-slate-900 dark:text-white text-xl mb-3">{item.name}</h4>
                     <Badge variant="brand" className="mb-4">{item.tag}</Badge>
                     <div className="flex justify-between items-center mt-2">
-                      <span className="font-black text-2xl text-slate-900">{item.price}</span>
+                      <span className="font-black text-2xl text-slate-900 dark:text-white">{item.price}</span>
                       <button 
                         onClick={() => navigate("/login")}
-                        className="w-12 h-12 rounded-full bg-slate-900 text-white flex items-center justify-center hover:bg-brand-500 transition-colors shadow-md hover:scale-105 active:scale-95"
+                        className="w-12 h-12 rounded-full bg-slate-900 dark:bg-slate-800 text-white flex items-center justify-center hover:bg-brand-500 transition-colors shadow-md hover:scale-105 active:scale-95"
                       >
                         <ArrowRight size={20} />
                       </button>
@@ -192,11 +192,11 @@ export default function Home() {
       </section>
 
       {/* ── Testimonials ── */}
-      <section className="w-full py-32 bg-white relative">
+      <section className="w-full py-32 bg-white dark:bg-slate-950 relative transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeIn} className="text-center max-w-2xl mx-auto mb-20">
             <h2 className="text-sm font-bold text-brand-600 uppercase tracking-widest mb-4">Customer Reviews</h2>
-            <h3 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight">People Love ByteBite</h3>
+            <h3 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight">People Love ByteBite</h3>
           </motion.div>
 
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -210,7 +210,7 @@ export default function Home() {
               createdAt: new Date().toISOString()
             }))).map((r, i) => (
               <motion.div variants={fadeIn} key={r._id}>
-                <Card className="p-10 border-slate-100 h-full flex flex-col justify-between">
+                <Card className="p-10 border-slate-100 dark:border-slate-800 h-full flex flex-col justify-between">
                   <div>
                     <div className="flex justify-between items-start mb-6 gap-4">
                       <div className="flex gap-1 text-yellow-400">
@@ -218,29 +218,29 @@ export default function Home() {
                           <Star key={idx} size={18} fill="currentColor" className="text-yellow-400" />
                         ))}
                         {[...Array(5 - r.rating)].map((_, idx) => (
-                          <Star key={idx} size={18} className="text-slate-200" />
+                          <Star key={idx} size={18} className="text-slate-200 dark:text-slate-850" />
                         ))}
                       </div>
-                      <span className="text-xs font-extrabold text-brand-600 uppercase tracking-wider bg-brand-50 border border-brand-100 px-2.5 py-1 rounded-lg truncate max-w-[150px]">
+                      <span className="text-xs font-extrabold text-brand-600 dark:text-brand-400 uppercase tracking-wider bg-brand-50 dark:bg-brand-950/45 border border-brand-100 dark:border-brand-900/60 px-2.5 py-1 rounded-lg truncate max-w-[150px]">
                         {r.foodName || "General"}
                       </span>
                     </div>
-                    <p className="text-slate-600 leading-relaxed font-medium mb-8 text-base">"{r.reviewText}"</p>
+                    <p className="text-slate-600 dark:text-slate-350 leading-relaxed font-medium mb-8 text-base">"{r.reviewText}"</p>
                   </div>
                   
-                  <div className="flex items-center justify-between border-t border-slate-100/60 pt-6">
+                  <div className="flex items-center justify-between border-t border-slate-100/60 dark:border-slate-800/60 pt-6">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-full bg-slate-50 text-slate-700 font-black text-lg flex items-center justify-center border border-slate-200 shadow-inner">
+                      <div className="w-12 h-12 rounded-full bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-black text-lg flex items-center justify-center border border-slate-200 dark:border-slate-700 shadow-inner">
                         {r.userName ? r.userName[0].toUpperCase() : "U"}
                       </div>
                       <div>
-                        <h5 className="font-bold text-slate-900 text-sm">{r.userName}</h5>
-                        <span className="text-[11px] font-medium text-slate-500 flex items-center gap-1 mt-0.5">
+                        <h5 className="font-bold text-slate-900 dark:text-white text-sm">{r.userName}</h5>
+                        <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5">
                           <MapPin size={12} /> {r.city || "Verified Buyer"}
                         </span>
                       </div>
                     </div>
-                    <span className="text-[10px] font-bold text-slate-400">
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-550">
                       {new Date(r.createdAt).toLocaleDateString()}
                     </span>
                   </div>
