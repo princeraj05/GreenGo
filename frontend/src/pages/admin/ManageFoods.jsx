@@ -135,9 +135,9 @@ export default function ManageFoods() {
                   >
                     <option value="Veg">Veg</option>
                     <option value="Non-Veg">Non-Veg</option>
-                    <option value="Spicy">Spicy</option>
                     <option value="Sweet">Sweet</option>
-                    <option value="Beverages">Beverages</option>
+                    <option value="Water">Water</option>
+                    <option value="Cold Drink">Cold Drink</option>
                   </select>
                 </div>
               </div>

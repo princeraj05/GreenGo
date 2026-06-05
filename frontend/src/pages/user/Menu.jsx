@@ -139,7 +139,7 @@ export default function Menu() {
     navigate("/user/checkout");
   };
 
-  const categories = ["All", "Veg", "Non-Veg", "Spicy", "Sweet", "Beverages", "Favorites"];
+  const categories = ["All", "Veg", "Non-Veg", "Sweet", "Water", "Cold Drink", "Favorites"];
 
   return (
     <div className="max-w-7xl mx-auto w-full pb-10">
