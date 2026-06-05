@@ -47,6 +47,7 @@ const userSchema = new mongoose.Schema(
   totalSpent: { type: Number, default: 0 },
   totalOrders: { type: Number, default: 0 },
   favoriteCategory: { type: String, default: "" },
+  favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: "Food" }],
   blocked: { type: Boolean, default: false },
 
   role:{

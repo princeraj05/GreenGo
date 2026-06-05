@@ -133,3 +133,35 @@ export const updateProfile = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+/* ================= TOGGLE FAVORITE ================= */
+
+export const toggleFavorite = async (req, res) => {
+  try {
+    const { foodId } = req.body;
+    if (!foodId) {
+      return res.status(400).json({ message: "Food ID is required" });
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (!user.favorites) {
+      user.favorites = [];
+    }
+
+    const index = user.favorites.indexOf(foodId);
+    if (index > -1) {
+      user.favorites.splice(index, 1);
+    } else {
+      user.favorites.push(foodId);
+    }
+
+    await user.save();
+    res.json({ success: true, favorites: user.favorites });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+};

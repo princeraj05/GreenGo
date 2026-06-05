@@ -7,7 +7,7 @@ export default function QuickActions() {
     { title: "Browse Menu", icon: <Search size={24} />, link: "/user/menu", color: "from-brand-400 to-brand-600", bg: "bg-brand-50", text: "text-brand-600" },
     { title: "View Cart", icon: <ShoppingBag size={24} />, link: "/user/cart", color: "from-blue-400 to-indigo-500", bg: "bg-blue-50", text: "text-blue-600" },
     { title: "My Orders", icon: <Package size={24} />, link: "/user/orders", color: "from-emerald-400 to-teal-500", bg: "bg-emerald-50", text: "text-emerald-600" },
-    { title: "Favorite Foods", icon: <Heart size={24} />, link: "/user/menu", color: "from-rose-400 to-pink-500", bg: "bg-rose-50", text: "text-rose-600" },
+    { title: "Favorite Foods", icon: <Heart size={24} />, link: "/user/menu?category=Favorites", color: "from-rose-400 to-pink-500", bg: "bg-rose-50", text: "text-rose-600" },
   ];
 
   return (

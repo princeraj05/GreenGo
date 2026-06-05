@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ShoppingCart, UtensilsCrossed, Star, X } from "lucide-react";
+import { Search, ShoppingCart, UtensilsCrossed, Star, X, Heart } from "lucide-react";
 import Button from "../../components/ui/Button";
 import Card from "../../components/ui/Card";
 import Input from "../../components/ui/Input";
 import { getApiUrl, getImageUrl } from "../../utils/getApiUrl";
+import { getToken } from "../../utils/getToken";
 
 const API = getApiUrl();
 
@@ -15,8 +16,10 @@ export default function Menu() {
   const [category, setCategory] = useState("All");
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
   const [selectedFood, setSelectedFood] = useState(null);
   const [foodReviews, setFoodReviews] = useState([]);
+  const [favorites, setFavorites] = useState([]);
 
   const selectFoodDetails = async (food) => {
     setSelectedFood(food);
@@ -32,8 +35,58 @@ export default function Menu() {
   };
 
   useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const catParam = params.get("category");
+    if (catParam) {
+      setCategory(catParam);
+    }
+  }, [location.search]);
+
+  useEffect(() => {
     loadFoods();
+    loadFavorites();
   }, []);
+
+  const loadFavorites = async () => {
+    try {
+      const token = await getToken();
+      if (!token) return;
+      const res = await fetch(`${API}/api/users/me`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setFavorites(data.favorites || []);
+      }
+    } catch (err) {
+      console.error("Failed to load user favorites:", err);
+    }
+  };
+
+  const toggleFavoriteFood = async (foodId) => {
+    try {
+      const token = await getToken();
+      if (!token) return;
+      const res = await fetch(`${API}/api/users/favorites/toggle`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ foodId })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setFavorites(data.favorites || []);
+      }
+    } catch (err) {
+      console.error("Failed to toggle favorite:", err);
+    }
+  };
+
+  const isFavorite = (foodId) => {
+    return favorites.includes(foodId);
+  };
 
   const loadFoods = async () => {
     try {
@@ -51,7 +104,16 @@ export default function Menu() {
 
   const filteredFoods = foods.filter(food => {
     const matchesSearch = food.name.toLowerCase().includes(search.toLowerCase()) || (food.description || "").toLowerCase().includes(search.toLowerCase());
-    const matchesCategory = category === "All" || (food.category && food.category.toLowerCase() === category.toLowerCase()) || (food.description || "").toLowerCase().includes(category.toLowerCase()) || food.name.toLowerCase().includes(category.toLowerCase());
+    
+    let matchesCategory = false;
+    if (category === "All") {
+      matchesCategory = true;
+    } else if (category === "Favorites") {
+      matchesCategory = isFavorite(food._id);
+    } else {
+      matchesCategory = (food.category && food.category.toLowerCase() === category.toLowerCase()) || (food.description || "").toLowerCase().includes(category.toLowerCase()) || food.name.toLowerCase().includes(category.toLowerCase());
+    }
+    
     return matchesSearch && matchesCategory;
   });
 
@@ -77,7 +139,7 @@ export default function Menu() {
     navigate("/user/checkout");
   };
 
-  const categories = ["All", "Veg", "Non-Veg", "Spicy", "Sweet", "Beverages"];
+  const categories = ["All", "Veg", "Non-Veg", "Spicy", "Sweet", "Beverages", "Favorites"];
 
   return (
     <div className="max-w-7xl mx-auto w-full pb-10">
@@ -177,6 +239,18 @@ export default function Menu() {
                         className="w-full h-full object-cover rounded-[1.25rem] transition-transform duration-700 group-hover:scale-110"
                         onError={(e) => { e.target.src = 'https://placehold.co/400x300?text=Food'; }}
                       />
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleFavoriteFood(food._id);
+                        }}
+                        className="absolute top-4 left-4 w-9 h-9 bg-white/90 backdrop-blur-md flex items-center justify-center rounded-xl shadow-sm text-slate-700 hover:text-red-500 transition-colors z-10"
+                      >
+                        <Heart
+                          size={18}
+                          className={isFavorite(food._id) ? "fill-red-500 text-red-500" : "text-slate-600"}
+                        />
+                      </button>
                       <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-lg text-sm font-black text-slate-900 shadow-sm">
                         ₹{food.price}
                       </div>
@@ -228,6 +302,15 @@ export default function Menu() {
                   className="w-full h-full object-cover"
                   onError={(e) => { e.target.src = 'https://placehold.co/600x400?text=Food'; }}
                 />
+                 <button 
+                  onClick={() => toggleFavoriteFood(selectedFood._id)}
+                  className="absolute top-6 left-6 w-10 h-10 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-slate-700 shadow-md hover:bg-white transition-colors"
+                >
+                  <Heart 
+                    size={20} 
+                    className={isFavorite(selectedFood._id) ? "fill-red-500 text-red-500" : "text-slate-600"} 
+                  />
+                </button>
                 <button 
                   onClick={() => setSelectedFood(null)}
                   className="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-slate-700 shadow-md hover:bg-white transition-colors"
