@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import API from "../../api/axios";
+import { Link } from "react-router-dom";
+import { sendPasswordResetEmail } from "firebase/auth";
+import { auth } from "../../config/firebase";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -14,10 +15,10 @@ export default function ForgotPassword() {
     setMessage("");
     setError("");
     try {
-      const res = await API.post("/api/users/forgot-password", { email });
-      setMessage(res.data.message || "Password reset email has been sent successfully!");
+      await sendPasswordResetEmail(auth, email);
+      setMessage("A password reset email has been sent successfully by Firebase!");
     } catch (err) {
-      setError(err.response?.data?.message || "Something went wrong. Please try again.");
+      setError(err.message || "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }

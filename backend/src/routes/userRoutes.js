@@ -5,9 +5,7 @@ import {
   getMe,
   updateProfile,
   toggleFavorite,
-  googleLogin,
-  forgotPassword,
-  resetPassword
+  googleLogin
 } from "../controllers/userController.js";
 
 import { protect } from "../middleware/authMiddleware.js";
@@ -20,7 +18,5 @@ router.get("/me", protect, getMe);
 router.put("/profile", protect, updateProfile);
 router.post("/favorites/toggle", protect, toggleFavorite);
 router.post("/google-login", googleLogin);
-router.post("/forgot-password", forgotPassword);
-router.post("/reset-password/:token", resetPassword);
 
 export default router;
