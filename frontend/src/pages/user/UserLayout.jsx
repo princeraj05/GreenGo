@@ -2,15 +2,17 @@ import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { 
   LayoutDashboard, UtensilsCrossed, ShoppingCart, 
-  Clock, User, Phone, LogOut, Menu, X, Home 
+  Clock, User, Phone, LogOut, Menu, X, Home, Sun, Moon 
 } from "lucide-react";
 import { getToken } from "../../utils/getToken";
 import { cn } from "../../utils/cn";
+import { useTheme } from "../../context/ThemeContext";
 
 export default function UserLayout() {
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [open, setOpen] = useState(false);
+  const { theme, toggleTheme } = useTheme();
 
   // Bottom Navigation state & badges
   const [showBottomNav, setShowBottomNav] = useState(true);
@@ -107,7 +109,7 @@ export default function UserLayout() {
   ];
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
       {/* Mobile Overlay (Only for desktop-fallback drawer click, but not used by main mobile flow anymore) */}
       {open && (
         <div
@@ -117,26 +119,33 @@ export default function UserLayout() {
       )}
 
       {/* Desktop Sidebar (Hidden on mobile) */}
-      <div className="fixed top-0 left-0 bottom-0 w-72 z-[1000] hidden md:flex flex-col bg-white border-r border-slate-200 shadow-sm">
+      <div className="fixed top-0 left-0 bottom-0 w-72 z-[1000] hidden md:flex flex-col bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 shadow-sm transition-colors duration-300">
         {/* Brand */}
-        <div className="px-6 h-20 flex items-center border-b border-slate-100">
+        <div className="px-6 h-20 flex items-center justify-between border-b border-slate-100 dark:border-slate-800/50">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-brand-500 flex items-center justify-center shadow-md shadow-brand-500/20">
               <span className="text-white text-xl">🍔</span>
             </div>
-            <span className="text-slate-900 font-extrabold text-xl tracking-tight">ByteBite</span>
+            <span className="text-slate-900 dark:text-white font-extrabold text-xl tracking-tight">ByteBite</span>
           </div>
+          <button
+            onClick={toggleTheme}
+            className="p-2.5 rounded-xl border border-slate-200/60 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors"
+            aria-label="Toggle Theme"
+          >
+            {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
         </div>
 
         {/* User Info */}
-        <div className="px-6 py-5 border-b border-slate-100">
+        <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800/50">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200">
-              <User size={24} className="text-slate-500" />
+            <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-900 flex items-center justify-center border border-slate-200 dark:border-slate-800">
+              <User size={24} className="text-slate-500 dark:text-slate-400" />
             </div>
             <div>
-              <p className="text-slate-900 font-bold">{name || "User"}</p>
-              <p className="text-slate-500 text-sm font-medium">Food Lover</p>
+              <p className="text-slate-900 dark:text-white font-bold">{name || "User"}</p>
+              <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Food Lover</p>
             </div>
           </div>
         </div>
@@ -152,7 +161,7 @@ export default function UserLayout() {
                 "flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-bold transition-all duration-300",
                 isActive
                   ? "bg-brand-500 text-white shadow-md shadow-brand-500/25"
-                  : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                  : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-white"
               )}
             >
               {icon}
@@ -162,10 +171,10 @@ export default function UserLayout() {
         </nav>
 
         {/* Logout */}
-        <div className="p-4 border-t border-slate-100">
+        <div className="p-4 border-t border-slate-100 dark:border-slate-800/50">
           <button
             onClick={() => navigate("/login")}
-            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-red-50 hover:bg-red-100 text-red-600 font-bold transition-colors"
+            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-950/30 text-red-600 dark:text-red-400 font-bold transition-colors"
           >
             <LogOut size={18} />
             Logout
@@ -177,20 +186,29 @@ export default function UserLayout() {
       <div className="flex-1 flex flex-col w-full md:pl-72 min-h-screen transition-all duration-300">
         
         {/* Mobile Topbar */}
-        <div className="sticky top-0 z-40 h-16 flex items-center justify-between px-4 bg-white/80 backdrop-blur-md border-b border-slate-200 md:hidden">
+        <div className="sticky top-0 z-40 h-16 flex items-center justify-between px-4 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 md:hidden transition-colors duration-300">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center">
               <span className="text-white text-sm">🍔</span>
             </div>
-            <span className="font-extrabold text-slate-900 text-lg">ByteBite</span>
+            <span className="font-extrabold text-slate-900 dark:text-white text-lg">ByteBite</span>
           </div>
-          {/* Right avatar or profile button for mobile topbar instead of hamburger */}
-          <button 
-            onClick={() => navigate("/user/profile")}
-            className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 transition-colors border border-slate-100 shadow-sm"
-          >
-            <User size={18} />
-          </button>
+          {/* Right actions (theme toggle + profile) */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={toggleTheme}
+              className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors border border-slate-100 dark:border-slate-800 shadow-sm"
+              aria-label="Toggle Theme"
+            >
+              {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
+            <button 
+              onClick={() => navigate("/user/profile")}
+              className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors border border-slate-100 dark:border-slate-800 shadow-sm"
+            >
+              <User size={18} />
+            </button>
+          </div>
         </div>
 
         {/* Page Content - with additional padding-bottom on mobile to prevent occlusion by bottom nav */}
@@ -206,7 +224,7 @@ export default function UserLayout() {
         "fixed bottom-4 left-4 right-4 z-50 transition-all duration-300 transform md:hidden",
         showBottomNav ? "translate-y-0 opacity-100" : "translate-y-28 opacity-0 pointer-events-none"
       )}>
-        <nav className="bg-white/70 backdrop-blur-xl border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.08)] rounded-2xl flex items-center justify-around py-2.5 px-3">
+        <nav className="bg-white/70 dark:bg-slate-950/70 backdrop-blur-xl border border-white/20 dark:border-slate-800/50 shadow-[0_8px_32px_rgba(0,0,0,0.08)] rounded-2xl flex items-center justify-around py-2.5 px-3">
           {bottomNavLinks.map(({ to, end, label, icon, badge }) => (
             <NavLink
               key={to}
@@ -215,14 +233,14 @@ export default function UserLayout() {
               className={({ isActive }) => cn(
                 "flex flex-col items-center justify-center relative py-1.5 px-4 rounded-xl transition-all duration-300 active:scale-90",
                 isActive 
-                  ? "text-brand-500 scale-105 bg-brand-500/10 font-black" 
-                  : "text-slate-400 hover:text-slate-600 font-bold"
+                  ? "text-brand-500 scale-105 bg-brand-500/10 dark:bg-brand-500/20 font-black" 
+                  : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 font-bold"
               )}
             >
               <div className="relative">
                 {icon}
                 {badge !== undefined && badge > 0 && (
-                  <span className="absolute -top-1.5 -right-2 bg-brand-500 text-white text-[9px] font-black h-4 min-w-[16px] px-1 rounded-full flex items-center justify-center border border-white">
+                  <span className="absolute -top-1.5 -right-2 bg-brand-500 text-white text-[9px] font-black h-4 min-w-[16px] px-1 rounded-full flex items-center justify-center border border-white dark:border-slate-900">
                     {badge}
                   </span>
                 )}

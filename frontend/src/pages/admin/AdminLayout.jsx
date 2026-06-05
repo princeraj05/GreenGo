@@ -4,16 +4,18 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   LayoutDashboard, UtensilsCrossed, Package, Users, 
   MessageSquare, Ticket, Bell, LineChart, Settings, 
-  LogOut, Menu, X, Star, Plus, MoreHorizontal
+  LogOut, Menu, X, Star, Plus, MoreHorizontal, Sun, Moon
 } from "lucide-react";
 import { getToken } from "../../utils/getToken";
 import { cn } from "../../utils/cn";
+import { useTheme } from "../../context/ThemeContext";
 
 export default function AdminLayout() {
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [open, setOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const { theme, toggleTheme } = useTheme();
 
   // Mobile Bottom Navigation and Drawer State
   const [showBottomNav, setShowBottomNav] = useState(true);
@@ -111,7 +113,7 @@ export default function AdminLayout() {
   ];
 
   return (
-    <div className="flex min-h-screen bg-slate-50 font-sans text-slate-900">
+    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-white transition-colors duration-300">
       
       {/* Mobile Overlay (drawer closing toggle fallback) */}
       {open && (
@@ -185,34 +187,51 @@ export default function AdminLayout() {
       <div className="flex-1 flex flex-col w-full md:pl-72 min-h-screen transition-all duration-300 relative bg-slate-50">
         
         {/* Mobile Topbar */}
-        <div className="sticky top-0 z-40 h-16 flex items-center justify-between px-4 bg-white/80 backdrop-blur-md border-b border-slate-200 md:hidden">
+        <div className="sticky top-0 z-40 h-16 flex items-center justify-between px-4 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 md:hidden transition-colors duration-300">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center shadow-md">
               <span className="text-white text-sm font-black">B</span>
             </div>
-            <span className="font-extrabold text-slate-900 text-lg">ByteBite Admin</span>
+            <span className="font-extrabold text-slate-900 dark:text-white text-lg">ByteBite Admin</span>
           </div>
-          {/* Messages shortcut on header for instant access */}
-          <button 
-            onClick={() => navigate("/admin/contacts")}
-            className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 transition-colors border border-slate-100 shadow-sm relative"
-          >
-            <MessageSquare size={18} />
-            {unreadCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-brand-500 rounded-full border-2 border-white animate-pulse" />
-            )}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={toggleTheme}
+              className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-350 transition-colors border border-slate-100 dark:border-slate-800 shadow-sm"
+              aria-label="Toggle Theme"
+            >
+              {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
+            <button 
+              onClick={() => navigate("/admin/contacts")}
+              className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors border border-slate-100 dark:border-slate-800 shadow-sm relative"
+            >
+              <MessageSquare size={18} />
+              {unreadCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-brand-500 rounded-full border-2 border-white animate-pulse" />
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Topbar for Desktop viewports */}
-        <div className="sticky top-0 z-30 h-20 hidden md:flex items-center justify-between px-6 lg:px-10 bg-white/70 backdrop-blur-xl border-b border-slate-200/50 shadow-sm">
-          <h2 className="text-xl font-bold text-slate-800 tracking-tight">Admin Portal</h2>
+        <div className="sticky top-0 z-30 h-20 hidden md:flex items-center justify-between px-6 lg:px-10 bg-white/70 dark:bg-slate-950/70 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50 shadow-sm transition-colors duration-300">
+          <h2 className="text-xl font-bold text-slate-800 dark:text-white tracking-tight">Admin Portal</h2>
 
           <div className="flex items-center gap-4">
+             {/* Theme Toggle Button */}
+             <button
+               onClick={toggleTheme}
+               className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-900 flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-brand-50 dark:hover:bg-slate-850 hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
+               title="Toggle Theme"
+             >
+                {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+             </button>
+             
              {/* Notification Bell */}
              <button 
                onClick={() => navigate("/admin/contacts")}
-               className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-brand-50 hover:text-brand-600 transition-colors relative"
+               className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-900 flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-brand-50 dark:hover:bg-slate-800 hover:text-brand-600 dark:hover:text-brand-400 transition-colors relative"
                title={unreadCount > 0 ? `${unreadCount} unread messages` : "No new messages"}
              >
                 <Bell size={18} />
@@ -222,17 +241,17 @@ export default function AdminLayout() {
              </button>
              
              {/* Profile Avatar (Small) */}
-             <div className="w-10 h-10 rounded-full bg-brand-100 text-brand-600 shadow-sm flex items-center justify-center cursor-pointer">
+             <div className="w-10 h-10 rounded-full bg-brand-100 dark:bg-brand-900/55 text-brand-600 dark:text-brand-400 shadow-sm flex items-center justify-center cursor-pointer">
                 <span className="font-bold text-sm">{name ? name.charAt(0).toUpperCase() : 'A'}</span>
              </div>
           </div>
         </div>
 
         {/* Dynamic Page Content - adjusted padding at the bottom for mobile */}
-        <div className="flex-1 p-6 lg:p-10 pb-28 md:pb-10 relative overflow-hidden">
+        <div className="flex-1 p-6 lg:p-10 pb-28 md:pb-10 relative overflow-hidden bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
            {/* Decorative Background Elements */}
-           <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-brand-50 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
-           <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-50/50 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/3 pointer-events-none"></div>
+           <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-brand-50 dark:bg-brand-950/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
+           <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-50/50 dark:bg-blue-950/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/3 pointer-events-none"></div>
            
            <div className="relative z-10 w-full h-full max-w-7xl mx-auto">
              <Outlet />
