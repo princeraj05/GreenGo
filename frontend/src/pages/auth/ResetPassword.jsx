@@ -1,23 +1,33 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import API from "../../api/axios";
 
-export default function ForgotPassword() {
-  const [email, setEmail] = useState("");
+export default function ResetPassword() {
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const { token } = useParams();
+  const navigate = useNavigate();
 
-  const handleForgotPassword = async (e) => {
+  const handleResetPassword = async (e) => {
     e.preventDefault();
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
     setLoading(true);
     setMessage("");
     setError("");
     try {
-      const res = await API.post("/api/users/forgot-password", { email });
-      setMessage(res.data.message || "Password reset email has been sent successfully!");
+      const res = await API.post(`/api/users/reset-password/${token}`, { password });
+      setMessage(res.data.message || "Password updated successfully!");
+      setTimeout(() => {
+        navigate("/login");
+      }, 3000);
     } catch (err) {
-      setError(err.response?.data?.message || "Something went wrong. Please try again.");
+      setError(err.response?.data?.message || "Reset token is invalid or expired. Please request a new link.");
     } finally {
       setLoading(false);
     }
@@ -37,15 +47,15 @@ export default function ForgotPassword() {
             <span className="text-3xl text-white">🍔</span>
           </Link>
           <h1 className="text-3xl font-black text-gray-900 tracking-tight">ByteBite</h1>
-          <p className="text-sm font-medium text-gray-500 mt-2">Reset your account password</p>
+          <p className="text-sm font-medium text-gray-500 mt-2">Set your new password</p>
         </div>
 
         <div className="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100 px-8 py-10">
-          <h2 className="text-xl font-black text-gray-900 mb-6">Forgot Password</h2>
+          <h2 className="text-xl font-black text-gray-900 mb-6">Reset Password</h2>
 
           {message && (
             <div className="mb-6 p-4 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-700 text-sm font-medium">
-              {message}
+              {message} (Redirecting to login...)
             </div>
           )}
 
@@ -55,36 +65,43 @@ export default function ForgotPassword() {
             </div>
           )}
 
-          <form onSubmit={handleForgotPassword} className="space-y-5">
-            <div className="group">
+          <form onSubmit={handleResetPassword} className="space-y-5">
+            <div>
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">
-                Email Address
+                New Password
               </label>
               <input
-                type="email"
-                placeholder="you@example.com"
-                value={email}
+                type="password"
+                placeholder="••••••••"
+                value={password}
                 required
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-5 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all font-medium text-gray-900"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">
+                Confirm Password
+              </label>
+              <input
+                type="password"
+                placeholder="••••••••"
+                value={confirmPassword}
+                required
+                onChange={(e) => setConfirmPassword(e.target.value)}
                 className="w-full px-5 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all font-medium text-gray-900"
               />
             </div>
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !!message}
               className="w-full py-4 mt-4 rounded-xl bg-gradient-to-r from-orange-500 to-red-600 text-white font-black text-lg shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 hover:-translate-y-1 transition-all active:scale-95 disabled:opacity-70 disabled:hover:translate-y-0 disabled:hover:shadow-orange-500/30"
             >
-              {loading ? "Sending link..." : "Send Reset Link →"}
+              {loading ? "Resetting..." : "Save Password →"}
             </button>
           </form>
-
-          <p className="text-center text-sm font-medium text-gray-500 mt-8">
-            Remembered your password?{" "}
-            <Link to="/login" className="text-orange-600 font-bold hover:underline">
-              Back to Login
-            </Link>
-          </p>
         </div>
       </div>
     </div>
