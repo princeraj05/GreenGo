@@ -48,18 +48,18 @@ export default function ManageSettings() {
     }
   };
 
-  if (loading) return <p className="p-8">Loading settings...</p>;
+  if (loading) return <p className="p-8 text-slate-900 dark:text-white">Loading settings...</p>;
 
   return (
     <div className="w-full h-full animate-fade-in pb-10">
       <div className="mb-10">
-        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Global Settings</h1>
-        <p className="text-slate-500 mt-1">Configure global application properties.</p>
+        <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Global Settings</h1>
+        <p className="text-slate-500 dark:text-slate-400 mt-1">Configure global application properties.</p>
       </div>
 
-      <div className="bg-white rounded-3xl p-8 mb-10 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] max-w-2xl">
-        <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-          <svg className="w-6 h-6 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <div className="bg-white dark:bg-slate-950 rounded-3xl p-8 mb-10 border border-slate-100 dark:border-slate-800/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] max-w-2xl">
+        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+          <svg className="w-6 h-6 text-emerald-500 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
@@ -68,34 +68,34 @@ export default function ManageSettings() {
         
         <form onSubmit={handleSave} className="space-y-8">
           
-          <div className="flex items-center justify-between p-4 rounded-2xl border border-slate-200 bg-slate-50">
+          <div className="flex items-center justify-between p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900">
             <div>
-              <h3 className="font-bold text-slate-800">Enable Delivery Charge</h3>
-              <p className="text-sm text-slate-500">Charge users for delivery during checkout</p>
+              <h3 className="font-bold text-slate-800 dark:text-white">Enable Delivery Charge</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Charge users for delivery during checkout</p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input type="checkbox" className="sr-only peer" 
                 checked={form.isDeliveryChargeEnabled}
                 onChange={(e) => setForm({ ...form, isDeliveryChargeEnabled: e.target.checked })} 
               />
-              <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+              <div className="w-11 h-6 bg-gray-300 dark:bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-350 dark:after:border-slate-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
             </label>
           </div>
 
           <div className={`${!form.isDeliveryChargeEnabled ? "opacity-50 pointer-events-none" : "transition-opacity"}`}>
-            <label className="block text-sm font-bold text-slate-700 mb-2">Delivery Charge Amount (₹)</label>
+            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Delivery Charge Amount (₹)</label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <span className="text-slate-400 font-bold">₹</span>
+                <span className="text-slate-400 dark:text-slate-500 font-bold">₹</span>
               </div>
               <input type="number" min="0" value={form.deliveryChargeAmount} 
                 onChange={(e) => setForm({ ...form, deliveryChargeAmount: Number(e.target.value) })}
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-slate-800 font-medium" />
+                className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-slate-800 dark:text-white font-medium" />
             </div>
           </div>
           
           <button type="submit" disabled={saving}
-            className="w-full py-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-lg shadow-lg shadow-slate-900/20 hover:shadow-slate-900/30 transition-all active:scale-95 flex items-center justify-center gap-2">
+            className="w-full py-4 rounded-xl bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white font-bold text-lg shadow-lg shadow-slate-900/20 hover:shadow-slate-900/30 transition-all active:scale-95 flex items-center justify-center gap-2">
             {saving ? "Saving..." : "Save Settings"}
           </button>
         </form>

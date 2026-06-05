@@ -80,52 +80,52 @@ export default function Contact() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto w-full animate-fade-in pb-10 flex flex-col lg:flex-row gap-8">
+    <div className="max-w-6xl mx-auto w-full animate-fade-in pb-10 flex flex-col lg:flex-row gap-8 bg-transparent">
       <div className="flex-1">
         <div className="mb-8">
-          <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
+          <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
             <MessageCircle className="w-9 h-9 text-indigo-500" />
             Support
           </h2>
-          <p className="text-slate-500 mt-2 text-lg">We're here to help. Send us a message.</p>
+          <p className="text-slate-500 dark:text-slate-400 mt-2 text-lg">We're here to help. Send us a message.</p>
         </div>
 
         <form
           onSubmit={handleSubmit}
-          className="bg-white rounded-3xl p-6 md:p-8 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)]"
+          className="bg-white dark:bg-slate-950 rounded-3xl p-6 md:p-8 border border-slate-100 dark:border-slate-800/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-colors"
         >
           <div className="space-y-5">
             <div>
-              <label className="text-sm font-bold text-slate-700 mb-2 block">Name</label>
+              <label className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 block">Name</label>
               <input
                 required
                 name="name"
                 value={form.name}
                 onChange={(event) => setForm({ ...form, name: event.target.value })}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
                 placeholder="Your Name"
               />
             </div>
             <div>
-              <label className="text-sm font-bold text-slate-700 mb-2 block">Email</label>
+              <label className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 block">Email</label>
               <input
                 type="email"
                 required
                 name="email"
                 value={form.email}
                 onChange={(event) => setForm({ ...form, email: event.target.value })}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
                 placeholder="Your Email"
               />
             </div>
             <div>
-              <label className="text-sm font-bold text-slate-700 mb-2 block">Message</label>
+              <label className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 block">Message</label>
               <textarea
                 required
                 name="message"
                 value={form.message}
                 onChange={(event) => setForm({ ...form, message: event.target.value })}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none h-32 resize-none"
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none h-32 resize-none"
                 placeholder="How can we help?"
               />
             </div>
@@ -140,17 +140,17 @@ export default function Contact() {
         </form>
       </div>
 
-      <div className="flex-1 bg-white rounded-3xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden flex flex-col h-[600px]">
-        <div className="bg-slate-50 border-b border-slate-100 p-6">
-          <h3 className="font-bold text-slate-900 flex items-center gap-2">
+      <div className="flex-1 bg-white dark:bg-slate-950 rounded-3xl border border-slate-100 dark:border-slate-800/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden flex flex-col h-[600px] transition-colors">
+        <div className="bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800/60 p-6 transition-colors">
+          <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
             Live Inbox
           </h3>
         </div>
 
-        <div className="flex-1 p-6 overflow-y-auto space-y-6 bg-slate-50/50">
+        <div className="flex-1 p-6 overflow-y-auto space-y-6 bg-slate-50/50 dark:bg-slate-900/30">
           {contacts.length === 0 ? (
-            <div className="h-full flex items-center justify-center text-slate-400 font-medium">
+            <div className="h-full flex items-center justify-center text-slate-400 dark:text-slate-500 font-medium">
               No messages yet.
             </div>
           ) : (
@@ -170,17 +170,17 @@ export default function Contact() {
 
                 <div className="flex justify-start">
                   {contact.reply ? (
-                    <div className="bg-white border border-slate-200 text-slate-800 p-4 rounded-2xl rounded-tl-sm max-w-[80%] shadow-sm">
+                    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 p-4 rounded-2xl rounded-tl-sm max-w-[80%] shadow-sm transition-colors">
                       <div className="flex items-center gap-2 mb-1">
                         <div className="w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center text-white text-xs font-bold shadow-sm">
                           B
                         </div>
-                        <span className="text-xs font-bold text-slate-500">ByteBite Support</span>
+                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400">ByteBite Support</span>
                       </div>
                       <p className="text-sm leading-relaxed mt-2">{contact.reply}</p>
                     </div>
                   ) : (
-                    <div className="bg-white border border-slate-100 text-slate-400 p-3 rounded-2xl rounded-tl-sm shadow-sm text-xs italic flex items-center gap-2">
+                    <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-slate-400 dark:text-slate-500 p-3 rounded-2xl rounded-tl-sm shadow-sm text-xs italic flex items-center gap-2 transition-colors">
                       <RefreshCw className="w-4 h-4 animate-spin" />
                       Admin is typing...
                     </div>

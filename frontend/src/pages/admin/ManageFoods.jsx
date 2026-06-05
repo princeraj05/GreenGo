@@ -100,14 +100,14 @@ export default function ManageFoods() {
     <div className="w-full pb-10">
       
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
-        <h1 className="text-4xl font-black text-slate-900 tracking-tight">Manage Foods</h1>
-        <p className="text-slate-500 mt-2 text-lg font-medium">Add new items to the menu or manage existing ones.</p>
+        <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">Manage Foods</h1>
+        <p className="text-slate-500 dark:text-slate-400 mt-2 text-lg font-medium">Add new items to the menu or manage existing ones.</p>
       </motion.div>
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-        <Card className="p-8 mb-12 border-slate-100">
-          <h2 className="text-xl font-bold text-slate-900 mb-8 flex items-center gap-3 border-b border-slate-100 pb-4">
-            <div className="w-10 h-10 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center">
+        <Card className="p-8 mb-12 border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-950">
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-8 flex items-center gap-3 border-b border-slate-100 dark:border-slate-800/60 pb-4">
+            <div className="w-10 h-10 rounded-xl bg-brand-50 dark:bg-brand-950/30 text-brand-600 dark:text-brand-400 flex items-center justify-center">
               {editingId ? <Edit2 size={20} /> : <Plus size={20} />}
             </div>
             {editingId ? "Edit Item" : "Add New Item"}
@@ -118,41 +118,41 @@ export default function ManageFoods() {
             <div className="lg:col-span-8 space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Food Name</label>
-                  <Input name="name" placeholder="e.g. Spicy Chicken Burger" value={form.name} onChange={handleChange} className="bg-slate-50" />
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Food Name</label>
+                  <Input name="name" placeholder="e.g. Spicy Chicken Burger" value={form.name} onChange={handleChange} className="bg-slate-50 dark:bg-slate-900" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Price (₹)</label>
-                  <Input name="price" type="number" placeholder="e.g. 249" value={form.price} onChange={handleChange} className="bg-slate-50" />
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Price (₹)</label>
+                  <Input name="price" type="number" placeholder="e.g. 249" value={form.price} onChange={handleChange} className="bg-slate-50 dark:bg-slate-900" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Category</label>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Category</label>
                   <select 
                     name="category" 
                     value={form.category || "Veg"} 
                     onChange={handleChange} 
-                    className="w-full px-5 py-3.5 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 transition-all outline-none text-slate-900 font-medium"
+                    className="w-full px-5 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-950 focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 transition-all outline-none text-slate-900 dark:text-white font-medium"
                   >
-                    <option value="Veg">Veg</option>
-                    <option value="Non-Veg">Non-Veg</option>
-                    <option value="Sweet">Sweet</option>
-                    <option value="Water">Water</option>
-                    <option value="Cold Drink">Cold Drink</option>
+                    <option value="Veg" className="bg-white dark:bg-slate-900">Veg</option>
+                    <option value="Non-Veg" className="bg-white dark:bg-slate-900">Non-Veg</option>
+                    <option value="Sweet" className="bg-white dark:bg-slate-900">Sweet</option>
+                    <option value="Water" className="bg-white dark:bg-slate-900">Water</option>
+                    <option value="Cold Drink" className="bg-white dark:bg-slate-900">Cold Drink</option>
                   </select>
                 </div>
               </div>
               
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Description</label>
+                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Description</label>
                 <textarea name="description" placeholder="A short, tasty description..." value={form.description} onChange={handleChange} rows={4}
-                  className="w-full px-5 py-4 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 transition-all outline-none resize-y text-slate-900 font-medium placeholder-slate-400" />
+                  className="w-full px-5 py-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-950 focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 transition-all outline-none resize-y text-slate-900 dark:text-white font-medium placeholder-slate-400 dark:placeholder:text-slate-500" />
               </div>
               
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Upload Image</label>
+                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Upload Image</label>
                 <div className="relative">
                   <input id="foodImageInput" name="image" type="file" onChange={handleChange} accept="image/*" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
-                  <div className="w-full px-5 py-4 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 flex items-center justify-center gap-3 text-slate-500 group-hover:border-brand-300 transition-colors">
+                  <div className="w-full px-5 py-4 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex items-center justify-center gap-3 text-slate-500 dark:text-slate-400 group-hover:border-brand-300 transition-colors">
                     <UploadCloud size={20} className="text-brand-500" />
                     <span className="font-medium">Choose a file or drag & drop</span>
                   </div>
@@ -162,13 +162,13 @@ export default function ManageFoods() {
             
             <div className="lg:col-span-4 flex flex-col justify-between gap-6">
               <div className="flex-1">
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Image Preview</label>
-                <div className="w-full h-56 rounded-[1.5rem] border-2 border-dashed border-slate-200 bg-slate-50 flex flex-col items-center justify-center overflow-hidden relative group">
+                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Image Preview</label>
+                <div className="w-full h-56 rounded-[1.5rem] border-2 border-dashed border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex flex-col items-center justify-center overflow-hidden relative group">
                   {preview ? (
                     <img src={preview} alt="Preview" className="w-full h-full object-cover" />
                   ) : (
-                    <div className="text-center text-slate-400 p-4 flex flex-col items-center gap-3">
-                      <ImagePlus size={32} className="text-slate-300" />
+                    <div className="text-center text-slate-400 dark:text-slate-500 p-4 flex flex-col items-center gap-3">
+                      <ImagePlus size={32} className="text-slate-300 dark:text-slate-700" />
                       <span className="text-sm font-medium">Select an image to preview</span>
                     </div>
                   )}
@@ -181,7 +181,7 @@ export default function ManageFoods() {
                   {editingId ? "Update Item" : "Publish Item"}
                 </Button>
                 {editingId && (
-                  <Button type="button" onClick={resetForm} variant="ghost" className="w-full rounded-2xl text-slate-500 hover:bg-slate-100 hover:text-slate-700">
+                  <Button type="button" onClick={resetForm} variant="ghost" className="w-full rounded-2xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-white">
                     <X size={18} className="mr-2" /> Cancel Edit
                   </Button>
                 )}
@@ -193,7 +193,7 @@ export default function ManageFoods() {
       </motion.div>
 
       <div className="mb-6 flex items-center justify-between">
-         <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Current Menu ({foods.length})</h2>
+         <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Current Menu ({foods.length})</h2>
       </div>
       
       <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
@@ -207,23 +207,23 @@ export default function ManageFoods() {
               exit={{ opacity: 0, scale: 0.9 }}
               transition={{ delay: i * 0.05 }}
             >
-              <Card hover className="overflow-hidden flex flex-col h-full border-slate-100 p-2 group">
+              <Card hover className="overflow-hidden flex flex-col h-full border-slate-100 dark:border-slate-800/60 p-2 bg-white dark:bg-slate-950 group">
                 
-                <div className="relative h-56 overflow-hidden bg-slate-50 rounded-2xl">
+                <div className="relative h-56 overflow-hidden bg-slate-50 dark:bg-slate-900 rounded-2xl">
                   <img src={f.image?.startsWith('http') ? f.image : `${import.meta.env.VITE_API_URL}/uploads/${f.image}`}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt={f.name} />
                     
                   <div className="absolute top-3 right-3 flex gap-2">
                     <button 
                        onClick={() => startEdit(f)}
-                       className="w-10 h-10 rounded-xl bg-white/90 backdrop-blur-md flex items-center justify-center text-blue-600 shadow-sm hover:bg-blue-500 hover:text-white transition-all"
+                       className="w-10 h-10 rounded-xl bg-white/90 dark:bg-slate-950/90 backdrop-blur-md flex items-center justify-center text-blue-600 dark:text-blue-400 shadow-sm hover:bg-blue-500 hover:text-white dark:hover:bg-blue-600 transition-all"
                        title="Edit"
                     >
                       <Edit2 size={16} />
                     </button>
                     <button 
                        onClick={() => deleteFood(f._id)}
-                       className="w-10 h-10 rounded-xl bg-white/90 backdrop-blur-md flex items-center justify-center text-red-500 shadow-sm hover:bg-red-500 hover:text-white transition-all"
+                       className="w-10 h-10 rounded-xl bg-white/90 dark:bg-slate-950/90 backdrop-blur-md flex items-center justify-center text-red-500 dark:text-red-400 shadow-sm hover:bg-red-500 hover:text-white dark:hover:bg-red-600 transition-all"
                        title="Delete"
                     >
                       <Trash2 size={16} />
@@ -233,15 +233,15 @@ export default function ManageFoods() {
                 
                 <div className="p-6 flex-1 flex flex-col">
                   <div className="flex justify-between items-start mb-1 gap-2">
-                    <h3 className="font-bold text-slate-900 text-xl leading-tight group-hover:text-brand-600 transition-colors">{f.name}</h3>
+                    <h3 className="font-bold text-slate-900 dark:text-white text-xl leading-tight group-hover:text-brand-600 transition-colors">{f.name}</h3>
                   </div>
                   <div className="flex gap-2 mb-2">
-                    <span className="px-2.5 py-0.5 text-xs font-bold bg-brand-50 text-brand-600 rounded-md">
+                    <span className="px-2.5 py-0.5 text-xs font-bold bg-brand-50 dark:bg-brand-950/30 text-brand-600 dark:text-brand-400 rounded-md">
                       {f.category || "Veg"}
                     </span>
                   </div>
-                  <p className="text-slate-500 text-sm line-clamp-2 mt-1 mb-4 flex-1 font-medium">{f.description}</p>
-                  <div className="flex items-center justify-between mt-auto border-t border-slate-100 pt-4">
+                  <p className="text-slate-500 dark:text-slate-400 text-sm line-clamp-2 mt-1 mb-4 flex-1 font-medium">{f.description}</p>
+                  <div className="flex items-center justify-between mt-auto border-t border-slate-100 dark:border-slate-800/60 pt-4">
                     <span className="font-black text-brand-600 text-2xl">₹{f.price}</span>
                   </div>
                 </div>
@@ -252,12 +252,12 @@ export default function ManageFoods() {
         </AnimatePresence>
         
         {foods.length === 0 && (
-          <div className="col-span-full py-20 text-center bg-white rounded-[2.5rem] border border-slate-100 shadow-sm">
-            <div className="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center mx-auto mb-6">
-              <UtensilsCrossed size={32} className="text-slate-300" />
+          <div className="col-span-full py-20 text-center bg-white dark:bg-slate-950 rounded-[2.5rem] border border-slate-100 dark:border-slate-800/60 shadow-sm">
+            <div className="w-20 h-20 bg-slate-50 dark:bg-slate-900 rounded-3xl flex items-center justify-center mx-auto mb-6">
+              <UtensilsCrossed size={32} className="text-slate-300 dark:text-slate-700" />
             </div>
-            <h3 className="text-2xl font-black text-slate-900 mb-2">No foods found</h3>
-            <p className="text-slate-500 font-medium">Your menu is empty. Add a new item above.</p>
+            <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2">No foods found</h3>
+            <p className="text-slate-500 dark:text-slate-400 font-medium">Your menu is empty. Add a new item above.</p>
           </div>
         )}
       </motion.div>

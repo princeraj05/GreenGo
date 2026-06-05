@@ -48,13 +48,13 @@ export default function ManageOrders() {
 
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-black text-slate-900 tracking-tight flex items-center gap-4">
-            <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600">
+          <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-4">
+            <div className="w-12 h-12 bg-emerald-50 dark:bg-emerald-950/30 rounded-2xl flex items-center justify-center text-emerald-600 dark:text-emerald-400">
               <Package size={28} />
             </div>
             Manage Orders
           </h1>
-          <p className="text-slate-500 mt-2 text-lg font-medium">Track and update all customer orders in real-time.</p>
+          <p className="text-slate-500 dark:text-slate-400 mt-2 text-lg font-medium">Track and update all customer orders in real-time.</p>
         </div>
       </motion.div>
 
@@ -69,12 +69,12 @@ export default function ManageOrders() {
               exit={{ opacity: 0, scale: 0.9 }}
               transition={{ delay: i * 0.05 }}
             >
-              <Card hover className="p-6 h-full flex flex-col border-slate-100">
+              <Card hover className="p-6 h-full flex flex-col border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-950">
 
                 {/* Order ID + Status */}
                 <div className="flex items-center justify-between mb-6">
-                  <p className="font-extrabold text-slate-900 text-lg">
-                    #<span className="text-emerald-600">{o._id.slice(-6).toUpperCase()}</span>
+                  <p className="font-extrabold text-slate-900 dark:text-white text-lg">
+                    #<span className="text-emerald-600 dark:text-emerald-400">{o._id.slice(-6).toUpperCase()}</span>
                   </p>
                   <Badge variant={o.status === 'Delivered' ? 'success' : o.status === 'Preparing' ? 'warning' : 'default'} className="uppercase tracking-wider">
                     {o.status}
@@ -83,28 +83,28 @@ export default function ManageOrders() {
 
                 {/* Status Selector */}
                 <div className="mb-6">
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Update Status</label>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Update Status</label>
                   <select 
                     value={o.status} 
                     onChange={(e) => setETA(o._id, e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 font-bold focus:outline-none focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all appearance-none cursor-pointer"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200 font-bold focus:outline-none focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all appearance-none cursor-pointer focus:bg-white dark:focus:bg-slate-950"
                   >
-                    <option value="Pending">Pending</option>
-                    <option value="Preparing">Preparing</option>
-                    <option value="Out for Delivery">Out for Delivery</option>
-                    <option value="Delivered">Delivered</option>
+                    <option value="Pending" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Pending</option>
+                    <option value="Preparing" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Preparing</option>
+                    <option value="Out for Delivery" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Out for Delivery</option>
+                    <option value="Delivered" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Delivered</option>
                   </select>
                 </div>
 
                 {/* Address & ETA */}
-                <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 space-y-3 mb-6">
-                  <p className="text-sm font-medium text-slate-600 flex items-start gap-2 leading-tight">
+                <div className="bg-slate-50 dark:bg-slate-900/60 rounded-2xl p-4 border border-slate-100 dark:border-slate-800/50 space-y-3 mb-6">
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-300 flex items-start gap-2 leading-tight">
                     <MapPin size={16} className="text-emerald-500 shrink-0 mt-0.5" /> 
                     {o.address}
                   </p>
-                  <p className="text-sm font-medium text-slate-600 flex items-center gap-2">
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-300 flex items-center gap-2">
                     <Clock size={16} className="text-emerald-500 shrink-0" /> 
-                    Remaining: <span className="font-bold text-slate-900">{remaining(o)}</span>
+                    Remaining: <span className="font-bold text-slate-900 dark:text-white">{remaining(o)}</span>
                   </p>
                 </div>
 
@@ -114,7 +114,7 @@ export default function ManageOrders() {
                     <input type="number" placeholder="ETA (min)"
                       value={etaInput[o._id] || ""}
                       onChange={(e) => setEtaInput({ ...etaInput, [o._id]: e.target.value })}
-                      className="flex-1 px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 font-medium focus:outline-none focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all" />
+                      className="flex-1 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 font-medium focus:outline-none focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all focus:bg-white dark:focus:bg-slate-950" />
                     <Button onClick={() => setETA(o._id, o.status)} className="rounded-xl px-6 bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20">
                       Set
                     </Button>
@@ -124,17 +124,17 @@ export default function ManageOrders() {
                 {/* Items */}
                 <div className="space-y-2 mb-6 flex-1">
                   {o.items.map((i, idx) => (
-                    <div key={idx} className="flex justify-between items-center text-sm font-medium text-slate-600 py-1 border-b border-slate-50 last:border-0">
-                      <span>{i.name} <span className="text-emerald-600 font-bold ml-1">×{i.qty}</span></span>
-                      <span className="font-bold text-slate-900">₹{i.price * i.qty}</span>
+                    <div key={idx} className="flex justify-between items-center text-sm font-medium text-slate-600 dark:text-slate-400 py-1 border-b border-slate-50 dark:border-slate-800/40 last:border-0">
+                      <span>{i.name} <span className="text-emerald-600 dark:text-emerald-400 font-bold ml-1">×{i.qty}</span></span>
+                      <span className="font-bold text-slate-900 dark:text-white font-black">₹{i.price * i.qty}</span>
                     </div>
                   ))}
                 </div>
 
                 {/* Total */}
-                <div className="flex justify-between items-center pt-4 border-t border-slate-100 mt-auto">
-                  <span className="text-sm font-bold text-slate-500 uppercase tracking-wider">Total Amount</span>
-                  <span className="text-2xl font-black text-slate-900">
+                <div className="flex justify-between items-center pt-4 border-t border-slate-100 dark:border-slate-800/60 mt-auto">
+                  <span className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Amount</span>
+                  <span className="text-2xl font-black text-slate-900 dark:text-white">
                     ₹{o.total}
                   </span>
                 </div>
