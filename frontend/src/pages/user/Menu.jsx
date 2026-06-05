@@ -148,28 +148,28 @@ export default function Menu() {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 bg-white p-8 sm:p-10 rounded-[2.5rem] shadow-sm border border-slate-100 relative overflow-hidden"
+        className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 bg-white dark:bg-slate-950 p-8 sm:p-10 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-800/60 relative overflow-hidden"
       >
-        <div className="absolute top-0 right-0 w-80 h-80 bg-brand-50 rounded-full blur-[80px] -z-10 translate-x-1/3 -translate-y-1/3" />
-        <div className="absolute bottom-0 left-10 w-60 h-60 bg-blue-50 rounded-full blur-[60px] -z-10 translate-y-1/3" />
+        <div className="absolute top-0 right-0 w-80 h-80 bg-brand-50 dark:bg-brand-950/20 rounded-full blur-[80px] -z-10 translate-x-1/3 -translate-y-1/3" />
+        <div className="absolute bottom-0 left-10 w-60 h-60 bg-blue-50 dark:bg-blue-950/20 rounded-full blur-[60px] -z-10 translate-y-1/3" />
         
         <div>
-          <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight">
+          <h1 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight">
             Our Menu
           </h1>
-          <p className="text-slate-500 mt-3 text-lg font-medium">Discover delicious meals tailored for you.</p>
+          <p className="text-slate-500 dark:text-slate-400 mt-3 text-lg font-medium">Discover delicious meals tailored for you.</p>
         </div>
         
         <div className="relative w-full md:w-[400px]">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <Search className="h-5 w-5 text-slate-400" />
+            <Search className="h-5 w-5 text-slate-400 dark:text-slate-500" />
           </div>
           <Input
             type="text"
             placeholder="Search for your cravings..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-12 bg-white/60 backdrop-blur-sm border-slate-200 shadow-sm rounded-2xl py-3.5"
+            className="pl-12 bg-white/60 dark:bg-slate-900/60 backdrop-blur-sm border-slate-200 dark:border-slate-800 shadow-sm rounded-2xl py-3.5"
           />
         </div>
       </motion.div>
@@ -185,8 +185,8 @@ export default function Menu() {
             onClick={() => setCategory(cat)}
             className={`px-6 py-2.5 rounded-full font-bold text-sm transition-all duration-300 ${
               category === cat 
-              ? "bg-slate-900 text-white shadow-md shadow-slate-900/20 scale-105" 
-              : "bg-white text-slate-600 border border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+              ? "bg-slate-900 dark:bg-slate-850 text-white shadow-md shadow-slate-900/20 scale-105" 
+              : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-350 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50"
             }`}
           >
             {cat}
@@ -207,13 +207,13 @@ export default function Menu() {
             {filteredFoods.length === 0 ? (
               <motion.div 
                 initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
-                className="col-span-full flex flex-col items-center justify-center py-24 text-center bg-white rounded-[2.5rem] border border-slate-100 shadow-sm"
+                className="col-span-full flex flex-col items-center justify-center py-24 text-center bg-white dark:bg-slate-950 rounded-[2.5rem] border border-slate-100 dark:border-slate-800/60 shadow-sm"
               >
-                <div className="w-24 h-24 bg-slate-50 rounded-3xl flex items-center justify-center mb-6 text-brand-500">
+                <div className="w-24 h-24 bg-slate-50 dark:bg-slate-900 rounded-3xl flex items-center justify-center mb-6 text-brand-500">
                   <UtensilsCrossed size={48} />
                 </div>
-                <h3 className="text-2xl font-black text-slate-900 mb-2">No food found</h3>
-                <p className="text-slate-500 max-w-sm mb-8 font-medium">Try adjusting your search criteria or category filter to find what you're looking for.</p>
+                <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2">No food found</h3>
+                <p className="text-slate-500 dark:text-slate-400 max-w-sm mb-8 font-medium">Try adjusting your search criteria or category filter to find what you're looking for.</p>
                 <Button onClick={() => {setSearch(""); setCategory("All");}} variant="secondary" className="rounded-full">
                   Clear Filters
                 </Button>
@@ -228,10 +228,10 @@ export default function Menu() {
                   exit={{ opacity: 0, scale: 0.9 }}
                   transition={{ duration: 0.3, delay: i * 0.05 }}
                 >
-                  <Card hover className="h-full flex flex-col overflow-hidden group border-slate-100">
+                  <Card hover className="h-full flex flex-col overflow-hidden group border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-900">
                     <div 
                       onClick={() => selectFoodDetails(food)}
-                      className="relative h-56 overflow-hidden bg-slate-50 p-2 cursor-pointer"
+                      className="relative h-56 overflow-hidden bg-slate-50 dark:bg-slate-900 p-2 cursor-pointer"
                     >
                       <img
                         src={getImageUrl(food.image)}
@@ -244,14 +244,14 @@ export default function Menu() {
                           e.stopPropagation();
                           toggleFavoriteFood(food._id);
                         }}
-                        className="absolute top-4 left-4 w-9 h-9 bg-white/90 backdrop-blur-md flex items-center justify-center rounded-xl shadow-sm text-slate-700 hover:text-red-500 transition-colors z-10"
+                        className="absolute top-4 left-4 w-9 h-9 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md flex items-center justify-center rounded-xl shadow-sm text-slate-700 dark:text-slate-300 hover:text-red-500 transition-colors z-10"
                       >
                         <Heart
                           size={18}
-                          className={isFavorite(food._id) ? "fill-red-500 text-red-500" : "text-slate-600"}
+                          className={isFavorite(food._id) ? "fill-red-500 text-red-500" : "text-slate-600 dark:text-slate-400"}
                         />
                       </button>
-                      <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-lg text-sm font-black text-slate-900 shadow-sm">
+                      <div className="absolute top-4 right-4 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-lg text-sm font-black text-slate-900 dark:text-white shadow-sm">
                         ₹{food.price}
                       </div>
                     </div>
@@ -259,18 +259,18 @@ export default function Menu() {
                     <div className="p-6 flex-1 flex flex-col">
                       <h3 
                         onClick={() => selectFoodDetails(food)}
-                        className="text-xl font-bold text-slate-900 mb-1 line-clamp-1 group-hover:text-brand-600 transition-colors cursor-pointer"
+                        className="text-xl font-bold text-slate-900 dark:text-white mb-1 line-clamp-1 group-hover:text-brand-600 transition-colors cursor-pointer"
                       >
                         {food.name}
                       </h3>
 
                       {/* Ratings stars count */}
-                      <div className="flex items-center gap-1 mb-3 text-[11px] font-bold text-slate-400 bg-slate-50 px-2.5 py-1 rounded-lg w-fit border border-slate-100">
-                        <Star size={12} className={food.rating > 0 ? "text-amber-500 fill-amber-500" : "text-slate-300"} />
+                      <div className="flex items-center gap-1 mb-3 text-[11px] font-bold text-slate-400 dark:text-slate-400 bg-slate-50 dark:bg-slate-950 px-2.5 py-1 rounded-lg w-fit border border-slate-100 dark:border-slate-800/60">
+                        <Star size={12} className={food.rating > 0 ? "text-amber-500 fill-amber-500" : "text-slate-300 dark:text-slate-700"} />
                         <span>{food.rating > 0 ? `${food.rating.toFixed(1)} (${food.ratingCount})` : "No reviews"}</span>
                       </div>
 
-                      <p className="text-sm text-slate-500 line-clamp-2 flex-1 mb-6 font-medium leading-relaxed">{food.description}</p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 flex-1 mb-6 font-medium leading-relaxed">{food.description}</p>
                       
                       <Button onClick={() => addToCart(food)} className="w-full gap-2 group-hover:shadow-brand-500/30">
                         <ShoppingCart size={18} />
@@ -292,10 +292,10 @@ export default function Menu() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 w-full max-w-2xl overflow-hidden flex flex-col max-h-[85vh]"
+              className="bg-white dark:bg-slate-950 rounded-[2.5rem] shadow-2xl border border-slate-100 dark:border-slate-800/60 w-full max-w-2xl overflow-hidden flex flex-col max-h-[85vh]"
             >
               {/* Image & Header */}
-              <div className="relative h-64 sm:h-80 bg-slate-50 shrink-0">
+              <div className="relative h-64 sm:h-80 bg-slate-50 dark:bg-slate-900 shrink-0">
                 <img 
                   src={getImageUrl(selectedFood.image)} 
                   alt={selectedFood.name}
@@ -304,16 +304,16 @@ export default function Menu() {
                 />
                  <button 
                   onClick={() => toggleFavoriteFood(selectedFood._id)}
-                  className="absolute top-6 left-6 w-10 h-10 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-slate-700 shadow-md hover:bg-white transition-colors"
+                  className="absolute top-6 left-6 w-10 h-10 rounded-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md flex items-center justify-center text-slate-700 dark:text-slate-300 shadow-md hover:bg-white dark:hover:bg-slate-800 transition-colors"
                 >
                   <Heart 
                     size={20} 
-                    className={isFavorite(selectedFood._id) ? "fill-red-500 text-red-500" : "text-slate-600"} 
+                    className={isFavorite(selectedFood._id) ? "fill-red-500 text-red-500" : "text-slate-600 dark:text-slate-400"} 
                   />
                 </button>
                 <button 
                   onClick={() => setSelectedFood(null)}
-                  className="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-slate-700 shadow-md hover:bg-white transition-colors"
+                  className="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md flex items-center justify-center text-slate-700 dark:text-slate-300 shadow-md hover:bg-white dark:hover:bg-slate-800 transition-colors"
                 >
                   <X size={20} />
                 </button>
@@ -323,12 +323,12 @@ export default function Menu() {
               <div className="p-6 sm:p-8 flex-1 overflow-y-auto space-y-6">
                 <div>
                   <div className="flex justify-between items-start gap-4 mb-3">
-                    <h2 className="text-3xl font-black text-slate-900 tracking-tight">{selectedFood.name}</h2>
+                    <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">{selectedFood.name}</h2>
                     <span className="text-2xl font-black text-brand-600 shrink-0">₹{selectedFood.price}</span>
                   </div>
                   
                   {/* Rating summary */}
-                  <div className="flex items-center gap-2 text-sm font-extrabold text-slate-600 bg-slate-50 px-3.5 py-2 rounded-xl w-fit border border-slate-100">
+                  <div className="flex items-center gap-2 text-sm font-extrabold text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-900 px-3.5 py-2 rounded-xl w-fit border border-slate-100 dark:border-slate-800/60">
                     <Star size={16} className="text-amber-500 fill-amber-500" />
                     <span>{selectedFood.rating > 0 ? `${selectedFood.rating.toFixed(1)} ★ (${selectedFood.ratingCount} reviews)` : "No reviews yet"}</span>
                   </div>
@@ -336,44 +336,44 @@ export default function Menu() {
 
                 <div>
                   <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Description</h4>
-                  <p className="text-slate-600 leading-relaxed font-medium">{selectedFood.description || "No description available."}</p>
+                  <p className="text-slate-600 dark:text-slate-300 leading-relaxed font-medium">{selectedFood.description || "No description available."}</p>
                 </div>
 
-                <hr className="border-slate-100" />
+                <hr className="border-slate-100 dark:border-slate-800/60" />
 
                 {/* Reviews List */}
                 <div>
-                  <h3 className="text-xl font-black text-slate-900 tracking-tight mb-4">Customer Reviews</h3>
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight mb-4">Customer Reviews</h3>
                   {foodReviews.length === 0 ? (
-                    <div className="bg-slate-50 rounded-2xl p-6 text-center border border-slate-100">
-                      <p className="text-slate-500 font-medium">No reviews for this dish yet. Be the first to try it and write a review!</p>
+                    <div className="bg-slate-50 dark:bg-slate-900 rounded-2xl p-6 text-center border border-slate-100 dark:border-slate-800/60">
+                      <p className="text-slate-500 dark:text-slate-400 font-medium">No reviews for this dish yet. Be the first to try it and write a review!</p>
                     </div>
                   ) : (
                     <div className="space-y-4">
                       {foodReviews.map((r) => (
-                        <div key={r._id} className="bg-slate-50 rounded-2xl p-5 border border-slate-100/60">
+                        <div key={r._id} className="bg-slate-50 dark:bg-slate-900 rounded-2xl p-5 border border-slate-100/60 dark:border-slate-800/50">
                           <div className="flex justify-between items-start gap-4 mb-3">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-full bg-brand-50 text-brand-600 font-black text-sm flex items-center justify-center border border-brand-100">
+                              <div className="w-10 h-10 rounded-full bg-brand-50 dark:bg-brand-950/30 text-brand-600 dark:text-brand-400 font-black text-sm flex items-center justify-center border border-brand-100 dark:border-brand-900/60">
                                 {r.userName ? r.userName[0].toUpperCase() : "U"}
                               </div>
                               <div>
-                                <h5 className="font-bold text-slate-800 text-sm">{r.userName}</h5>
-                                <span className="text-[10px] font-bold text-slate-400">
+                                <h5 className="font-bold text-slate-800 dark:text-white text-sm">{r.userName}</h5>
+                                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">
                                   {new Date(r.createdAt).toLocaleDateString()}
                                 </span>
                               </div>
                             </div>
-                            <div className="flex gap-0.5 text-yellow-400 bg-white border border-slate-100 px-2 py-1 rounded-lg">
+                            <div className="flex gap-0.5 text-yellow-400 bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800/60 px-2 py-1 rounded-lg">
                               {[...Array(r.rating)].map((_, idx) => (
                                 <Star key={idx} size={12} fill="currentColor" className="text-yellow-400" />
                               ))}
                               {[...Array(5 - r.rating)].map((_, idx) => (
-                                <Star key={idx} size={12} className="text-slate-200" />
+                                <Star key={idx} size={12} className="text-slate-200 dark:text-slate-800" />
                               ))}
                             </div>
                           </div>
-                          <p className="text-slate-600 text-sm leading-relaxed font-medium">"{r.reviewText}"</p>
+                          <p className="text-slate-600 dark:text-slate-350 text-sm leading-relaxed font-medium">"{r.reviewText}"</p>
                         </div>
                       ))}
                     </div>
@@ -382,7 +382,7 @@ export default function Menu() {
               </div>
 
               {/* Add to Cart button */}
-              <div className="p-6 border-t border-slate-100 bg-white">
+              <div className="p-6 border-t border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-950">
                 <Button onClick={() => { addToCart(selectedFood); setSelectedFood(null); }} className="w-full gap-2 py-4 text-base rounded-2xl">
                   <ShoppingCart size={20} />
                   Add to Cart • ₹{selectedFood.price}

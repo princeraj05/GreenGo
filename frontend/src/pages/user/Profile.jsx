@@ -153,44 +153,44 @@ export default function Profile() {
       
       {/* Header with Dynamic Avatar */}
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-        <Card className="p-8 mb-8 flex flex-col md:flex-row items-center gap-8 border-slate-100 bg-white">
+        <Card className="p-8 mb-8 flex flex-col md:flex-row items-center gap-8 border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-950">
           <div className="relative">
-            <div className="w-32 h-32 rounded-full bg-gradient-to-tr from-brand-400 to-brand-600 shadow-xl shadow-brand-500/30 flex items-center justify-center text-5xl text-white font-black border-4 border-white z-10 relative">
+            <div className="w-32 h-32 rounded-full bg-gradient-to-tr from-brand-400 to-brand-600 shadow-xl shadow-brand-500/30 flex items-center justify-center text-5xl text-white font-black border-4 border-white dark:border-slate-900 z-10 relative">
               {form.name ? form.name.charAt(0).toUpperCase() : <User size={48} />}
             </div>
             <div className="absolute inset-0 bg-brand-500 rounded-full blur-2xl opacity-40 animate-pulse"></div>
           </div>
           <div className="text-center md:text-left">
-            <h1 className="text-4xl font-black text-slate-900 tracking-tight">{form.name || "Food Lover"}</h1>
-            <p className="text-slate-500 mt-2 text-lg font-medium">Manage your personal information and preferences.</p>
+            <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">{form.name || "Food Lover"}</h1>
+            <p className="text-slate-505 dark:text-slate-400 mt-2 text-lg font-medium">Manage your personal information and preferences.</p>
           </div>
         </Card>
       </motion.div>
 
       {message && (
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className={`mb-6 p-4 rounded-2xl flex items-center gap-3 shadow-sm font-bold ${msgType === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-red-50 text-red-700 border border-red-100'}`}>
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className={`mb-6 p-4 rounded-2xl flex items-center gap-3 shadow-sm font-bold ${msgType === 'success' ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-950/30' : 'bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400 border border-red-100 dark:border-red-950/30'}`}>
           {msgType === 'success' ? <CheckCircle className="text-emerald-500" size={24} /> : <XCircle className="text-red-500" size={24} />}
           {message}
         </motion.div>
       )}
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-        <Card className="p-6 md:p-10 border-slate-100">
+        <Card className="p-6 md:p-10 border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-950">
           
           <div className="mb-10">
-            <h3 className="font-bold text-slate-900 mb-6 flex items-center gap-3 text-xl pb-4 border-b border-slate-100">
+            <h3 className="font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-3 text-xl pb-4 border-b border-slate-100 dark:border-slate-800/60">
               <User size={24} className="text-brand-500" /> Personal Details
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="relative">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1 block">Full Name</label>
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 ml-1 block">Full Name</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400"><User size={18} /></div>
                   <Input name="name" value={form.name} onChange={handleChange} placeholder="John Doe" className="pl-12" />
                 </div>
               </div>
               <div className="relative">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1 block">Mobile Number</label>
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 ml-1 block">Mobile Number</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400"><Phone size={18} /></div>
                   <Input name="phone" value={form.phone} onChange={handleChange} placeholder="+1 234 567 890" className="pl-12" />
@@ -198,7 +198,7 @@ export default function Profile() {
               </div>
               
               <div className="relative">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1 block">Food Preference</label>
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 ml-1 block">Food Preference</label>
                 <div className="relative mb-3">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400"><Utensils size={18} /></div>
                   <Input name="foodPreference" value={form.foodPreference} onChange={handleChange} placeholder="Veg, Non-Veg, Vegan..." className="pl-12" />
@@ -234,7 +234,7 @@ export default function Profile() {
                         className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
                           active
                             ? "bg-brand-500 text-white border-brand-500 shadow-sm"
-                            : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
+                            : "bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800"
                         }`}
                       >
                         {p.label}
@@ -245,7 +245,7 @@ export default function Profile() {
               </div>
 
               <div className="relative">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1 block">Delivery Time</label>
+                <label className="text-xs font-bold text-slate-505 dark:text-slate-400 uppercase tracking-wider mb-2 ml-1 block">Delivery Time</label>
                 <div className="relative mb-3">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400"><Clock size={18} /></div>
                   <Input name="deliveryTime" value={form.deliveryTime} onChange={handleChange} placeholder="e.g. 7:00 PM" className="pl-12" />
@@ -260,14 +260,14 @@ export default function Profile() {
                       key={t.value}
                       type="button"
                       onClick={() => setForm({ ...form, deliveryTime: t.value })}
-                      className="px-3 py-1.5 rounded-full text-xs font-bold border bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 transition-all"
+                      className="px-3 py-1.5 rounded-full text-xs font-bold border bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
                     >
                       🕒 {t.label}
                     </button>
                   ))}
                   
-                  <div className="relative flex items-center border border-slate-200 rounded-full px-3 py-1.5 bg-slate-50 hover:bg-slate-100 transition-all">
-                    <span className="text-xs font-bold text-slate-500 mr-2">Custom:</span>
+                  <div className="relative flex items-center border border-slate-200 dark:border-slate-800 rounded-full px-3 py-1.5 bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
+                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 mr-2">Custom:</span>
                     <input
                       type="time"
                       onChange={(e) => {
@@ -278,7 +278,7 @@ export default function Profile() {
                         const formattedHours = hours % 12 || 12;
                         setForm({ ...form, deliveryTime: `${formattedHours}:${m} ${ampm}` });
                       }}
-                      className="bg-transparent text-xs font-bold text-slate-700 outline-none cursor-pointer"
+                      className="bg-transparent text-xs font-bold text-slate-700 dark:text-slate-200 outline-none cursor-pointer"
                     />
                   </div>
                 </div>
@@ -287,12 +287,12 @@ export default function Profile() {
           </div>
 
           <div className="mb-10">
-            <h3 className="font-bold text-slate-900 mb-6 flex items-center gap-3 text-xl pb-4 border-b border-slate-100">
+            <h3 className="font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-3 text-xl pb-4 border-b border-slate-100 dark:border-slate-800/60">
               <MapPin size={24} className="text-brand-500" /> Delivery Information
             </h3>
             <div className="space-y-6">
               <div className="relative">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 ml-1 block">Address Type</label>
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3 ml-1 block">Address Type</label>
                 <div className="flex flex-wrap gap-3 mb-4">
                   {[
                     { id: "home", label: "Home", icon: "🏠" },
@@ -308,7 +308,7 @@ export default function Profile() {
                         className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold border transition-all ${
                           active
                             ? "bg-brand-500 text-white border-brand-500 shadow-md shadow-brand-500/20"
-                            : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                            : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-355 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800"
                         }`}
                       >
                         <span>{t.icon}</span>
@@ -319,11 +319,11 @@ export default function Profile() {
                 </div>
                 
                 <div className="flex justify-between items-center mb-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1 block">Delivery Address Details</label>
+                  <label className="text-xs font-bold text-slate-505 dark:text-slate-400 uppercase tracking-wider ml-1 block">Delivery Address Details</label>
                   <button
                     type="button"
                     onClick={useCurrentLocation}
-                    className="flex items-center gap-1.5 px-3.5 py-1.5 bg-brand-50 hover:bg-brand-100 text-brand-600 rounded-xl text-xs font-bold transition-all shadow-sm"
+                    className="flex items-center gap-1.5 px-3.5 py-1.5 bg-brand-50 dark:bg-brand-950/30 hover:bg-brand-100 dark:hover:bg-brand-900/40 text-brand-600 dark:text-brand-405 rounded-xl text-xs font-bold transition-all shadow-sm"
                   >
                     {locationLoading ? (
                       <div className="w-3.5 h-3.5 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
@@ -344,18 +344,18 @@ export default function Profile() {
                       ? "Enter your Office address details..."
                       : "Enter your custom / own street address..."
                   }
-                  className="w-full px-5 py-4 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 transition-all outline-none resize-y min-h-[120px] text-slate-900 font-medium placeholder-slate-400 shadow-sm"
+                  className="w-full px-5 py-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-950 focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 transition-all outline-none resize-y min-h-[120px] text-slate-900 dark:text-white font-medium placeholder-slate-400 dark:placeholder:text-slate-500 shadow-sm"
                 />
               </div>
             </div>
           </div>
 
           <div className="mb-6">
-            <h3 className="font-bold text-slate-900 mb-6 flex items-center gap-3 text-xl pb-4 border-b border-slate-100">
+            <h3 className="font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-3 text-xl pb-4 border-b border-slate-100 dark:border-slate-800/60">
               <Settings size={24} className="text-brand-500" /> Preferences
             </h3>
             <div className="space-y-4">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1 block">Notification Channels</label>
+              <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 ml-1 block">Notification Channels</label>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {[
                   { label: "Email Notifications", value: "Email", icon: "📧" },
@@ -385,13 +385,13 @@ export default function Profile() {
                       }}
                       className={`flex flex-col items-center justify-center p-5 rounded-2xl border transition-all ${
                         active
-                          ? "bg-brand-50/50 border-brand-500 text-brand-700 shadow-sm"
-                          : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+                          ? "bg-brand-50/50 dark:bg-brand-950/30 border-brand-500 text-brand-700 dark:text-brand-400 shadow-sm"
+                          : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
                       }`}
                     >
                       <span className="text-2xl mb-2">{n.icon}</span>
                       <span className="text-sm font-bold">{n.label}</span>
-                      <span className="text-[11px] font-semibold mt-1 text-slate-400">
+                      <span className="text-[11px] font-semibold mt-1 text-slate-400 dark:text-slate-500">
                         {active ? "Enabled" : "Disabled"}
                       </span>
                     </button>
@@ -401,7 +401,7 @@ export default function Profile() {
             </div>
           </div>
 
-          <div className="mt-10 flex justify-end pt-6 border-t border-slate-100">
+          <div className="mt-10 flex justify-end pt-6 border-t border-slate-100 dark:border-slate-800/60">
             <Button
               onClick={handleSave}
               disabled={saving}
