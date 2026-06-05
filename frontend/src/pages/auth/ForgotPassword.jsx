@@ -24,7 +24,7 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50 px-4 py-10 overflow-hidden relative">
+    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50 dark:bg-transparent px-4 py-10 overflow-hidden relative">
 
       {/* Decorative Background Elements */}
       <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-orange-500/10 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
@@ -36,28 +36,28 @@ export default function ForgotPassword() {
           <Link to="/" className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center shadow-xl shadow-orange-500/30 mb-4 hover:scale-105 transition-transform">
             <span className="text-3xl text-white">🍔</span>
           </Link>
-          <h1 className="text-3xl font-black text-gray-900 tracking-tight">ByteBite</h1>
-          <p className="text-sm font-medium text-gray-500 mt-2">Reset your account password</p>
+          <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">ByteBite</h1>
+          <p className="text-sm font-medium text-gray-500 dark:text-slate-400 mt-2">Reset your account password</p>
         </div>
 
-        <div className="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100 px-8 py-10">
-          <h2 className="text-xl font-black text-gray-900 mb-6">Forgot Password</h2>
+        <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100 dark:border-slate-800 px-8 py-10">
+          <h2 className="text-xl font-black text-gray-900 dark:text-white mb-6">Forgot Password</h2>
 
           {message && (
-            <div className="mb-6 p-4 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-700 text-sm font-medium">
+            <div className="mb-6 p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/40 text-emerald-700 dark:text-emerald-400 text-sm font-medium">
               {message}
             </div>
           )}
 
           {error && (
-            <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-100 text-red-700 text-sm font-medium">
+            <div className="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/40 text-red-700 dark:text-red-400 text-sm font-medium">
               {error}
             </div>
           )}
 
           <form onSubmit={handleForgotPassword} className="space-y-5">
             <div className="group">
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">
+              <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-widest mb-2">
                 Email Address
               </label>
               <input
@@ -66,7 +66,7 @@ export default function ForgotPassword() {
                 value={email}
                 required
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-5 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all font-medium text-gray-900"
+                className="w-full px-5 py-3.5 rounded-xl border border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all font-medium text-gray-900 dark:text-white"
               />
             </div>
 
@@ -79,9 +79,9 @@ export default function ForgotPassword() {
             </button>
           </form>
 
-          <p className="text-center text-sm font-medium text-gray-500 mt-8">
+          <p className="text-center text-sm font-medium text-gray-500 dark:text-slate-400 mt-8">
             Remembered your password?{" "}
-            <Link to="/login" className="text-orange-600 font-bold hover:underline">
+            <Link to="/login" className="text-orange-600 dark:text-orange-500 font-bold hover:underline">
               Back to Login
             </Link>
           </p>

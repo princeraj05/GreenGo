@@ -75,7 +75,7 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50 px-4 py-10 overflow-hidden relative">
+    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50 dark:bg-transparent px-4 py-10 overflow-hidden relative">
       
       {/* Decorative Background Elements */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-orange-500/10 rounded-full blur-[100px] translate-x-1/3 -translate-y-1/3 pointer-events-none" />
@@ -87,50 +87,50 @@ export default function Register() {
           <Link to="/" className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center shadow-xl shadow-orange-500/30 mb-4 hover:scale-105 transition-transform">
             <span className="text-3xl text-white">🍔</span>
           </Link>
-          <h1 className="text-3xl font-black text-gray-900 tracking-tight">ByteBite</h1>
-          <p className="text-sm font-medium text-gray-500 mt-2">Join us and start ordering premium food today!</p>
+          <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">ByteBite</h1>
+          <p className="text-sm font-medium text-gray-500 dark:text-slate-400 mt-2">Join us and start ordering premium food today!</p>
         </div>
 
-        <div className="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100 px-8 py-10">
-          <h2 className="text-xl font-black text-gray-900 mb-6">Create an Account</h2>
+        <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100 dark:border-slate-800 px-8 py-10">
+          <h2 className="text-xl font-black text-gray-900 dark:text-white mb-6">Create an Account</h2>
 
           <form onSubmit={handleRegister} className="space-y-5">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Full Name</label>
+                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-widest mb-2">Full Name</label>
                 <input type="text" name="name" required onChange={handleChange} placeholder="John Doe"
-                  className="w-full px-5 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all font-medium text-gray-900" />
+                  className="w-full px-5 py-3.5 rounded-xl border border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all font-medium text-gray-900 dark:text-white" />
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Email Address</label>
+                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-widest mb-2">Email Address</label>
                 <input type="email" name="email" required onChange={handleChange} placeholder="john@example.com"
-                  className="w-full px-5 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all font-medium text-gray-900" />
+                  className="w-full px-5 py-3.5 rounded-xl border border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all font-medium text-gray-900 dark:text-white" />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Password</label>
+                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-widest mb-2">Password</label>
                 <input type="password" name="password" required onChange={handleChange} placeholder="••••••••"
-                  className="w-full px-5 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all font-medium text-gray-900" />
+                  className="w-full px-5 py-3.5 rounded-xl border border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all font-medium text-gray-900 dark:text-white" />
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Phone Number</label>
+                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-widest mb-2">Phone Number</label>
                 <input type="text" name="phone" required onChange={handleChange} placeholder="9876543210"
-                  className="w-full px-5 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all font-medium text-gray-900" />
+                  className="w-full px-5 py-3.5 rounded-xl border border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all font-medium text-gray-900 dark:text-white" />
               </div>
             </div>
 
             <div>
               <div className="flex justify-between items-center mb-2">
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest">Delivery Address</label>
-                <button type="button" onClick={useCurrentLocation} className="text-xs text-orange-600 bg-orange-50 px-3 py-1.5 rounded-lg font-bold hover:bg-orange-100 flex items-center gap-1.5 transition-colors">
+                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-widest">Delivery Address</label>
+                <button type="button" onClick={useCurrentLocation} className="text-xs text-orange-600 dark:text-orange-500 bg-orange-50 dark:bg-orange-950/40 px-3 py-1.5 rounded-lg font-bold hover:bg-orange-100 dark:hover:bg-orange-900/60 flex items-center gap-1.5 transition-colors border border-orange-100 dark:border-orange-900/40">
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.243-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg> 
                   Use Current Location
                 </button>
               </div>
               <textarea name="address" required value={form.address} onChange={handleChange} placeholder="Full address for delivery..." rows={3}
-                className="w-full px-5 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all font-medium text-gray-900 resize-none" />
+                className="w-full px-5 py-3.5 rounded-xl border border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all font-medium text-gray-900 dark:text-white resize-none" />
             </div>
 
             <button type="submit" disabled={loading}
@@ -141,10 +141,10 @@ export default function Register() {
 
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200"></div>
+              <div className="w-full border-t border-gray-200 dark:border-slate-800"></div>
             </div>
             <div className="relative flex justify-center text-xs uppercase font-bold text-gray-400">
-              <span className="bg-white px-3">Or continue with</span>
+              <span className="bg-white dark:bg-slate-900 px-3">Or continue with</span>
             </div>
           </div>
 
@@ -152,7 +152,7 @@ export default function Register() {
             type="button"
             onClick={handleGoogleSignIn}
             disabled={loading}
-            className="w-full py-3.5 rounded-xl border border-gray-200 hover:border-gray-300 bg-white hover:bg-gray-50 text-gray-700 font-bold text-sm shadow-sm flex items-center justify-center gap-3 transition-all active:scale-95 disabled:opacity-70"
+            className="w-full py-3.5 rounded-xl border border-gray-200 dark:border-slate-800 hover:border-gray-300 dark:hover:border-slate-700 bg-white dark:bg-slate-950 hover:bg-gray-50 dark:hover:bg-slate-900 text-gray-700 dark:text-slate-200 font-bold text-sm shadow-sm flex items-center justify-center gap-3 transition-all active:scale-95 disabled:opacity-70"
           >
             <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
               <path
@@ -175,9 +175,9 @@ export default function Register() {
             Continue with Google
           </button>
 
-          <p className="text-center text-sm font-medium text-gray-500 mt-8">
+          <p className="text-center text-sm font-medium text-gray-500 dark:text-slate-400 mt-8">
             Already have an account?{" "}
-            <Link to="/login" className="text-orange-600 font-bold hover:underline">
+            <Link to="/login" className="text-orange-600 dark:text-orange-500 font-bold hover:underline">
               Sign in here
             </Link>
           </p>

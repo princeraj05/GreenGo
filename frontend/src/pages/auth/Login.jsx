@@ -60,7 +60,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50 px-4 py-10 overflow-hidden relative">
+    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50 dark:bg-transparent px-4 py-10 overflow-hidden relative">
 
       {/* Decorative Background Elements */}
       <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-orange-500/10 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
@@ -72,17 +72,17 @@ export default function Login() {
           <Link to="/" className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center shadow-xl shadow-orange-500/30 mb-4 hover:scale-105 transition-transform">
             <span className="text-3xl text-white">🍔</span>
           </Link>
-          <h1 className="text-3xl font-black text-gray-900 tracking-tight">ByteBite</h1>
-          <p className="text-sm font-medium text-gray-500 mt-2">Welcome back! Sign in to continue</p>
+          <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">ByteBite</h1>
+          <p className="text-sm font-medium text-gray-500 dark:text-slate-400 mt-2">Welcome back! Sign in to continue</p>
         </div>
 
-        <div className="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100 px-8 py-10">
-          <h2 className="text-xl font-black text-gray-900 mb-6">Sign In</h2>
+        <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100 dark:border-slate-800 px-8 py-10">
+          <h2 className="text-xl font-black text-gray-900 dark:text-white mb-6">Sign In</h2>
 
           <form onSubmit={handleLogin} className="space-y-5">
 
             <div className="group">
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">
+              <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-widest mb-2">
                 Email Address
               </label>
               <input
@@ -91,16 +91,16 @@ export default function Login() {
                 value={email}
                 required
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-5 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all font-medium text-gray-900"
+                className="w-full px-5 py-3.5 rounded-xl border border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all font-medium text-gray-900 dark:text-white"
               />
             </div>
 
             <div>
               <div className="flex justify-between items-center mb-2">
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest">
+                <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-widest">
                   Password
                 </label>
-                <Link to="/forgot-password" className="text-xs font-bold text-orange-600 hover:underline">
+                <Link to="/forgot-password" className="text-xs font-bold text-orange-600 dark:text-orange-500 hover:underline">
                   Forgot Password?
                 </Link>
               </div>
@@ -110,7 +110,7 @@ export default function Login() {
                 value={password}
                 required
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-5 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all font-medium text-gray-900"
+                className="w-full px-5 py-3.5 rounded-xl border border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all font-medium text-gray-900 dark:text-white"
               />
             </div>
 
@@ -125,10 +125,10 @@ export default function Login() {
 
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200"></div>
+              <div className="w-full border-t border-gray-200 dark:border-slate-800"></div>
             </div>
             <div className="relative flex justify-center text-xs uppercase font-bold text-gray-400">
-              <span className="bg-white px-3">Or continue with</span>
+              <span className="bg-white dark:bg-slate-900 px-3">Or continue with</span>
             </div>
           </div>
 
@@ -136,7 +136,7 @@ export default function Login() {
             type="button"
             onClick={handleGoogleSignIn}
             disabled={loading}
-            className="w-full py-3.5 rounded-xl border border-gray-200 hover:border-gray-300 bg-white hover:bg-gray-50 text-gray-700 font-bold text-sm shadow-sm flex items-center justify-center gap-3 transition-all active:scale-95 disabled:opacity-70"
+            className="w-full py-3.5 rounded-xl border border-gray-200 dark:border-slate-800 hover:border-gray-300 dark:hover:border-slate-700 bg-white dark:bg-slate-950 hover:bg-gray-50 dark:hover:bg-slate-900 text-gray-700 dark:text-slate-200 font-bold text-sm shadow-sm flex items-center justify-center gap-3 transition-all active:scale-95 disabled:opacity-70"
           >
             <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
               <path
@@ -159,9 +159,9 @@ export default function Login() {
             Continue with Google
           </button>
 
-          <p className="text-center text-sm font-medium text-gray-500 mt-8">
+          <p className="text-center text-sm font-medium text-gray-500 dark:text-slate-400 mt-8">
             Don't have an account?{" "}
-            <Link to="/register" className="text-orange-600 font-bold hover:underline">
+            <Link to="/register" className="text-orange-600 dark:text-orange-500 font-bold hover:underline">
               Create one for free
             </Link>
           </p>

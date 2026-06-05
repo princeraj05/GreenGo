@@ -4,7 +4,7 @@ import Footer from "../../components/Footer";
 
 export default function CommonLayout() {
   return (
-    <div className="min-h-screen flex flex-col bg-white overflow-x-hidden font-sans text-gray-900">
+    <div className="min-h-screen flex flex-col bg-white dark:bg-slate-950 overflow-x-hidden font-sans text-gray-900 dark:text-slate-100 transition-colors duration-300">
       <Navbar />
       
       {/* 
