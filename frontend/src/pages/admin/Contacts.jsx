@@ -103,15 +103,15 @@ export default function Contacts() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-slate-50 px-4 py-10">
+    <div className="min-h-screen w-full bg-slate-50 dark:bg-transparent px-4 py-10 transition-colors duration-300">
       <div className="relative max-w-7xl mx-auto">
         <div className="flex items-center gap-4 mb-8">
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg">
             <Mail className="w-7 h-7 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-extrabold text-gray-800 tracking-tight">User Contacts</h1>
-            <p className="text-sm text-gray-500 mt-0.5">Open a user chat to view messages and reply</p>
+            <h1 className="text-2xl font-extrabold text-gray-800 dark:text-white tracking-tight">User Contacts</h1>
+            <p className="text-sm text-gray-500 dark:text-slate-400 mt-0.5">Open a user chat to view messages and reply</p>
           </div>
         </div>
 
@@ -122,19 +122,19 @@ export default function Contacts() {
         )}
 
         {conversations.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-slate-200 px-8 py-12 text-center shadow-sm">
-            <p className="text-gray-400 font-medium">No contact messages found</p>
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 px-8 py-12 text-center shadow-sm transition-colors">
+            <p className="text-gray-400 dark:text-slate-500 font-medium">No contact messages found</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-5 lg:h-[calc(100vh-220px)] lg:min-h-[620px]">
             <div
-              className={`bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex-col lg:flex ${
+              className={`bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex-col lg:flex transition-colors ${
                 selectedKey ? "hidden" : "flex"
               }`}
             >
-              <div className="px-5 py-4 border-b border-slate-100">
-                <p className="font-bold text-slate-900">Conversations</p>
-                <p className="text-xs text-slate-400 mt-1">{conversations.length} active chats</p>
+              <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800">
+                <p className="font-bold text-slate-900 dark:text-white">Conversations</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{conversations.length} active chats</p>
               </div>
 
               <div className="flex-1 overflow-y-auto">
@@ -146,14 +146,14 @@ export default function Contacts() {
                     <button
                       key={conversation.key}
                       onClick={() => setSelectedKey(conversation.key)}
-                      className={`w-full text-left px-5 py-4 border-b border-slate-100 transition-colors ${
-                        active ? "bg-emerald-50" : "hover:bg-slate-50"
+                      className={`w-full text-left px-5 py-4 border-b border-slate-100 dark:border-slate-800 transition-colors ${
+                        active ? "bg-emerald-50 dark:bg-emerald-950/20" : "hover:bg-slate-50 dark:hover:bg-slate-800/40"
                       }`}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="font-bold text-slate-800 truncate">{conversation.name}</p>
-                          <p className="text-xs text-slate-500 truncate mt-0.5">{conversation.email}</p>
+                          <p className="font-bold text-slate-800 dark:text-slate-200 truncate">{conversation.name}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">{conversation.email}</p>
                         </div>
                         {conversation.unreadCount > 0 && (
                           <span className="shrink-0 rounded-full bg-orange-500 px-2 py-0.5 text-[11px] font-bold text-white">
@@ -161,10 +161,10 @@ export default function Contacts() {
                           </span>
                         )}
                       </div>
-                      <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mt-2">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mt-2">
                         {conversation.isUserChat ? "User chat reply" : "Email reply"}
                       </p>
-                      <p className="text-sm text-slate-500 truncate mt-2">{latestText}</p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 truncate mt-2">{latestText}</p>
                     </button>
                   );
                 })}
@@ -172,51 +172,51 @@ export default function Contacts() {
             </div>
 
             <div
-              className={`bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex-col min-h-[620px] lg:flex ${
+              className={`bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex-col min-h-[620px] lg:flex transition-colors ${
                 selectedKey ? "flex" : "hidden"
               }`}
             >
-              <div className="px-4 sm:px-6 py-4 border-b border-slate-100 flex items-center justify-between gap-4">
+              <div className="px-4 sm:px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4">
                 <div className="min-w-0 flex items-center gap-3">
                   <button
                     type="button"
                     onClick={() => setSelectedKey("")}
-                    className="lg:hidden shrink-0 rounded-xl border border-slate-200 bg-white p-2 text-slate-600 shadow-sm"
+                    className="lg:hidden shrink-0 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-2 text-slate-600 dark:text-slate-450 shadow-sm"
                     aria-label="Back to conversations"
                   >
                     <ArrowLeft className="w-4 h-4" />
                   </button>
                   <div className="min-w-0">
-                    <p className="font-extrabold text-slate-900 truncate">{selectedConversation.name}</p>
-                    <p className="text-sm text-slate-500 truncate">{selectedConversation.email}</p>
+                    <p className="font-extrabold text-slate-900 dark:text-white truncate">{selectedConversation.name}</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 truncate">{selectedConversation.email}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-wider text-slate-500">
+                  <span className="rounded-full bg-slate-100 dark:bg-slate-800 px-3 py-1 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                     {selectedConversation.isUserChat ? "Chat" : "Email"}
                   </span>
                   <span className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider border ${
                     selectedConversation.latest?.reply
-                      ? "bg-emerald-50 text-emerald-700 border-emerald-100"
-                      : "bg-amber-50 text-amber-700 border-amber-100"
+                      ? "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-450 border-emerald-100 dark:border-emerald-900/50"
+                      : "bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-900/50"
                   }`}>
                     {selectedConversation.latest?.reply ? "Replied" : "Pending"}
                   </span>
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto bg-slate-50">
+              <div className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-950 transition-colors">
                 <div className="p-4 sm:p-6 space-y-5">
                   {selectedConversation.messages.map((message) => (
                     <div key={message._id} className="space-y-4">
                       {/* User Message Bubble */}
                       <div className="flex justify-start">
-                        <div className="max-w-[85%] sm:max-w-[70%] rounded-2xl rounded-tl-none border border-slate-200 bg-white p-4 sm:p-5 shadow-sm">
+                        <div className="max-w-[85%] sm:max-w-[70%] rounded-2xl rounded-tl-none border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-5 shadow-sm transition-colors">
                           {message.subject && (
-                            <p className="text-xs font-bold text-brand-600 mb-2 uppercase tracking-wide">{message.subject}</p>
+                            <p className="text-xs font-bold text-brand-600 dark:text-brand-400 mb-2 uppercase tracking-wide">{message.subject}</p>
                           )}
-                          <p className="text-[14px] text-slate-800 leading-relaxed font-medium">{message.message}</p>
-                          <p className="text-[10px] text-slate-400 font-semibold mt-2.5 flex items-center gap-1.5">
+                          <p className="text-[14px] text-slate-800 dark:text-slate-200 leading-relaxed font-medium">{message.message}</p>
+                          <p className="text-[10px] text-slate-400 dark:text-slate-550 font-semibold mt-2.5 flex items-center gap-1.5">
                             <span>📅</span>
                             {new Date(message.createdAt).toLocaleString()}
                           </p>
@@ -260,7 +260,7 @@ export default function Contacts() {
                 </div>
               </div>
 
-              <div className="border-t border-slate-100 bg-white p-4">
+              <div className="border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 transition-colors">
                 <div className="flex flex-col md:flex-row gap-3">
                   <textarea
                     placeholder={
@@ -273,7 +273,7 @@ export default function Contacts() {
                       setReplyText({ ...replyText, [selectedConversation.key]: event.target.value })
                     }
                     rows={2}
-                    className="min-h-[56px] flex-1 resize-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-100"
+                    className="min-h-[56px] flex-1 resize-none rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-4 py-3 text-sm outline-none transition focus:border-emerald-400 dark:focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-100 dark:focus:ring-emerald-950/20 text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
                   />
                   <button
                     disabled={!replyText[selectedConversation.key]?.trim()}
