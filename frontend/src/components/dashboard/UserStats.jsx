@@ -1,7 +1,7 @@
 export default function UserStats({ totalOrders, totalSpent, points }) {
   return (
     <div className="mb-10">
-      <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+      <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-6 flex items-center gap-2">
         <span className="text-2xl">📊</span> Your Stats
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

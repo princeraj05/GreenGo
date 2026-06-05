@@ -3,7 +3,7 @@ export default function OffersSection({ offers }) {
 
   return (
     <div id="offers" className="mb-10">
-      <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+      <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-6 flex items-center gap-2">
         <span className="text-2xl">🎟️</span> Special Offers
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -32,8 +32,8 @@ export default function OffersSection({ offers }) {
             </div>
             
             {/* Cutouts for ticket effect */}
-            <div className="absolute top-1/2 -left-3 w-6 h-6 bg-slate-50 rounded-full -translate-y-1/2"></div>
-            <div className="absolute top-1/2 -right-3 w-6 h-6 bg-slate-50 rounded-full -translate-y-1/2"></div>
+            <div className="absolute top-1/2 -left-3 w-6 h-6 bg-slate-50 dark:bg-slate-900 rounded-full -translate-y-1/2"></div>
+            <div className="absolute top-1/2 -right-3 w-6 h-6 bg-slate-50 dark:bg-slate-900 rounded-full -translate-y-1/2"></div>
           </div>
           );
         })}
