@@ -12,10 +12,10 @@ const About = lazy(() => import("../pages/common/About"));
 const Contact = lazy(() => import("../pages/common/Contact"));
 
 /* AUTH */
-const Login = lazy(() => import("../pages/auth/Login"));
-const Register = lazy(() => import("../pages/auth/Register"));
-const ForgotPassword = lazy(() => import("../pages/auth/ForgotPassword"));
-const ResetPassword = lazy(() => import("../pages/auth/ResetPassword"));
+import Login from "../pages/auth/Login";
+import Register from "../pages/auth/Register";
+import ForgotPassword from "../pages/auth/ForgotPassword";
+import ResetPassword from "../pages/auth/ResetPassword";
 
 /* USER */
 import UserLayout from "../pages/user/UserLayout";
