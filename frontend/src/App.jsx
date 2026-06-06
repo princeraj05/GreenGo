@@ -12,6 +12,13 @@ export default function App() {
   const [isConnected, setIsConnected] = useState(true);
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    const msg = `[ROUTE ENTERED]\nPath: ${location.pathname}\nToken Exists: ${token ? "YES (exists)" : "NO (missing)"}`;
+    console.log(msg);
+    alert(msg);
+  }, [location.pathname]);
+
+  useEffect(() => {
     // Dismiss native splash screen on app load
     if (Capacitor.isNativePlatform()) {
       SplashScreen.hide().catch((err) => console.log("Splashscreen hide error", err));

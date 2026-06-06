@@ -25,11 +25,38 @@ export default function AdminDashboard() {
   const loadStats = async () => {
     try {
       const token = await getToken();
-      if (!token) return;
+      const mountMsg = `[AdminDashboard Mounting]\nToken exists: ${token ? "YES" : "NO"}`;
+      console.log(mountMsg);
+      alert(mountMsg);
+
+      if (!token) {
+        alert("[AdminDashboard] Stop loading: No token found!");
+        return;
+      }
+
+      console.log(`[AdminDashboard Data Fetch] VITE_API_URL is: ${import.meta.env.VITE_API_URL}`);
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/analytics/dashboard-stats`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
+
+      // Fetch admin user info to show current role & object in alert
+      let userData = { role: "unknown" };
+      try {
+        const resMe = await fetch(`${import.meta.env.VITE_API_URL}/api/users/me`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (resMe.ok) {
+          userData = await resMe.json();
+        }
+      } catch (meErr) {
+        console.error("Failed to load admin user details", meErr);
+      }
+
+      const loadedMsg = `[AdminDashboard Loaded]\nUser Object: ${JSON.stringify(userData)}\nUser Role: ${userData?.role}\nStatus Code: ${res.status}`;
+      console.log(loadedMsg);
+      alert(loadedMsg);
+
       setStats({
         users: data.totalCustomers || 0,
         orders: data.totalOrders || 0,
@@ -44,7 +71,8 @@ export default function AdminDashboard() {
         });
       }
     } catch (err) {
-      console.log(err);
+      console.error("Failed to load admin dashboard stats", err);
+      alert(`[AdminDashboard Error] Caught Exception:\nMessage: ${err.message}\nStack: ${err.stack}`);
     }
   };
 

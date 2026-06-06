@@ -29,8 +29,16 @@ export default function UserDashboard() {
   const loadDashboardData = async () => {
     try {
       const token = await getToken();
-      if (!token) return;
+      const mountMsg = `[UserDashboard Mounting]\nToken exists: ${token ? "YES" : "NO"}`;
+      console.log(mountMsg);
+      alert(mountMsg);
 
+      if (!token) {
+        alert("[UserDashboard] Stop loading: No token found!");
+        return;
+      }
+
+      console.log(`[UserDashboard Data Fetch] VITE_API_URL is: ${import.meta.env.VITE_API_URL}`);
       const [ordersRes, recommendedRes, userRes, statsRes, offersRes, notifRes] = await Promise.all([
         fetch(`${import.meta.env.VITE_API_URL}/api/orders/my`, { headers: { Authorization: `Bearer ${token}` } }),
         fetch(`${import.meta.env.VITE_API_URL}/api/dashboard/recommended`, { headers: { Authorization: `Bearer ${token}` } }),
@@ -49,6 +57,10 @@ export default function UserDashboard() {
         notifRes.json()
       ]);
 
+      const loadedMsg = `[UserDashboard Loaded]\nUser Object: ${JSON.stringify(userData)}\nUser Role: ${userData?.role}\nStatus Code: ${userRes.status}`;
+      console.log(loadedMsg);
+      alert(loadedMsg);
+
       setOrders(Array.isArray(ordersData) ? ordersData : []);
       setFoods(Array.isArray(recommendedData) ? recommendedData : []);
       setUser(userData || {});
@@ -57,6 +69,7 @@ export default function UserDashboard() {
       setNotifications(Array.isArray(notifData) ? notifData : []);
     } catch (err) {
       console.error("Failed to load dashboard data", err);
+      alert(`[UserDashboard Error] Caught Exception:\nMessage: ${err.message}\nStack: ${err.stack}`);
     } finally {
       setLoading(false);
     }

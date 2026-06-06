@@ -20,6 +20,7 @@ export default function UserLayout() {
   const [cartCount, setCartCount] = useState(0);
   const [pendingCount, setPendingCount] = useState(0);
 
+  // 1. Initial mounts and updates (non-scrolling triggers)
   useEffect(() => {
     loadUser();
     updateCartCount();
@@ -28,7 +29,17 @@ export default function UserLayout() {
     // Listen to custom cart updates
     window.addEventListener("cart-updated", updateCartCount);
 
-    // Listen to scroll events to hide/show bottom nav
+    // Poll pending orders count
+    const interval = setInterval(loadPendingOrdersCount, 15000);
+
+    return () => {
+      window.removeEventListener("cart-updated", updateCartCount);
+      clearInterval(interval);
+    };
+  }, []);
+
+  // 2. Scroll listener (depends on lastScrollY)
+  useEffect(() => {
     const handleScroll = () => {
       if (typeof window !== "undefined") {
         if (window.scrollY > lastScrollY && window.scrollY > 80) {
@@ -41,14 +52,8 @@ export default function UserLayout() {
     };
 
     window.addEventListener("scroll", handleScroll);
-
-    // Poll pending orders count
-    const interval = setInterval(loadPendingOrdersCount, 15000);
-
     return () => {
-      window.removeEventListener("cart-updated", updateCartCount);
       window.removeEventListener("scroll", handleScroll);
-      clearInterval(interval);
     };
   }, [lastScrollY]);
 
