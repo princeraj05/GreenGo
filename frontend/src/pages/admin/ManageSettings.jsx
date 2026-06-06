@@ -11,6 +11,7 @@ export default function ManageSettings() {
     maxDeliveryDistance: 10,
     storeLatitude: 25.5941,
     storeLongitude: 85.1376,
+    isDistanceLimitEnabled: true,
   });
 
   useEffect(() => {
@@ -28,6 +29,7 @@ export default function ManageSettings() {
           maxDeliveryDistance: data.maxDeliveryDistance !== undefined ? data.maxDeliveryDistance : 10,
           storeLatitude: data.storeLatitude !== undefined ? data.storeLatitude : 25.5941,
           storeLongitude: data.storeLongitude !== undefined ? data.storeLongitude : 85.1376,
+          isDistanceLimitEnabled: data.isDistanceLimitEnabled !== undefined ? data.isDistanceLimitEnabled : true,
         });
       }
     } catch (err) {
@@ -104,25 +106,41 @@ export default function ManageSettings() {
             <h3 className="font-extrabold text-slate-800 dark:text-white mb-4 uppercase tracking-wider text-xs">Distance & Location Limits</h3>
             
             <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Maximum Delivery Distance (km)</label>
-                <input type="number" min="0" step="0.1" value={form.maxDeliveryDistance} 
-                  onChange={(e) => setForm({ ...form, maxDeliveryDistance: Number(e.target.value) })}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-955 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-slate-800 dark:text-white font-medium" />
+              <div className="flex items-center justify-between p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900">
+                <div>
+                  <h3 className="font-bold text-slate-800 dark:text-white">Enable Distance Limit Check</h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Validate customer distance from the store during checkout</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" className="sr-only peer" 
+                    checked={form.isDistanceLimitEnabled}
+                    onChange={(e) => setForm({ ...form, isDistanceLimitEnabled: e.target.checked })} 
+                  />
+                  <div className="w-11 h-6 bg-gray-300 dark:bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-350 dark:after:border-slate-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                </label>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className={`${!form.isDistanceLimitEnabled ? "opacity-50 pointer-events-none" : "transition-opacity"} space-y-6`}>
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Store Latitude</label>
-                  <input type="number" step="0.0001" value={form.storeLatitude} 
-                    onChange={(e) => setForm({ ...form, storeLatitude: Number(e.target.value) })}
+                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Maximum Delivery Distance (km)</label>
+                  <input type="number" min="0" step="0.1" value={form.maxDeliveryDistance} 
+                    onChange={(e) => setForm({ ...form, maxDeliveryDistance: Number(e.target.value) })}
                     className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-955 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-slate-800 dark:text-white font-medium" />
                 </div>
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Store Longitude</label>
-                  <input type="number" step="0.0001" value={form.storeLongitude} 
-                    onChange={(e) => setForm({ ...form, storeLongitude: Number(e.target.value) })}
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-955 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-slate-800 dark:text-white font-medium" />
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Store Latitude</label>
+                    <input type="number" step="0.0001" value={form.storeLatitude} 
+                      onChange={(e) => setForm({ ...form, storeLatitude: Number(e.target.value) })}
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-955 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-slate-800 dark:text-white font-medium" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Store Longitude</label>
+                    <input type="number" step="0.0001" value={form.storeLongitude} 
+                      onChange={(e) => setForm({ ...form, storeLongitude: Number(e.target.value) })}
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-955 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-slate-800 dark:text-white font-medium" />
+                  </div>
                 </div>
               </div>
             </div>

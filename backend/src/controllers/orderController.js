@@ -67,8 +67,8 @@ export const createOrder = async (req, res) => {
         userLon
       );
 
-      // Verify delivery distance limit
-      if (distance > settings.maxDeliveryDistance) {
+      // Verify delivery distance limit if enabled
+      if (settings.isDistanceLimitEnabled && distance > settings.maxDeliveryDistance) {
         return res.status(400).json({
           message: `Delivery is not available. Your location is ${distance.toFixed(1)} km away, which exceeds our maximum delivery distance of ${settings.maxDeliveryDistance} km.`
         });

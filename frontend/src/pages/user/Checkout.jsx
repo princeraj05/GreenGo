@@ -119,7 +119,7 @@ export default function Checkout() {
       const settingsRes = await fetch(`${import.meta.env.VITE_API_URL}/api/settings`);
       const settingsData = await settingsRes.json();
 
-      if (settingsData && lat !== undefined && lat !== null && lon !== undefined && lon !== null) {
+      if (settingsData && settingsData.isDistanceLimitEnabled && lat !== undefined && lat !== null && lon !== undefined && lon !== null) {
         const dist = calculateHaversineDistance(
           settingsData.storeLatitude,
           settingsData.storeLongitude,

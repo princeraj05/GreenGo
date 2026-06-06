@@ -19,7 +19,8 @@ export const updateSettings = async (req, res) => {
       isDeliveryChargeEnabled,
       maxDeliveryDistance,
       storeLatitude,
-      storeLongitude
+      storeLongitude,
+      isDistanceLimitEnabled
     } = req.body;
     let settings = await Settings.findOne();
     
@@ -32,6 +33,7 @@ export const updateSettings = async (req, res) => {
     if (maxDeliveryDistance !== undefined) settings.maxDeliveryDistance = Number(maxDeliveryDistance);
     if (storeLatitude !== undefined) settings.storeLatitude = Number(storeLatitude);
     if (storeLongitude !== undefined) settings.storeLongitude = Number(storeLongitude);
+    if (isDistanceLimitEnabled !== undefined) settings.isDistanceLimitEnabled = Boolean(isDistanceLimitEnabled);
     
     await settings.save();
     res.json(settings);
