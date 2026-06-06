@@ -130,7 +130,8 @@ export default function Login() {
     setLoading(true);
     try {
       debugAlert(`[ANDROID AUTH DEBUG] Starting Google sign-in\nAPI URL: ${getApiUrl()}\nCurrent Firebase user: ${auth.currentUser ? auth.currentUser.email : "none"}`);
-      if (window.Capacitor) {
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      if (window.Capacitor || isMobile) {
         await signInWithRedirect(auth, googleProvider);
       } else {
         const result = await signInWithPopup(auth, googleProvider);
