@@ -90,21 +90,20 @@ export default function Contact() {
               Have a question, feedback, or need assistance? Reach out to our team — we respond lightning fast.
             </p>
           </Section>
-        </div>
-      </section>
-
+          </div>
+        </section>
       {/* ── Contact Channels ── */}
-      <section className="w-full py-24 px-4 sm:px-6">
+      <section className="w-full py-20 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {channels.map((c, i) => (
               <Section delay={i * 100} key={c.title}>
-                <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 border border-gray-100 dark:border-slate-800 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-center h-full">
-                  <div className="w-16 h-16 mx-auto bg-orange-50 dark:bg-orange-950/20 rounded-full flex items-center justify-center text-3xl mb-6 shadow-inner">
+                <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-100 dark:border-slate-800 shadow-premium hover:shadow-premium-hover hover:-translate-y-1 transition-all duration-300 text-center h-full">
+                  <div className="w-16 h-16 mx-auto bg-brand-50 dark:bg-brand-950/20 rounded-full flex items-center justify-center text-3xl mb-6 shadow-inner">
                     {c.icon}
                   </div>
                   <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{c.title}</h3>
-                  <p className="text-orange-600 dark:text-orange-500 font-bold mb-2">{c.value}</p>
+                  <p className="text-brand-500 dark:text-brand-400 font-bold mb-2">{c.value}</p>
                   <p className="text-gray-400 dark:text-slate-500 font-medium text-sm">{c.sub}</p>
                 </div>
               </Section>
@@ -113,13 +112,13 @@ export default function Contact() {
         </div>
       </section>
 
-      {/* ── Contact Form & Map ── */}
-      <section className="w-full py-24 bg-gray-50 dark:bg-slate-900/40 px-4 sm:px-6 transition-colors duration-300">
+      {/* ── Contact Form & FAQs ── */}
+      <section className="w-full py-20 bg-gray-50 dark:bg-slate-900/40 px-4 sm:px-6 transition-colors duration-300">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
           
           {/* Form */}
           <Section>
-            <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 md:p-10 shadow-lg border border-gray-100 dark:border-slate-800">
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 md:p-10 shadow-premium border border-slate-100 dark:border-slate-850">
               <h2 className="text-3xl font-black text-gray-900 dark:text-white mb-2">Send a Message</h2>
               <p className="text-gray-500 dark:text-slate-400 font-medium mb-8">Fill in the form and we'll get back to you within 2 hours.</p>
 
@@ -130,7 +129,7 @@ export default function Contact() {
                   <p className="text-gray-500 dark:text-slate-400 font-medium mb-8">Thank you for reaching out. A member of our support team will contact you shortly.</p>
                   <button 
                     onClick={() => setSent(false)}
-                    className="px-8 py-3 rounded-full bg-gray-100 dark:bg-slate-800 text-gray-900 dark:text-white font-bold hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"
+                    className="px-8 py-3 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-900 dark:text-white font-bold transition-all active:scale-95"
                   >
                     Send Another Message
                   </button>
@@ -139,41 +138,41 @@ export default function Contact() {
                 <form onSubmit={handleSubmit} className="flex flex-col gap-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-bold text-gray-700 dark:text-slate-350 mb-2">Your Name *</label>
+                      <label className="block text-sm font-bold text-gray-750 dark:text-slate-300 mb-2">Your Name *</label>
                       <input 
                         required name="name" value={form.name} onChange={handleChange} 
                         placeholder="John Doe"
-                        className="w-full px-5 py-4 rounded-xl border border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all font-medium text-gray-900 dark:text-white"
+                        className="w-full px-5 py-4 rounded-xl border border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500/10 focus:border-brand-500 transition-all font-medium text-gray-900 dark:text-white text-sm"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-bold text-gray-700 dark:text-slate-350 mb-2">Email Address *</label>
+                      <label className="block text-sm font-bold text-gray-755 dark:text-slate-300 mb-2">Email Address *</label>
                       <input 
                         required type="email" name="email" value={form.email} onChange={handleChange} 
                         placeholder="john@example.com"
-                        className="w-full px-5 py-4 rounded-xl border border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all font-medium text-gray-900 dark:text-white"
+                        className="w-full px-5 py-4 rounded-xl border border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500/10 focus:border-brand-500 transition-all font-medium text-gray-900 dark:text-white text-sm"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 dark:text-slate-350 mb-2">Subject</label>
+                    <label className="block text-sm font-bold text-gray-750 dark:text-slate-300 mb-2">Subject</label>
                     <input 
                       name="subject" value={form.subject} onChange={handleChange} 
                       placeholder="How can we help you?"
-                      className="w-full px-5 py-4 rounded-xl border border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all font-medium text-gray-900 dark:text-white"
+                      className="w-full px-5 py-4 rounded-xl border border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500/10 focus:border-brand-500 transition-all font-medium text-gray-900 dark:text-white text-sm"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 dark:text-slate-350 mb-2">Message *</label>
+                    <label className="block text-sm font-bold text-gray-750 dark:text-slate-300 mb-2">Message *</label>
                     <textarea 
                       required name="message" value={form.message} onChange={handleChange} 
                       placeholder="Write your message here..." rows={4}
-                      className="w-full px-5 py-4 rounded-xl border border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all font-medium text-gray-900 dark:text-white resize-none"
+                      className="w-full px-5 py-4 rounded-xl border border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-955 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500/10 focus:border-brand-500 transition-all font-medium text-gray-900 dark:text-white resize-none text-sm"
                     />
                   </div>
                   <button 
                     type="submit"
-                    className="w-full py-4 rounded-xl bg-gradient-to-r from-orange-500 to-red-600 text-white font-black text-lg shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 hover:-translate-y-1 transition-all duration-300 mt-2"
+                    className="w-full py-4 rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 text-white font-black text-lg shadow-md shadow-brand-500/20 hover:shadow-brand-500/35 hover:-translate-y-0.5 transition-all duration-300 active:scale-[0.98] mt-2 flex items-center justify-center gap-2"
                   >
                     Send Message →
                   </button>
@@ -190,15 +189,14 @@ export default function Contact() {
 
               <div className="flex flex-col gap-6">
                 {faqs.map((faq, i) => (
-                  <div key={i} className="bg-white dark:bg-slate-900 rounded-2xl p-6 border-l-4 border-l-orange-500 shadow-sm border border-gray-100 dark:border-slate-800 transition-colors">
+                  <div key={i} className="bg-white dark:bg-slate-900 rounded-2xl p-6 border-l-4 border-l-brand-500 shadow-premium border border-slate-100 dark:border-slate-800 hover:-translate-y-0.5 hover:shadow-premium-hover transition-all duration-200">
                     <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-3">Q: {faq.q}</h4>
-                    <p className="text-gray-600 dark:text-slate-400 font-medium leading-relaxed">{faq.a}</p>
+                    <p className="text-gray-650 dark:text-slate-400 font-medium leading-relaxed text-sm">{faq.a}</p>
                   </div>
                 ))}
               </div>
             </div>
           </Section>
-
         </div>
       </section>
       

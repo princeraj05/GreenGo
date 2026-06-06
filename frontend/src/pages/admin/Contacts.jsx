@@ -9,6 +9,28 @@ function getEmailStatusText(message) {
   return "Pending";
 }
 
+const avatarColors = [
+  "bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400 border-red-200/60 dark:border-red-900/30",
+  "bg-orange-100 text-orange-700 dark:bg-orange-950/40 dark:text-orange-400 border-orange-200/60 dark:border-orange-900/30",
+  "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border-amber-200/60 dark:border-amber-900/30",
+  "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-900/30",
+  "bg-teal-100 text-teal-700 dark:bg-teal-950/40 dark:text-teal-400 border-teal-200/60 dark:border-teal-900/30",
+  "bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 border-blue-200/60 dark:border-blue-900/30",
+  "bg-indigo-100 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-400 border-indigo-200/60 dark:border-indigo-900/30",
+  "bg-purple-100 text-purple-700 dark:bg-purple-950/40 dark:text-purple-400 border-purple-200/60 dark:border-purple-900/30",
+  "bg-pink-100 text-pink-700 dark:bg-pink-950/40 dark:text-pink-400 border-pink-200/60 dark:border-pink-900/30",
+];
+
+function getAvatarStyle(name) {
+  if (!name) return avatarColors[0];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % avatarColors.length;
+  return avatarColors[index];
+}
+
 export default function Contacts() {
   const [contacts, setContacts] = useState([]);
   const [selectedKey, setSelectedKey] = useState("");
@@ -102,140 +124,189 @@ export default function Contacts() {
     }
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendReply();
+    }
+  };
+
   return (
-    <div className="min-h-screen w-full bg-slate-50 dark:bg-transparent px-4 py-10 transition-colors duration-300">
+    <div className="min-h-screen w-full bg-slate-50 dark:bg-transparent px-4 py-8 transition-colors duration-300">
       <div className="relative max-w-7xl mx-auto">
-        <div className="flex items-center gap-4 mb-8">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg">
-            <Mail className="w-7 h-7 text-white" />
+        {/* Header section */}
+        <div className="flex items-center gap-4 mb-6">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center shadow-lg shadow-brand-500/25">
+            <Mail className="w-6 h-6 text-white" />
           </div>
           <div>
             <h1 className="text-2xl font-extrabold text-gray-800 dark:text-white tracking-tight">User Contacts</h1>
-            <p className="text-sm text-gray-500 dark:text-slate-400 mt-0.5">Open a user chat to view messages and reply</p>
+            <p className="text-sm text-gray-500 dark:text-slate-400 mt-0.5">Manage user inbox chats and email replies in real-time</p>
           </div>
         </div>
 
         {error && (
-          <div className="mb-5 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">
+          <div className="mb-5 rounded-2xl border border-red-150 dark:border-red-900/30 bg-red-50 dark:bg-red-950/20 px-4 py-3 text-sm font-semibold text-red-650 dark:text-red-400">
             {error}
           </div>
         )}
 
         {conversations.length === 0 ? (
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 px-8 py-12 text-center shadow-sm transition-colors">
-            <p className="text-gray-400 dark:text-slate-500 font-medium">No contact messages found</p>
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800/80 px-8 py-16 text-center shadow-premium transition-all">
+            <div className="w-16 h-16 mx-auto rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4 text-slate-400 dark:text-slate-500">
+              <Mail className="w-8 h-8" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-800 dark:text-white">Inbox is empty</h3>
+            <p className="text-sm text-slate-400 dark:text-slate-500 max-w-xs mx-auto mt-2">
+              All caught up! No contact messages or customer tickets found.
+            </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-5 lg:h-[calc(100vh-220px)] lg:min-h-[620px]">
+          <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-6 lg:h-[calc(100vh-220px)] lg:min-h-[620px]">
+            {/* Conversations List Panel */}
             <div
-              className={`bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex-col lg:flex transition-colors ${
+              className={`bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800/80 shadow-premium overflow-hidden flex-col lg:flex transition-all duration-300 ${
                 selectedKey ? "hidden" : "flex"
               }`}
             >
-              <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800">
+              <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/50">
                 <p className="font-bold text-slate-900 dark:text-white">Conversations</p>
                 <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{conversations.length} active chats</p>
               </div>
 
-              <div className="flex-1 overflow-y-auto">
+              <div className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/55 scrollbar-thin">
                 {conversations.map((conversation) => {
                   const active = selectedConversation?.key === conversation.key;
                   const latestText = conversation.latest?.message || conversation.latest?.reply || "";
+                  const initials = (conversation.name || "U").trim().substring(0, 2).toUpperCase();
+                  const avatarStyle = getAvatarStyle(conversation.name);
 
                   return (
                     <button
                       key={conversation.key}
                       onClick={() => setSelectedKey(conversation.key)}
-                      className={`w-full text-left px-5 py-4 border-b border-slate-100 dark:border-slate-800 transition-colors ${
-                        active ? "bg-emerald-50 dark:bg-emerald-950/20" : "hover:bg-slate-50 dark:hover:bg-slate-800/40"
+                      className={`w-full text-left px-5 py-4 transition-all duration-200 flex items-start gap-3 relative ${
+                        active
+                          ? "bg-brand-500/10 dark:bg-brand-500/15 border-l-4 border-brand-500 pl-4"
+                          : "hover:bg-slate-50 dark:hover:bg-slate-800/30"
                       }`}
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="font-bold text-slate-800 dark:text-slate-200 truncate">{conversation.name}</p>
-                          <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">{conversation.email}</p>
-                        </div>
-                        {conversation.unreadCount > 0 && (
-                          <span className="shrink-0 rounded-full bg-orange-500 px-2 py-0.5 text-[11px] font-bold text-white">
-                            {conversation.unreadCount}
-                          </span>
-                        )}
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border shrink-0 ${avatarStyle}`}>
+                        {initials}
                       </div>
-                      <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mt-2">
-                        {conversation.isUserChat ? "User chat reply" : "Email reply"}
-                      </p>
-                      <p className="text-sm text-slate-500 dark:text-slate-400 truncate mt-2">{latestText}</p>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-1">
+                          <p className={`font-bold truncate text-sm ${active ? "text-brand-600 dark:text-brand-400" : "text-slate-800 dark:text-slate-200"}`}>
+                            {conversation.name}
+                          </p>
+                          <span className="text-[10px] text-slate-450 dark:text-slate-500 shrink-0 font-medium">
+                            {conversation.latest?.createdAt ? new Date(conversation.latest.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""}
+                          </span>
+                        </div>
+                        
+                        <p className="text-xs text-slate-400 dark:text-slate-450 truncate mt-0.5">{conversation.email}</p>
+                        
+                        <div className="flex items-center justify-between gap-2 mt-2">
+                          <p className="text-xs text-slate-400 dark:text-slate-500 truncate flex-1 font-medium">{latestText}</p>
+                          {conversation.unreadCount > 0 && (
+                            <span className="shrink-0 rounded-full bg-brand-500 text-white font-extrabold text-[9px] px-1.5 py-0.5 flex items-center justify-center animate-pulse">
+                              {conversation.unreadCount}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-1.5 mt-2">
+                          <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border ${
+                            conversation.isUserChat 
+                              ? "bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-900/30" 
+                              : "bg-purple-50 dark:bg-purple-950/20 text-purple-600 dark:text-purple-400 border-purple-100 dark:border-purple-900/30"
+                          }`}>
+                            {conversation.isUserChat ? "User Chat" : "Email Inbox"}
+                          </span>
+                        </div>
+                      </div>
                     </button>
                   );
                 })}
               </div>
             </div>
 
+            {/* Conversation Messages Panel */}
             <div
-              className={`bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex-col min-h-[620px] lg:flex transition-colors ${
+              className={`bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800/80 shadow-premium overflow-hidden flex-col min-h-[620px] lg:flex transition-all duration-300 ${
                 selectedKey ? "flex" : "hidden"
               }`}
             >
-              <div className="px-4 sm:px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4">
+              <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-900/50">
                 <div className="min-w-0 flex items-center gap-3">
                   <button
                     type="button"
                     onClick={() => setSelectedKey("")}
-                    className="lg:hidden shrink-0 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-2 text-slate-600 dark:text-slate-450 shadow-sm"
+                    className="lg:hidden shrink-0 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-2 text-slate-600 dark:text-slate-400 shadow-sm hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-all"
                     aria-label="Back to conversations"
                   >
                     <ArrowLeft className="w-4 h-4" />
                   </button>
+                  
                   <div className="min-w-0">
-                    <p className="font-extrabold text-slate-900 dark:text-white truncate">{selectedConversation.name}</p>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 truncate">{selectedConversation.email}</p>
+                    <p className="font-extrabold text-slate-900 dark:text-white truncate text-base leading-tight">{selectedConversation.name}</p>
+                    <p className="text-xs text-slate-450 dark:text-slate-400 truncate mt-0.5">{selectedConversation.email}</p>
                   </div>
                 </div>
+
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className="rounded-full bg-slate-100 dark:bg-slate-800 px-3 py-1 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider border ${
+                    selectedConversation.isUserChat
+                      ? "bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-900/30"
+                      : "bg-purple-50 dark:bg-purple-950/20 text-purple-600 dark:text-purple-400 border-purple-100 dark:border-purple-900/30"
+                  }`}>
                     {selectedConversation.isUserChat ? "Chat" : "Email"}
                   </span>
-                  <span className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider border ${
+                  
+                  <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider border ${
                     selectedConversation.latest?.reply
-                      ? "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-450 border-emerald-100 dark:border-emerald-900/50"
-                      : "bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-900/50"
+                      ? "bg-brand-50 dark:bg-brand-950/20 text-brand-650 dark:text-brand-400 border-brand-100 dark:border-brand-900/30"
+                      : "bg-amber-50 dark:bg-amber-950/20 text-amber-650 dark:text-amber-450 border-amber-100 dark:border-amber-900/30"
                   }`}>
                     {selectedConversation.latest?.reply ? "Replied" : "Pending"}
                   </span>
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-950 transition-colors">
-                <div className="p-4 sm:p-6 space-y-5">
+              {/* Message History area */}
+              <div className="flex-1 overflow-y-auto bg-slate-50/50 dark:bg-slate-950/40 transition-colors scrollbar-thin">
+                <div className="p-4 sm:p-6 space-y-6">
                   {selectedConversation.messages.map((message) => (
                     <div key={message._id} className="space-y-4">
                       {/* User Message Bubble */}
                       <div className="flex justify-start">
                         <div className="max-w-[85%] sm:max-w-[70%] rounded-2xl rounded-tl-none border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-5 shadow-sm transition-colors">
                           {message.subject && (
-                            <p className="text-xs font-bold text-brand-600 dark:text-brand-400 mb-2 uppercase tracking-wide">{message.subject}</p>
+                            <p className="text-[11px] font-extrabold text-brand-600 dark:text-brand-400 mb-2 uppercase tracking-wider">{message.subject}</p>
                           )}
-                          <p className="text-[14px] text-slate-800 dark:text-slate-200 leading-relaxed font-medium">{message.message}</p>
-                          <p className="text-[10px] text-slate-400 dark:text-slate-550 font-semibold mt-2.5 flex items-center gap-1.5">
+                          <p className="text-sm text-slate-800 dark:text-slate-200 leading-relaxed font-medium">{message.message}</p>
+                          <p className="text-[9px] text-slate-400 dark:text-slate-550 font-semibold mt-3 flex items-center gap-1">
                             <span>📅</span>
-                            {new Date(message.createdAt).toLocaleString()}
+                            {new Date(message.createdAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
                           </p>
                         </div>
                       </div>
 
                       {/* Admin Reply Bubble */}
                       {message.reply && (
-                        <div className="flex justify-end">
-                          <div className="max-w-[85%] sm:max-w-[70%] rounded-2xl rounded-tr-none bg-gradient-to-br from-emerald-500 to-teal-600 p-4 sm:p-5 text-white shadow-md shadow-emerald-500/10">
-                            <div className="flex items-center justify-between gap-4 mb-2 border-b border-white/10 pb-1.5">
-                              <span className="text-xs font-black uppercase tracking-wider text-emerald-50">Admin Reply</span>
-                              <MessageSquare className="w-3.5 h-3.5 text-emerald-100" />
+                        <div className="flex justify-end animate-fade-in">
+                          <div className="max-w-[85%] sm:max-w-[70%] rounded-2xl rounded-tr-none bg-gradient-to-br from-brand-500 to-brand-600 p-4 sm:p-5 text-white shadow-md shadow-brand-500/10">
+                            <div className="flex items-center justify-between gap-4 mb-2.5 border-b border-white/10 pb-2">
+                              <span className="text-[10px] font-black uppercase tracking-wider text-brand-50">Admin Reply</span>
+                              <MessageSquare className="w-3.5 h-3.5 text-brand-100" />
                             </div>
-                            <p className="text-[14px] leading-relaxed font-medium">{message.reply}</p>
+                            
+                            <p className="text-sm leading-relaxed font-medium">{message.reply}</p>
                             
                             {/* Email Status Indicator */}
                             {message.replyDelivery === "email" && (
-                              <div className="flex items-center gap-1.5 mt-3 justify-end bg-black/10 px-2 py-1 rounded-lg w-fit ml-auto border border-white/5">
+                              <div className="flex items-center gap-1.5 mt-3 justify-end bg-black/15 px-2 py-1 rounded-lg w-fit ml-auto border border-white/5">
                                 <span className={`w-1.5 h-1.5 rounded-full ${
                                   message.emailReplyStatus === "sent" 
                                     ? "bg-emerald-300" 
@@ -243,14 +314,14 @@ export default function Contacts() {
                                     ? "bg-red-400 animate-pulse" 
                                     : "bg-amber-300 animate-pulse"
                                 }`} />
-                                <span className="text-[10px] font-black uppercase tracking-wider text-white/95">
+                                <span className="text-[9px] font-black uppercase tracking-wider text-white/90">
                                   Email: {getEmailStatusText(message)}
                                 </span>
                               </div>
                             )}
                             
-                            <p className="text-[10px] text-emerald-100/80 font-bold mt-2.5 text-right">
-                              {message.repliedAt ? new Date(message.repliedAt).toLocaleString() : ""}
+                            <p className="text-[9px] text-brand-100/75 font-semibold mt-3 text-right">
+                              {message.repliedAt ? new Date(message.repliedAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : ""}
                             </p>
                           </div>
                         </div>
@@ -260,28 +331,30 @@ export default function Contacts() {
                 </div>
               </div>
 
-              <div className="border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 transition-colors">
-                <div className="flex flex-col md:flex-row gap-3">
+              {/* Chat Input Footer */}
+              <div className="border-t border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900 p-4 transition-colors">
+                <div className="relative flex items-end gap-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/85 rounded-2xl p-2 focus-within:border-brand-400 dark:focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/10 transition-all">
                   <textarea
                     placeholder={
                       selectedConversation.isUserChat
-                        ? "Reply in user chat..."
-                        : "Reply to user's email..."
+                        ? "Type reply in user chat..."
+                        : "Type reply to user's email..."
                     }
                     value={replyText[selectedConversation.key] || ""}
                     onChange={(event) =>
                       setReplyText({ ...replyText, [selectedConversation.key]: event.target.value })
                     }
+                    onKeyDown={handleKeyDown}
                     rows={2}
-                    className="min-h-[56px] flex-1 resize-none rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-4 py-3 text-sm outline-none transition focus:border-emerald-400 dark:focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-emerald-100 dark:focus:ring-emerald-950/20 text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                    className="flex-grow resize-none bg-transparent px-3 py-2 text-sm outline-none text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 min-h-[44px] max-h-[120px] scrollbar-thin"
                   />
                   <button
                     disabled={!replyText[selectedConversation.key]?.trim()}
                     onClick={sendReply}
-                    className="md:w-44 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-5 py-3 text-sm font-bold text-white shadow-md transition hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="shrink-0 w-11 h-11 rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 text-white shadow-md hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-40 flex items-center justify-center transition-all duration-200 active:scale-95 bg-brand-500"
+                    title="Send Reply"
                   >
                     <Send className="w-4 h-4" />
-                    Send Reply
                   </button>
                 </div>
               </div>
