@@ -5,46 +5,7 @@ import App from "./App";
 import { ThemeProvider } from "./context/ThemeContext";
 import './index.css'
 
-// Initialize global diagnostics store
-window.diagnostics = {
-  logs: [`[LOG] App initializing at ${new Date().toLocaleTimeString()}`],
-  errors: [],
-  userLayoutMounted: "NO",
-  adminLayoutMounted: "NO",
-  userDashboardMounted: "NO",
-  adminDashboardMounted: "NO",
-  currentRoute: window.location.pathname + window.location.hash,
-  tokenExists: !!localStorage.getItem("token"),
-  userObject: "none",
-  loadingState: "Init",
-  addLog(msg) {
-    console.log(`[DIAG_LOG] ${msg}`);
-    this.logs.push(`[LOG] ${msg}`);
-    if (window.updateDiagnosticsUI) {
-      window.updateDiagnosticsUI();
-    }
-  },
-  addError(err) {
-    console.error(`[DIAG_ERR] ${err}`);
-    this.errors.push(`[ERR] ${err}`);
-    if (window.updateDiagnosticsUI) {
-      window.updateDiagnosticsUI();
-    }
-  }
-};
-
-// Global error catching for debugging on Android WebView (logs directly to HTML DOM overlay)
-window.onerror = function (message, source, lineno, colno, error) {
-  const errMsg = `${message} (at ${source}:${lineno}:${colno})${error ? '\nStack: ' + error.stack : ''}`;
-  window.diagnostics.addError(errMsg);
-  return false;
-};
-
-window.onunhandledrejection = function (event) {
-  const reason = event.reason;
-  const errMsg = `Unhandled Rejection: ${reason ? (reason.stack || reason.message || JSON.stringify(reason)) : event}`;
-  window.diagnostics.addError(errMsg);
-};
+// Global diagnostics store is initialized inline in index.html to capture bundle parse/syntax exceptions.
 
 // Premium Error Boundary Component to prevent silent black screens
 class ErrorBoundary extends Component {

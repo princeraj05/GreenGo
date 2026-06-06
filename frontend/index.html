@@ -5,10 +5,114 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>frontend</title>
+    <script>
+      // Early global diagnostics store setup (catches parsing syntax errors before module scripts parse)
+      window.diagnostics = {
+        logs: ["[LOG] HTML head inline script initialized"],
+        errors: [],
+        userLayoutMounted: "NO",
+        adminLayoutMounted: "NO",
+        userDashboardMounted: "NO",
+        adminDashboardMounted: "NO",
+        currentRoute: window.location.pathname + window.location.hash,
+        tokenExists: !!localStorage.getItem("token"),
+        userObject: "none",
+        loadingState: "HTML Init",
+        addLog: function(msg) {
+          console.log("[DIAG_LOG] " + msg);
+          this.logs.push("[LOG] " + msg);
+          if (window.updateDiagnosticsUI) {
+            window.updateDiagnosticsUI();
+          }
+        },
+        addError: function(err) {
+          console.error("[DIAG_ERR] " + err);
+          this.errors.push("[ERR] " + err);
+          if (window.updateDiagnosticsUI) {
+            window.updateDiagnosticsUI();
+          }
+          showFallbackError(err);
+        }
+      };
+
+      window.onerror = function (message, source, lineno, colno, error) {
+        var errMsg = message + " (at " + source + ":" + lineno + ":" + colno + ")";
+        if (error && error.stack) {
+          errMsg += "\nStack: " + error.stack;
+        }
+        window.diagnostics.addError(errMsg);
+        return false;
+      };
+
+      window.onunhandledrejection = function (event) {
+        var reason = event.reason;
+        var errMsg = "Unhandled Rejection: " + (reason ? (reason.stack || reason.message || JSON.stringify(reason)) : event);
+        window.diagnostics.addError(errMsg);
+      };
+
+      function showFallbackError(err) {
+        var errDiv = document.getElementById("fallback-error-overlay");
+        if (!errDiv) {
+          errDiv = document.createElement("div");
+          errDiv.id = "fallback-error-overlay";
+          errDiv.style.position = "fixed";
+          errDiv.style.top = "0";
+          errDiv.style.left = "0";
+          errDiv.style.right = "0";
+          errDiv.style.bottom = "0";
+          errDiv.style.background = "rgb(180, 0, 0)";
+          errDiv.style.color = "white";
+          errDiv.style.fontFamily = "monospace";
+          errDiv.style.padding = "24px";
+          errDiv.style.zIndex = "999999";
+          errDiv.style.overflow = "auto";
+          errDiv.style.boxSizing = "border-box";
+          
+          var title = document.createElement("h2");
+          title.innerText = "🚨 WebView Parsing/Syntax Exception";
+          title.style.margin = "0 0 10px 0";
+          errDiv.appendChild(title);
+          
+          var sub = document.createElement("p");
+          sub.innerText = "The following error occurred before React finished loading. This usually means a bundle syntax error in this WebView version:";
+          sub.style.margin = "0 0 20px 0";
+          errDiv.appendChild(sub);
+
+          var pre = document.createElement("pre");
+          pre.id = "fallback-error-pre";
+          pre.style.background = "black";
+          pre.style.padding = "15px";
+          pre.style.borderRadius = "8px";
+          pre.style.whiteSpace = "pre-wrap";
+          pre.style.wordBreak = "break-all";
+          pre.style.fontSize = "12px";
+          pre.style.lineHeight = "1.5";
+          errDiv.appendChild(pre);
+
+          var btn = document.createElement("button");
+          btn.innerText = "Clear LocalStorage & Refresh";
+          btn.style.marginTop = "20px";
+          btn.style.padding = "12px 24px";
+          btn.style.background = "orange";
+          btn.style.border = "none";
+          btn.style.color = "black";
+          btn.style.fontWeight = "bold";
+          btn.style.borderRadius = "6px";
+          btn.style.cursor = "pointer";
+          btn.onclick = function() {
+            localStorage.clear();
+            window.location.reload();
+          };
+          errDiv.appendChild(btn);
+
+          document.body.appendChild(errDiv);
+        }
+        document.getElementById("fallback-error-pre").innerText += err + "\n\n";
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

@@ -19,6 +19,17 @@ export default function Checkout() {
   const [locationLoading, setLocationLoading] = useState(false);
 
   useEffect(() => {
+    if (!window.Razorpay) {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.async = true;
+      script.onload = () => console.log("Razorpay SDK loaded dynamically.");
+      script.onerror = () => console.error("Failed to load Razorpay SDK.");
+      document.body.appendChild(script);
+    }
+  }, []);
+
+  useEffect(() => {
     const data = JSON.parse(localStorage.getItem("cart")) || [];
     if (data.length === 0) navigate("/user/cart");
     setCart(data);
