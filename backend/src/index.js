@@ -41,6 +41,8 @@ const allowedOrigins = [
   "http://localhost",
   "https://localhost",
   "capacitor://localhost",
+  "com.bytebite.fooddelivery://localhost",
+  "com.bytebite.fooddelivery://",
   "ionic://localhost",
 ];
 

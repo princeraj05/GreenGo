@@ -4,6 +4,8 @@
   "webDir": "dist",
   "bundledWebRuntime": false,
   "server": {
+    "androidScheme": "com.bytebite.fooddelivery",
+    "hostname": "localhost",
     "allowNavigation": [
       "checkout.razorpay.com",
       "*.razorpay.com",

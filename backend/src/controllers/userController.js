@@ -5,6 +5,17 @@ import admin from "../config/firebase.js";
 import crypto from "crypto";
 import { sendEmail } from "../services/emailService.js";
 
+const maskToken = (token) => {
+  if (!token) return "none";
+  return `${token.slice(0, 12)}...${token.slice(-8)}`;
+};
+
+const sanitizeBody = (body = {}) => ({
+  ...body,
+  password: body.password ? "***" : body.password,
+  idToken: body.idToken ? maskToken(body.idToken) : body.idToken,
+});
+
 /* ================= REGISTER ================= */
 
 export const registerUser = async (req, res) => {
@@ -46,39 +57,66 @@ export const registerUser = async (req, res) => {
 /* ================= LOGIN ================= */
 
 export const loginUser = async (req, res) => {
+  let email = "unknown";
+
   try {
 
-    const { email, password } = req.body;
+    const { password } = req.body;
+    email = req.body?.email || "unknown";
+    console.log("[AUTH DEBUG] Login request body received:", sanitizeBody(req.body));
 
     const user = await User.findOne({ email });
+    console.log("[AUTH DEBUG] User lookup result:", user ? {
+      id: user._id,
+      email: user.email,
+      role: user.role,
+      provider: user.provider,
+      hasPassword: Boolean(user.password),
+    } : "not found");
 
     if (!user) {
       console.log(`[AUTH ERROR] User login failed: User not found (${email})`);
+      console.log("[AUTH DEBUG] Final response status: 400");
       return res.status(400).json({
         message: "User not found"
       });
     }
 
+    if (!user.password) {
+      console.log(`[AUTH ERROR] User login failed: No password hash exists for ${email}; provider=${user.provider}`);
+      console.log("[AUTH DEBUG] Final response status: 400");
+      return res.status(400).json({
+        message: "This account is registered using Google. Please login with Google."
+      });
+    }
+
     const isMatch = await bcrypt.compare(password, user.password);
+    console.log("[AUTH DEBUG] Password validation result:", isMatch);
 
     if (!isMatch) {
       console.log(`[AUTH ERROR] User login failed: Invalid password for ${email}`);
+      console.log("[AUTH DEBUG] Final response status: 400");
       return res.status(400).json({
         message: "Invalid password"
       });
     }
 
+    const jwtPayload = {
+      id: user._id,
+      email: user.email,
+      role: user.role
+    };
+    console.log("[AUTH DEBUG] JWT payload:", jwtPayload);
+
     const token = jwt.sign(
-      {
-        id: user._id,
-        email: user.email,
-        role: user.role
-      },
+      jwtPayload,
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
+    console.log("[AUTH DEBUG] JWT creation success:", maskToken(token));
 
     console.log(`[AUTH SUCCESS] User logged in: ${email} | Role: ${user.role}`);
+    console.log("[AUTH DEBUG] Final response status: 200");
     res.json({
       success: true,
       token,
@@ -86,7 +124,9 @@ export const loginUser = async (req, res) => {
     });
 
   } catch (err) {
-    console.log(`[AUTH ERROR] User login server error for ${email || 'unknown'}: ${err.message}`);
+    console.log(`[AUTH ERROR] User login server error for ${email}: ${err.message}`);
+    console.log("[AUTH DEBUG] JWT creation/password validation failure stack:", err.stack);
+    console.log("[AUTH DEBUG] Final response status: 500");
     res.status(500).json({
       message: "Server error"
     });
@@ -178,14 +218,24 @@ export const toggleFavorite = async (req, res) => {
 export const googleLogin = async (req, res) => {
   try {
     const { idToken } = req.body;
+    console.log("[AUTH DEBUG] Google login request body received:", sanitizeBody(req.body));
     if (!idToken) {
+      console.log("[AUTH DEBUG] Google final response status: 400");
       return res.status(400).json({ message: "ID token is required" });
     }
 
     const decodedToken = await admin.auth().verifyIdToken(idToken);
     const { uid, email, name, picture } = decodedToken;
+    console.log("[AUTH DEBUG] Firebase token verified:", { uid, email, name, hasPicture: Boolean(picture) });
 
     let user = await User.findOne({ email });
+    console.log("[AUTH DEBUG] Google user lookup result:", user ? {
+      id: user._id,
+      email: user.email,
+      role: user.role,
+      provider: user.provider,
+      uid: user.uid,
+    } : "not found");
 
     if (!user) {
       user = await User.create({
@@ -211,15 +261,20 @@ export const googleLogin = async (req, res) => {
       }
     }
 
+    const jwtPayload = {
+      id: user._id,
+      email: user.email,
+      role: user.role
+    };
+    console.log("[AUTH DEBUG] Google JWT payload:", jwtPayload);
+
     const token = jwt.sign(
-      {
-        id: user._id,
-        email: user.email,
-        role: user.role
-      },
+      jwtPayload,
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
+    console.log("[AUTH DEBUG] Google JWT creation success:", maskToken(token));
+    console.log("[AUTH DEBUG] Google final response status: 200");
 
     res.json({
       success: true,
@@ -230,6 +285,7 @@ export const googleLogin = async (req, res) => {
   } catch (err) {
     console.error("Google login verification failed:", err);
     console.log(`[AUTH ERROR] Google login verification failed: ${err.message}`);
+    console.log("[AUTH DEBUG] Google final response status: 401");
     res.status(401).json({ message: "Invalid Google token or verification failed" });
   }
 };

@@ -3,6 +3,19 @@ import { useNavigate, Link } from "react-router-dom";
 import API from "../../api/axios";
 import { signInWithPopup, signInWithRedirect, getRedirectResult } from "firebase/auth";
 import { auth, googleProvider } from "../../config/firebase";
+import { getApiUrl } from "../../utils/getApiUrl";
+
+const maskToken = (token) => {
+  if (!token) return "none";
+  return `${token.slice(0, 12)}...${token.slice(-8)}`;
+};
+
+const debugAlert = (message) => {
+  console.log(message);
+  if (window.Capacitor) {
+    alert(message);
+  }
+};
 
 export default function Register() {
   const [form, setForm] = useState({ name: "", email: "", password: "", phone: "", address: "" });
@@ -50,22 +63,39 @@ export default function Register() {
   };
 
   useEffect(() => {
+    console.log("[REGISTER DEBUG] Resolved API URL on load is: ", getApiUrl());
+
     const checkRedirect = async () => {
+      console.log("[REGISTER GOOGLE AUTH] Checking redirect result...");
       try {
+        console.log("[REGISTER GOOGLE AUTH] Firebase currentUser before redirect result:", auth.currentUser);
         const result = await getRedirectResult(auth);
+        console.log("[REGISTER GOOGLE AUTH] getRedirectResult returned:", result);
+        debugAlert(`[ANDROID AUTH DEBUG] Register Firebase redirect result: ${result ? "present" : "null"}\nFirebase currentUser after redirect: ${auth.currentUser ? auth.currentUser.email : "none"}`);
         if (result) {
           setLoading(true);
           const user = result.user;
           const idToken = await user.getIdToken();
+          console.log("[REGISTER GOOGLE AUTH] Firebase ID Token obtained: ", idToken ? "Exists" : "Empty");
+          debugAlert(`[ANDROID AUTH DEBUG] Register Firebase user credential: ${user.email || user.uid}\nFirebase ID token: ${maskToken(idToken)}`);
+          
           const res = await API.post("/api/users/google-login", { idToken });
+          console.log("[REGISTER GOOGLE AUTH] Backend google-login response status:", res.status);
           const data = res.data;
+          
           localStorage.setItem("token", data.token);
+          const storedToken = localStorage.getItem("token");
+          console.log("[REGISTER GOOGLE AUTH] Token successfully stored in localStorage.", maskToken(storedToken));
+          debugAlert(`[ANDROID AUTH DEBUG] Register Google backend status: ${res.status}\nStored JWT: ${maskToken(storedToken)}`);
+          
           if (data.role === "admin") navigate("/admin");
           else navigate("/user");
+        } else {
+          console.log("[REGISTER GOOGLE AUTH] No redirect result found (null).");
         }
       } catch (err) {
-        console.error("Google redirect sign in failed:", err);
-        alert(err.message || "Google redirect failed");
+        console.error("[REGISTER GOOGLE AUTH] Google redirect sign in failed:", err);
+        alert(`Google Auth Redirect Error (Register):\nCode: ${err.code}\nMessage: ${err.message}\nEmail: ${err.customData?.email || "none"}`);
       } finally {
         setLoading(false);
       }
@@ -76,6 +106,7 @@ export default function Register() {
   const handleGoogleSignIn = async () => {
     setLoading(true);
     try {
+      debugAlert(`[ANDROID AUTH DEBUG] Starting Register Google sign-in\nAPI URL: ${getApiUrl()}\nCurrent Firebase user: ${auth.currentUser ? auth.currentUser.email : "none"}`);
       if (window.Capacitor) {
         await signInWithRedirect(auth, googleProvider);
       } else {
@@ -90,6 +121,7 @@ export default function Register() {
         const data = res.data;
         
         localStorage.setItem("token", data.token);
+        console.log("[REGISTER GOOGLE AUTH] Popup token stored:", maskToken(localStorage.getItem("token")));
         
         if (data.role === "admin") navigate("/admin");
         else navigate("/user");
