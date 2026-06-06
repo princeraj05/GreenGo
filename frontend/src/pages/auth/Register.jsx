@@ -63,45 +63,63 @@ export default function Register() {
   useEffect(() => {
     console.log("[REGISTER DEBUG] Resolved API URL on load is: ", getApiUrl());
 
-    const checkRedirect = async () => {
-      console.log("[REGISTER GOOGLE AUTH] Checking redirect result...");
+    let processed = false;
+
+    const handleUserSession = async (user) => {
+      if (processed) return;
+      processed = true;
+      setLoading(true);
       try {
-        console.log("[REGISTER GOOGLE AUTH] Firebase currentUser before redirect result:", auth.currentUser);
-        const result = await getRedirectResult(auth);
-        console.log("[REGISTER GOOGLE AUTH] getRedirectResult returned:", result);
-        debugAlert(`[ANDROID AUTH DEBUG] Register Firebase redirect result: ${result ? "present" : "null"}\nFirebase currentUser after redirect: ${auth.currentUser ? auth.currentUser.email : "none"}`);
-        if (result) {
-          setLoading(true);
-          const user = result.user;
-          const idToken = await user.getIdToken();
-          console.log("[REGISTER GOOGLE AUTH] Firebase ID Token obtained: ", idToken ? "Exists" : "Empty");
-          debugAlert(`[ANDROID AUTH DEBUG] Register Firebase user credential: ${user.email || user.uid}\nFirebase ID token: ${maskToken(idToken)}`);
-          
-          const res = await API.post("/api/users/google-login", { idToken });
-          console.log("[REGISTER GOOGLE AUTH] Backend google-login response status:", res.status);
-          const data = res.data;
-          
-          localStorage.setItem("token", data.token);
-          try {
-            const meRes = await API.get("/api/users/me");
-            await saveSession(data.token, meRes.data);
-          } catch (meErr) {
-            await saveSession(data.token, { email: user.email, role: data.role });
-          }
-          
-          if (data.role === "admin") navigate("/admin");
-          else navigate("/user");
-        } else {
-          console.log("[REGISTER GOOGLE AUTH] No redirect result found (null).");
+        const idToken = await user.getIdToken(true);
+        console.log("[REGISTER GOOGLE AUTH] Firebase ID Token obtained: ", idToken ? "Exists" : "Empty");
+        
+        const res = await API.post("/api/users/google-login", { idToken });
+        console.log("[REGISTER GOOGLE AUTH] Backend google-login response status:", res.status);
+        const data = res.data;
+        
+        localStorage.setItem("token", data.token);
+        try {
+          const meRes = await API.get("/api/users/me");
+          await saveSession(data.token, meRes.data);
+        } catch (meErr) {
+          await saveSession(data.token, { email: user.email, role: data.role });
         }
+        
+        if (data.role === "admin") navigate("/admin");
+        else navigate("/user");
       } catch (err) {
-        console.error("[REGISTER GOOGLE AUTH] Google redirect sign in failed:", err);
-        alert(`Google Auth Redirect Error (Register):\nCode: ${err.code}\nMessage: ${err.message}\nEmail: ${err.customData?.email || "none"}`);
+        console.error("[REGISTER GOOGLE AUTH] Google session handler failed:", err);
       } finally {
         setLoading(false);
       }
     };
+
+    const checkRedirect = async () => {
+      console.log("[REGISTER GOOGLE AUTH] Checking redirect result...");
+      try {
+        const result = await getRedirectResult(auth);
+        console.log("[REGISTER GOOGLE AUTH] getRedirectResult returned:", result);
+        if (result && result.user) {
+          await handleUserSession(result.user);
+        } else if (auth.currentUser) {
+          await handleUserSession(auth.currentUser);
+        }
+      } catch (err) {
+        console.error("[REGISTER GOOGLE AUTH] Google redirect sign in failed:", err);
+      }
+    };
+
+    // Listen for state change in case currentUser is populated asynchronously
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        console.log("[REGISTER GOOGLE AUTH] onAuthStateChanged detected user:", user.email);
+        await handleUserSession(user);
+      }
+    });
+
     checkRedirect();
+
+    return () => unsubscribe();
   }, [navigate]);
 
   const handleGoogleSignIn = async () => {
