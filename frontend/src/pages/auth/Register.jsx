@@ -97,7 +97,11 @@ export default function Register() {
     const checkRedirect = async () => {
       console.log("[REGISTER GOOGLE AUTH] Checking redirect result...");
       try {
-        const result = await getRedirectResult(auth);
+        const redirectPromise = getRedirectResult(auth);
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Firebase Redirect Timeout")), 4000)
+        );
+        const result = await Promise.race([redirectPromise, timeoutPromise]);
         console.log("[REGISTER GOOGLE AUTH] getRedirectResult returned:", result);
         if (result && result.user) {
           await handleUserSession(result.user);
@@ -105,7 +109,10 @@ export default function Register() {
           await handleUserSession(auth.currentUser);
         }
       } catch (err) {
-        console.error("[REGISTER GOOGLE AUTH] Google redirect sign in failed:", err);
+        console.error("[REGISTER GOOGLE AUTH] Google redirect sign in failed or timed out:", err);
+        if (auth.currentUser) {
+          await handleUserSession(auth.currentUser);
+        }
       }
     };
 
