@@ -99,6 +99,14 @@ export default function Contacts() {
   const selectedConversation =
     conversations.find((conversation) => conversation.key === selectedKey) || conversations[0];
 
+  const { initials, avatarStyle } = useMemo(() => {
+    if (!selectedConversation) return { initials: "U", avatarStyle: avatarColors[0] };
+    return {
+      initials: (selectedConversation.name || "U").trim().substring(0, 2).toUpperCase(),
+      avatarStyle: getAvatarStyle(selectedConversation.name),
+    };
+  }, [selectedConversation]);
+
   const sendReply = async () => {
     if (!selectedConversation) return;
 
@@ -165,13 +173,13 @@ export default function Contacts() {
           <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-6 lg:h-[calc(100vh-220px)] lg:min-h-[620px]">
             {/* Conversations List Panel */}
             <div
-              className={`bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800/80 shadow-premium overflow-hidden flex-col lg:flex transition-all duration-300 ${
+              className={`bg-white dark:bg-slate-955 rounded-3xl border border-slate-100 dark:border-slate-800/60 shadow-premium overflow-hidden flex-col lg:flex transition-all duration-300 ${
                 selectedKey ? "hidden" : "flex"
               }`}
             >
-              <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/50">
-                <p className="font-bold text-slate-900 dark:text-white">Conversations</p>
-                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{conversations.length} active chats</p>
+              <div className="bg-slate-50 dark:bg-slate-900/80 border-b border-slate-100 dark:border-slate-800/60 p-5 flex flex-col transition-colors">
+                <p className="font-extrabold text-slate-900 dark:text-white text-sm uppercase tracking-wider">Conversations</p>
+                <p className="text-xs text-slate-500 dark:text-slate-450 mt-1 font-medium">{conversations.length} active chats</p>
               </div>
 
               <div className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/55 scrollbar-thin">
@@ -234,24 +242,24 @@ export default function Contacts() {
 
             {/* Conversation Messages Panel */}
             <div
-              className={`bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800/80 shadow-premium overflow-hidden flex-col min-h-[620px] lg:flex transition-all duration-300 ${
+              className={`bg-white dark:bg-slate-955 rounded-3xl border border-slate-100 dark:border-slate-800/60 shadow-premium overflow-hidden flex-col min-h-[620px] lg:flex transition-all duration-300 ${
                 selectedKey ? "flex" : "hidden"
               }`}
             >
-              <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-900/50">
+              <div className="bg-slate-50 dark:bg-slate-900/80 border-b border-slate-100 dark:border-slate-800/60 p-5 flex items-center justify-between gap-4 transition-colors">
                 <div className="min-w-0 flex items-center gap-3">
                   <button
                     type="button"
                     onClick={() => setSelectedKey("")}
-                    className="lg:hidden shrink-0 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-2 text-slate-600 dark:text-slate-400 shadow-sm hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-all"
+                    className="lg:hidden shrink-0 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-955 p-2 text-slate-600 dark:text-slate-400 shadow-sm hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-all"
                     aria-label="Back to conversations"
                   >
                     <ArrowLeft className="w-4 h-4" />
                   </button>
                   
                   <div className="min-w-0">
-                    <p className="font-extrabold text-slate-900 dark:text-white truncate text-base leading-tight">{selectedConversation.name}</p>
-                    <p className="text-xs text-slate-450 dark:text-slate-400 truncate mt-0.5">{selectedConversation.email}</p>
+                    <p className="font-extrabold text-slate-900 dark:text-white truncate text-sm uppercase tracking-wider leading-tight">{selectedConversation.name}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-1 font-medium">{selectedConversation.email}</p>
                   </div>
                 </div>
 
@@ -267,7 +275,7 @@ export default function Contacts() {
                   <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider border ${
                     selectedConversation.latest?.reply
                       ? "bg-brand-50 dark:bg-brand-950/20 text-brand-650 dark:text-brand-400 border-brand-100 dark:border-brand-900/30"
-                      : "bg-amber-50 dark:bg-amber-950/20 text-amber-650 dark:text-amber-450 border-amber-100 dark:border-amber-900/30"
+                      : "bg-amber-50 dark:bg-amber-950/20 text-amber-650 dark:text-amber-455 border-amber-100 dark:border-amber-900/30"
                   }`}>
                     {selectedConversation.latest?.reply ? "Replied" : "Pending"}
                   </span>
@@ -275,18 +283,25 @@ export default function Contacts() {
               </div>
 
               {/* Message History area */}
-              <div className="flex-1 overflow-y-auto bg-slate-50/50 dark:bg-slate-950/40 transition-colors scrollbar-thin">
+              <div className="flex-1 overflow-y-auto bg-slate-50/50 dark:bg-slate-955/25 transition-colors scrollbar-thin">
                 <div className="p-4 sm:p-6 space-y-6">
                   {selectedConversation.messages.map((message) => (
                     <div key={message._id} className="space-y-4">
                       {/* User Message Bubble */}
                       <div className="flex justify-start">
-                        <div className="max-w-[85%] sm:max-w-[70%] rounded-2xl rounded-tl-none border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-5 shadow-sm transition-colors">
+                        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 text-slate-800 dark:text-slate-200 p-4 rounded-2xl rounded-tl-sm max-w-[80%] shadow-sm transition-colors">
+                          <div className="flex items-center gap-2 mb-1">
+                            <div className={`w-5 h-5 rounded-full flex items-center justify-center font-bold text-[9px] border shrink-0 ${avatarStyle}`}>
+                              {initials}
+                            </div>
+                            <span className="text-xs font-bold text-slate-500 dark:text-slate-450">{selectedConversation.name}</span>
+                          </div>
+                          
                           {message.subject && (
-                            <p className="text-[11px] font-extrabold text-brand-600 dark:text-brand-400 mb-2 uppercase tracking-wider">{message.subject}</p>
+                            <p className="text-[11px] font-extrabold text-brand-600 dark:text-brand-400 mb-2 uppercase tracking-wider mt-2.5">{message.subject}</p>
                           )}
-                          <p className="text-sm text-slate-800 dark:text-slate-200 leading-relaxed font-medium">{message.message}</p>
-                          <p className="text-[9px] text-slate-400 dark:text-slate-550 font-semibold mt-3 flex items-center gap-1">
+                          <p className="text-sm leading-relaxed mt-2.5 font-medium">{message.message}</p>
+                          <p className="text-[9px] text-slate-400 dark:text-slate-500 font-semibold mt-2.5 flex items-center gap-1">
                             <span>📅</span>
                             {new Date(message.createdAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
                           </p>
@@ -296,17 +311,12 @@ export default function Contacts() {
                       {/* Admin Reply Bubble */}
                       {message.reply && (
                         <div className="flex justify-end animate-fade-in">
-                          <div className="max-w-[85%] sm:max-w-[70%] rounded-2xl rounded-tr-none bg-gradient-to-br from-brand-500 to-brand-600 p-4 sm:p-5 text-white shadow-md shadow-brand-500/10">
-                            <div className="flex items-center justify-between gap-4 mb-2.5 border-b border-white/10 pb-2">
-                              <span className="text-[10px] font-black uppercase tracking-wider text-brand-50">Admin Reply</span>
-                              <MessageSquare className="w-3.5 h-3.5 text-brand-100" />
-                            </div>
-                            
+                          <div className="bg-brand-500 text-white p-4 rounded-2xl rounded-tr-sm max-w-[80%] shadow-md shadow-brand-500/10">
                             <p className="text-sm leading-relaxed font-medium">{message.reply}</p>
                             
                             {/* Email Status Indicator */}
                             {message.replyDelivery === "email" && (
-                              <div className="flex items-center gap-1.5 mt-3 justify-end bg-black/15 px-2 py-1 rounded-lg w-fit ml-auto border border-white/5">
+                              <div className="flex items-center gap-1.5 mt-2.5 justify-end bg-black/15 px-2 py-0.5 rounded-lg w-fit ml-auto border border-white/5">
                                 <span className={`w-1.5 h-1.5 rounded-full ${
                                   message.emailReplyStatus === "sent" 
                                     ? "bg-emerald-300" 
@@ -320,8 +330,11 @@ export default function Contacts() {
                               </div>
                             )}
                             
-                            <p className="text-[9px] text-brand-100/75 font-semibold mt-3 text-right">
-                              {message.repliedAt ? new Date(message.repliedAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : ""}
+                            <p className="text-[10px] text-brand-100 text-right mt-1.5 font-semibold">
+                              {new Date(message.repliedAt || message.createdAt).toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
                             </p>
                           </div>
                         </div>
@@ -330,10 +343,9 @@ export default function Contacts() {
                   ))}
                 </div>
               </div>
-
               {/* Chat Input Footer */}
-              <div className="border-t border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900 p-4 transition-colors">
-                <div className="relative flex items-end gap-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800/85 rounded-2xl p-2 focus-within:border-brand-400 dark:focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/10 transition-all">
+              <div className="border-t border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-955 p-4 transition-colors">
+                <div className="relative flex items-end gap-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 rounded-2xl p-2 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/10 transition-all">
                   <textarea
                     placeholder={
                       selectedConversation.isUserChat
@@ -351,7 +363,7 @@ export default function Contacts() {
                   <button
                     disabled={!replyText[selectedConversation.key]?.trim()}
                     onClick={sendReply}
-                    className="shrink-0 w-11 h-11 rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 text-white shadow-md hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-40 flex items-center justify-center transition-all duration-200 active:scale-95 bg-brand-500"
+                    className="shrink-0 w-11 h-11 rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-650 hover:to-brand-700 text-white shadow-md hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-40 flex items-center justify-center transition-all duration-200 active:scale-95"
                     title="Send Reply"
                   >
                     <Send className="w-4 h-4" />
