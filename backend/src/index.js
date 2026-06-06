@@ -31,6 +31,7 @@ dotenv.config();
 connectDB();
 
 const app = express();
+app.set("etag", false);
 
 /* ================= CORS ================= */
 
@@ -81,6 +82,14 @@ app.options("*", cors(corsOptions));
 /* ================= MIDDLEWARE ================= */
 
 app.use(express.json());
+
+app.use("/api", (req, res, next) => {
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+  res.setHeader("Surrogate-Control", "no-store");
+  next();
+});
 
 /* ================= STATIC FILES ================= */
 
