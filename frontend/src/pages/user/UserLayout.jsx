@@ -22,6 +22,11 @@ export default function UserLayout() {
 
   // 1. Initial mounts and updates (non-scrolling triggers)
   useEffect(() => {
+    if (window.diagnostics) {
+      window.diagnostics.userLayoutMounted = "YES";
+      window.diagnostics.loadingState = "UserLayout Mounting";
+      window.diagnostics.addLog("UserLayout: mounted successfully");
+    }
     loadUser();
     updateCartCount();
     loadPendingOrdersCount();
@@ -59,17 +64,39 @@ export default function UserLayout() {
 
   const loadUser = async () => {
     const token = await getToken();
+    if (window.diagnostics) {
+      window.diagnostics.addLog(`UserLayout loadUser: Token found = ${!!token}`);
+      window.diagnostics.loadingState = "UserLayout: loading user";
+    }
     if (!token) return;
     try {
+      if (window.diagnostics) {
+        window.diagnostics.addLog(`UserLayout loadUser: Fetching GET /api/users/me`);
+      }
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/me`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      if (window.diagnostics) {
+        window.diagnostics.addLog(`UserLayout loadUser: GET /api/users/me status = ${res.status}`);
+      }
       if (res.ok) {
         const data = await res.json();
         setName(data.name);
+        if (window.diagnostics) {
+          window.diagnostics.userObject = data;
+          window.diagnostics.addLog(`UserLayout loadUser: Loaded user "${data.name}" (role: ${data.role})`);
+          window.diagnostics.loadingState = "UserLayout: user loaded";
+        }
+      } else {
+        if (window.diagnostics) {
+          window.diagnostics.addError(`UserLayout loadUser failed: status ${res.status}`);
+        }
       }
     } catch (e) {
       console.error("Failed to load user info:", e);
+      if (window.diagnostics) {
+        window.diagnostics.addError(`UserLayout loadUser exception: ${e.message}`);
+      }
     }
   };
 

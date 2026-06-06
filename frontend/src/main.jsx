@@ -5,19 +5,45 @@ import App from "./App";
 import { ThemeProvider } from "./context/ThemeContext";
 import './index.css'
 
-// Global error catching for debugging on Android WebView
+// Initialize global diagnostics store
+window.diagnostics = {
+  logs: [`[LOG] App initializing at ${new Date().toLocaleTimeString()}`],
+  errors: [],
+  userLayoutMounted: "NO",
+  adminLayoutMounted: "NO",
+  userDashboardMounted: "NO",
+  adminDashboardMounted: "NO",
+  currentRoute: window.location.pathname + window.location.hash,
+  tokenExists: !!localStorage.getItem("token"),
+  userObject: "none",
+  loadingState: "Init",
+  addLog(msg) {
+    console.log(`[DIAG_LOG] ${msg}`);
+    this.logs.push(`[LOG] ${msg}`);
+    if (window.updateDiagnosticsUI) {
+      window.updateDiagnosticsUI();
+    }
+  },
+  addError(err) {
+    console.error(`[DIAG_ERR] ${err}`);
+    this.errors.push(`[ERR] ${err}`);
+    if (window.updateDiagnosticsUI) {
+      window.updateDiagnosticsUI();
+    }
+  }
+};
+
+// Global error catching for debugging on Android WebView (logs directly to HTML DOM overlay)
 window.onerror = function (message, source, lineno, colno, error) {
-  const errMsg = `[WINDOW ERROR]\nMsg: ${message}\nSrc: ${source}\nLine: ${lineno}\nCol: ${colno}\nError: ${error ? error.stack : ""}`;
-  console.error(errMsg);
-  alert(errMsg);
+  const errMsg = `${message} (at ${source}:${lineno}:${colno})${error ? '\nStack: ' + error.stack : ''}`;
+  window.diagnostics.addError(errMsg);
   return false;
 };
 
 window.onunhandledrejection = function (event) {
   const reason = event.reason;
-  const errMsg = `[UNHANDLED REJECTION]\nReason: ${reason ? (reason.stack || reason.message || JSON.stringify(reason)) : event}`;
-  console.error(errMsg);
-  alert(errMsg);
+  const errMsg = `Unhandled Rejection: ${reason ? (reason.stack || reason.message || JSON.stringify(reason)) : event}`;
+  window.diagnostics.addError(errMsg);
 };
 
 // Premium Error Boundary Component to prevent silent black screens
@@ -33,8 +59,8 @@ class ErrorBoundary extends Component {
       error: error,
       errorInfo: errorInfo
     });
-    console.error("React Error Boundary caught an error:", error, errorInfo);
-    alert(`[REACT ERROR BOUNDARY]\nError: ${error?.message || error}\nStack: ${error?.stack}\nComponent Stack: ${errorInfo?.componentStack}`);
+    const errorMsg = `React Error Boundary: ${error?.message || error}\nComponent Stack: ${errorInfo?.componentStack}`;
+    window.diagnostics.addError(errorMsg);
   }
 
   render() {

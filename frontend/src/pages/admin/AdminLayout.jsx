@@ -23,6 +23,11 @@ export default function AdminLayout() {
   const [moreOpen, setMoreOpen] = useState(false);
 
   useEffect(() => { 
+    if (window.diagnostics) {
+      window.diagnostics.adminLayoutMounted = "YES";
+      window.diagnostics.loadingState = "AdminLayout Mounting";
+      window.diagnostics.addLog("AdminLayout: mounted successfully");
+    }
     loadAdmin(); 
     loadAlerts();
   }, []);
@@ -45,17 +50,39 @@ export default function AdminLayout() {
 
   const loadAdmin = async () => {
     const token = await getToken();
+    if (window.diagnostics) {
+      window.diagnostics.addLog(`AdminLayout loadAdmin: Token found = ${!!token}`);
+      window.diagnostics.loadingState = "AdminLayout: loading admin";
+    }
     if (!token) return;
     try {
+      if (window.diagnostics) {
+        window.diagnostics.addLog(`AdminLayout loadAdmin: Fetching GET /api/users/me`);
+      }
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/me`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      if (window.diagnostics) {
+        window.diagnostics.addLog(`AdminLayout loadAdmin: GET /api/users/me status = ${res.status}`);
+      }
       if(res.ok) {
         const data = await res.json();
         setName(data.name);
+        if (window.diagnostics) {
+          window.diagnostics.userObject = data;
+          window.diagnostics.addLog(`AdminLayout loadAdmin: Loaded admin "${data.name}" (role: ${data.role})`);
+          window.diagnostics.loadingState = "AdminLayout: admin loaded";
+        }
+      } else {
+        if (window.diagnostics) {
+          window.diagnostics.addError(`AdminLayout loadAdmin failed: status ${res.status}`);
+        }
       }
     } catch(e) {
       console.error("Failed to load admin profile:", e);
+      if (window.diagnostics) {
+        window.diagnostics.addError(`AdminLayout loadAdmin exception: ${e.message}`);
+      }
     }
   };
 
