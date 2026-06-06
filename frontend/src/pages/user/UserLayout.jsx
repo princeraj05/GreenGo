@@ -5,6 +5,7 @@ import {
   Clock, User, Phone, LogOut, Menu, X, Home, Sun, Moon 
 } from "lucide-react";
 import { getToken } from "../../utils/getToken";
+import { clearSession } from "../../utils/authStorage";
 import { cn } from "../../utils/cn";
 import { useTheme } from "../../context/ThemeContext";
 
@@ -13,6 +14,13 @@ export default function UserLayout() {
   const [name, setName] = useState("");
   const [open, setOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  const confirmLogout = async () => {
+    setShowLogoutConfirm(false);
+    await clearSession();
+    navigate("/login", { replace: true });
+  };
 
   // Bottom Navigation state & badges
   const [showBottomNav, setShowBottomNav] = useState(true);
@@ -205,7 +213,7 @@ export default function UserLayout() {
         {/* Logout */}
         <div className="p-4 border-t border-slate-100 dark:border-slate-800/50">
           <button
-            onClick={() => navigate("/login")}
+            onClick={() => setShowLogoutConfirm(true)}
             className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-950/30 text-red-600 dark:text-red-400 font-bold transition-colors"
           >
             <LogOut size={18} />
@@ -282,6 +290,43 @@ export default function UserLayout() {
           ))}
         </nav>
       </div>
+
+      {/* Confirmation Dialog Modal */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-slate-950/65 backdrop-blur-sm"
+            onClick={() => setShowLogoutConfirm(false)}
+          />
+          {/* Dialog */}
+          <div className="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 max-w-sm w-full shadow-2xl animate-fade-in text-center">
+            <div className="w-16 h-16 rounded-2xl bg-red-50 dark:bg-red-950/20 text-red-500 flex items-center justify-center mx-auto mb-6">
+              <LogOut size={32} />
+            </div>
+            <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2">Logout</h3>
+            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-8 leading-relaxed">
+              Are you sure you want to logout?
+            </p>
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                type="button"
+                onClick={() => setShowLogoutConfirm(false)}
+                className="w-full py-3.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-sm transition-all duration-200 active:scale-95"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmLogout}
+                className="w-full py-3.5 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold text-sm shadow-lg shadow-red-500/25 transition-all duration-200 active:scale-95"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,19 +1,23 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { User, Save, MapPin, Bell, CheckCircle, XCircle, Settings, Phone, Clock, Utensils, Navigation } from "lucide-react";
+import { User, Save, MapPin, Bell, CheckCircle, XCircle, Settings, Phone, Clock, Utensils, Navigation, Mail, LogOut } from "lucide-react";
 import { getToken } from "../../utils/getToken";
+import { clearSession } from "../../utils/authStorage";
 import Button from "../../components/ui/Button";
 import Card from "../../components/ui/Card";
 import Input from "../../components/ui/Input";
 
 export default function Profile() {
+  const navigate = useNavigate();
   const [form, setForm] = useState({
-    name: "", phone: "", address: "", foodPreference: "", deliveryTime: "", notifications: ""
+    name: "", email: "", phone: "", address: "", foodPreference: "", deliveryTime: "", notifications: ""
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [msgType, setMsgType] = useState("");
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -26,8 +30,13 @@ export default function Profile() {
         if(res.ok) {
           const data = await res.json();
           setForm({
-            name: data.name || "", phone: data.phone || "", address: data.address || "",
-            foodPreference: data.foodPreference || "", deliveryTime: data.deliveryTime || "", notifications: data.notifications || ""
+            name: data.name || "",
+            email: data.email || "",
+            phone: data.phone || "",
+            address: data.address || "",
+            foodPreference: data.foodPreference || "",
+            deliveryTime: data.deliveryTime || "",
+            notifications: data.notifications || ""
           });
         }
       } catch {
@@ -38,6 +47,12 @@ export default function Profile() {
     };
     fetchProfile();
   }, []);
+
+  const confirmLogout = async () => {
+    setShowLogoutConfirm(false);
+    await clearSession();
+    navigate("/login", { replace: true });
+  };
 
   const [locationLoading, setLocationLoading] = useState(false);
 
@@ -179,14 +194,21 @@ export default function Profile() {
           
           <div className="mb-10">
             <h3 className="font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-3 text-xl pb-4 border-b border-slate-100 dark:border-slate-800/60">
-              <User size={24} className="text-brand-500" /> Personal Details
+              <User size={24} className="text-brand-500" /> Account Information
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <div className="relative">
                 <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 ml-1 block">Full Name</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400"><User size={18} /></div>
                   <Input name="name" value={form.name} onChange={handleChange} placeholder="John Doe" className="pl-12" />
+                </div>
+              </div>
+              <div className="relative">
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 ml-1 block">Email Address</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400"><Mail size={18} /></div>
+                  <Input name="email" value={form.email} readOnly disabled placeholder="you@example.com" className="pl-12 bg-slate-50 dark:bg-slate-900/40 text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-80" />
                 </div>
               </div>
               <div className="relative">
@@ -420,6 +442,71 @@ export default function Profile() {
           </div>
         </Card>
       </motion.div>
+
+      {/* Dedicated Logout Card/Section */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }} 
+        animate={{ opacity: 1, y: 0 }} 
+        transition={{ delay: 0.2 }}
+        className="mt-8"
+      >
+        <Card className="p-6 md:p-8 border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-950 flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-4 text-center sm:text-left">
+            <div className="w-12 h-12 rounded-2xl bg-red-50 dark:bg-red-950/20 text-red-500 flex items-center justify-center shrink-0">
+              <LogOut size={24} />
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-900 dark:text-white text-lg">Logout</h3>
+              <p className="text-slate-400 dark:text-slate-500 text-sm font-medium font-sans">Are you sure you want to logout?</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowLogoutConfirm(true)}
+            className="px-6 py-3.5 rounded-2xl bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-950/30 text-red-600 dark:text-red-400 font-extrabold text-sm transition-all duration-300 hover:scale-[1.02] active:scale-95 flex items-center gap-2"
+          >
+            <LogOut size={18} />
+            Sign Out
+          </button>
+        </Card>
+      </motion.div>
+
+      {/* Confirmation Dialog Modal */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-slate-950/65 backdrop-blur-sm"
+            onClick={() => setShowLogoutConfirm(false)}
+          />
+          {/* Dialog */}
+          <div className="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 max-w-sm w-full shadow-2xl animate-fade-in text-center">
+            <div className="w-16 h-16 rounded-2xl bg-red-50 dark:bg-red-950/20 text-red-500 flex items-center justify-center mx-auto mb-6">
+              <LogOut size={32} />
+            </div>
+            <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2">Logout</h3>
+            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-8 leading-relaxed">
+              Are you sure you want to logout?
+            </p>
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                type="button"
+                onClick={() => setShowLogoutConfirm(false)}
+                className="w-full py-3.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-sm transition-all duration-200 active:scale-95"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmLogout}
+                className="w-full py-3.5 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold text-sm shadow-lg shadow-red-500/25 transition-all duration-200 active:scale-95"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

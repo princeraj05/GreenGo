@@ -4,6 +4,7 @@ import API from "../../api/axios";
 import { signInWithPopup, signInWithRedirect, getRedirectResult } from "firebase/auth";
 import { auth, googleProvider } from "../../config/firebase";
 import { getApiUrl } from "../../utils/getApiUrl";
+import { saveSession } from "../../utils/authStorage";
 
 const maskToken = (token) => {
   if (!token) return "none";
@@ -48,16 +49,13 @@ export default function Login() {
       
       try {
         localStorage.setItem("token", data.token);
-        const storedToken = localStorage.getItem("token");
-        console.log(`[LOGIN PROCESS] Token successfully stored in localStorage. Readback: ${maskToken(storedToken)}`);
-        debugAlert(`[ANDROID AUTH DEBUG] localStorage token write: success\nlocalStorage token read: ${storedToken ? "success" : "missing"}\nStored JWT: ${maskToken(storedToken)}`);
-
         const meRes = await API.get("/api/users/me");
-        console.log(`[LOGIN PROCESS] Protected /api/users/me status: ${meRes.status}`, sanitizeBody(meRes.data));
-        debugAlert(`[ANDROID AUTH DEBUG] Protected route /api/users/me status: ${meRes.status}\nBody: ${JSON.stringify(sanitizeBody(meRes.data))}`);
+        await saveSession(data.token, meRes.data);
+        console.log(`[LOGIN PROCESS] Token and user data successfully stored persistently.`);
+        debugAlert(`[ANDROID AUTH DEBUG] Session persistence write: success`);
       } catch (storageErr) {
         console.error(`[LOGIN PROCESS] Token storage or protected-route verification failed:`, storageErr);
-        alert(`Storage/Protected Route Error:\n${storageErr.message}\nStatus: ${storageErr.response?.status || "none"}\nBody: ${JSON.stringify(storageErr.response?.data || {})}`);
+        await saveSession(data.token, { email, role: data.role });
       }
 
       if (data.role === "admin") {
@@ -106,9 +104,12 @@ export default function Login() {
           const data = res.data;
           
           localStorage.setItem("token", data.token);
-          const storedToken = localStorage.getItem("token");
-          console.log("[GOOGLE AUTH] Token successfully stored in localStorage.", maskToken(storedToken));
-          debugAlert(`[ANDROID AUTH DEBUG] Google backend status: ${res.status}\nGoogle backend body: ${JSON.stringify(sanitizeBody(data))}\nStored JWT: ${maskToken(storedToken)}`);
+          try {
+            const meRes = await API.get("/api/users/me");
+            await saveSession(data.token, meRes.data);
+          } catch (meErr) {
+            await saveSession(data.token, { email: user.email, role: data.role });
+          }
           
           if (data.role === "admin") navigate("/admin");
           else navigate("/user");
@@ -138,12 +139,16 @@ export default function Login() {
         // Get Firebase ID Token
         const idToken = await user.getIdToken();
         
-        // Send token to backend
         const res = await API.post("/api/users/google-login", { idToken });
         const data = res.data;
         
         localStorage.setItem("token", data.token);
-        console.log("[GOOGLE AUTH] Popup token stored:", maskToken(localStorage.getItem("token")));
+        try {
+          const meRes = await API.get("/api/users/me");
+          await saveSession(data.token, meRes.data);
+        } catch (meErr) {
+          await saveSession(data.token, { email: user.email, role: data.role });
+        }
         
         if (data.role === "admin") navigate("/admin");
         else navigate("/user");

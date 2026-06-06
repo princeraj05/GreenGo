@@ -4,15 +4,16 @@ import { jwtDecode } from "jwt-decode";
 export default function AdminRoute({ children }) {
 
   const token = localStorage.getItem("token");
+  const authState = localStorage.getItem("auth_state");
 
   if (window.diagnostics) {
-    window.diagnostics.addLog(`AdminRoute: Token read from localStorage: ${token ? "found" : "not found"}`);
+    window.diagnostics.addLog(`AdminRoute: Token: ${token ? "found" : "not found"}, AuthState: ${authState}`);
   }
 
   // Agar token nahi hai → login page
-  if (!token) {
+  if (!token || authState !== "logged_in") {
     if (window.diagnostics) {
-      window.diagnostics.addLog(`AdminRoute: No token found. Redirecting to /login`);
+      window.diagnostics.addLog(`AdminRoute: No token found or not logged in. Redirecting to /login`);
     }
     return <Navigate to="/login" replace />;
   }

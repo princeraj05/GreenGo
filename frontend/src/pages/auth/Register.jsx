@@ -4,6 +4,7 @@ import API from "../../api/axios";
 import { signInWithPopup, signInWithRedirect, getRedirectResult } from "firebase/auth";
 import { auth, googleProvider } from "../../config/firebase";
 import { getApiUrl } from "../../utils/getApiUrl";
+import { saveSession } from "../../utils/authStorage";
 
 const maskToken = (token) => {
   if (!token) return "none";
@@ -81,9 +82,12 @@ export default function Register() {
           const data = res.data;
           
           localStorage.setItem("token", data.token);
-          const storedToken = localStorage.getItem("token");
-          console.log("[REGISTER GOOGLE AUTH] Token successfully stored in localStorage.", maskToken(storedToken));
-          debugAlert(`[ANDROID AUTH DEBUG] Register Google backend status: ${res.status}\nStored JWT: ${maskToken(storedToken)}`);
+          try {
+            const meRes = await API.get("/api/users/me");
+            await saveSession(data.token, meRes.data);
+          } catch (meErr) {
+            await saveSession(data.token, { email: user.email, role: data.role });
+          }
           
           if (data.role === "admin") navigate("/admin");
           else navigate("/user");
@@ -113,12 +117,16 @@ export default function Register() {
         // Get Firebase ID Token
         const idToken = await user.getIdToken();
         
-        // Send token to backend
         const res = await API.post("/api/users/google-login", { idToken });
         const data = res.data;
         
         localStorage.setItem("token", data.token);
-        console.log("[REGISTER GOOGLE AUTH] Popup token stored:", maskToken(localStorage.getItem("token")));
+        try {
+          const meRes = await API.get("/api/users/me");
+          await saveSession(data.token, meRes.data);
+        } catch (meErr) {
+          await saveSession(data.token, { email: user.email, role: data.role });
+        }
         
         if (data.role === "admin") navigate("/admin");
         else navigate("/user");
