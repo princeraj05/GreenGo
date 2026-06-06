@@ -8,6 +8,19 @@ import Card from "../../components/ui/Card";
 import Input from "../../components/ui/Input";
 import { cn } from "../../utils/cn";
 
+
+function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Earth's radius in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
 export default function Checkout() {
   const navigate = useNavigate();
   const [cart, setCart] = useState([]);
@@ -17,6 +30,7 @@ export default function Checkout() {
   const [deliveryCharge, setDeliveryCharge] = useState(40);
   const [loading, setLoading] = useState(false);
   const [locationLoading, setLocationLoading] = useState(false);
+  const [userCoords, setUserCoords] = useState(null); // { latitude, longitude }
 
   useEffect(() => {
     if (!window.Razorpay) {
@@ -76,6 +90,50 @@ export default function Checkout() {
         return;
       }
 
+      // Check distance and coordinates first
+      let lat = userCoords?.latitude;
+      let lon = userCoords?.longitude;
+
+      const latLngRegex = /Lat:\s*([-\d.]+),\s*Lng:\s*([-\d.]+)/i;
+      const match = address.match(latLngRegex);
+      if (match) {
+        lat = parseFloat(match[1]);
+        lon = parseFloat(match[2]);
+      } else if (!lat || !lon) {
+        // Fallback geocoding on frontend if coordinates not loaded yet
+        try {
+          const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`, {
+            headers: { "User-Agent": "ByteBite-FoodDelivery-App/1.0" }
+          });
+          const geoData = await geoRes.json();
+          if (geoData && geoData.length > 0) {
+            lat = parseFloat(geoData[0].lat);
+            lon = parseFloat(geoData[0].lon);
+          }
+        } catch (err) {
+          console.error("Frontend geocoding error:", err);
+        }
+      }
+
+      // Fetch store settings to calculate & validate distance
+      const settingsRes = await fetch(`${import.meta.env.VITE_API_URL}/api/settings`);
+      const settingsData = await settingsRes.json();
+
+      if (settingsData && lat !== undefined && lat !== null && lon !== undefined && lon !== null) {
+        const dist = calculateHaversineDistance(
+          settingsData.storeLatitude,
+          settingsData.storeLongitude,
+          lat,
+          lon
+        );
+
+        if (dist > settingsData.maxDeliveryDistance) {
+          alert(`Delivery is not available. Your location is ${dist.toFixed(1)} km away, which exceeds our maximum delivery distance of ${settingsData.maxDeliveryDistance} km.`);
+          setLoading(false);
+          return;
+        }
+      }
+
       if (paymentMethod !== "COD") {
         const orderRes = await fetch(`${import.meta.env.VITE_API_URL}/api/payment/create-order`, {
           method: "POST",
@@ -120,7 +178,7 @@ export default function Checkout() {
 
             const verifyData = await verifyRes.json();
             if (verifyData.success) {
-              await createFinalOrder(token);
+              await createFinalOrder(token, lat, lon);
             } else {
               alert("Payment Verification Failed!");
               setLoading(false);
@@ -138,7 +196,7 @@ export default function Checkout() {
         
         rzp1.open();
       } else {
-        await createFinalOrder(token);
+        await createFinalOrder(token, lat, lon);
       }
     } catch (err) {
       console.error("Checkout error:", err);
@@ -147,7 +205,7 @@ export default function Checkout() {
     }
   };
 
-  const createFinalOrder = async (token) => {
+  const createFinalOrder = async (token, lat, lon) => {
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/orders`, {
         method: "POST",
@@ -157,11 +215,13 @@ export default function Checkout() {
         },
         body: JSON.stringify({
           items: cart, address, phone, paymentMethod, subtotal, deliveryCharge, total,
+          latitude: lat, longitude: lon
         }),
       });
 
       if (!res.ok) {
-        alert("Order failed. Please try again.");
+        const errorData = await res.json();
+        alert(errorData.message || "Order failed. Please try again.");
         setLoading(false);
         return;
       }
@@ -186,6 +246,7 @@ export default function Checkout() {
     navigator.geolocation.getCurrentPosition(async (position) => {
       try {
         const { latitude, longitude } = position.coords;
+        setUserCoords({ latitude, longitude });
         const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
         const data = await res.json();
         if (data && data.display_name) {
@@ -195,6 +256,7 @@ export default function Checkout() {
         }
       } catch (err) {
         setAddress(`Lat: ${position.coords.latitude}, Lng: ${position.coords.longitude}`);
+        setUserCoords({ latitude: position.coords.latitude, longitude: position.coords.longitude });
       } finally {
         setLocationLoading(false);
       }
@@ -243,10 +305,14 @@ export default function Checkout() {
                   <textarea
                     placeholder="Enter your full delivery address (House No, Street, Landmark...)"
                     value={address}
-                    onChange={(e) => setAddress(e.target.value)}
+                    onChange={(e) => {
+                      setAddress(e.target.value);
+                      setUserCoords(null);
+                    }}
                     className="w-full px-5 py-4 rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 transition-all outline-none resize-y min-h-[120px] text-slate-900 placeholder-slate-400 font-medium shadow-sm"
                   />
                 </div>
+
 
                 <div>
                   <label className="text-sm font-bold text-slate-700 mb-2 block">Phone Number</label>

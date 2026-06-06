@@ -14,7 +14,13 @@ export const getSettings = async (req, res) => {
 
 export const updateSettings = async (req, res) => {
   try {
-    const { deliveryChargeAmount, isDeliveryChargeEnabled } = req.body;
+    const { 
+      deliveryChargeAmount, 
+      isDeliveryChargeEnabled,
+      maxDeliveryDistance,
+      storeLatitude,
+      storeLongitude
+    } = req.body;
     let settings = await Settings.findOne();
     
     if (!settings) {
@@ -23,6 +29,9 @@ export const updateSettings = async (req, res) => {
     
     settings.deliveryChargeAmount = deliveryChargeAmount;
     settings.isDeliveryChargeEnabled = isDeliveryChargeEnabled;
+    if (maxDeliveryDistance !== undefined) settings.maxDeliveryDistance = Number(maxDeliveryDistance);
+    if (storeLatitude !== undefined) settings.storeLatitude = Number(storeLatitude);
+    if (storeLongitude !== undefined) settings.storeLongitude = Number(storeLongitude);
     
     await settings.save();
     res.json(settings);

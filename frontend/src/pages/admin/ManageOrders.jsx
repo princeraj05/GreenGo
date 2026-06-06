@@ -102,6 +102,17 @@ export default function ManageOrders() {
                     <MapPin size={16} className="text-emerald-500 shrink-0 mt-0.5" /> 
                     {o.address}
                   </p>
+                  {o.distance !== undefined && o.distance !== null && (
+                    <p className="text-sm font-medium text-slate-600 dark:text-slate-300 flex items-center gap-2">
+                      <span className="text-base">📏</span> 
+                      Distance: <span className="font-bold text-slate-900 dark:text-white">{o.distance} km</span>
+                      {o.latitude && o.longitude && (
+                        <span className="text-xs text-slate-400 dark:text-slate-500">
+                          ({o.latitude.toFixed(4)}, {o.longitude.toFixed(4)})
+                        </span>
+                      )}
+                    </p>
+                  )}
                   <p className="text-sm font-medium text-slate-600 dark:text-slate-300 flex items-center gap-2">
                     <Clock size={16} className="text-emerald-500 shrink-0" /> 
                     Remaining: <span className="font-bold text-slate-900 dark:text-white">{remaining(o)}</span>

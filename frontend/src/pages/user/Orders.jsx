@@ -272,9 +272,15 @@ export default function Orders() {
                 </div>
 
                 <div className="flex justify-between items-center border-t border-slate-100 pt-6">
-                  <div>
-                    <p className="text-slate-500 font-medium text-sm">Payment Method</p>
-                    <p className="text-slate-900 font-bold">{o.paymentMethod || "COD"}</p>
+                  <div className="space-y-1">
+                    <p className="text-slate-500 font-medium text-sm">
+                      Payment Method: <span className="text-slate-900 font-bold">{o.paymentMethod || "COD"}</span>
+                    </p>
+                    {o.distance !== undefined && o.distance !== null && (
+                      <p className="text-slate-500 font-medium text-sm">
+                        Delivery Distance: <span className="text-slate-900 font-bold">{o.distance} km</span>
+                      </p>
+                    )}
                   </div>
                   <div className="text-right">
                     <p className="text-slate-500 font-medium text-sm mb-1">Total Amount</p>

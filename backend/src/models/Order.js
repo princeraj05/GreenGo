@@ -42,7 +42,10 @@ const orderSchema = new mongoose.Schema(
   },
 
   etaMinutes:Number,
-  etaSetAt:Date
+  etaSetAt:Date,
+  distance:Number,
+  latitude:Number,
+  longitude:Number
 
 },
 {timestamps:true}

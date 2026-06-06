@@ -1,4 +1,33 @@
 import Order from "../models/Order.js";
+import Settings from "../models/Settings.js";
+
+function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Earth's radius in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
+const geocodeAddress = async (addrStr) => {
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addrStr)}&limit=1`;
+    const res = await fetch(url, {
+      headers: { "User-Agent": "ByteBite-FoodDelivery-App/1.0" }
+    });
+    const data = await res.json();
+    if (data && data.length > 0) {
+      return { latitude: parseFloat(data[0].lat), longitude: parseFloat(data[0].lon) };
+    }
+  } catch (err) {
+    console.error("Geocoding failed on backend:", err);
+  }
+  return null;
+};
 
 /* ================= CREATE ORDER (USER) ================= */
 export const createOrder = async (req, res) => {
@@ -11,11 +40,43 @@ export const createOrder = async (req, res) => {
       paymentMethod,
       subtotal,
       deliveryCharge,
-      total
+      total,
+      latitude,
+      longitude
     } = req.body;
 
+    let userLat = latitude;
+    let userLon = longitude;
+
+    // If coordinates are not provided, try to geocode the address
+    if ((userLat === undefined || userLat === null) && address) {
+      const coords = await geocodeAddress(address);
+      if (coords) {
+        userLat = coords.latitude;
+        userLon = coords.longitude;
+      }
+    }
+
+    let distance = null;
+    const settings = await Settings.findOne();
+    if (settings && userLat !== undefined && userLat !== null && userLon !== undefined && userLon !== null) {
+      distance = calculateHaversineDistance(
+        settings.storeLatitude,
+        settings.storeLongitude,
+        userLat,
+        userLon
+      );
+
+      // Verify delivery distance limit
+      if (distance > settings.maxDeliveryDistance) {
+        return res.status(400).json({
+          message: `Delivery is not available. Your location is ${distance.toFixed(1)} km away, which exceeds our maximum delivery distance of ${settings.maxDeliveryDistance} km.`
+        });
+      }
+    }
+
     const order = await Order.create({
-      userId: req.user.id,   // ✅ FIX (uid → id)
+      userId: req.user.id,
 
       items: items.map(i => ({
         foodId: i._id,
@@ -30,7 +91,10 @@ export const createOrder = async (req, res) => {
       paymentMethod,
       subtotal,
       deliveryCharge,
-      total
+      total,
+      distance: distance ? Number(distance.toFixed(2)) : null,
+      latitude: userLat,
+      longitude: userLon
     });
 
     res.json({

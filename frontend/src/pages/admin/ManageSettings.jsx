@@ -8,6 +8,9 @@ export default function ManageSettings() {
   const [form, setForm] = useState({
     deliveryChargeAmount: 40,
     isDeliveryChargeEnabled: true,
+    maxDeliveryDistance: 10,
+    storeLatitude: 25.5941,
+    storeLongitude: 85.1376,
   });
 
   useEffect(() => {
@@ -22,6 +25,9 @@ export default function ManageSettings() {
         setForm({
           deliveryChargeAmount: data.deliveryChargeAmount,
           isDeliveryChargeEnabled: data.isDeliveryChargeEnabled,
+          maxDeliveryDistance: data.maxDeliveryDistance !== undefined ? data.maxDeliveryDistance : 10,
+          storeLatitude: data.storeLatitude !== undefined ? data.storeLatitude : 25.5941,
+          storeLongitude: data.storeLongitude !== undefined ? data.storeLongitude : 85.1376,
         });
       }
     } catch (err) {
@@ -91,6 +97,34 @@ export default function ManageSettings() {
               <input type="number" min="0" value={form.deliveryChargeAmount} 
                 onChange={(e) => setForm({ ...form, deliveryChargeAmount: Number(e.target.value) })}
                 className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-slate-800 dark:text-white font-medium" />
+            </div>
+          </div>
+
+          <div className="border-t border-slate-100 dark:border-slate-800/80 pt-6">
+            <h3 className="font-extrabold text-slate-800 dark:text-white mb-4 uppercase tracking-wider text-xs">Distance & Location Limits</h3>
+            
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Maximum Delivery Distance (km)</label>
+                <input type="number" min="0" step="0.1" value={form.maxDeliveryDistance} 
+                  onChange={(e) => setForm({ ...form, maxDeliveryDistance: Number(e.target.value) })}
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-955 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-slate-800 dark:text-white font-medium" />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Store Latitude</label>
+                  <input type="number" step="0.0001" value={form.storeLatitude} 
+                    onChange={(e) => setForm({ ...form, storeLatitude: Number(e.target.value) })}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-955 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-slate-800 dark:text-white font-medium" />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Store Longitude</label>
+                  <input type="number" step="0.0001" value={form.storeLongitude} 
+                    onChange={(e) => setForm({ ...form, storeLongitude: Number(e.target.value) })}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-955 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-slate-800 dark:text-white font-medium" />
+                </div>
+              </div>
             </div>
           </div>
           
