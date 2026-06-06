@@ -22,9 +22,6 @@ const sanitizeBody = (body) => {
 
 const debugAlert = (message) => {
   console.log(message);
-  if (window.Capacitor) {
-    alert(message);
-  }
 };
 
 export default function Login() {
@@ -89,7 +86,6 @@ export default function Login() {
   useEffect(() => {
     // Log resolved API URL immediately on mount
     console.log("[DEBUG] Resolved API URL on load is: ", getApiUrl());
-    alert("[DEBUG] Resolved API URL on load is: " + getApiUrl());
 
     const checkRedirect = async () => {
       console.log("[GOOGLE AUTH] Checking redirect result...");

@@ -12,9 +12,6 @@ const maskToken = (token) => {
 
 const debugAlert = (message) => {
   console.log(message);
-  if (window.Capacitor) {
-    alert(message);
-  }
 };
 
 export default function Register() {
