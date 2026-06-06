@@ -163,9 +163,9 @@ export default function ManageFoods() {
             <div className="lg:col-span-4 flex flex-col justify-between gap-6">
               <div className="flex-1">
                 <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Image Preview</label>
-                <div className="w-full h-56 rounded-[1.5rem] border-2 border-dashed border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex flex-col items-center justify-center overflow-hidden relative group">
+                <div className="w-full h-56 rounded-[1.5rem] border-2 border-dashed border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex items-center justify-center overflow-hidden relative group p-3">
                   {preview ? (
-                    <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+                    <img src={preview} alt="Preview" className="max-w-full max-h-full w-auto h-auto object-contain rounded-xl" />
                   ) : (
                     <div className="text-center text-slate-400 dark:text-slate-500 p-4 flex flex-col items-center gap-3">
                       <ImagePlus size={32} className="text-slate-300 dark:text-slate-700" />
@@ -209,9 +209,9 @@ export default function ManageFoods() {
             >
               <Card hover className="overflow-hidden flex flex-col h-full border-slate-100 dark:border-slate-800/60 p-2 bg-white dark:bg-slate-950 group">
                 
-                <div className="relative h-56 overflow-hidden bg-slate-50 dark:bg-slate-900 rounded-2xl">
+                <div className="relative h-56 overflow-hidden bg-slate-50 dark:bg-slate-900 rounded-2xl flex items-center justify-center p-3">
                   <img src={f.image?.startsWith('http') ? f.image : `${import.meta.env.VITE_API_URL}/uploads/${f.image}`}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt={f.name} />
+                    className="max-w-full max-h-full w-auto h-auto object-contain rounded-xl transition-transform duration-500 group-hover:scale-105" alt={f.name} />
                     
                   <div className="absolute top-3 right-3 flex gap-2">
                     <button 

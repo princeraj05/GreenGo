@@ -220,7 +220,7 @@ export default function Orders() {
                     <div key={iIdx} className="flex items-center gap-4 p-3 border-b border-slate-100 last:border-0 hover:bg-white rounded-xl transition-colors">
                       <img 
                         src={getImageUrl(i.image)}
-                        className="w-16 h-16 rounded-xl object-cover bg-slate-100" 
+                        className="w-16 h-16 rounded-xl object-contain bg-slate-100 p-1" 
                         onError={(e) => { e.target.src = 'https://placehold.co/400x300?text=Food'; }}
                         alt={i.name}
                       />

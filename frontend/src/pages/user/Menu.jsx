@@ -231,12 +231,12 @@ export default function Menu() {
                   <Card hover className="h-full flex flex-col overflow-hidden group border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-900">
                     <div 
                       onClick={() => selectFoodDetails(food)}
-                      className="relative h-56 overflow-hidden bg-slate-50 dark:bg-slate-900 p-2 cursor-pointer"
+                      className="relative h-56 overflow-hidden bg-slate-50 dark:bg-slate-900/40 p-3 cursor-pointer flex items-center justify-center"
                     >
                       <img
                         src={getImageUrl(food.image)}
                         alt={food.name}
-                        className="w-full h-full object-cover rounded-[1.25rem] transition-transform duration-700 group-hover:scale-110"
+                        className="max-w-full max-h-full w-auto h-auto object-contain rounded-2xl transition-transform duration-500 group-hover:scale-105"
                         onError={(e) => { e.target.src = 'https://placehold.co/400x300?text=Food'; }}
                       />
                       <button
@@ -294,12 +294,11 @@ export default function Menu() {
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="bg-white dark:bg-slate-950 rounded-[2.5rem] shadow-2xl border border-slate-100 dark:border-slate-800/60 w-full max-w-2xl overflow-hidden flex flex-col max-h-[85vh]"
             >
-              {/* Image & Header */}
-              <div className="relative h-64 sm:h-80 bg-slate-50 dark:bg-slate-900 shrink-0">
+              <div className="relative h-64 sm:h-80 bg-slate-50 dark:bg-slate-900 shrink-0 flex items-center justify-center p-4">
                 <img 
                   src={getImageUrl(selectedFood.image)} 
                   alt={selectedFood.name}
-                  className="w-full h-full object-cover"
+                  className="max-w-full max-h-full w-auto h-auto object-contain rounded-2xl"
                   onError={(e) => { e.target.src = 'https://placehold.co/600x400?text=Food'; }}
                 />
                  <button 

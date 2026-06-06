@@ -125,7 +125,7 @@ export default function Cart() {
                     <img
                       src={getImageUrl(item.image)}
                       alt={item.name}
-                      className="w-28 h-28 object-cover rounded-[1.25rem] bg-slate-50 dark:bg-slate-800 shadow-inner group-hover:scale-105 transition-transform"
+                      className="w-28 h-28 object-contain rounded-[1.25rem] bg-slate-50 dark:bg-slate-800 shadow-inner p-2 group-hover:scale-105 transition-transform"
                       onError={(e) => { e.target.src = 'https://placehold.co/400x300?text=Food'; }}
                     />
 
