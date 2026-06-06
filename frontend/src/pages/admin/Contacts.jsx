@@ -57,22 +57,19 @@ export default function Contacts() {
 
   const conversations = useMemo(() => {
     const grouped = contacts.reduce((acc, contact) => {
-      const isUserChat = contact.source === "user" || Boolean(contact.uid);
-      const key = isUserChat
-        ? `user:${contact.uid || contact.email}`
-        : `email:${String(contact.email || "").toLowerCase()}`;
+      // Group by lowercase email address to combine guest and user chats for the same person
+      const emailKey = String(contact.email || "").toLowerCase();
 
-      if (!acc[key]) {
-        acc[key] = {
-          key,
-          isUserChat,
+      if (!acc[emailKey]) {
+        acc[emailKey] = {
+          key: emailKey,
           name: contact.name,
           email: contact.email,
           messages: [],
         };
       }
 
-      acc[key].messages.push(contact);
+      acc[emailKey].messages.push(contact);
       return acc;
     }, {});
 
@@ -84,8 +81,12 @@ export default function Contacts() {
         const latest = messages[messages.length - 1];
         const unreadCount = messages.filter((message) => !message.reply).length;
 
+        // Determine isUserChat based on the latest message in the conversation
+        const isUserChat = latest ? (latest.source === "user" || Boolean(latest.uid)) : false;
+
         return {
           ...conversation,
+          isUserChat,
           name: latest?.name || conversation.name,
           email: latest?.email || conversation.email,
           messages,
@@ -295,6 +296,13 @@ export default function Contacts() {
                               {initials}
                             </div>
                             <span className="text-xs font-bold text-slate-500 dark:text-slate-450">{selectedConversation.name}</span>
+                            <span className={`text-[8px] px-1.5 py-0.5 rounded border uppercase tracking-wider font-extrabold ${
+                              message.source === "user"
+                                ? "bg-blue-50 dark:bg-blue-950/20 text-blue-500 border-blue-100 dark:border-blue-900/20"
+                                : "bg-purple-50 dark:bg-purple-950/20 text-purple-500 border-purple-100 dark:border-purple-900/20"
+                            }`}>
+                              {message.source === "user" ? "Chat" : "Email"}
+                            </span>
                           </div>
                           
                           {message.subject && (
