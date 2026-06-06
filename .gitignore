@@ -1,0 +1,6 @@
+android-sdk/
+builds/
+frontend/android/
+frontend/assets/
+*.keystore
+*.jks

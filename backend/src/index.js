@@ -38,6 +38,10 @@ const allowedOrigins = [
   "http://localhost:5173",
   "https://byte-bite-ten.vercel.app",
   "https://byte-bite-dd1g7omzo-princes-projects-d7be7534.vercel.app",
+  "http://localhost",
+  "https://localhost",
+  "capacitor://localhost",
+  "ionic://localhost",
 ];
 
 const corsOptions = {
@@ -58,6 +62,16 @@ const corsOptions = {
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
 };
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  const method = req.method;
+  const url = req.originalUrl;
+  res.on("finish", () => {
+    console.log(`[REQUEST LOG] ${method} ${url} | Origin: ${origin || "none"} | Status: ${res.statusCode}`);
+  });
+  next();
+});
 
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));

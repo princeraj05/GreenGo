@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import API from "../../api/axios";
-import { signInWithPopup } from "firebase/auth";
+import { signInWithPopup, signInWithRedirect, getRedirectResult } from "firebase/auth";
 import { auth, googleProvider } from "../../config/firebase";
 
 export default function Login() {
@@ -34,27 +34,54 @@ export default function Login() {
     }
   };
 
+  useEffect(() => {
+    const checkRedirect = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result) {
+          setLoading(true);
+          const user = result.user;
+          const idToken = await user.getIdToken();
+          const res = await API.post("/api/users/google-login", { idToken });
+          const data = res.data;
+          localStorage.setItem("token", data.token);
+          if (data.role === "admin") navigate("/admin");
+          else navigate("/user");
+        }
+      } catch (err) {
+        console.error("Google redirect sign in failed:", err);
+        alert(err.message || "Google redirect failed");
+      } finally {
+        setLoading(false);
+      }
+    };
+    checkRedirect();
+  }, [navigate]);
+
   const handleGoogleSignIn = async () => {
     setLoading(true);
     try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user;
-      
-      // Get Firebase ID Token
-      const idToken = await user.getIdToken();
-      
-      // Send token to backend
-      const res = await API.post("/api/users/google-login", { idToken });
-      const data = res.data;
-      
-      localStorage.setItem("token", data.token);
-      
-      if (data.role === "admin") navigate("/admin");
-      else navigate("/user");
+      if (window.Capacitor) {
+        await signInWithRedirect(auth, googleProvider);
+      } else {
+        const result = await signInWithPopup(auth, googleProvider);
+        const user = result.user;
+        
+        // Get Firebase ID Token
+        const idToken = await user.getIdToken();
+        
+        // Send token to backend
+        const res = await API.post("/api/users/google-login", { idToken });
+        const data = res.data;
+        
+        localStorage.setItem("token", data.token);
+        
+        if (data.role === "admin") navigate("/admin");
+        else navigate("/user");
+      }
     } catch (err) {
       console.error("Google sign in failed:", err);
       alert(err.response?.data?.message || err.message || "Google Sign-In failed");
-    } finally {
       setLoading(false);
     }
   };

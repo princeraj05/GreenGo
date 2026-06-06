@@ -1,0 +1,26 @@
+{
+  "appId": "com.bytebite.fooddelivery",
+  "appName": "ByteBite",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "allowNavigation": [
+      "checkout.razorpay.com",
+      "*.razorpay.com",
+      "api.razorpay.com"
+    ]
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 3000,
+      "launchAutoHide": false,
+      "backgroundColor": "#1e293b",
+      "androidScaleType": "CENTER_CROP",
+      "showSpinner": false
+    },
+    "Keyboard": {
+      "resize": "body",
+      "style": "DARK"
+    }
+  }
+}

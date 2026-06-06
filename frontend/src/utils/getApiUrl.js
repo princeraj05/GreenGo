@@ -2,8 +2,13 @@ export const getApiUrl = () => {
   if (import.meta.env.VITE_API_URL) {
     return import.meta.env.VITE_API_URL;
   }
-  // Fallback for Vercel/production environment
-  if (window.location.hostname.includes("vercel.app") || window.location.protocol === "https:") {
+  // Fallback for Vercel/production environment or Capacitor native app
+  if (
+    window.location.hostname.includes("vercel.app") || 
+    window.location.protocol === "https:" ||
+    window.Capacitor ||
+    (window.location.hostname === "localhost" && window.location.port === "")
+  ) {
     return "https://bytebite-8n5z.onrender.com";
   }
   // Fallback for local development

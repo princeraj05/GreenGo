@@ -53,6 +53,7 @@ export const loginUser = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (!user) {
+      console.log(`[AUTH ERROR] User login failed: User not found (${email})`);
       return res.status(400).json({
         message: "User not found"
       });
@@ -61,6 +62,7 @@ export const loginUser = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
+      console.log(`[AUTH ERROR] User login failed: Invalid password for ${email}`);
       return res.status(400).json({
         message: "Invalid password"
       });
@@ -76,6 +78,7 @@ export const loginUser = async (req, res) => {
       { expiresIn: "7d" }
     );
 
+    console.log(`[AUTH SUCCESS] User logged in: ${email} | Role: ${user.role}`);
     res.json({
       success: true,
       token,
@@ -83,6 +86,7 @@ export const loginUser = async (req, res) => {
     });
 
   } catch (err) {
+    console.log(`[AUTH ERROR] User login server error for ${email || 'unknown'}: ${err.message}`);
     res.status(500).json({
       message: "Server error"
     });
@@ -225,6 +229,7 @@ export const googleLogin = async (req, res) => {
 
   } catch (err) {
     console.error("Google login verification failed:", err);
+    console.log(`[AUTH ERROR] Google login verification failed: ${err.message}`);
     res.status(401).json({ message: "Invalid Google token or verification failed" });
   }
 };
