@@ -125,7 +125,7 @@ export default function Contact() {
                 name="message"
                 value={form.message}
                 onChange={(event) => setForm({ ...form, message: event.target.value })}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:bg-white dark:focus:bg-slate-955 focus:ring-2 focus:ring-brand-500/10 focus:border-brand-500 transition-all outline-none h-32 resize-none font-medium text-sm"
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-brand-500/10 focus:border-brand-500 transition-all outline-none h-32 resize-none font-medium text-sm"
                 placeholder="How can we help you today?"
               />
             </div>
@@ -140,7 +140,7 @@ export default function Contact() {
         </form>
       </div>
 
-      <div className="flex-1 bg-white dark:bg-slate-955 rounded-3xl border border-slate-100 dark:border-slate-800/60 shadow-premium overflow-hidden flex flex-col h-[600px] transition-colors">
+      <div className="flex-1 bg-white dark:bg-slate-950 rounded-3xl border border-slate-100 dark:border-slate-800/60 shadow-premium overflow-hidden flex flex-col h-[600px] transition-colors">
         <div className="bg-slate-50 dark:bg-slate-900/80 border-b border-slate-100 dark:border-slate-800/60 p-5 flex items-center justify-between transition-colors">
           <h3 className="font-extrabold text-slate-900 dark:text-white flex items-center gap-2 text-sm uppercase tracking-wider">
             <span className="relative flex h-2 w-2">

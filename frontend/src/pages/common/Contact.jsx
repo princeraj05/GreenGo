@@ -167,7 +167,7 @@ export default function Contact() {
                     <textarea 
                       required name="message" value={form.message} onChange={handleChange} 
                       placeholder="Write your message here..." rows={4}
-                      className="w-full px-5 py-4 rounded-xl border border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-955 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500/10 focus:border-brand-500 transition-all font-medium text-gray-900 dark:text-white resize-none text-sm"
+                      className="w-full px-5 py-4 rounded-xl border border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500/10 focus:border-brand-500 transition-all font-medium text-gray-900 dark:text-white resize-none text-sm"
                     />
                   </div>
                   <button 

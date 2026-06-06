@@ -325,7 +325,7 @@ export default function Checkout() {
                       placeholder="Enter phone number"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      className="pl-12 py-3.5 bg-slate-50 dark:bg-slate-955 text-slate-900 dark:text-white border-slate-200 dark:border-slate-800 rounded-2xl"
+                      className="pl-12 py-3.5 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white border-slate-200 dark:border-slate-800 rounded-2xl"
                     />
                   </div>
                 </div>
