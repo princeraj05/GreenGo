@@ -5,15 +5,8 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import PrivateRoute from "./PrivateRoute";
 import AdminRoute from "./AdminRoute";
 
-/* COMMON */
-import CommonLayout from "../pages/common/CommonLayout";
-const Home = lazy(() => import("../pages/common/Home"));
-const About = lazy(() => import("../pages/common/About"));
-const Contact = lazy(() => import("../pages/common/Contact"));
-
 /* AUTH */
-import Login from "../pages/auth/Login";
-import Register from "../pages/auth/Register";
+import AuthPage from "../pages/auth/AuthPage";
 import ForgotPassword from "../pages/auth/ForgotPassword";
 import ResetPassword from "../pages/auth/ResetPassword";
 
@@ -50,16 +43,14 @@ export default function AppRoutes() {
   return (
     <Suspense fallback={<SuspenseLoader />}>
       <Routes>
-        {/* PUBLIC WEBSITE WITH NAVBAR + FOOTER */}
-        <Route element={<CommonLayout />}>
-          <Route path="/" element={<Home />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password/:token" element={<ResetPassword />} />
-        </Route>
+        {/* PUBLIC AUTHENTICATION & REDIRECTS */}
+        <Route path="/" element={<AuthPage />} />
+        <Route path="/login" element={<Navigate to="/" replace />} />
+        <Route path="/register" element={<Navigate to="/" replace />} />
+        <Route path="/about" element={<Navigate to="/" replace />} />
+        <Route path="/contact" element={<Navigate to="/" replace />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
 
         {/* USER PANEL */}
         <Route

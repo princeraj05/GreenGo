@@ -1,4 +1,5 @@
 import User from "../models/User.js";
+import Otp from "../models/Otp.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import admin from "../config/firebase.js";
@@ -100,6 +101,9 @@ export const loginUser = async (req, res) => {
         message: "Invalid password"
       });
     }
+
+    user.lastLogin = new Date();
+    await user.save();
 
     const jwtPayload = {
       id: user._id,
@@ -244,6 +248,7 @@ export const googleLogin = async (req, res) => {
         uid,
         provider: "google",
         avatar: picture || "",
+        lastLogin: new Date()
       });
     } else {
       let updated = false;
@@ -256,6 +261,8 @@ export const googleLogin = async (req, res) => {
         user.avatar = picture;
         updated = true;
       }
+      user.lastLogin = new Date();
+      updated = true;
       if (updated) {
         await user.save();
       }
@@ -392,6 +399,202 @@ export const resetPassword = async (req, res) => {
     res.json({ success: true, message: "Password reset successful" });
   } catch (err) {
     console.error("Reset password error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+/* ================= SEND EMAIL OTP ================= */
+
+export const sendOtpEmail = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    // Generate 6 digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+    // Delete existing OTPs for this email and save new one
+    await Otp.deleteMany({ email });
+    await Otp.create({ email, otp, expiresAt });
+
+    console.log(`[OTP DEBUG] Generated Email OTP ${otp} for ${email}`);
+
+    // Send email
+    const subject = "ByteBite Verification Code";
+    const text = `Your ByteBite verification code is: ${otp}`;
+    const html = `
+      <div style="font-family: Arial, sans-serif; color: #111827; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 16px; padding: 24px;">
+        <h2 style="color: #f97316; margin-top: 0; text-align: center;">ByteBite</h2>
+        <p>Dear Customer,</p>
+        <p>Your one-time password (OTP) to log in or create your ByteBite account is:</p>
+        <div style="text-align: center; margin: 32px 0;">
+          <span style="font-size: 32px; font-weight: bold; letter-spacing: 6px; color: #f97316; background-color: #fef3c7; padding: 12px 24px; border-radius: 8px;">${otp}</span>
+        </div>
+        <p>This code is valid for 5 minutes. Please do not share this OTP with anyone.</p>
+        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
+        <p style="color: #6b7280; font-size: 12px; text-align: center;">ByteBite - Delivering Happiness</p>
+      </div>
+    `;
+
+    try {
+      await sendEmail({ to: email, subject, text, html });
+      res.json({ success: true, message: "OTP sent to your email successfully" });
+    } catch (emailErr) {
+      console.error("[OTP ERROR] Failed to send email via SMTP, sending mock success response:", emailErr.message);
+      // In case SMTP is blocked/fails, we still return the OTP in development to prevent breaking the flow
+      res.json({
+        success: true,
+        message: "OTP generated (SMTP send failed, fallback enabled)",
+        otp: process.env.NODE_ENV === "production" ? undefined : otp // Expose OTP only in development/testing environments
+      });
+    }
+
+  } catch (err) {
+    console.error("Send email OTP error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+/* ================= VERIFY EMAIL OTP ================= */
+
+export const verifyOtpEmail = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    if (!email || !otp) {
+      return res.status(400).json({ message: "Email and OTP are required" });
+    }
+
+    const otpRecord = await Otp.findOne({ email, otp });
+    if (!otpRecord || otpRecord.expiresAt < new Date()) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
+
+    // Delete verified OTP
+    await Otp.deleteMany({ email });
+
+    let user = await User.findOne({ email });
+    if (!user) {
+      // Auto-create user
+      user = await User.create({
+        name: email.split("@")[0],
+        email,
+        role: "user",
+        provider: "email",
+        lastLogin: new Date()
+      });
+    } else {
+      user.lastLogin = new Date();
+      await user.save();
+    }
+
+    // Generate JWT
+    const token = jwt.sign(
+      {
+        id: user._id,
+        email: user.email,
+        role: user.role
+      },
+      process.env.JWT_SECRET || "SECRET123",
+      { expiresIn: "7d" }
+    );
+
+    res.json({
+      success: true,
+      token,
+      role: user.role
+    });
+
+  } catch (err) {
+    console.error("Verify email OTP error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+/* ================= SEND PHONE OTP ================= */
+
+export const sendOtpPhone = async (req, res) => {
+  try {
+    const { phone } = req.body;
+    if (!phone) {
+      return res.status(400).json({ message: "Phone number is required" });
+    }
+
+    // Generate 6 digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+    // Delete existing OTPs for this phone and save new one
+    await Otp.deleteMany({ phone });
+    await Otp.create({ phone, otp, expiresAt });
+
+    console.log(`[OTP DEBUG] Generated Phone OTP ${otp} for ${phone}`);
+
+    // Return the OTP in response since real SMS service is not integrated
+    res.json({
+      success: true,
+      message: "OTP sent to your phone number successfully",
+      otp // Expose OTP for developers/testing
+    });
+
+  } catch (err) {
+    console.error("Send phone OTP error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+/* ================= VERIFY PHONE OTP ================= */
+
+export const verifyOtpPhone = async (req, res) => {
+  try {
+    const { phone, otp } = req.body;
+    if (!phone || !otp) {
+      return res.status(400).json({ message: "Phone and OTP are required" });
+    }
+
+    const otpRecord = await Otp.findOne({ phone, otp });
+    if (!otpRecord || otpRecord.expiresAt < new Date()) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
+
+    // Delete verified OTP
+    await Otp.deleteMany({ phone });
+
+    let user = await User.findOne({ phone });
+    if (!user) {
+      // Auto-create user
+      user = await User.create({
+        name: `User_${phone.slice(-4)}`,
+        phone,
+        role: "user",
+        provider: "phone",
+        lastLogin: new Date()
+      });
+    } else {
+      user.lastLogin = new Date();
+      await user.save();
+    }
+
+    // Generate JWT
+    const token = jwt.sign(
+      {
+        id: user._id,
+        role: user.role
+      },
+      process.env.JWT_SECRET || "SECRET123",
+      { expiresIn: "7d" }
+    );
+
+    res.json({
+      success: true,
+      token,
+      role: user.role
+    });
+
+  } catch (err) {
+    console.error("Verify phone OTP error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };

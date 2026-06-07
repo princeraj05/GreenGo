@@ -3,18 +3,19 @@ import mongoose from "mongoose";
 const userSchema = new mongoose.Schema(
 {
   name: {
-    type:String,
-    required:true
+    type: String,
+    required: false
   },
 
-  email:{
-    type:String,
-    unique:true,
-    required:true
+  email: {
+    type: String,
+    unique: true,
+    sparse: true,
+    required: false
   },
 
-  password:{
-    type:String
+  password: {
+    type: String
   },
 
   uid: {
@@ -73,12 +74,16 @@ const userSchema = new mongoose.Schema(
   favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: "Food" }],
   blocked: { type: Boolean, default: false },
 
-  role:{
-    type:String,
-    default:"user"
+  lastLogin: {
+    type: Date
+  },
+
+  role: {
+    type: String,
+    default: "user"
   }
 },
-{ timestamps:true }
+{ timestamps: true }
 );
 
 export default mongoose.model("User", userSchema);

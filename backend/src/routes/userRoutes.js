@@ -7,7 +7,11 @@ import {
   toggleFavorite,
   googleLogin,
   forgotPassword,
-  resetPassword
+  resetPassword,
+  sendOtpEmail,
+  verifyOtpEmail,
+  sendOtpPhone,
+  verifyOtpPhone
 } from "../controllers/userController.js";
 
 import { protect } from "../middleware/authMiddleware.js";
@@ -22,5 +26,10 @@ router.post("/favorites/toggle", protect, toggleFavorite);
 router.post("/google-login", googleLogin);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password/:token", resetPassword);
+
+router.post("/send-otp-email", sendOtpEmail);
+router.post("/verify-otp-email", verifyOtpEmail);
+router.post("/send-otp-phone", sendOtpPhone);
+router.post("/verify-otp-phone", verifyOtpPhone);
 
 export default router;
