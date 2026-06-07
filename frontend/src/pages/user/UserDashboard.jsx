@@ -174,89 +174,8 @@ export default function UserDashboard() {
 
       <DashboardHero userName={user.name} />
       
-      <ActiveOrdersCard activeOrdersCount={activeOrdersCount} />
-      
-      {mostRecentActiveOrder && (
-        <ActivityTimeline activeOrder={mostRecentActiveOrder} />
-      )}
-      
       <QuickActions />
       
-      <UserStats totalOrders={stats.totalOrders} totalSpent={stats.totalSpent} points={stats.rewardPoints} />
-      
-      <OffersSection offers={offers} />
-      
-      <RecommendedFoods foods={foods} />
-      
-      {/* RECENT ORDERS TABLE - Kept for existing functionality, but modernized slightly */}
-      <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 border border-slate-100 dark:border-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)] mt-10 transition-colors">
-        <div className="flex items-center justify-between mb-8">
-          <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <svg className="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-            Recent Orders
-          </h3>
-          {totalOrders > 0 && (
-            <Link to="/user/orders" className="text-sm font-bold text-orange-500 hover:text-orange-600 bg-orange-50 dark:bg-orange-950/20 px-4 py-2 rounded-lg">View All History</Link>
-          )}
-        </div>
-
-        {totalOrders === 0 ? (
-          <div className="text-center py-12 bg-slate-50 dark:bg-slate-950 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800">
-            <div className="text-6xl mb-4">🍽️</div>
-            <h4 className="text-lg font-bold text-slate-900 dark:text-white mb-1">No orders yet</h4>
-            <p className="text-slate-500 dark:text-slate-400 mb-6">Looks like you haven't ordered anything yet. Let's fix that!</p>
-            <Link to="/user/menu" className="px-6 py-3 bg-slate-900 dark:bg-slate-800 text-white rounded-xl font-bold shadow-lg">Start Ordering</Link>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[600px]">
-              <thead>
-                <tr className="border-b border-slate-100 dark:border-slate-800">
-                  <th className="py-4 font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider text-xs">Order ID</th>
-                  <th className="py-4 font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider text-xs">Items</th>
-                  <th className="py-4 font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider text-xs">Status</th>
-                  <th className="py-4 font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider text-xs text-right">Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                {orders.slice(0, 5).map((order) => (
-                  <tr key={order._id} className="border-b border-slate-50 dark:border-slate-800/50 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group">
-                    <td className="py-4 font-medium text-slate-600 dark:text-slate-300">
-                      <span className="text-slate-300 dark:text-slate-700">#</span>{order._id.slice(-6)}
-                    </td>
-                    <td className="py-4 text-slate-800 dark:text-slate-200 font-medium">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-950 overflow-hidden shrink-0">
-                          {order.items[0]?.image ? (
-                            <img src={order.items[0].image} className="w-full h-full object-cover" alt="" />
-                          ) : <div className="w-full h-full flex items-center justify-center">🍲</div>}
-                        </div>
-                        <span className="truncate max-w-[200px]">
-                          {order.items.map(i => i.name).join(", ")}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="py-4">
-                      <span className={`px-3 py-1 text-xs font-bold rounded-full ${
-                        order.status === "Delivered" ? "bg-emerald-50 text-emerald-600 border border-emerald-100" :
-                        order.status === "Pending" ? "bg-amber-50 text-amber-600 border border-amber-100" :
-                        "bg-blue-50 text-blue-600 border border-blue-100"
-                      }`}>
-                        {order.status}
-                      </span>
-                    </td>
-                    <td className="py-4 font-black text-slate-900 dark:text-white text-right">
-                      ₹{order.total}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
     </div>
   );
 }
