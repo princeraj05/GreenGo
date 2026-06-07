@@ -1,4 +1,6 @@
 import { Preferences } from "@capacitor/preferences";
+import { signOut } from "firebase/auth";
+import { auth } from "../config/firebase";
 
 /**
  * Save user session data securely in Preferences and fallback/sync with localStorage.
@@ -33,6 +35,14 @@ export const clearSession = async () => {
   localStorage.removeItem("token");
   localStorage.removeItem("user_data");
   localStorage.removeItem("auth_state");
+
+  try {
+    if (auth) {
+      await signOut(auth);
+    }
+  } catch (err) {
+    console.error("Failed to sign out from Firebase:", err);
+  }
 };
 
 /**
