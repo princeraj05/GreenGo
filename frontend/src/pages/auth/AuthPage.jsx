@@ -44,9 +44,15 @@ export default function AuthPage() {
       processed = true;
       setLoading(true);
       try {
+        console.log("[GOOGLE DEBUG] Firebase user received:", user.email);
+        console.log("[GOOGLE DEBUG] ID token generated");
         const idToken = await user.getIdToken(true);
+        
+        console.log("[GOOGLE DEBUG] Backend sync started");
         const res = await API.post("/api/users/google-login", { idToken });
         const data = res.data;
+        console.log("[GOOGLE DEBUG] Backend sync success");
+        
         localStorage.setItem("token", data.token);
         try {
           const meRes = await API.get("/api/users/me");
@@ -66,11 +72,13 @@ export default function AuthPage() {
 
     const checkRedirect = async () => {
       try {
+        console.log("[GOOGLE DEBUG] Redirect result checking...");
         const redirectPromise = getRedirectResult(auth);
         const timeoutPromise = new Promise((_, reject) =>
           setTimeout(() => reject(new Error("Firebase Redirect Timeout")), 4000)
         );
         const result = await Promise.race([redirectPromise, timeoutPromise]);
+        console.log("[GOOGLE DEBUG] Redirect result:", result);
         if (result && result.user) {
           await handleUserSession(result.user);
         } else if (auth.currentUser) {
@@ -85,6 +93,7 @@ export default function AuthPage() {
     };
 
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      console.log("[GOOGLE DEBUG] Auth state changed");
       if (user) {
         await handleUserSession(user);
       }
@@ -95,18 +104,29 @@ export default function AuthPage() {
   }, [navigate]);
 
   const handleGoogleSignIn = async () => {
+    console.log("[GOOGLE DEBUG] Button clicked");
     setLoading(true);
     setError("");
     try {
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      if (window.Capacitor || isMobile) {
+      // Use popup for all web environments to prevent redirect 404 init.json issues
+      // Only use redirect if strictly in native Capacitor app container
+      if (window.Capacitor) {
+        console.log("[GOOGLE DEBUG] Using redirect");
         await signInWithRedirect(auth, googleProvider);
       } else {
+        console.log("[GOOGLE DEBUG] Using popup");
         const result = await signInWithPopup(auth, googleProvider);
         const user = result.user;
+        console.log("[GOOGLE DEBUG] Firebase user received:", user.email);
+        
+        console.log("[GOOGLE DEBUG] ID token generated");
         const idToken = await user.getIdToken();
+        
+        console.log("[GOOGLE DEBUG] Backend sync started");
         const res = await API.post("/api/users/google-login", { idToken });
         const data = res.data;
+        console.log("[GOOGLE DEBUG] Backend sync success");
+        
         localStorage.setItem("token", data.token);
         try {
           const meRes = await API.get("/api/users/me");
@@ -114,6 +134,7 @@ export default function AuthPage() {
         } catch (meErr) {
           await saveSession(data.token, { email: user.email, role: data.role });
         }
+        
         if (data.role === "admin") navigate("/admin");
         else navigate("/user");
       }
