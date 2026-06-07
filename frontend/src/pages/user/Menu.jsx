@@ -20,6 +20,7 @@ export default function Menu() {
   const [selectedFood, setSelectedFood] = useState(null);
   const [foodReviews, setFoodReviews] = useState([]);
   const [favorites, setFavorites] = useState([]);
+  const [cart, setCart] = useState([]);
 
   const selectFoodDetails = async (food) => {
     setSelectedFood(food);
@@ -45,7 +46,13 @@ export default function Menu() {
   useEffect(() => {
     loadFoods();
     loadFavorites();
+    loadCart();
   }, []);
+
+  const loadCart = () => {
+    const data = JSON.parse(localStorage.getItem("cart")) || [];
+    setCart(data);
+  };
 
   const loadFavorites = async () => {
     try {
@@ -117,32 +124,40 @@ export default function Menu() {
     return matchesSearch && matchesCategory;
   });
 
-  const addToCart = (food) => {
-    let cart = JSON.parse(localStorage.getItem("cart")) || [];
-    const existing = cart.find(i => i._id === food._id);
+  const updateQuantity = (food, newQty) => {
+    let currentCart = JSON.parse(localStorage.getItem("cart")) || [];
+    const existingIndex = currentCart.findIndex(i => i._id === food._id);
 
-    if (existing) {
-      existing.qty += 1;
+    if (newQty <= 0) {
+      if (existingIndex > -1) {
+        currentCart.splice(existingIndex, 1);
+      }
     } else {
-      cart.push({
-        _id: food._id,
-        name: food.name,
-        price: food.price,
-        image: food.image,
-        qty: 1
-      });
+      if (existingIndex > -1) {
+        currentCart[existingIndex].qty = newQty;
+      } else {
+        currentCart.push({
+          _id: food._id,
+          name: food.name,
+          price: food.price,
+          image: food.image,
+          qty: newQty
+        });
+      }
     }
 
-    localStorage.setItem("cart", JSON.stringify(cart));
+    localStorage.setItem("cart", JSON.stringify(currentCart));
+    setCart(currentCart);
     window.dispatchEvent(new Event("cart-updated"));
-    // Provide a tiny vibration/feedback or visual cue (could add toast later)
-    navigate("/user/checkout");
   };
 
   const categories = ["All", "Veg", "Non-Veg", "Sweet", "Water", "Cold Drink", "Favorites"];
 
+  const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+  const cartCount = cart.reduce((sum, item) => sum + item.qty, 0);
+
   return (
-    <div className="max-w-7xl mx-auto w-full pb-10">
+    <div className="max-w-7xl mx-auto w-full pb-10 relative">
       
       {/* HEADER SECTION */}
       <motion.div 
@@ -271,11 +286,30 @@ export default function Menu() {
                       </div>
 
                       <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 flex-1 mb-6 font-medium leading-relaxed">{food.description}</p>
-                      
-                      <Button onClick={() => addToCart(food)} className="w-full gap-2 group-hover:shadow-brand-500/30">
-                        <ShoppingCart size={18} />
-                        Add to Cart
-                      </Button>
+                                           {cart.find(i => i._id === food._id) ? (
+                        <div className="flex items-center justify-between w-full bg-brand-50 dark:bg-brand-950/30 border border-brand-100 dark:border-brand-900 rounded-xl p-1 shadow-sm">
+                          <button
+                            onClick={() => updateQuantity(food, (cart.find(i => i._id === food._id)?.qty || 0) - 1)}
+                            className="w-10 h-10 rounded-lg bg-white dark:bg-slate-900 text-brand-600 dark:text-brand-400 hover:bg-slate-50 dark:hover:bg-slate-800 font-extrabold flex items-center justify-center transition-all select-none border border-slate-100 dark:border-slate-800"
+                          >
+                            -
+                          </button>
+                          <span className="font-black text-slate-850 dark:text-white px-4">
+                            {cart.find(i => i._id === food._id)?.qty || 0}
+                          </span>
+                          <button
+                            onClick={() => updateQuantity(food, (cart.find(i => i._id === food._id)?.qty || 0) + 1)}
+                            className="w-10 h-10 rounded-lg bg-brand-500 text-white hover:bg-brand-600 font-extrabold flex items-center justify-center transition-all select-none shadow-md shadow-brand-500/20"
+                          >
+                            +
+                          </button>
+                        </div>
+                      ) : (
+                        <Button onClick={() => updateQuantity(food, 1)} className="w-full gap-2 group-hover:shadow-brand-500/30">
+                          <ShoppingCart size={18} />
+                          Add to Cart
+                        </Button>
+                      )}
                     </div>
                   </Card>
                 </motion.div>
@@ -382,15 +416,53 @@ export default function Menu() {
 
               {/* Add to Cart button */}
               <div className="p-6 border-t border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-950">
-                <Button onClick={() => { addToCart(selectedFood); setSelectedFood(null); }} className="w-full gap-2 py-4 text-base rounded-2xl">
-                  <ShoppingCart size={20} />
-                  Add to Cart • ₹{selectedFood.price}
-                </Button>
+                {cart.find(i => i._id === selectedFood._id) ? (
+                  <div className="flex items-center justify-between w-full bg-brand-50 dark:bg-brand-950/30 border border-brand-100 dark:border-brand-900 rounded-2xl p-2 shadow-sm">
+                    <button
+                      onClick={() => updateQuantity(selectedFood, (cart.find(i => i._id === selectedFood._id)?.qty || 0) - 1)}
+                      className="w-12 h-12 rounded-xl bg-white dark:bg-slate-900 text-brand-600 dark:text-brand-400 hover:bg-slate-50 dark:hover:bg-slate-800 font-extrabold flex items-center justify-center transition-all select-none border border-slate-100 dark:border-slate-800"
+                    >
+                      -
+                    </button>
+                    <span className="font-black text-slate-850 dark:text-white px-4 text-lg">
+                      {cart.find(i => i._id === selectedFood._id)?.qty || 0} in Cart
+                    </span>
+                    <button
+                      onClick={() => updateQuantity(selectedFood, (cart.find(i => i._id === selectedFood._id)?.qty || 0) + 1)}
+                      className="w-12 h-12 rounded-xl bg-brand-500 text-white hover:bg-brand-600 font-extrabold flex items-center justify-center transition-all select-none shadow-md shadow-brand-500/20"
+                    >
+                      +
+                    </button>
+                  </div>
+                ) : (
+                  <Button onClick={() => updateQuantity(selectedFood, 1)} className="w-full gap-2 py-4 text-base rounded-2xl">
+                    <ShoppingCart size={20} />
+                    Add to Cart • ₹{selectedFood.price}
+                  </Button>
+                )}
               </div>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
+
+      {/* Floating Cart Strip like Swiggy/Zomato */}
+      {cartCount > 0 && (
+        <div className="fixed bottom-20 md:bottom-6 left-1/2 transform -translate-x-1/2 w-[90%] max-w-lg bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-md border border-slate-800/80 text-white px-6 py-4 rounded-2xl shadow-xl flex items-center justify-between z-[999] animate-fade-in">
+          <div className="flex flex-col">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+              {cartCount} {cartCount === 1 ? "Item" : "Items"} Added
+            </span>
+            <span className="text-lg font-black text-brand-400">
+              ₹{cartTotal} <span className="text-xs text-slate-400 font-normal">plus taxes</span>
+            </span>
+          </div>
+          <Button onClick={() => navigate("/user/cart")} className="gap-2 px-6 py-3 bg-brand-500 hover:bg-brand-600 text-white rounded-xl font-bold shadow-lg shadow-brand-500/25">
+            View Cart
+            <ShoppingCart size={18} />
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
