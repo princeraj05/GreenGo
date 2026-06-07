@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Phone, ArrowLeft, ArrowRight, Loader2, Sparkles } from "lucide-react";
+import { Capacitor } from "@capacitor/core";
 import API from "../../api/axios";
 import { signInWithPopup, signInWithRedirect, getRedirectResult } from "firebase/auth";
 import { auth, googleProvider } from "../../config/firebase";
@@ -110,7 +111,7 @@ export default function AuthPage() {
     try {
       // Use popup for all web environments to prevent redirect 404 init.json issues
       // Only use redirect if strictly in native Capacitor app container
-      if (window.Capacitor) {
+      if (Capacitor.isNativePlatform()) {
         console.log("[GOOGLE DEBUG] Using redirect");
         await signInWithRedirect(auth, googleProvider);
       } else {
