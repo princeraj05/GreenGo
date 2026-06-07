@@ -62,7 +62,7 @@ export default function AuthPage() {
           await saveSession(data.token, { email: user.email, role: data.role });
         }
         if (data.role === "admin") navigate("/admin");
-        else navigate("/user");
+        else navigate("/user/menu");
       } catch (err) {
         console.error("[GOOGLE AUTH] Google session handler failed:", err);
         setError("Google authentication backend sync failed.");
@@ -137,7 +137,7 @@ export default function AuthPage() {
         }
         
         if (data.role === "admin") navigate("/admin");
-        else navigate("/user");
+        else navigate("/user/menu");
       }
     } catch (err) {
       console.error("Google sign in failed:", err);
@@ -203,7 +203,7 @@ export default function AuthPage() {
           await saveSession(data.token, { email, role: data.role });
         }
         if (data.role === "admin") navigate("/admin");
-        else navigate("/user");
+        else navigate("/user/menu");
       } else {
         const res = await API.post("/api/users/verify-otp-phone", { phone, otp });
         const data = res.data;
@@ -215,7 +215,7 @@ export default function AuthPage() {
           await saveSession(data.token, { phone, role: data.role });
         }
         if (data.role === "admin") navigate("/admin");
-        else navigate("/user");
+        else navigate("/user/menu");
       }
     } catch (err) {
       setError(err.response?.data?.message || "Invalid or expired OTP. Please try again.");

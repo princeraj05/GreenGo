@@ -86,7 +86,7 @@ export default function Register() {
         }
         
         if (data.role === "admin") navigate("/admin");
-        else navigate("/user");
+        else navigate("/user/menu");
       } catch (err) {
         console.error("[REGISTER GOOGLE AUTH] Google session handler failed:", err);
       } finally {
@@ -155,7 +155,7 @@ export default function Register() {
         }
         
         if (data.role === "admin") navigate("/admin");
-        else navigate("/user");
+        else navigate("/user/menu");
       }
     } catch (err) {
       console.error("Google sign in failed:", err);

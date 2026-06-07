@@ -41,7 +41,7 @@ export default function App() {
             if (role === "admin") {
               navigate("/admin", { replace: true });
             } else {
-              navigate("/user", { replace: true });
+              navigate("/user/menu", { replace: true });
             }
           }
         } catch (err) {
@@ -70,7 +70,7 @@ export default function App() {
                 if (decoded.role === "admin") {
                   navigate("/admin", { replace: true });
                 } else {
-                  navigate("/user", { replace: true });
+                  navigate("/user/menu", { replace: true });
                 }
               }
             } catch (decodeErr) {

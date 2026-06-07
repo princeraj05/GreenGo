@@ -62,8 +62,8 @@ export default function Login() {
         console.log(`[LOGIN PROCESS] Navigating to /admin`);
         navigate("/admin");
       } else {
-        console.log(`[LOGIN PROCESS] Navigating to /user`);
-        navigate("/user");
+        console.log(`[LOGIN PROCESS] Navigating to /user/menu`);
+        navigate("/user/menu");
       }
 
     } catch (err) {
@@ -108,7 +108,7 @@ export default function Login() {
         }
         
         if (data.role === "admin") navigate("/admin");
-        else navigate("/user");
+        else navigate("/user/menu");
       } catch (err) {
         console.error("[GOOGLE AUTH] Google session handler failed:", err);
       } finally {
@@ -177,7 +177,7 @@ export default function Login() {
         }
         
         if (data.role === "admin") navigate("/admin");
-        else navigate("/user");
+        else navigate("/user/menu");
       }
     } catch (err) {
       console.error("Google sign in failed:", err);

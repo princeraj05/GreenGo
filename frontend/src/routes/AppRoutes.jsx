@@ -61,7 +61,8 @@ export default function AppRoutes() {
             </PrivateRoute>
           }
         >
-          <Route index element={<UserDashboard />} />
+          <Route index element={<Navigate to="/user/menu" replace />} />
+          <Route path="dashboard" element={<UserDashboard />} />
           <Route path="menu" element={<Menu />} />
           <Route path="cart" element={<Cart />} />
           <Route path="checkout" element={<Checkout />} />
