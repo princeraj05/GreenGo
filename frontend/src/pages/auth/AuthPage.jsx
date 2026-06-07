@@ -319,7 +319,7 @@ export default function AuthPage() {
                 }}
                 className={`flex-1 py-2.5 rounded-lg text-xs font-bold transition-all duration-200 flex items-center justify-center gap-1.5 ${
                   authMethod === "email"
-                    ? "bg-white dark:bg-slate-850 text-gray-900 dark:text-white shadow-sm"
+                    ? "bg-white dark:bg-slate-800 text-gray-900 dark:text-white shadow-sm"
                     : "text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white"
                 }`}
               >
@@ -333,7 +333,7 @@ export default function AuthPage() {
                 }}
                 className={`flex-1 py-2.5 rounded-lg text-xs font-bold transition-all duration-200 flex items-center justify-center gap-1.5 ${
                   authMethod === "phone"
-                    ? "bg-white dark:bg-slate-850 text-gray-900 dark:text-white shadow-sm"
+                    ? "bg-white dark:bg-slate-800 text-gray-900 dark:text-white shadow-sm"
                     : "text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white"
                 }`}
               >
