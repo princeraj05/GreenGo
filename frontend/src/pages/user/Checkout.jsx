@@ -27,6 +27,7 @@ export default function Checkout() {
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("COD");
+  const [customMessage, setCustomMessage] = useState(""); // <-- Added
   const [deliveryCharge, setDeliveryCharge] = useState(40);
   const [loading, setLoading] = useState(false);
   const [locationLoading, setLocationLoading] = useState(false);
@@ -215,7 +216,8 @@ export default function Checkout() {
         },
         body: JSON.stringify({
           items: cart, address, phone, paymentMethod, subtotal, deliveryCharge, total,
-          latitude: lat, longitude: lon
+          latitude: lat, longitude: lon,
+          customMessage
         }),
       });
 
@@ -328,6 +330,16 @@ export default function Checkout() {
                       className="pl-12 py-3.5 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white border-slate-200 dark:border-slate-800 rounded-2xl"
                     />
                   </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 block">Order Notes / Instructions (Optional)</label>
+                  <textarea
+                    placeholder="e.g. Make it extra spicy, don't add onions, ring bell twice..."
+                    value={customMessage}
+                    onChange={(e) => setCustomMessage(e.target.value)}
+                    className="w-full px-5 py-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-905 focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 transition-all outline-none resize-y min-h-[80px] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-505 font-medium shadow-sm"
+                  />
                 </div>
               </div>
             </Card>

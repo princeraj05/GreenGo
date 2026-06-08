@@ -117,6 +117,12 @@ export default function ManageOrders() {
                     <Clock size={16} className="text-emerald-500 shrink-0" /> 
                     Remaining: <span className="font-bold text-slate-900 dark:text-white">{remaining(o)}</span>
                   </p>
+                  {o.customMessage && (
+                    <p className="text-sm font-medium text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/30 p-2.5 rounded-xl border border-amber-100 dark:border-amber-900/30 flex items-start gap-1.5 leading-tight">
+                      <span className="shrink-0 mt-0.5">📝</span> 
+                      <span>Notes: <span className="font-bold text-slate-800 dark:text-slate-200">{o.customMessage}</span></span>
+                    </p>
+                  )}
                 </div>
 
                 {/* ETA Input */}

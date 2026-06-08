@@ -42,7 +42,8 @@ export const createOrder = async (req, res) => {
       deliveryCharge,
       total,
       latitude,
-      longitude
+      longitude,
+      customMessage
     } = req.body;
 
     let userLat = latitude;
@@ -94,7 +95,8 @@ export const createOrder = async (req, res) => {
       total,
       distance: distance ? Number(distance.toFixed(2)) : null,
       latitude: userLat,
-      longitude: userLon
+      longitude: userLon,
+      customMessage: customMessage || ""
     });
 
     res.json({

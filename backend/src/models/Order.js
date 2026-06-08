@@ -45,7 +45,8 @@ const orderSchema = new mongoose.Schema(
   etaSetAt:Date,
   distance:Number,
   latitude:Number,
-  longitude:Number
+  longitude:Number,
+  customMessage:{ type: String, default: "" }
 
 },
 {timestamps:true}

@@ -13,6 +13,8 @@ export default function Profile() {
   const [form, setForm] = useState({
     name: "", email: "", phone: "", address: "", foodPreference: "", deliveryTime: "", notifications: ""
   });
+  const [originalForm, setOriginalForm] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -34,7 +36,7 @@ export default function Profile() {
 
         if (userRes.ok) {
           const data = await userRes.json();
-          setForm({
+          const initialForm = {
             name: data.name || "",
             email: data.email || "",
             phone: data.phone || "",
@@ -42,7 +44,9 @@ export default function Profile() {
             foodPreference: data.foodPreference || "",
             deliveryTime: data.deliveryTime || "",
             notifications: data.notifications || ""
-          });
+          };
+          setForm(initialForm);
+          setOriginalForm(initialForm);
           setFavorites(data.favorites || []);
         }
 
@@ -157,7 +161,12 @@ export default function Profile() {
         method: "PUT", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(form)
       });
-      if (res.ok) { setMessage("Profile updated successfully"); setMsgType("success"); } 
+      if (res.ok) { 
+        setMessage("Profile updated successfully"); 
+        setMsgType("success"); 
+        setOriginalForm(form);
+        setIsEditing(false);
+      } 
       else { setMessage("Failed to update profile"); setMsgType("error"); }
     } catch {
       setMessage("Failed to update profile"); setMsgType("error");
@@ -207,37 +216,49 @@ export default function Profile() {
         <Card className="p-6 md:p-10 border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-950">
           
           <div className="mb-10">
-            <h3 className="font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-3 text-xl pb-4 border-b border-slate-100 dark:border-slate-800/60">
-              <User size={24} className="text-brand-500" /> Account Information
-            </h3>
+            <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100 dark:border-slate-800/60">
+              <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-3 text-xl">
+                <User size={24} className="text-brand-500" /> Account Information
+              </h3>
+              {!isEditing && (
+                <Button
+                  type="button"
+                  onClick={() => setIsEditing(true)}
+                  size="sm"
+                  className="rounded-xl px-5 py-2.5 bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs"
+                >
+                  ⚙️ Edit Account
+                </Button>
+              )}
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <div className="relative">
-                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 ml-1 block">Full Name</label>
+                <label className="text-xs font-bold text-slate-505 dark:text-slate-400 uppercase tracking-wider mb-2 ml-1 block">Full Name</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400"><User size={18} /></div>
-                  <Input name="name" value={form.name} onChange={handleChange} placeholder="John Doe" className="pl-12" />
+                  <Input name="name" value={form.name} onChange={handleChange} placeholder="John Doe" className="pl-12" disabled={!isEditing} />
                 </div>
               </div>
               <div className="relative">
-                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 ml-1 block">Email Address</label>
+                <label className="text-xs font-bold text-slate-505 dark:text-slate-400 uppercase tracking-wider mb-2 ml-1 block">Email Address</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400"><Mail size={18} /></div>
-                  <Input name="email" value={form.email} readOnly disabled placeholder="you@example.com" className="pl-12 bg-slate-50 dark:bg-slate-900/40 text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-80" />
+                  <Input name="email" value={form.email} readOnly disabled placeholder="you@example.com" className="pl-12 bg-slate-50 dark:bg-slate-900/40 text-slate-400 dark:text-slate-505 cursor-not-allowed opacity-80" />
                 </div>
               </div>
               <div className="relative">
-                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 ml-1 block">Mobile Number</label>
+                <label className="text-xs font-bold text-slate-505 dark:text-slate-400 uppercase tracking-wider mb-2 ml-1 block">Mobile Number</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400"><Phone size={18} /></div>
-                  <Input name="phone" value={form.phone} onChange={handleChange} placeholder="+1 234 567 890" className="pl-12" />
+                  <Input name="phone" value={form.phone} onChange={handleChange} placeholder="+1 234 567 890" className="pl-12" disabled={!isEditing} />
                 </div>
               </div>
               
               <div className="relative">
-                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 ml-1 block">Food Preference</label>
+                <label className="text-xs font-bold text-slate-505 dark:text-slate-400 uppercase tracking-wider mb-2 ml-1 block">Food Preference</label>
                 <div className="relative mb-3">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400"><Utensils size={18} /></div>
-                  <Input name="foodPreference" value={form.foodPreference} onChange={handleChange} placeholder="Veg, Non-Veg, Vegan..." className="pl-12" />
+                  <Input name="foodPreference" value={form.foodPreference} onChange={handleChange} placeholder="Veg, Non-Veg, Vegan..." className="pl-12" disabled={!isEditing} />
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {[
@@ -255,6 +276,7 @@ export default function Profile() {
                       <button
                         key={p.value}
                         type="button"
+                        disabled={!isEditing}
                         onClick={() => {
                           const list = form.foodPreference
                             ? form.foodPreference.split(",").map(item => item.trim()).filter(Boolean)
@@ -271,7 +293,7 @@ export default function Profile() {
                           active
                             ? "bg-brand-500 text-white border-brand-500 shadow-sm"
                             : "bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800"
-                        }`}
+                        } disabled:opacity-75 disabled:cursor-not-allowed`}
                       >
                         {p.label}
                       </button>
@@ -284,7 +306,7 @@ export default function Profile() {
                 <label className="text-xs font-bold text-slate-505 dark:text-slate-400 uppercase tracking-wider mb-2 ml-1 block">Delivery Time</label>
                 <div className="relative mb-3">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400"><Clock size={18} /></div>
-                  <Input name="deliveryTime" value={form.deliveryTime} onChange={handleChange} placeholder="e.g. 7:00 PM" className="pl-12" />
+                  <Input name="deliveryTime" value={form.deliveryTime} onChange={handleChange} placeholder="e.g. 7:00 PM" className="pl-12" disabled={!isEditing} />
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   {[
@@ -295,8 +317,9 @@ export default function Profile() {
                     <button
                       key={t.value}
                       type="button"
+                      disabled={!isEditing}
                       onClick={() => setForm({ ...form, deliveryTime: t.value })}
-                      className="px-3 py-1.5 rounded-full text-xs font-bold border bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+                      className="px-3 py-1.5 rounded-full text-xs font-bold border bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all disabled:opacity-75 disabled:cursor-not-allowed"
                     >
                       🕒 {t.label}
                     </button>
@@ -306,6 +329,7 @@ export default function Profile() {
                     <span className="text-xs font-bold text-slate-500 dark:text-slate-400 mr-2">Custom:</span>
                     <input
                       type="time"
+                      disabled={!isEditing}
                       onChange={(e) => {
                         if (!e.target.value) return;
                         const [h, m] = e.target.value.split(":");
@@ -314,7 +338,7 @@ export default function Profile() {
                         const formattedHours = hours % 12 || 12;
                         setForm({ ...form, deliveryTime: `${formattedHours}:${m} ${ampm}` });
                       }}
-                      className="bg-transparent text-xs font-bold text-slate-700 dark:text-slate-200 outline-none cursor-pointer"
+                      className="bg-transparent text-xs font-bold text-slate-700 dark:text-slate-200 outline-none cursor-pointer disabled:cursor-not-allowed"
                     />
                   </div>
                 </div>
@@ -328,7 +352,7 @@ export default function Profile() {
             </h3>
             <div className="space-y-6">
               <div className="relative">
-                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3 ml-1 block">Address Type</label>
+                <label className="text-xs font-bold text-slate-550 dark:text-slate-400 uppercase tracking-wider mb-3 ml-1 block">Address Type</label>
                 <div className="flex flex-wrap gap-3 mb-4">
                   {[
                     { id: "home", label: "Home", icon: "🏠" },
@@ -340,12 +364,13 @@ export default function Profile() {
                       <button
                         key={t.id}
                         type="button"
+                        disabled={!isEditing}
                         onClick={() => handleAddressTypeChange(t.id)}
                         className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold border transition-all ${
                           active
                             ? "bg-brand-500 text-white border-brand-500 shadow-md shadow-brand-500/20"
                             : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-355 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800"
-                        }`}
+                        } disabled:opacity-75 disabled:cursor-not-allowed`}
                       >
                         <span>{t.icon}</span>
                         <span>{t.label}</span>
@@ -358,8 +383,9 @@ export default function Profile() {
                   <label className="text-xs font-bold text-slate-505 dark:text-slate-400 uppercase tracking-wider ml-1 block">Delivery Address Details</label>
                   <button
                     type="button"
+                    disabled={!isEditing}
                     onClick={useCurrentLocation}
-                    className="flex items-center gap-1.5 px-3.5 py-1.5 bg-brand-50 dark:bg-brand-950/30 hover:bg-brand-100 dark:hover:bg-brand-900/40 text-brand-600 dark:text-brand-405 rounded-xl text-xs font-bold transition-all shadow-sm"
+                    className="flex items-center gap-1.5 px-3.5 py-1.5 bg-brand-50 dark:bg-brand-950/30 hover:bg-brand-100 dark:hover:bg-brand-900/40 text-brand-600 dark:text-brand-405 rounded-xl text-xs font-bold transition-all shadow-sm disabled:opacity-75 disabled:cursor-not-allowed"
                   >
                     {locationLoading ? (
                       <div className="w-3.5 h-3.5 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
@@ -373,6 +399,7 @@ export default function Profile() {
                   name="address"
                   value={getCleanAddressText(form.address)}
                   onChange={handleAddressTextChange}
+                  disabled={!isEditing}
                   placeholder={
                     getAddressType(form.address) === "home"
                       ? "Enter your Home address details..."
@@ -380,30 +407,44 @@ export default function Profile() {
                       ? "Enter your Office address details..."
                       : "Enter your custom / own street address..."
                   }
-                  className="w-full px-5 py-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-950 focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 transition-all outline-none resize-y min-h-[120px] text-slate-900 dark:text-white font-medium placeholder-slate-400 dark:placeholder:text-slate-500 shadow-sm"
+                  className="w-full px-5 py-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-950 focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 transition-all outline-none resize-y min-h-[120px] text-slate-900 dark:text-white font-medium placeholder-slate-400 dark:placeholder:text-slate-500 shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
                 />
               </div>
             </div>
           </div>
 
 
-          <div className="mt-10 flex justify-end pt-6 border-t border-slate-100 dark:border-slate-800/60">
-            <Button
-              onClick={handleSave}
-              disabled={saving}
-              size="lg"
-              className="px-10 py-4 text-lg rounded-full shadow-brand-500/25"
-            >
-              {saving ? (
-                <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <>
-                  <Save size={20} className="mr-2" />
-                  Save Changes
-                </>
-              )}
-            </Button>
-          </div>
+          {isEditing && (
+            <div className="mt-10 flex justify-end gap-4 pt-6 border-t border-slate-100 dark:border-slate-800/60">
+              <Button
+                type="button"
+                onClick={() => {
+                  setForm(originalForm);
+                  setIsEditing(false);
+                }}
+                variant="secondary"
+                size="lg"
+                className="px-8 py-4 text-lg rounded-full"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSave}
+                disabled={saving}
+                size="lg"
+                className="px-10 py-4 text-lg rounded-full shadow-brand-500/25"
+              >
+                {saving ? (
+                  <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <Save size={20} className="mr-2" />
+                    Save Changes
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
         </Card>
       </motion.div>
 
