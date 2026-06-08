@@ -95,3 +95,13 @@ export const validateCoupon = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+/* ================= GET ACTIVE COUPONS (USER) ================= */
+export const getActiveCoupons = async (req, res) => {
+  try {
+    const coupons = await Coupon.find({ active: true, expiryDate: { $gt: new Date() } }).sort({ createdAt: -1 });
+    res.json(coupons);
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+};

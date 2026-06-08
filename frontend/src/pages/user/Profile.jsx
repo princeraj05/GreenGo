@@ -23,15 +23,18 @@ export default function Profile() {
   const [foods, setFoods] = useState([]);
   const [favorites, setFavorites] = useState([]);
   const [showFavorites, setShowFavorites] = useState(false);
+  const [coupons, setCoupons] = useState([]);
+  const [showCoupons, setShowCoupons] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const token = await getToken();
         if (!token) return;
-        const [userRes, foodsRes] = await Promise.all([
+        const [userRes, foodsRes, couponsRes] = await Promise.all([
           fetch(`${import.meta.env.VITE_API_URL}/api/users/me`, { headers: { Authorization: `Bearer ${token}` } }),
-          fetch(`${import.meta.env.VITE_API_URL}/api/foods`)
+          fetch(`${import.meta.env.VITE_API_URL}/api/foods`),
+          fetch(`${import.meta.env.VITE_API_URL}/api/coupons/active`, { headers: { Authorization: `Bearer ${token}` } })
         ]);
 
         if (userRes.ok) {
@@ -53,6 +56,11 @@ export default function Profile() {
         if (foodsRes.ok) {
           const foodsData = await foodsRes.json();
           setFoods(foodsData);
+        }
+
+        if (couponsRes.ok) {
+          const couponsData = await couponsRes.json();
+          setCoupons(couponsData);
         }
       } catch (err) {
         console.error("Failed to load profile details:", err);
@@ -525,6 +533,58 @@ export default function Profile() {
                     <Button onClick={() => navigate("/user/menu")} className="mt-4 w-full text-xs py-2.5 bg-slate-950 hover:bg-slate-900 text-white rounded-xl font-bold">
                       Order Now
                     </Button>
+                  </Card>
+                ))}
+              </div>
+            )
+          )}
+        </Card>
+      </motion.div>
+
+      {/* Coupons/Promo Codes Section */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }} 
+        animate={{ opacity: 1, y: 0 }} 
+        transition={{ delay: 0.18 }}
+        className="mt-8"
+      >
+        <Card className="p-6 md:p-10 border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-950">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800/60 mb-6">
+            <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-3 text-xl">
+              <span className="text-brand-500 text-2xl">🎟️</span> View Coupon / Promo Code
+            </h3>
+            <Button 
+              onClick={() => setShowCoupons(!showCoupons)} 
+              variant="secondary" 
+              className="rounded-xl px-5 py-2.5 text-xs font-bold transition-all"
+            >
+              {showCoupons ? "Hide Coupons" : "View Coupons"}
+            </Button>
+          </div>
+          
+          {showCoupons && (
+            coupons.length === 0 ? (
+              <div className="bg-slate-50 dark:bg-slate-900 rounded-2xl p-8 text-center border border-slate-100 dark:border-slate-800/60">
+                <p className="text-slate-500 dark:text-slate-400 font-medium">Empty Promo Code</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                {coupons.map(coupon => (
+                  <Card key={coupon._id} className="p-5 border border-dashed border-brand-500 bg-brand-50/10 dark:bg-brand-950/10 rounded-2xl flex flex-col justify-between hover:shadow-lg transition-all duration-300">
+                    <div>
+                      <span className="inline-block px-3 py-1 bg-brand-500 text-white text-xs font-extrabold rounded-lg tracking-wider mb-3 uppercase">
+                        {coupon.code}
+                      </span>
+                      <h4 className="font-bold text-slate-900 dark:text-white text-lg leading-tight mb-2">{coupon.title}</h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                        Discount: <span className="font-bold text-brand-500">{coupon.discountValue}{coupon.discountType === "percentage" ? "% OFF" : " ₹ OFF"}</span>
+                      </p>
+                      {coupon.minimumOrder > 0 && (
+                        <p className="text-xs text-slate-405 dark:text-slate-500 font-medium mt-1">
+                          Min. Order: ₹{coupon.minimumOrder}
+                        </p>
+                      )}
+                    </div>
                   </Card>
                 ))}
               </div>
