@@ -187,7 +187,7 @@ export default function Orders() {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                   <div>
                     <h3 className="text-lg font-bold text-slate-900">
-                      Order <span className="text-brand-500">#{o._id.slice(-6).toUpperCase()}</span>
+                      Order
                     </h3>
                     <p className="text-slate-500 text-sm mt-1 font-medium">{new Date(o.createdAt).toLocaleString()}</p>
                   </div>
