@@ -2,7 +2,7 @@ import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { 
   LayoutDashboard, UtensilsCrossed, ShoppingCart, 
-  Clock, User, Phone, LogOut, Menu, X, Home, Sun, Moon, Heart 
+  Clock, User, Phone, LogOut, Menu, X, Home, Sun, Moon, Heart, MessageCircle
 } from "lucide-react";
 import { getToken } from "../../utils/getToken";
 import { clearSession } from "../../utils/authStorage";
@@ -136,7 +136,7 @@ export default function UserLayout() {
     { to: "/user/wishlist", label: "Wishlist", icon: <Heart size={20} /> },
     { to: "/user/cart", label: "Cart", icon: <ShoppingCart size={20} /> },
     { to: "/user/orders", label: "Orders", icon: <Clock size={20} /> },
-    { to: "/user/profile", label: "Profile", icon: <User size={20} /> },
+    { to: "/user/contact", label: "Message", icon: <MessageCircle size={20} /> },
   ];
 
   const bottomNavLinks = [
@@ -144,7 +144,7 @@ export default function UserLayout() {
     { to: "/user/wishlist", label: "Wishlist", icon: <Heart size={20} /> },
     { to: "/user/cart", label: "Cart", icon: <ShoppingCart size={20} />, badge: cartCount },
     { to: "/user/orders", label: "Orders", icon: <Clock size={20} />, badge: pendingCount },
-    { to: "/user/profile", label: "Profile", icon: <User size={20} /> },
+    { to: "/user/contact", label: "Message", icon: <MessageCircle size={20} /> },
   ];
 
   return (
@@ -225,7 +225,7 @@ export default function UserLayout() {
       <div className="flex-1 flex flex-col w-full md:pl-72 min-h-screen transition-all duration-300">
         
         {/* Mobile Topbar */}
-        <div className="sticky top-0 z-40 h-16 flex items-center justify-between px-4 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 md:hidden transition-colors duration-300">
+        <div className="hidden">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center">
               <span className="text-white text-sm">🍔</span>

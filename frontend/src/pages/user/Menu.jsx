@@ -314,7 +314,7 @@ export default function Menu() {
           <div>
             <div className="flex items-center gap-1">
               <span className="font-extrabold text-brand-500 text-lg tracking-tight">Green</span>
-              <span className="font-extrabold text-slate-850 dark:text-white text-lg tracking-tight">GO</span>
+              <span className="font-extrabold text-slate-900 dark:text-white text-lg tracking-tight">GO</span>
             </div>
             <div className="flex items-center gap-1 text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-bold">
               <MapPin size={10} className="text-brand-500 shrink-0" />
@@ -328,7 +328,7 @@ export default function Menu() {
           {/* Theme Switcher */}
           <button
             onClick={toggleTheme}
-            className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-350 border border-slate-100 dark:border-slate-800"
+            className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800"
             title="Toggle Theme"
           >
             {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
@@ -337,7 +337,7 @@ export default function Menu() {
           {/* Notifications Icon with unread badge */}
           <button
             onClick={() => navigate("/user/contact")}
-            className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-350 border border-slate-100 dark:border-slate-800 relative"
+            className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800 relative"
           >
             <Bell size={16} />
             {notifications.length > 0 && (
@@ -443,7 +443,7 @@ export default function Menu() {
       {/* 5. FOOD CATEGORIES HORIZONTAL SLIDER */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-black text-slate-850 dark:text-white tracking-tight">Food Categories</h3>
+          <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Food Categories</h3>
         </div>
         <div className="flex gap-3.5 overflow-x-auto no-scrollbar py-2">
           {categoriesList.map(cat => {
@@ -469,7 +469,7 @@ export default function Menu() {
       {/* 6. POPULAR DISHES SECTION */}
       {category === "All" && (
         <div className="mb-10">
-          <h3 className="text-lg font-black text-slate-850 dark:text-white tracking-tight mb-4.5">Popular Dishes</h3>
+          <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight mb-4.5">Popular Dishes</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {popularDishes.map((food) => (
               <div 
@@ -502,15 +502,15 @@ export default function Menu() {
                 {/* Content */}
                 <h4 
                   onClick={() => selectFoodDetails(food)}
-                  className="font-bold text-slate-850 dark:text-white text-base group-hover:text-brand-500 transition-colors line-clamp-1 mb-1 cursor-pointer"
+                  className="font-bold text-slate-900 dark:text-white text-base group-hover:text-brand-500 transition-colors line-clamp-1 mb-1 cursor-pointer"
                 >
                   {food.name}
                 </h4>
                 <p className="text-[11px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider mb-2.5">In Category: {food.category}</p>
-                <p className="text-xs text-slate-500 dark:text-slate-405 line-clamp-2 leading-relaxed mb-4.5 font-medium flex-1">{food.description}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed mb-4.5 font-medium flex-1">{food.description}</p>
                 
                 {/* Actions */}
-                <div className="flex items-center justify-between gap-3 mt-auto pt-3 border-t border-slate-100 dark:border-slate-850/50">
+                <div className="flex items-center justify-between gap-3 mt-auto pt-3 border-t border-slate-100 dark:border-slate-800/50">
                   <div className="flex flex-col">
                     <span className="text-[10px] font-bold text-slate-400 line-through">₹{Math.round(food.price * 1.25)}</span>
                     <span className="text-base font-black text-slate-900 dark:text-white leading-tight">₹{food.price}</span>
@@ -520,7 +520,7 @@ export default function Menu() {
                     {/* Wishlist */}
                     <button
                       onClick={() => toggleFavoriteFood(food._id)}
-                      className="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-850 border border-slate-100 dark:border-slate-800/80 text-slate-500 dark:text-slate-400 hover:text-red-500 transition-colors"
+                      className="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 text-slate-500 dark:text-slate-400 hover:text-red-500 transition-colors"
                     >
                       <Heart size={14} className={isFavorite(food._id) ? "fill-red-500 text-red-500" : ""} />
                     </button>
@@ -563,7 +563,7 @@ export default function Menu() {
       {/* 7. RECOMMENDED FOR YOU */}
       {category === "All" && (
         <div className="mb-10">
-          <h3 className="text-lg font-black text-slate-850 dark:text-white tracking-tight mb-4.5">Recommended For You</h3>
+          <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight mb-4.5">Recommended For You</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {recommendedFoods.map((food) => (
               <div 
@@ -596,15 +596,15 @@ export default function Menu() {
                 {/* Content */}
                 <h4 
                   onClick={() => selectFoodDetails(food)}
-                  className="font-bold text-slate-850 dark:text-white text-base group-hover:text-brand-500 transition-colors line-clamp-1 mb-1 cursor-pointer"
+                  className="font-bold text-slate-900 dark:text-white text-base group-hover:text-brand-500 transition-colors line-clamp-1 mb-1 cursor-pointer"
                 >
                   {food.name}
                 </h4>
                 <p className="text-[11px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider mb-2.5">In Category: {food.category}</p>
-                <p className="text-xs text-slate-500 dark:text-slate-405 line-clamp-2 leading-relaxed mb-4.5 font-medium flex-1">{food.description}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed mb-4.5 font-medium flex-1">{food.description}</p>
                 
                 {/* Actions */}
-                <div className="flex items-center justify-between gap-3 mt-auto pt-3 border-t border-slate-100 dark:border-slate-855/50">
+                <div className="flex items-center justify-between gap-3 mt-auto pt-3 border-t border-slate-100 dark:border-slate-800/50">
                   <div className="flex flex-col">
                     <span className="text-[10px] font-bold text-slate-400 line-through">₹{Math.round(food.price * 1.2)}</span>
                     <span className="text-base font-black text-slate-900 dark:text-white leading-tight">₹{food.price}</span>
@@ -614,7 +614,7 @@ export default function Menu() {
                     {/* Wishlist */}
                     <button
                       onClick={() => toggleFavoriteFood(food._id)}
-                      className="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-850 border border-slate-100 dark:border-slate-800/80 text-slate-500 dark:text-slate-400 hover:text-red-500 transition-colors"
+                      className="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 text-slate-500 dark:text-slate-400 hover:text-red-500 transition-colors"
                     >
                       <Heart size={14} className={isFavorite(food._id) ? "fill-red-500 text-red-500" : ""} />
                     </button>
@@ -657,7 +657,7 @@ export default function Menu() {
       {/* DYNAMIC PRODUCTS BY SELECTED CATEGORY OR SEARCH */}
       {(category !== "All" || search !== "") && (
         <div className="mb-10">
-          <h3 className="text-lg font-black text-slate-850 dark:text-white tracking-tight mb-4.5">
+          <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight mb-4.5">
             {category !== "All" ? `${category} Products` : "Search Results"}
           </h3>
           {loading ? (
@@ -704,19 +704,19 @@ export default function Menu() {
 
                   <h4 
                     onClick={() => selectFoodDetails(food)}
-                    className="font-bold text-slate-850 dark:text-white text-base group-hover:text-brand-500 transition-colors line-clamp-1 mb-1 cursor-pointer"
+                    className="font-bold text-slate-900 dark:text-white text-base group-hover:text-brand-500 transition-colors line-clamp-1 mb-1 cursor-pointer"
                   >
                     {food.name}
                   </h4>
                   <p className="text-[11px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider mb-2.5">Category: {food.category}</p>
-                  <p className="text-xs text-slate-500 dark:text-slate-405 line-clamp-2 leading-relaxed mb-4.5 font-medium flex-1">{food.description}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed mb-4.5 font-medium flex-1">{food.description}</p>
                   
-                  <div className="flex items-center justify-between gap-3 mt-auto pt-3 border-t border-slate-100 dark:border-slate-850/50">
+                  <div className="flex items-center justify-between gap-3 mt-auto pt-3 border-t border-slate-100 dark:border-slate-800/50">
                     <span className="text-base font-black text-slate-900 dark:text-white leading-tight">₹{food.price}</span>
                     <div className="flex items-center gap-1.5">
                       <button
                         onClick={() => toggleFavoriteFood(food._id)}
-                        className="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-850 border border-slate-100 dark:border-slate-800/80 text-slate-500 dark:text-slate-400 hover:text-red-500 transition-colors"
+                        className="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 text-slate-500 dark:text-slate-400 hover:text-red-500 transition-colors"
                       >
                         <Heart size={14} className={isFavorite(food._id) ? "fill-red-500 text-red-500" : ""} />
                       </button>
@@ -805,7 +805,7 @@ export default function Menu() {
 
                 <div>
                   <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Description</h4>
-                  <p className="text-slate-600 dark:text-slate-305 leading-relaxed font-medium">{selectedFood.description || "No description available."}</p>
+                  <p className="text-slate-600 dark:text-slate-300 leading-relaxed font-medium">{selectedFood.description || "No description available."}</p>
                 </div>
 
                 <hr className="border-slate-100 dark:border-slate-800/60" />
@@ -828,7 +828,7 @@ export default function Menu() {
                               </div>
                               <div>
                                 <h5 className="font-bold text-slate-800 dark:text-white text-sm">{r.userName}</h5>
-                                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-550">
+                                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">
                                   {new Date(r.createdAt).toLocaleDateString()}
                                 </span>
                               </div>
@@ -842,7 +842,7 @@ export default function Menu() {
                               ))}
                             </div>
                           </div>
-                          <p className="text-slate-600 dark:text-slate-350 text-sm leading-relaxed font-medium">"{r.reviewText}"</p>
+                          <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed font-medium">"{r.reviewText}"</p>
                         </div>
                       ))}
                     </div>
@@ -860,7 +860,7 @@ export default function Menu() {
                     >
                       -
                     </button>
-                    <span className="font-black text-slate-850 dark:text-white px-4 text-lg">
+                    <span className="font-black text-slate-900 dark:text-white px-4 text-lg">
                       {cart.find(i => i._id === selectedFood._id)?.qty || 0} in Cart
                     </span>
                     <button

@@ -208,7 +208,7 @@ export default function Profile() {
           </div>
           <div className="text-center md:text-left">
             <h1 className="text-2xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight">{form.name || "Food Lover"}</h1>
-            <p className="text-slate-505 dark:text-slate-400 mt-1.5 md:mt-2 text-sm md:text-lg font-medium">Manage your personal information and preferences.</p>
+            <p className="text-slate-500 dark:text-slate-300 mt-1.5 md:mt-2 text-sm md:text-lg font-medium">Manage your personal information and preferences.</p>
           </div>
         </Card>
       </motion.div>
@@ -244,48 +244,48 @@ export default function Profile() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in text-sm font-medium text-slate-700 dark:text-slate-300">
                 <div className="bg-slate-50 dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/60">
                   <span className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">Full Name</span>
-                  <span className="text-slate-905 dark:text-white font-extrabold">{form.name || "N/A"}</span>
+                  <span className="text-slate-900 dark:text-white font-extrabold">{form.name || "N/A"}</span>
                 </div>
                 <div className="bg-slate-50 dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/60">
                   <span className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">Email Address</span>
-                  <span className="text-slate-905 dark:text-white font-extrabold">{form.email || "N/A"}</span>
+                  <span className="text-slate-900 dark:text-white font-extrabold">{form.email || "N/A"}</span>
                 </div>
                 <div className="bg-slate-50 dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/60">
                   <span className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">Mobile Number</span>
-                  <span className="text-slate-905 dark:text-white font-extrabold">{form.phone || "N/A"}</span>
+                  <span className="text-slate-900 dark:text-white font-extrabold">{form.phone || "N/A"}</span>
                 </div>
                 <div className="bg-slate-50 dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/60">
                   <span className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">Food Preference</span>
-                  <span className="text-slate-905 dark:text-white font-extrabold">{form.foodPreference || "N/A"}</span>
+                  <span className="text-slate-900 dark:text-white font-extrabold">{form.foodPreference || "N/A"}</span>
                 </div>
                 <div className="bg-slate-50 dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/60">
                   <span className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">Delivery Time</span>
-                  <span className="text-slate-905 dark:text-white font-extrabold">{form.deliveryTime || "N/A"}</span>
+                  <span className="text-slate-900 dark:text-white font-extrabold">{form.deliveryTime || "N/A"}</span>
                 </div>
                 <div className="bg-slate-50 dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/60 md:col-span-2 lg:col-span-3">
                   <span className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">Delivery Address</span>
-                  <span className="text-slate-905 dark:text-white font-extrabold whitespace-pre-wrap">{form.address || "N/A"}</span>
+                  <span className="text-slate-900 dark:text-white font-extrabold whitespace-pre-wrap">{form.address || "N/A"}</span>
                 </div>
               </div>
             ) : (
               <div className="space-y-8 animate-fade-in">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                   <div className="relative">
-                    <label className="text-xs font-bold text-slate-500 dark:text-slate-450 uppercase tracking-wider mb-1.5 ml-1 block">Full Name</label>
+                    <label className="text-xs font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider mb-1.5 ml-1 block">Full Name</label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400"><User size={16} /></div>
                       <Input name="name" value={form.name} onChange={handleChange} placeholder="John Doe" className="pl-10" />
                     </div>
                   </div>
                   <div className="relative">
-                    <label className="text-xs font-bold text-slate-500 dark:text-slate-450 uppercase tracking-wider mb-1.5 ml-1 block">Email Address</label>
+                    <label className="text-xs font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider mb-1.5 ml-1 block">Email Address</label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400"><Mail size={16} /></div>
-                      <Input name="email" value={form.email} readOnly disabled placeholder="you@example.com" className="pl-10 bg-slate-55/60 dark:bg-slate-900/40 text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-80" />
+                      <Input name="email" value={form.email} readOnly disabled placeholder="you@example.com" className="pl-10 bg-slate-100/60 dark:bg-slate-900/70 text-slate-500 dark:text-slate-300 cursor-not-allowed opacity-90" />
                     </div>
                   </div>
                   <div className="relative">
-                    <label className="text-xs font-bold text-slate-500 dark:text-slate-450 uppercase tracking-wider mb-1.5 ml-1 block">Mobile Number</label>
+                    <label className="text-xs font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider mb-1.5 ml-1 block">Mobile Number</label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400"><Phone size={16} /></div>
                       <Input name="phone" value={form.phone} onChange={handleChange} placeholder="+1 234 567 890" className="pl-10" />
@@ -293,7 +293,7 @@ export default function Profile() {
                   </div>
                   
                   <div className="relative">
-                    <label className="text-xs font-bold text-slate-500 dark:text-slate-450 uppercase tracking-wider mb-1.5 ml-1 block">Food Preference</label>
+                    <label className="text-xs font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider mb-1.5 ml-1 block">Food Preference</label>
                     <div className="relative mb-2.5">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400"><Utensils size={16} /></div>
                       <Input name="foodPreference" value={form.foodPreference} onChange={handleChange} placeholder="Veg, Non-Veg, Vegan..." className="pl-10" />
@@ -329,7 +329,7 @@ export default function Profile() {
                             className={`px-2.5 py-1 rounded-full text-[10px] font-bold border transition-all ${
                               active
                                 ? "bg-brand-500 text-white border-brand-500 shadow-sm"
-                                : "bg-slate-50 dark:bg-slate-900 text-slate-655 dark:text-slate-350 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800"
+                                : "bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800"
                             }`}
                           >
                             {p.label}
@@ -340,7 +340,7 @@ export default function Profile() {
                   </div>
 
                   <div className="relative">
-                    <label className="text-xs font-bold text-slate-500 dark:text-slate-450 uppercase tracking-wider mb-1.5 ml-1 block">Delivery Time</label>
+                    <label className="text-xs font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider mb-1.5 ml-1 block">Delivery Time</label>
                     <div className="relative mb-2.5">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400"><Clock size={16} /></div>
                       <Input name="deliveryTime" value={form.deliveryTime} onChange={handleChange} placeholder="e.g. 7:00 PM" className="pl-10" />
@@ -355,14 +355,14 @@ export default function Profile() {
                           key={t.value}
                           type="button"
                           onClick={() => setForm({ ...form, deliveryTime: t.value })}
-                          className="px-2.5 py-1 rounded-full text-[10px] font-bold border bg-slate-50 dark:bg-slate-900 text-slate-655 dark:text-slate-350 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+                          className="px-2.5 py-1 rounded-full text-[10px] font-bold border bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
                         >
                           {t.label}
                         </button>
                       ))}
                       
                       <div className="relative flex items-center border border-slate-200 dark:border-slate-800 rounded-full px-2 py-1 bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
-                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-550 mr-1.5">Custom:</span>
+                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-300 mr-1.5">Custom:</span>
                         <input
                           type="time"
                           onChange={(e) => {
@@ -386,7 +386,7 @@ export default function Profile() {
                   </h3>
                   <div className="space-y-4">
                     <div>
-                      <label className="text-xs font-bold text-slate-500 dark:text-slate-450 uppercase tracking-wider mb-2 block">Address Type</label>
+                      <label className="text-xs font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider mb-2 block">Address Type</label>
                       <div className="flex flex-wrap gap-2.5">
                         {[
                           { id: "home", label: "Home", icon: "🏠" },
@@ -402,7 +402,7 @@ export default function Profile() {
                               className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold border transition-all ${
                                 active
                                   ? "bg-brand-500 text-white border-brand-500 shadow-sm"
-                                  : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-350 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800"
+                                  : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-200 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800"
                               }`}
                             >
                               <span>{t.icon}</span>
@@ -415,7 +415,7 @@ export default function Profile() {
                     
                     <div>
                       <div className="flex justify-between items-center mb-1.5">
-                        <label className="text-xs font-bold text-slate-500 dark:text-slate-450 uppercase tracking-wider ml-1">Address Details</label>
+                        <label className="text-xs font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider ml-1">Address Details</label>
                         <button
                           type="button"
                           onClick={useCurrentLocation}
@@ -599,7 +599,7 @@ export default function Profile() {
                         Discount: <span className="font-bold text-brand-500">{coupon.discountValue}{coupon.discountType === "percentage" ? "% OFF" : " ₹ OFF"}</span>
                       </p>
                       {coupon.minimumOrder > 0 && (
-                        <p className="text-xs text-slate-405 dark:text-slate-500 font-medium mt-1">
+                        <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-1">
                           Min. Order: ₹{coupon.minimumOrder}
                         </p>
                       )}
