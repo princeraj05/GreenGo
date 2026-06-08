@@ -105,17 +105,17 @@ export default function ManageNotifications() {
 
   return (
     <div className="animate-fade-in pb-10">
-      <div className="mb-10">
-        <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-4">
-          <div className="w-12 h-12 bg-emerald-50 dark:bg-emerald-950/30 rounded-2xl flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-            <Megaphone size={26} />
+      <div className="mb-6 md:mb-10">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3 md:gap-4">
+          <div className="w-10 h-10 md:w-12 md:h-12 bg-emerald-50 dark:bg-emerald-950/30 rounded-2xl flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+            <Megaphone size={22} className="md:w-[26px] md:h-[26px]" />
           </div>
           Notification Center
         </h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-2 text-lg font-medium">Broadcast messages and promotional offers to users.</p>
+        <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm sm:text-base md:text-lg font-medium">Broadcast messages and promotional offers to users.</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[450px_1fr] gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-[450px_1fr] gap-5 md:gap-8">
         {/* Form panel */}
         <div>
           <Card className="p-6 md:p-8 border-slate-100 dark:border-slate-800/60 sticky top-24">

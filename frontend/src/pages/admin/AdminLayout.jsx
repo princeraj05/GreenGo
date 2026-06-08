@@ -130,7 +130,6 @@ export default function AdminLayout() {
     { to: "/admin/users", label: "Users", icon: <Users size={20} /> },
     { to: "/admin/foods", label: "Foods", icon: <UtensilsCrossed size={20} /> },
     { to: "/admin/orders", label: "Orders", icon: <Package size={20} /> },
-    { to: "/admin/reviews", label: "Reviews", icon: <Star size={20} /> },
   ];
 
   const handleLogout = () => {
@@ -143,6 +142,7 @@ export default function AdminLayout() {
     { to: "/admin/contacts", label: "Messages", icon: <MessageSquare size={20} />, badge: unreadCount },
     { to: "/admin/coupons", label: "Coupons", icon: <Ticket size={20} /> },
     { to: "/admin/banners", label: "Banners", icon: <Image size={20} /> },
+    { to: "/admin/reviews", label: "Reviews", icon: <Star size={20} /> },
     { to: "/admin/notifications", label: "Alerts", icon: <Bell size={20} /> },
     { to: "/admin/analytics", label: "Analytics", icon: <LineChart size={20} /> },
     { to: "/admin/settings", label: "Settings", icon: <Settings size={20} /> },
@@ -225,16 +225,16 @@ export default function AdminLayout() {
         
         {/* Mobile Topbar */}
         <div className="sticky top-0 z-40 h-16 flex items-center justify-between px-4 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 md:hidden transition-colors duration-300">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center shadow-md">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center shadow-md shrink-0">
               <span className="text-white text-sm font-black">B</span>
             </div>
-            <span className="font-extrabold text-slate-900 dark:text-white text-lg">ByteBite Admin</span>
+            <span className="font-extrabold text-slate-900 dark:text-white text-base sm:text-lg truncate">ByteBite Admin</span>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={toggleTheme}
-              className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-350 transition-colors border border-slate-100 dark:border-slate-800 shadow-sm"
+              className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors border border-slate-100 dark:border-slate-800 shadow-sm"
               aria-label="Toggle Theme"
             >
               {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
@@ -285,7 +285,7 @@ export default function AdminLayout() {
         </div>
 
         {/* Dynamic Page Content - adjusted padding at the bottom for mobile */}
-        <div className="flex-1 p-6 lg:p-10 pb-28 md:pb-10 relative overflow-hidden bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
+        <div className="flex-1 p-4 sm:p-6 lg:p-10 pb-24 md:pb-10 relative overflow-hidden bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
            {/* Decorative Background Elements */}
            <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-brand-50 dark:bg-brand-950/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
            <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-50/50 dark:bg-blue-950/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/3 pointer-events-none"></div>
@@ -302,21 +302,21 @@ export default function AdminLayout() {
         "fixed bottom-4 left-4 right-4 z-[800] transition-all duration-300 transform md:hidden",
         showBottomNav ? "translate-y-0 opacity-100" : "translate-y-28 opacity-0 pointer-events-none"
       )}>
-        <nav className="bg-slate-905 bg-slate-900 border border-slate-800 shadow-[0_8px_32px_rgba(0,0,0,0.3)] rounded-2xl flex items-center justify-around py-2.5 px-3">
+        <nav className="bg-slate-900 border border-slate-800 shadow-[0_8px_32px_rgba(0,0,0,0.3)] rounded-2xl flex items-center justify-around py-2 px-2">
           {mobileNavLinks.map(({ to, end, label, icon }) => (
             <NavLink
               key={to}
               to={to}
               end={end}
               className={({ isActive }) => cn(
-                "flex flex-col items-center justify-center relative py-1.5 px-3 rounded-xl transition-all duration-300 active:scale-90",
+                "flex flex-col items-center justify-center relative py-1.5 px-2.5 rounded-xl transition-all duration-300 active:scale-90 min-w-0",
                 isActive 
                   ? "text-brand-400 scale-105 bg-slate-800/80 font-black" 
                   : "text-slate-500 hover:text-slate-300 font-bold"
               )}
             >
               {icon}
-              <span className="text-[10px] mt-1 tracking-tight select-none">{label}</span>
+              <span className="text-[9px] sm:text-[10px] mt-1 tracking-tight select-none">{label}</span>
             </NavLink>
           ))}
 
@@ -324,12 +324,12 @@ export default function AdminLayout() {
           <button
             onClick={() => setMoreOpen(true)}
             className={cn(
-              "flex flex-col items-center justify-center relative py-1.5 px-3 rounded-xl transition-all duration-300 active:scale-90",
+              "flex flex-col items-center justify-center relative py-1.5 px-2.5 rounded-xl transition-all duration-300 active:scale-90 min-w-0",
               moreOpen ? "text-brand-400 bg-slate-800/80" : "text-slate-500 hover:text-slate-300 font-bold"
             )}
           >
             <Plus size={20} />
-            <span className="text-[10px] mt-1 tracking-tight select-none">More</span>
+            <span className="text-[9px] sm:text-[10px] mt-1 tracking-tight select-none">More</span>
           </button>
         </nav>
       </div>
@@ -432,14 +432,14 @@ export default function AdminLayout() {
               <LogOut size={32} />
             </div>
             <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2">Logout</h3>
-            <p className="text-slate-500 dark:text-slate-405 text-sm font-medium mb-8 leading-relaxed">
+            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-8 leading-relaxed">
               Are you sure you want to logout?
             </p>
             <div className="grid grid-cols-2 gap-4">
               <button
                 type="button"
                 onClick={() => setShowLogoutConfirm(false)}
-                className="w-full py-3.5 rounded-xl border border-slate-200 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-sm transition-all duration-200 active:scale-95"
+                className="w-full py-3.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-sm transition-all duration-200 active:scale-95"
               >
                 Cancel
               </button>

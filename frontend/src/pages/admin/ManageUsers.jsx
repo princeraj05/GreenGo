@@ -39,14 +39,14 @@ export default function ManageUsers() {
     <div className="w-full pb-10">
 
       {/* Header */}
-      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center shadow-sm">
-            <Users size={28} className="text-blue-600 dark:text-blue-400" />
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6 md:mb-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
+        <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center shadow-sm shrink-0">
+            <Users size={22} className="text-blue-600 dark:text-blue-400 sm:w-7 sm:h-7" />
           </div>
-          <div>
-            <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">Manage Users</h1>
-            <p className="text-slate-500 dark:text-slate-400 mt-1 font-medium text-lg">View and manage all registered users</p>
+          <div className="min-w-0">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">Manage Users</h1>
+            <p className="text-slate-500 dark:text-slate-400 mt-1 font-medium text-sm sm:text-base md:text-lg leading-snug">View and manage all registered users</p>
           </div>
         </div>
         
@@ -59,7 +59,7 @@ export default function ManageUsers() {
             placeholder="Search by name or email..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-12 bg-white dark:bg-slate-900 shadow-sm border-slate-200 dark:border-slate-800 py-3.5"
+            className="pl-11 sm:pl-12 bg-white dark:bg-slate-900 shadow-sm border-slate-200 dark:border-slate-800 py-3 sm:py-3.5 text-sm sm:text-base"
           />
         </div>
       </motion.div>
@@ -68,14 +68,14 @@ export default function ManageUsers() {
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
         <Card className="border-slate-100 dark:border-slate-800/60 overflow-hidden p-0 bg-white dark:bg-slate-950">
           <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
+            <table className="min-w-[720px] md:min-w-full text-xs sm:text-sm">
               <thead>
                 <tr className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800/60">
-                  <th className="text-left px-8 py-5 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">User Details</th>
-                  <th className="text-left px-8 py-5 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Spent</th>
-                  <th className="text-left px-8 py-5 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Orders</th>
-                  <th className="text-left px-8 py-5 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
-                  <th className="text-right px-8 py-5 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Actions</th>
+                  <th className="text-left px-4 md:px-8 py-4 md:py-5 text-[10px] md:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">User Details</th>
+                  <th className="text-left px-4 md:px-8 py-4 md:py-5 text-[10px] md:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Spent</th>
+                  <th className="text-left px-4 md:px-8 py-4 md:py-5 text-[10px] md:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Orders</th>
+                  <th className="text-left px-4 md:px-8 py-4 md:py-5 text-[10px] md:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
+                  <th className="text-right px-4 md:px-8 py-4 md:py-5 text-[10px] md:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 bg-white dark:bg-slate-950">
@@ -83,29 +83,29 @@ export default function ManageUsers() {
                   const isBlocked = u.blocked || u.status === "Blocked";
                   return (
                     <tr key={u._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors group">
-                      <td className="px-8 py-5">
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-full bg-brand-50 dark:bg-brand-950/30 text-brand-600 dark:text-brand-450 flex items-center justify-center font-bold text-sm">
+                      <td className="px-4 md:px-8 py-4 md:py-5">
+                        <div className="flex items-center gap-3 md:gap-4">
+                          <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-brand-50 dark:bg-brand-950/30 text-brand-600 dark:text-brand-450 flex items-center justify-center font-bold text-xs md:text-sm shrink-0">
                             {u.name.charAt(0).toUpperCase()}
                           </div>
-                          <div>
-                            <div className="font-bold text-slate-900 dark:text-white text-base">{u.name}</div>
-                            <div className="text-slate-500 dark:text-slate-400 font-medium">{u.email}</div>
+                          <div className="min-w-0">
+                            <div className="font-bold text-slate-900 dark:text-white text-sm md:text-base truncate max-w-[210px]">{u.name}</div>
+                            <div className="text-slate-500 dark:text-slate-400 font-medium truncate max-w-[230px]">{u.email}</div>
                           </div>
                         </div>
                       </td>
-                      <td className="px-8 py-5">
+                      <td className="px-4 md:px-8 py-4 md:py-5">
                         <span className="font-black text-slate-900 dark:text-white text-base">₹{u.totalSpent || 0}</span>
                       </td>
-                      <td className="px-8 py-5">
+                      <td className="px-4 md:px-8 py-4 md:py-5">
                         <span className="font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-900 px-3 py-1 rounded-lg">{u.totalOrders || 0}</span>
                       </td>
-                      <td className="px-8 py-5">
+                      <td className="px-4 md:px-8 py-4 md:py-5">
                         <Badge variant={!isBlocked ? "success" : "danger"} className="uppercase tracking-wider">
                           {!isBlocked ? "Active" : "Blocked"}
                         </Badge>
                       </td>
-                      <td className="px-8 py-5 text-right">
+                      <td className="px-4 md:px-8 py-4 md:py-5 text-right">
                         <Button
                           size="sm"
                           variant={!isBlocked ? "outline" : "default"}

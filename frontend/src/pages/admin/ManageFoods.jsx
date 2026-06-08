@@ -104,21 +104,21 @@ export default function ManageFoods() {
   return (
     <div className="w-full pb-10">
       
-      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
-        <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">Manage Foods</h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-2 text-lg font-medium">Add new items to the menu or manage existing ones.</p>
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6 md:mb-10">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight">Manage Foods</h1>
+        <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm sm:text-base md:text-lg font-medium">Add new items to the menu or manage existing ones.</p>
       </motion.div>
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-        <Card className="p-8 mb-12 border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-950">
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-8 flex items-center gap-3 border-b border-slate-100 dark:border-slate-800/60 pb-4">
+        <Card className="p-5 md:p-8 mb-8 md:mb-12 border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-950">
+          <h2 className="text-base md:text-xl font-bold text-slate-900 dark:text-white mb-5 md:mb-8 flex items-center gap-3 border-b border-slate-100 dark:border-slate-800/60 pb-4">
             <div className="w-10 h-10 rounded-xl bg-brand-50 dark:bg-brand-950/30 text-brand-600 dark:text-brand-400 flex items-center justify-center">
               {editingId ? <Edit2 size={20} /> : <Plus size={20} />}
             </div>
             {editingId ? "Edit Item" : "Add New Item"}
           </h2>
           
-          <form onSubmit={addFood} className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+          <form onSubmit={addFood} className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-10">
             
             <div className="lg:col-span-8 space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
@@ -199,7 +199,7 @@ export default function ManageFoods() {
          <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Current Menu ({foods.length})</h2>
       </div>
       
-      <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+      <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-8">
         <AnimatePresence>
           {foods.map((f, i) => (
             <motion.div 

@@ -126,25 +126,25 @@ export default function AdminDashboard() {
   return (
     <div className="w-full pb-10">
       {/* Header section */}
-      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
-        <h1 className="text-4xl font-black text-slate-900 tracking-tight">Overview</h1>
-        <p className="text-slate-500 mt-2 text-lg font-medium">Here is the latest snapshot of your business today.</p>
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6 md:mb-10">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight">Overview</h1>
+        <p className="text-slate-500 dark:text-slate-400 mt-1.5 md:mt-2 text-sm sm:text-base md:text-lg font-medium max-w-xl">Here is the latest snapshot of your business today.</p>
       </motion.div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 lg:gap-6">
         {cards.map((card, i) => (
           <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
-            <Card className="relative overflow-hidden group border-slate-100 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className={`w-14 h-14 rounded-2xl ${card.bg} flex items-center justify-center transition-transform duration-300 group-hover:scale-110`}>
+            <Card className="relative overflow-hidden group border-slate-100 p-4 sm:p-5 md:p-6 min-h-[132px] sm:min-h-[150px]">
+              <div className="flex items-center justify-between mb-3 md:mb-4">
+                <div className={`w-11 h-11 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-2xl ${card.bg} flex items-center justify-center transition-transform duration-300 group-hover:scale-110 [&>svg]:w-5 [&>svg]:h-5 sm:[&>svg]:w-6 sm:[&>svg]:h-6 md:[&>svg]:w-7 md:[&>svg]:h-7`}>
                   {card.icon}
                 </div>
                 <div className={`w-2 h-2 rounded-full bg-gradient-to-br ${card.accent} animate-pulse`}></div>
               </div>
               <div>
-                <p className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-1">{card.label}</p>
-                <p className="text-4xl font-black text-slate-900 tracking-tight">{card.value}</p>
+                <p className="text-[10px] sm:text-xs md:text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider md:tracking-widest mb-1 leading-tight">{card.label}</p>
+                <p className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight break-words">{card.value}</p>
               </div>
               <div className={`absolute bottom-0 left-0 h-1 w-0 bg-gradient-to-r ${card.accent} group-hover:w-full transition-all duration-500`}></div>
             </Card>
@@ -153,11 +153,11 @@ export default function AdminDashboard() {
       </div>
 
       {/* Charts Section */}
-      <div className="mt-10 grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="mt-8 md:mt-10 grid grid-cols-1 lg:grid-cols-2 gap-5 md:gap-8">
         {/* Revenue Chart */}
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
-          <Card className="p-8 border-slate-100 h-full">
-            <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+          <Card className="p-5 md:p-8 border-slate-100 h-full">
+            <h2 className="text-base md:text-xl font-bold text-slate-900 dark:text-white mb-4 md:mb-6 flex items-center gap-2">
               <IndianRupee size={20} className="text-purple-500" /> Monthly Revenue
             </h2>
             <div className="h-72">
@@ -192,8 +192,8 @@ export default function AdminDashboard() {
 
         {/* Orders Chart */}
         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }}>
-          <Card className="p-8 border-slate-100 h-full">
-            <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+          <Card className="p-5 md:p-8 border-slate-100 h-full">
+            <h2 className="text-base md:text-xl font-bold text-slate-900 dark:text-white mb-4 md:mb-6 flex items-center gap-2">
               <Package size={20} className="text-emerald-500" /> Orders Per Day
             </h2>
             <div className="h-72">
