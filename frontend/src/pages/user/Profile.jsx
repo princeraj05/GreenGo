@@ -20,6 +20,7 @@ export default function Profile() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [foods, setFoods] = useState([]);
   const [favorites, setFavorites] = useState([]);
+  const [showFavorites, setShowFavorites] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -464,63 +465,75 @@ export default function Profile() {
         className="mt-8"
       >
         <Card className="p-6 md:p-10 border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-950">
-          <h3 className="font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-3 text-xl pb-4 border-b border-slate-100 dark:border-slate-800/60">
-            <Utensils size={24} className="text-brand-500" /> My Favorite Foods
-          </h3>
-          {favoriteFoods.length === 0 ? (
-            <div className="bg-slate-50 dark:bg-slate-900 rounded-2xl p-8 text-center border border-slate-100 dark:border-slate-800/60">
-              <p className="text-slate-500 dark:text-slate-400 font-medium">You haven't marked any food as favorite yet. Visit the Menu to add some favorites!</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-              {favoriteFoods.map(food => (
-                <Card key={food._id} className="p-4 border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 hover:shadow-lg transition-all duration-300 group flex flex-col justify-between">
-                  <div>
-                    <div className="relative h-36 w-full rounded-2xl overflow-hidden mb-4 bg-slate-50 dark:bg-slate-950 flex items-center justify-center">
-                      {food.image ? (
-                        <img src={food.image} alt={food.name} className="max-w-full max-h-full w-auto h-auto object-contain group-hover:scale-105 transition-transform duration-500" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-4xl">🍔</div>
-                      )}
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          try {
-                            const token = await getToken();
-                            if (!token) return;
-                            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/favorites/toggle`, {
-                              method: "POST",
-                              headers: {
-                                "Content-Type": "application/json",
-                                Authorization: `Bearer ${token}`
-                              },
-                              body: JSON.stringify({ foodId: food._id })
-                            });
-                            if (res.ok) {
-                              const data = await res.json();
-                              setFavorites(data.favorites || []);
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800/60 mb-6">
+            <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-3 text-xl">
+              <Utensils size={24} className="text-brand-500" /> My Favorite Foods
+            </h3>
+            <Button 
+              onClick={() => setShowFavorites(!showFavorites)} 
+              variant="secondary" 
+              className="rounded-xl px-5 py-2.5 text-xs font-bold transition-all"
+            >
+              {showFavorites ? "Hide Favorite Foods" : "View Favorite Foods"}
+            </Button>
+          </div>
+          
+          {showFavorites && (
+            favoriteFoods.length === 0 ? (
+              <div className="bg-slate-50 dark:bg-slate-900 rounded-2xl p-8 text-center border border-slate-100 dark:border-slate-800/60">
+                <p className="text-slate-500 dark:text-slate-400 font-medium">You haven't marked any food as favorite yet. Visit the Menu to add some favorites!</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                {favoriteFoods.map(food => (
+                  <Card key={food._id} className="p-4 border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 hover:shadow-lg transition-all duration-300 group flex flex-col justify-between">
+                    <div>
+                      <div className="relative h-36 w-full rounded-2xl overflow-hidden mb-4 bg-slate-50 dark:bg-slate-950 flex items-center justify-center">
+                        {food.image ? (
+                          <img src={food.image} alt={food.name} className="max-w-full max-h-full w-auto h-auto object-contain group-hover:scale-105 transition-transform duration-500" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-4xl">🍔</div>
+                        )}
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              const token = await getToken();
+                              if (!token) return;
+                              const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/favorites/toggle`, {
+                                method: "POST",
+                                headers: {
+                                  "Content-Type": "application/json",
+                                  Authorization: `Bearer ${token}`
+                                },
+                                body: JSON.stringify({ foodId: food._id })
+                              });
+                              if (res.ok) {
+                                const data = await res.json();
+                                setFavorites(data.favorites || []);
+                              }
+                            } catch (err) {
+                              console.error("Failed to toggle favorite:", err);
                             }
-                          } catch (err) {
-                            console.error("Failed to toggle favorite:", err);
-                          }
-                        }}
-                        className="absolute top-2 left-2 w-8 h-8 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md flex items-center justify-center rounded-lg shadow-sm text-red-500 hover:scale-105 transition-all"
-                      >
-                        ❤️
-                      </button>
-                      <div className="absolute top-2 right-2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-2.5 py-1 rounded-lg text-xs font-black text-slate-900 dark:text-white shadow-sm">
-                        ₹{food.price}
+                          }}
+                          className="absolute top-2 left-2 w-8 h-8 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md flex items-center justify-center rounded-lg shadow-sm text-red-500 hover:scale-105 transition-all"
+                        >
+                          ❤️
+                        </button>
+                        <div className="absolute top-2 right-2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-2.5 py-1 rounded-lg text-xs font-black text-slate-900 dark:text-white shadow-sm">
+                          ₹{food.price}
+                        </div>
                       </div>
+                      <h4 className="font-bold text-slate-900 dark:text-white truncate text-base">{food.name}</h4>
+                      <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 line-clamp-2">{food.description}</p>
                     </div>
-                    <h4 className="font-bold text-slate-900 dark:text-white truncate text-base">{food.name}</h4>
-                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 line-clamp-2">{food.description}</p>
-                  </div>
-                  <Button onClick={() => navigate("/user/menu")} className="mt-4 w-full text-xs py-2.5 bg-slate-950 hover:bg-slate-900 text-white rounded-xl font-bold">
-                    Order Now
-                  </Button>
-                </Card>
-              ))}
-            </div>
+                    <Button onClick={() => navigate("/user/menu")} className="mt-4 w-full text-xs py-2.5 bg-slate-950 hover:bg-slate-900 text-white rounded-xl font-bold">
+                      Order Now
+                    </Button>
+                  </Card>
+                ))}
+              </div>
+            )
           )}
         </Card>
       </motion.div>
