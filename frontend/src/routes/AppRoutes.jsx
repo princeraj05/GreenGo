@@ -19,6 +19,7 @@ const Checkout = lazy(() => import("../pages/user/Checkout"));
 const Orders = lazy(() => import("../pages/user/Orders"));
 const Profile = lazy(() => import("../pages/user/Profile"));
 const UserContact = lazy(() => import("../pages/user/Contact"));
+const Wishlist = lazy(() => import("../pages/user/Wishlist"));
 
 /* ADMIN */
 import AdminLayout from "../pages/admin/AdminLayout";
@@ -69,6 +70,7 @@ export default function AppRoutes() {
           <Route path="checkout" element={<Checkout />} />
           <Route path="orders" element={<Orders />} />
           <Route path="profile" element={<Profile />} />
+          <Route path="wishlist" element={<Wishlist />} />
           <Route path="contact" element={<UserContact />} />
         </Route>
 

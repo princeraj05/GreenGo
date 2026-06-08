@@ -2,7 +2,7 @@ import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { 
   LayoutDashboard, UtensilsCrossed, ShoppingCart, 
-  Clock, User, Phone, LogOut, Menu, X, Home, Sun, Moon 
+  Clock, User, Phone, LogOut, Menu, X, Home, Sun, Moon, Heart 
 } from "lucide-react";
 import { getToken } from "../../utils/getToken";
 import { clearSession } from "../../utils/authStorage";
@@ -132,18 +132,19 @@ export default function UserLayout() {
   };
 
   const desktopNavLinks = [
-    { to: "/user/menu", label: "Menu", icon: <UtensilsCrossed size={20} /> },
+    { to: "/user/menu", label: "Home", icon: <Home size={20} /> },
+    { to: "/user/wishlist", label: "Wishlist", icon: <Heart size={20} /> },
     { to: "/user/cart", label: "Cart", icon: <ShoppingCart size={20} /> },
-    { to: "/user/orders", label: "My Orders", icon: <Clock size={20} /> },
+    { to: "/user/orders", label: "Orders", icon: <Clock size={20} /> },
     { to: "/user/profile", label: "Profile", icon: <User size={20} /> },
-    { to: "/user/contact", label: "Message", icon: <Phone size={20} /> },
   ];
 
   const bottomNavLinks = [
-    { to: "/user/menu", label: "Menu", icon: <UtensilsCrossed size={20} /> },
+    { to: "/user/menu", label: "Home", icon: <Home size={20} /> },
+    { to: "/user/wishlist", label: "Wishlist", icon: <Heart size={20} /> },
     { to: "/user/cart", label: "Cart", icon: <ShoppingCart size={20} />, badge: cartCount },
     { to: "/user/orders", label: "Orders", icon: <Clock size={20} />, badge: pendingCount },
-    { to: "/user/contact", label: "Message", icon: <Phone size={20} /> },
+    { to: "/user/profile", label: "Profile", icon: <User size={20} /> },
   ];
 
   return (
