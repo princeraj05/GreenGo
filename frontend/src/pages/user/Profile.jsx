@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { User, Save, MapPin, Bell, CheckCircle, XCircle, Settings, Phone, Clock, Utensils, Navigation, Mail, LogOut } from "lucide-react";
+import { User, Save, CheckCircle, XCircle, Phone, Utensils, Navigation, Mail, LogOut } from "lucide-react";
 import { getToken } from "../../utils/getToken";
 import { clearSession } from "../../utils/authStorage";
 import Button from "../../components/ui/Button";
@@ -237,34 +237,6 @@ export default function Profile() {
 
   const favoriteFoods = foods.filter(food => favorites.includes(food._id));
   const primaryAddress = (form.addresses || []).find(addr => addr.isPrimary) || (form.addresses || [])[0];
-  const activeFoodPreference = String(form.foodPreference || "").toLowerCase().includes("non") ? "Non-Veg" : String(form.foodPreference || "").toLowerCase().includes("veg") ? "Veg" : "";
-
-  const saveFoodPreference = async (preference) => {
-    const nextForm = { ...form, foodPreference: preference };
-    setForm(nextForm);
-    try {
-      const token = await getToken();
-      if (!token) return;
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/profile`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify(nextForm)
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setForm(prev => ({ ...prev, foodPreference: data.user?.foodPreference || preference }));
-        setOriginalForm(prev => ({ ...(prev || nextForm), foodPreference: data.user?.foodPreference || preference }));
-        setMessage(`${preference} preference saved`);
-        setMsgType("success");
-        setTimeout(() => setMessage(""), 2500);
-      }
-    } catch {
-      setMessage("Failed to update food preference");
-      setMsgType("error");
-      setTimeout(() => setMessage(""), 3000);
-    }
-  };
-
   if (loading) {
     return (
       <div className="flex justify-center items-center py-32">
@@ -334,28 +306,6 @@ export default function Profile() {
                   <span className="text-slate-950 dark:text-slate-50 font-extrabold break-words">{form.phone || "N/A"}</span>
                 </div>
                 <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-700">
-                  <span className="text-xs text-slate-500 dark:text-slate-300 uppercase tracking-wider block mb-1">Food Preference</span>
-                  <div className="mt-2 grid grid-cols-2 gap-2 rounded-2xl bg-slate-100 dark:bg-slate-950 p-1 border border-slate-200 dark:border-slate-800">
-                    {["Veg", "Non-Veg"].map((preference) => {
-                      const active = activeFoodPreference === preference;
-                      return (
-                        <button
-                          key={preference}
-                          type="button"
-                          onClick={() => saveFoodPreference(preference)}
-                          className={`py-2 rounded-xl text-xs font-black transition-all ${
-                            active
-                              ? "bg-brand-500 text-white shadow-sm"
-                              : "text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-900"
-                          }`}
-                        >
-                          {preference}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-                <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-700">
                   <span className="text-xs text-slate-500 dark:text-slate-300 uppercase tracking-wider block mb-1">Delivery Time</span>
                   <span className="text-slate-950 dark:text-slate-50 font-extrabold break-words">{form.deliveryTime || "N/A"}</span>
                 </div>
@@ -393,29 +343,6 @@ export default function Profile() {
                     </div>
                   </div>
                   
-                  <div className="relative">
-                    <label className="text-xs font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider mb-1.5 ml-1 block">Food Preference</label>
-                    <div className="grid grid-cols-2 gap-2 rounded-2xl bg-slate-100 dark:bg-slate-950 p-1 border border-slate-200 dark:border-slate-800">
-                      {["Veg", "Non-Veg"].map((preference) => {
-                        const active = activeFoodPreference === preference;
-                        return (
-                          <button
-                            key={preference}
-                            type="button"
-                            onClick={() => setForm({ ...form, foodPreference: preference })}
-                            className={`py-2.5 rounded-xl text-xs font-black transition-all ${
-                              active
-                                ? "bg-brand-500 text-white shadow-sm"
-                                : "text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-900"
-                            }`}
-                          >
-                            {preference}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
                   <div className="relative">
                     <label className="text-xs font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider mb-1.5 ml-1 block">Delivery Time</label>
                     <div className="relative mb-2.5">

@@ -1,6 +1,11 @@
 import Food from "../models/Food.js";
 
 const getUploadedPath = (files, field) => files?.[field]?.[0]?.path || "";
+const toBoolean = (value, fallback = true) => {
+  if (value === undefined || value === null || value === "") return fallback;
+  if (typeof value === "boolean") return value;
+  return String(value).toLowerCase() === "true";
+};
 
 export const getFoods = async (req, res) => {
   const foods = await Food.find().sort({ createdAt: -1 });
@@ -9,7 +14,7 @@ export const getFoods = async (req, res) => {
 
 export const addFood = async (req, res) => {
   try {
-    const { name, price, description, category, categoryImageCurrent } = req.body;
+    const { name, price, description, category, categoryImageCurrent, veg } = req.body;
     const foodImage = getUploadedPath(req.files, "image");
     const categoryImageUpload = getUploadedPath(req.files, "categoryImage");
     const nextCategoryImage = categoryImageUpload || categoryImageCurrent || "";
@@ -20,6 +25,7 @@ export const addFood = async (req, res) => {
       description,
       category,
       categoryImage: nextCategoryImage,
+      veg: toBoolean(veg, true),
       image: foodImage, // Save the full Cloudinary URL
     });
 
@@ -35,9 +41,18 @@ export const addFood = async (req, res) => {
 
 export const updateFood = async (req, res) => {
   try {
-    const { name, price, description, category, categoryImageCurrent } = req.body;
+    const { name, price, description, category, categoryImageCurrent, veg, featured } = req.body;
     const categoryImageUpload = getUploadedPath(req.files, "categoryImage");
-    let updateData = { name, price, description, category, categoryImage: categoryImageUpload || categoryImageCurrent || "" };
+    let updateData = {};
+    if (name !== undefined) updateData.name = name;
+    if (price !== undefined) updateData.price = price;
+    if (description !== undefined) updateData.description = description;
+    if (category !== undefined) updateData.category = category;
+    if (categoryImageUpload || categoryImageCurrent !== undefined) {
+      updateData.categoryImage = categoryImageUpload || categoryImageCurrent || "";
+    }
+    if (veg !== undefined) updateData.veg = toBoolean(veg, true);
+    if (featured !== undefined) updateData.featured = toBoolean(featured, false);
     
     const foodImage = getUploadedPath(req.files, "image");
     if (foodImage) {

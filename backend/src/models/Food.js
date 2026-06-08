@@ -6,6 +6,7 @@ const foodSchema = new mongoose.Schema({
   description: String,
   category: { type: String, default: "" },
   categoryImage: String,
+  veg: { type: Boolean, default: true },
   image: String,
   featured: { type: Boolean, default: false },
   totalOrders: { type: Number, default: 0 },

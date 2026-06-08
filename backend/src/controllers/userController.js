@@ -63,12 +63,12 @@ const formatAddress = (addr) => {
 };
 
 const budgetDummyFoods = [
-  { _id: "dummy-paneer-roll", name: "Paneer Roll", price: 129, category: "Veg", description: "Budget friendly paneer roll", rating: 4.4, ratingCount: 24, totalOrders: 80, image: "" },
-  { _id: "dummy-chicken-burger", name: "Chicken Burger", price: 169, category: "Chicken", description: "Juicy chicken burger combo base", rating: 4.5, ratingCount: 32, totalOrders: 100, image: "" },
-  { _id: "dummy-veg-pizza", name: "Veg Pizza", price: 199, category: "Pizza", description: "Loaded veggie pizza", rating: 4.3, ratingCount: 28, totalOrders: 75, image: "" },
-  { _id: "dummy-roti-combo", name: "Roti Sabzi Combo", price: 149, category: "Roti", description: "Homestyle roti with sabzi", rating: 4.2, ratingCount: 20, totalOrders: 70, image: "" },
-  { _id: "dummy-lassi", name: "Sweet Lassi", price: 69, category: "Drinks", description: "Cold Punjabi lassi", rating: 4.6, ratingCount: 18, totalOrders: 60, image: "" },
-  { _id: "dummy-gulab-jamun", name: "Gulab Jamun", price: 79, category: "Desserts", description: "Classic sweet dessert", rating: 4.7, ratingCount: 22, totalOrders: 55, image: "" },
+  { _id: "dummy-paneer-roll", name: "Paneer Roll", price: 129, category: "Veg", veg: true, description: "Budget friendly paneer roll", rating: 4.4, ratingCount: 24, totalOrders: 80, image: "" },
+  { _id: "dummy-chicken-burger", name: "Chicken Burger", price: 169, category: "Chicken", veg: false, description: "Juicy chicken burger combo base", rating: 4.5, ratingCount: 32, totalOrders: 100, image: "" },
+  { _id: "dummy-veg-pizza", name: "Veg Pizza", price: 199, category: "Pizza", veg: true, description: "Loaded veggie pizza", rating: 4.3, ratingCount: 28, totalOrders: 75, image: "" },
+  { _id: "dummy-roti-combo", name: "Roti Sabzi Combo", price: 149, category: "Roti", veg: true, description: "Homestyle roti with sabzi", rating: 4.2, ratingCount: 20, totalOrders: 70, image: "" },
+  { _id: "dummy-lassi", name: "Sweet Lassi", price: 69, category: "Drinks", veg: true, description: "Cold Punjabi lassi", rating: 4.6, ratingCount: 18, totalOrders: 60, image: "" },
+  { _id: "dummy-gulab-jamun", name: "Gulab Jamun", price: 79, category: "Desserts", veg: true, description: "Classic sweet dessert", rating: 4.7, ratingCount: 22, totalOrders: 55, image: "" },
 ];
 
 /* ================= REGISTER ================= */

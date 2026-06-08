@@ -9,12 +9,17 @@ import Card from "../../components/ui/Card";
 
 export default function ManageFoods() {
   const categoryOptions = [
-    "Veg", "Non-Veg", "Pizza", "Burger", "Starter", "Combo", "Roti",
-    "Chicken", "Biryani", "Pasta", "Desserts", "Drinks", "Sweet",
-    "Water", "Cold Drink", "Fast Food", "Main Course"
+    "Pizza", "Burger", "Biryani", "Rolls", "Fries", "North Indian", "Desserts", "Bowl",
+    "Veg Meal", "Paneer", "Paratha", "Sandwich", "Rice", "Cake", "Dal", "Thali",
+    "Aloo Paratha", "Italian", "Shawarma", "Noodles", "Shake", "Pasta", "Dal Makhani",
+    "Patty", "Rajma Rice", "Mousse", "Milkshake", "Sweets", "Ice Cream", "Cold Coffee",
+    "Cheesecake", "Brownie", "Tea", "Gulab Jamun", "Pastry", "Chaap", "Rajma", "Kulche",
+    "Kebabs", "Maggi", "Bhurji", "Juice", "Pakoda", "Falafel", "Kulfi", "Starter",
+    "Combo", "Roti", "Chicken", "Drinks", "Water", "Cold Drink", "Fast Food", "Main Course",
+    "Veg", "Non-Veg"
   ];
   const [foods, setFoods] = useState([]);
-  const [form, setForm] = useState({ name: "", price: "", description: "", category: "Veg", categoryImage: "", image: null, categoryImageFile: null });
+  const [form, setForm] = useState({ name: "", price: "", description: "", category: "Pizza", veg: "true", categoryImage: "", image: null, categoryImageFile: null });
   const [preview, setPreview] = useState(null);
   const [categoryPreview, setCategoryPreview] = useState(null);
   const [editingId, setEditingId] = useState(null);
@@ -64,7 +69,8 @@ export default function ManageFoods() {
       fd.append("name", form.name);
       fd.append("price", form.price);
       fd.append("description", form.description);
-      fd.append("category", form.category || "Veg");
+      fd.append("category", form.category || "Pizza");
+      fd.append("veg", form.veg);
       fd.append("categoryImageCurrent", form.categoryImage || "");
       if (form.image) fd.append("image", form.image);
       if (form.categoryImageFile) fd.append("categoryImage", form.categoryImageFile);
@@ -81,7 +87,7 @@ export default function ManageFoods() {
   };
 
   const resetForm = () => {
-    setForm({ name: "", price: "", description: "", category: "Veg", categoryImage: "", image: null, categoryImageFile: null });
+    setForm({ name: "", price: "", description: "", category: "Pizza", veg: "true", categoryImage: "", image: null, categoryImageFile: null });
     setPreview(null);
     setCategoryPreview(null);
     setEditingId(null);
@@ -92,7 +98,7 @@ export default function ManageFoods() {
   };
 
   const startEdit = (food) => {
-    setForm({ name: food.name, price: food.price, description: food.description, category: food.category || "Veg", categoryImage: food.categoryImage || "", image: null, categoryImageFile: null });
+    setForm({ name: food.name, price: food.price, description: food.description, category: food.category || "Pizza", veg: food.veg === false ? "false" : "true", categoryImage: food.categoryImage || "", image: null, categoryImageFile: null });
     setPreview(food.image?.startsWith('http') ? food.image : `${import.meta.env.VITE_API_URL}/uploads/${food.image}`);
     setCategoryPreview(food.categoryImage || null);
     setEditingId(food._id);
@@ -136,7 +142,7 @@ export default function ManageFoods() {
           <form onSubmit={addFood} className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-10">
             
             <div className="lg:col-span-8 space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
                 <div>
                   <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Food Name</label>
                   <Input name="name" placeholder="e.g. Spicy Chicken Burger" value={form.name} onChange={handleChange} className="bg-slate-50 dark:bg-slate-900" />
@@ -156,6 +162,18 @@ export default function ManageFoods() {
                     {categoryOptions.map((option) => (
                       <option key={option} value={option} className="bg-white dark:bg-slate-900">{option}</option>
                     ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Food Type</label>
+                  <select
+                    name="veg"
+                    value={form.veg}
+                    onChange={handleChange}
+                    className="w-full px-5 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-950 focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 transition-all outline-none text-slate-900 dark:text-white font-medium"
+                  >
+                    <option value="true" className="bg-white dark:bg-slate-900">Veg</option>
+                    <option value="false" className="bg-white dark:bg-slate-900">Non-Veg</option>
                   </select>
                 </div>
               </div>
@@ -278,7 +296,14 @@ export default function ManageFoods() {
                   </div>
                   <div className="flex gap-2 mb-2">
                     <span className="px-2.5 py-0.5 text-xs font-bold bg-brand-50 dark:bg-brand-950/30 text-brand-600 dark:text-brand-400 rounded-md">
-                      {f.category || "Veg"}
+                      {f.category || "Pizza"}
+                    </span>
+                    <span className={`px-2.5 py-0.5 text-xs font-bold rounded-md ${
+                      f.veg === false
+                        ? "bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400"
+                        : "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400"
+                    }`}>
+                      {f.veg === false ? "Non-Veg" : "Veg"}
                     </span>
                   </div>
                   <p className="text-slate-500 dark:text-slate-400 text-sm line-clamp-2 mt-1 mb-4 flex-1 font-medium">{f.description}</p>

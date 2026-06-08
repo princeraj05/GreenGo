@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Search, ShoppingCart, UtensilsCrossed, Star, X, Heart, 
-  MapPin, Bell, Sun, Moon, Sparkles, Navigation, Clock, ChevronDown, Plus 
+  MapPin, Bell, Sun, Moon, Sparkles, Navigation, Clock, ChevronDown, Plus, Mic, Grid3X3
 } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
 import Button from "../../components/ui/Button";
@@ -24,6 +24,9 @@ export default function Menu() {
   const [foods, setFoods] = useState([]);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
+  const [vegMode, setVegMode] = useState(false);
+  const [showAllCategories, setShowAllCategories] = useState(false);
+  const [showAllFoods, setShowAllFoods] = useState(false);
   const [loading, setLoading] = useState(true);
   const [selectedFood, setSelectedFood] = useState(null);
   const [foodReviews, setFoodReviews] = useState([]);
@@ -80,15 +83,52 @@ export default function Menu() {
     { id: "Starter", name: "Starter", icon: "ST" },
     { id: "Combo", name: "Combo", icon: "CB" },
     { id: "Roti", name: "Roti", icon: "RT" },
-    { id: "Pizza", name: "Pizza", icon: "🍕" },
-    { id: "Burger", name: "Burger", icon: "🍔" },
-    { id: "Chicken", name: "Chicken", icon: "🍗" },
-    { id: "Biryani", name: "Biryani", icon: "🍲" },
-    { id: "Pasta", name: "Pasta", icon: "🍝" },
-    { id: "Desserts", name: "Desserts", icon: "🍰" },
-    { id: "Drinks", name: "Drinks", icon: "🥤" },
-    { id: "Veg", name: "Veg", icon: "🟢" },
-    { id: "Non-Veg", name: "Non-Veg", icon: "🔴" }
+    { id: "Pizza", name: "Pizza", icon: "PZ" },
+    { id: "Burger", name: "Burger", icon: "BG" },
+    { id: "Biryani", name: "Biryani", icon: "BR" },
+    { id: "Rolls", name: "Rolls", icon: "RL" },
+    { id: "Fries", name: "Fries", icon: "FR" },
+    { id: "North Indian", name: "North Indian", icon: "NI" },
+    { id: "Desserts", name: "Desserts", icon: "DS" },
+    { id: "Bowl", name: "Bowl", icon: "BW" },
+    { id: "Veg Meal", name: "Veg Meal", icon: "VM" },
+    { id: "Paneer", name: "Paneer", icon: "PN" },
+    { id: "Paratha", name: "Paratha", icon: "PR" },
+    { id: "Sandwich", name: "Sandwich", icon: "SW" },
+    { id: "Rice", name: "Rice", icon: "RC" },
+    { id: "Cake", name: "Cake", icon: "CK" },
+    { id: "Dal", name: "Dal", icon: "DL" },
+    { id: "Thali", name: "Thali", icon: "TH" },
+    { id: "Aloo Paratha", name: "Aloo Paratha", icon: "AP" },
+    { id: "Italian", name: "Italian", icon: "IT" },
+    { id: "Shawarma", name: "Shawarma", icon: "SH" },
+    { id: "Noodles", name: "Noodles", icon: "ND" },
+    { id: "Shake", name: "Shake", icon: "SK" },
+    { id: "Pasta", name: "Pasta", icon: "PS" },
+    { id: "Dal Makhani", name: "Dal Makhani", icon: "DM" },
+    { id: "Patty", name: "Patty", icon: "PT" },
+    { id: "Paneer Biryani", name: "Paneer Biryani", icon: "PB" },
+    { id: "Rajma Rice", name: "Rajma Rice", icon: "RR" },
+    { id: "Mousse", name: "Mousse", icon: "MS" },
+    { id: "Milkshake", name: "Milkshake", icon: "MK" },
+    { id: "Sweets", name: "Sweets", icon: "ST" },
+    { id: "Ice Cream", name: "Ice Cream", icon: "IC" },
+    { id: "Cold Coffee", name: "Cold Coffee", icon: "CC" },
+    { id: "Cheesecake", name: "Cheesecake", icon: "CH" },
+    { id: "Brownie", name: "Brownie", icon: "BN" },
+    { id: "Tea", name: "Tea", icon: "TE" },
+    { id: "Gulab Jamun", name: "Gulab Jamun", icon: "GJ" },
+    { id: "Pastry", name: "Pastry", icon: "PY" },
+    { id: "Chaap", name: "Chaap", icon: "CP" },
+    { id: "Rajma", name: "Rajma", icon: "RJ" },
+    { id: "Kulche", name: "Kulche", icon: "KL" },
+    { id: "Kebabs", name: "Kebabs", icon: "KB" },
+    { id: "Maggi", name: "Maggi", icon: "MG" },
+    { id: "Bhurji", name: "Bhurji", icon: "BJ" },
+    { id: "Juice", name: "Juice", icon: "JC" },
+    { id: "Chicken", name: "Chicken", icon: "CH" },
+    { id: "Non-Veg", name: "Non-Veg", icon: "NV" },
+    { id: "Drinks", name: "Drinks", icon: "DR" }
   ];
 
   useEffect(() => {
@@ -264,16 +304,16 @@ export default function Menu() {
     }
   };
 
-  // RECOMMENDATION & FILTER LOGIC
-  const matchesUserFoodPreference = (food) => {
-    const preference = String(user.foodPreference || "").toLowerCase();
-    if (!preference.includes("veg")) return true;
+  const isNonVegFood = (food) => {
     const cat = String(food.category || "").toLowerCase();
     const name = String(food.name || "").toLowerCase();
-    const isNonVeg = food.veg === false || cat === "non-veg" || cat === "chicken" || name.includes("chicken") || name.includes("mutton") || name.includes("egg");
-    if (preference.includes("non")) return isNonVeg;
-    return !isNonVeg && (food.veg === true || cat === "veg" || name.includes("veg") || name.includes("paneer") || !["non-veg", "chicken"].includes(cat));
+    return food.veg === false || cat.includes("non-veg") || cat.includes("chicken") || name.includes("chicken") || name.includes("mutton") || name.includes("egg");
   };
+
+  const isVegFood = (food) => !isNonVegFood(food);
+
+  // RECOMMENDATION & FILTER LOGIC
+  const matchesVegMode = (food) => !vegMode || isVegFood(food);
 
   const filteredFoods = foods.filter(food => {
     const matchesSearch = food.name.toLowerCase().includes(search.toLowerCase()) || 
@@ -301,22 +341,24 @@ export default function Menu() {
       }
     }
     
-    return matchesSearch && matchesCategory && matchesUserFoodPreference(food);
+    return matchesSearch && matchesCategory && matchesVegMode(food);
   });
 
   // POPULAR DISHES (Ranked by highest rating)
   const popularDishes = foods
-    .filter(matchesUserFoodPreference)
+    .filter(matchesVegMode)
     .filter(f => f.rating > 0)
     .sort((a, b) => b.rating - a.rating)
-    .slice(0, 4);
+    .slice(0, 3);
 
   // RECOMMENDED FOR YOU (Ranked by popularity or recent updates)
   const recommendedFoods = foods
-    .filter(matchesUserFoodPreference)
+    .filter(matchesVegMode)
     .filter(f => f.ratingCount >= 0)
-    .sort((a, b) => b.ratingCount - a.ratingCount || b.updatedAt - a.updatedAt)
-    .slice(0, 4);
+    .sort((a, b) => b.ratingCount - a.ratingCount || new Date(b.updatedAt) - new Date(a.updatedAt));
+  const visibleRecommendedFoods = recommendedFoods.slice(0, 4);
+  const horizontalFoods = foods.filter(matchesVegMode).slice(0, 10);
+  const visibleCategories = categoriesList.slice(0, 8);
 
   const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
   const cartCount = cart.reduce((sum, item) => sum + item.qty, 0);
@@ -512,17 +554,44 @@ export default function Menu() {
       </div>
 
       {/* 2. SEARCH BAR */}
-      <div className="mb-6 relative">
-        <div className="absolute inset-y-0 left-0 pl-4.5 flex items-center pointer-events-none">
-          <Search className="h-5 w-5 text-slate-400 dark:text-slate-500" />
+      <div className="mb-6 flex items-stretch gap-2 sm:gap-3">
+        <div className="relative flex-1 min-w-0">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <Search className="h-5 w-5 text-rose-500" />
+          </div>
+          <input
+            type="text"
+            placeholder={'Search "bread"'}
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setShowAllFoods(false);
+            }}
+            className="w-full pl-12 pr-12 py-4 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-2xl outline-none focus:ring-4 focus:ring-brand-500/15 focus:border-brand-500 text-sm sm:text-base font-bold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm transition-all"
+          />
+          <button
+            type="button"
+            className="absolute inset-y-0 right-0 px-4 text-rose-500 border-l border-slate-100 dark:border-slate-800"
+            title="Voice search"
+          >
+            <Mic size={20} />
+          </button>
         </div>
-        <input
-          type="text"
-          placeholder="Search for food, dishes, restaurants..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-12 pr-6 py-4 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-2xl outline-none focus:ring-4 focus:ring-brand-500/15 focus:border-brand-500 text-sm font-bold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm transition-all"
-        />
+        <button
+          type="button"
+          onClick={() => {
+            setVegMode((value) => !value);
+            if (!vegMode && ["Non-Veg", "Chicken", "Kebabs"].includes(category)) setCategory("All");
+          }}
+          className="w-[74px] sm:w-24 rounded-2xl bg-amber-50 dark:bg-slate-900 border border-amber-100 dark:border-slate-800 shadow-sm flex flex-col items-center justify-center gap-1 px-1"
+          aria-pressed={vegMode}
+        >
+          <span className={`text-[10px] sm:text-xs font-black leading-none ${vegMode ? "text-emerald-600" : "text-slate-500 dark:text-slate-300"}`}>VEG</span>
+          <span className="text-[9px] sm:text-[10px] font-black text-slate-500 dark:text-slate-400 leading-none">MODE</span>
+          <span className={`relative w-10 h-6 rounded-full transition-colors ${vegMode ? "bg-emerald-400" : "bg-slate-300 dark:bg-slate-700"}`}>
+            <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${vegMode ? "translate-x-[18px]" : "translate-x-0.5"}`} />
+          </span>
+        </button>
       </div>
 
       {/* 3. AUTO SLIDING OFFER BANNER */}
@@ -598,15 +667,25 @@ export default function Menu() {
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Food Categories</h3>
+          <button
+            type="button"
+            onClick={() => setShowAllCategories(true)}
+            className="text-xs font-black text-brand-600 dark:text-brand-300 flex items-center gap-1 px-3 py-2 rounded-xl bg-brand-50 dark:bg-brand-950/30"
+          >
+            See All <ChevronDown size={14} />
+          </button>
         </div>
         <div className="flex gap-3 overflow-x-auto no-scrollbar py-2">
-          {categoriesList.map(cat => {
+          {visibleCategories.filter(cat => !(vegMode && ["Non-Veg", "Chicken", "Kebabs"].includes(cat.id))).map(cat => {
             const isSelected = category.toLowerCase() === cat.id.toLowerCase();
             const categoryImage = getCategoryImage(cat);
             return (
               <button
                 key={cat.id}
-                onClick={() => setCategory(cat.id)}
+                onClick={() => {
+                  setCategory(cat.id);
+                  setShowAllFoods(false);
+                }}
                 className={`flex min-w-[76px] sm:min-w-[88px] flex-col items-center gap-2 transition-all select-none duration-300 ${
                   isSelected
                     ? "text-brand-600 dark:text-brand-300 scale-105 font-black"
@@ -631,11 +710,74 @@ export default function Menu() {
         </div>
       </div>
 
+      <AnimatePresence>
+        {showAllCategories && (
+          <div className="fixed inset-0 z-[1800] flex items-end justify-center bg-slate-950/55 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, y: 80 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 80 }}
+              className="w-full max-w-3xl max-h-[82vh] bg-white dark:bg-slate-950 rounded-t-[2rem] shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden"
+            >
+              <div className="relative px-5 pt-8 pb-4 border-b border-slate-100 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setShowAllCategories(false)}
+                  className="absolute -top-7 left-1/2 -translate-x-1/2 w-14 h-14 rounded-full bg-slate-900 text-white flex items-center justify-center shadow-xl"
+                  title="Close"
+                >
+                  <X size={26} />
+                </button>
+                <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Cuisines and dishes</h3>
+              </div>
+              <div className="p-4 sm:p-6 overflow-y-auto max-h-[68vh]">
+                <div className="grid grid-cols-4 gap-x-3 gap-y-6">
+                  {categoriesList.filter(cat => !(vegMode && ["Non-Veg", "Chicken", "Kebabs"].includes(cat.id))).map((cat) => {
+                    const isSelected = category.toLowerCase() === cat.id.toLowerCase();
+                    const categoryImage = getCategoryImage(cat);
+                    return (
+                      <button
+                        type="button"
+                        key={cat.id}
+                        onClick={() => {
+                          setCategory(cat.id);
+                          setShowAllFoods(false);
+                          setShowAllCategories(false);
+                        }}
+                        className={`min-w-0 rounded-2xl p-2 flex flex-col items-center gap-2 transition-all ${
+                          isSelected
+                            ? "bg-rose-50 dark:bg-rose-950/20 ring-1 ring-rose-300"
+                            : "hover:bg-slate-50 dark:hover:bg-slate-900"
+                        }`}
+                      >
+                        <span className="w-full aspect-[1.35] rounded-xl flex items-center justify-center overflow-hidden bg-slate-50 dark:bg-slate-900">
+                          {categoryImage ? (
+                            <img src={categoryImage} alt={cat.name} className="w-full h-full object-contain" />
+                          ) : (
+                            <Grid3X3 size={22} className="text-slate-400" />
+                          )}
+                        </span>
+                        <span className={`w-full text-center text-[11px] sm:text-sm font-bold leading-tight break-words ${isSelected ? "text-slate-950 dark:text-white" : "text-slate-500 dark:text-slate-300"}`}>
+                          {cat.name}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* 6. POPULAR DISHES SECTION */}
       {category === "All" && (
         <div className="mb-10">
-          <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight mb-4.5">Popular Dishes</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          <div className="flex items-center justify-between mb-4.5">
+            <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Popular Dishes</h3>
+            <button type="button" onClick={() => { setCategory("All"); setSearch(""); setShowAllFoods(true); }} className="text-xs font-black text-brand-600 dark:text-brand-300">See All</button>
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-5">
             {popularDishes.map((food) => (
               <div 
                 key={food._id} 
@@ -702,12 +844,15 @@ export default function Menu() {
       {/* 7. RECOMMENDED FOR YOU */}
       {category === "All" && (
         <div className="mb-10">
-          <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight mb-4.5">Recommended For You</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {recommendedFoods.map((food) => (
+          <div className="flex items-center justify-between mb-4.5">
+            <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Recommended For You</h3>
+            <button type="button" onClick={() => { setCategory("All"); setSearch(""); setShowAllFoods(true); }} className="text-xs font-black text-brand-600 dark:text-brand-300">See All</button>
+          </div>
+          <div className="flex gap-4 sm:gap-5 overflow-x-auto no-scrollbar snap-x pb-2">
+            {visibleRecommendedFoods.map((food) => (
               <div 
                 key={food._id} 
-                className="bg-white dark:bg-slate-900 rounded-3xl p-4.5 pb-5 border border-slate-100 dark:border-slate-800/60 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col group relative overflow-hidden min-h-[390px]"
+                className="min-w-[240px] sm:min-w-[260px] lg:min-w-[280px] snap-start bg-white dark:bg-slate-900 rounded-3xl p-4.5 pb-5 border border-slate-100 dark:border-slate-800/60 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col group relative overflow-hidden min-h-[390px]"
               >
                 {/* Image & Buttons */}
                 <div 
@@ -768,10 +913,10 @@ export default function Menu() {
       )}
 
       {/* DYNAMIC PRODUCTS BY SELECTED CATEGORY OR SEARCH */}
-      {(category !== "All" || search !== "") && (
+      {(category !== "All" || search !== "" || showAllFoods) && (
         <div className="mb-10">
           <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight mb-4.5">
-            {category !== "All" ? `${category} Products` : "Search Results"}
+            {showAllFoods ? "All Products" : category !== "All" ? `${category} Products` : "Search Results"}
           </h3>
           {loading ? (
             <div className="flex justify-center items-center py-20">
@@ -784,7 +929,7 @@ export default function Menu() {
               </div>
               <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-1">No products found</h3>
               <p className="text-slate-500 dark:text-slate-400 text-sm max-w-xs mb-6 font-medium">Try clearing filters or checking other categories.</p>
-              <Button onClick={() => {setSearch(""); setCategory("All");}} variant="secondary" className="rounded-xl text-xs">
+              <Button onClick={() => {setSearch(""); setCategory("All"); setShowAllFoods(false);}} variant="secondary" className="rounded-xl text-xs">
                 Clear Filters
               </Button>
             </div>
