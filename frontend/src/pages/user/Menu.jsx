@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Search, ShoppingCart, UtensilsCrossed, Star, X, Heart, 
-  MapPin, Bell, Sun, Moon, Sparkles, Navigation, Clock, ChevronDown, Plus, Mic, Grid3X3
+  MapPin, Bell, Sun, Moon, Sparkles, Navigation, Clock, ChevronDown, Plus, Mic, Grid3X3, Wallet, ChevronRight
 } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
 import Button from "../../components/ui/Button";
@@ -639,27 +639,26 @@ export default function Menu() {
       )}
 
       {/* 4. BUDGET ASSISTANT CARD */}
-      <div className="bg-slate-90 bg-slate-900 text-white p-5 rounded-3xl border border-slate-800 shadow-lg mb-8 relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-4">
-        {/* Glow behind */}
-        <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-brand-500/25 rounded-full blur-[40px] pointer-events-none" />
-        
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center text-3xl">
-            🤖
-          </div>
-          <div>
-            <h3 className="font-extrabold text-base tracking-tight flex items-center gap-1.5">
-              Budget Assistant <span className="text-brand-400 text-xs font-black uppercase tracking-wider bg-brand-500/20 px-2 py-0.5 rounded-md">AI Smart</span>
-            </h3>
-            <p className="text-slate-400 text-xs mt-0.5 font-semibold">Tell us your budget and we'll suggest matching combos & dishes for you!</p>
-          </div>
+      <div className="mb-8 rounded-3xl border border-brand-100 dark:border-brand-900/60 bg-white dark:bg-slate-900 shadow-sm px-4 py-4 sm:px-6 sm:py-5 flex items-center gap-3 sm:gap-5">
+        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-green-600 text-white flex items-center justify-center shrink-0 shadow-lg shadow-green-600/20">
+          <Wallet size={30} className="sm:w-9 sm:h-9" />
         </div>
-
-        <button 
+        <div className="flex-1 min-w-0">
+          <h3 className="font-black text-slate-950 dark:text-white text-lg sm:text-2xl tracking-tight flex items-center gap-1.5 leading-tight">
+            Budget Assistant
+            <Sparkles size={20} className="text-green-600 fill-green-600 shrink-0" />
+          </h3>
+          <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-base font-semibold leading-snug mt-1 max-w-xl">
+            Tell us your budget and we'll suggest the best combos & dishes for you!
+          </p>
+        </div>
+        <button
+          type="button"
           onClick={() => navigate("/user/budget-assistant")}
-          className="shrink-0 px-6 py-3 bg-brand-500 hover:bg-brand-600 text-white font-extrabold rounded-xl transition-all active:scale-95 text-sm shadow-md shadow-brand-500/25"
+          className="shrink-0 min-w-[96px] sm:min-w-[150px] px-3 sm:px-6 py-3 sm:py-4 rounded-2xl bg-green-700 hover:bg-green-800 text-white font-black text-sm sm:text-lg flex items-center justify-center gap-1 sm:gap-2 shadow-lg shadow-green-700/20 active:scale-95 transition-all"
         >
           Start Now
+          <ChevronRight size={18} className="sm:w-6 sm:h-6" />
         </button>
       </div>
 
