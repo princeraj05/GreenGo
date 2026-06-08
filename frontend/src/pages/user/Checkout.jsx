@@ -26,7 +26,7 @@ export default function Checkout() {
   const [cart, setCart] = useState([]);
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("COD");
+  const [paymentMethod, setPaymentMethod] = useState("UPI");
   const [customMessage, setCustomMessage] = useState(""); // <-- Added
   const [deliveryCharge, setDeliveryCharge] = useState(40);
   const [loading, setLoading] = useState(false);
@@ -269,8 +269,8 @@ export default function Checkout() {
   };
 
   const paymentOptions = [
-    { id: 'COD', title: 'Cash on Delivery', desc: 'Pay when your food arrives', icon: <Banknote size={24} /> },
     { id: 'UPI', title: 'UPI (GPay, PhonePe)', desc: 'Pay securely using UPI apps', icon: <Smartphone size={24} /> },
+    { id: 'COD', title: 'Cash on Delivery', desc: 'Pay when your food arrives', icon: <Banknote size={24} /> },
     { id: 'Card', title: 'Credit/Debit Card', desc: 'Visa, MasterCard, RuPay', icon: <CreditCard size={24} /> }
   ];
 

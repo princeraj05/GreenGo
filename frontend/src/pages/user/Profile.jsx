@@ -231,7 +231,8 @@ export default function Profile() {
                 </Button>
               )}
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {isEditing && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <div className="relative">
                 <label className="text-xs font-bold text-slate-505 dark:text-slate-400 uppercase tracking-wider mb-2 ml-1 block">Full Name</label>
                 <div className="relative">
@@ -344,74 +345,77 @@ export default function Profile() {
                 </div>
               </div>
             </div>
+            )}
           </div>
 
-          <div className="mb-10">
-            <h3 className="font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-3 text-xl pb-4 border-b border-slate-100 dark:border-slate-800/60">
-              <MapPin size={24} className="text-brand-500" /> Delivery Information
-            </h3>
-            <div className="space-y-6">
-              <div className="relative">
-                <label className="text-xs font-bold text-slate-550 dark:text-slate-400 uppercase tracking-wider mb-3 ml-1 block">Address Type</label>
-                <div className="flex flex-wrap gap-3 mb-4">
-                  {[
-                    { id: "home", label: "Home", icon: "🏠" },
-                    { id: "office", label: "Office", icon: "🏢" },
-                    { id: "custom", label: "Own Address", icon: "📍" }
-                  ].map((t) => {
-                    const active = getAddressType(form.address) === t.id;
-                    return (
-                      <button
-                        key={t.id}
-                        type="button"
-                        disabled={!isEditing}
-                        onClick={() => handleAddressTypeChange(t.id)}
-                        className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold border transition-all ${
-                          active
-                            ? "bg-brand-500 text-white border-brand-500 shadow-md shadow-brand-500/20"
-                            : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-355 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800"
-                        } disabled:opacity-75 disabled:cursor-not-allowed`}
-                      >
-                        <span>{t.icon}</span>
-                        <span>{t.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-                
-                <div className="flex justify-between items-center mb-2">
-                  <label className="text-xs font-bold text-slate-505 dark:text-slate-400 uppercase tracking-wider ml-1 block">Delivery Address Details</label>
-                  <button
-                    type="button"
+          {isEditing && (
+            <div className="mb-10">
+              <h3 className="font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-3 text-xl pb-4 border-b border-slate-100 dark:border-slate-800/60">
+                <MapPin size={24} className="text-brand-500" /> Delivery Information
+              </h3>
+              <div className="space-y-6">
+                <div className="relative">
+                  <label className="text-xs font-bold text-slate-550 dark:text-slate-400 uppercase tracking-wider mb-3 ml-1 block">Address Type</label>
+                  <div className="flex flex-wrap gap-3 mb-4">
+                    {[
+                      { id: "home", label: "Home", icon: "🏠" },
+                      { id: "office", label: "Office", icon: "🏢" },
+                      { id: "custom", label: "Own Address", icon: "📍" }
+                    ].map((t) => {
+                      const active = getAddressType(form.address) === t.id;
+                      return (
+                        <button
+                          key={t.id}
+                          type="button"
+                          disabled={!isEditing}
+                          onClick={() => handleAddressTypeChange(t.id)}
+                          className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold border transition-all ${
+                            active
+                              ? "bg-brand-500 text-white border-brand-500 shadow-md shadow-brand-500/20"
+                              : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-355 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800"
+                          } disabled:opacity-75 disabled:cursor-not-allowed`}
+                        >
+                          <span>{t.icon}</span>
+                          <span>{t.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="text-xs font-bold text-slate-505 dark:text-slate-400 uppercase tracking-wider ml-1 block">Delivery Address Details</label>
+                    <button
+                      type="button"
+                      disabled={!isEditing}
+                      onClick={useCurrentLocation}
+                      className="flex items-center gap-1.5 px-3.5 py-1.5 bg-brand-50 dark:bg-brand-950/30 hover:bg-brand-100 dark:hover:bg-brand-900/40 text-brand-600 dark:text-brand-405 rounded-xl text-xs font-bold transition-all shadow-sm disabled:opacity-75 disabled:cursor-not-allowed"
+                    >
+                      {locationLoading ? (
+                        <div className="w-3.5 h-3.5 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <Navigation size={12} />
+                      )}
+                      Use Current Location
+                    </button>
+                  </div>
+                  <textarea
+                    name="address"
+                    value={getCleanAddressText(form.address)}
+                    onChange={handleAddressTextChange}
                     disabled={!isEditing}
-                    onClick={useCurrentLocation}
-                    className="flex items-center gap-1.5 px-3.5 py-1.5 bg-brand-50 dark:bg-brand-950/30 hover:bg-brand-100 dark:hover:bg-brand-900/40 text-brand-600 dark:text-brand-405 rounded-xl text-xs font-bold transition-all shadow-sm disabled:opacity-75 disabled:cursor-not-allowed"
-                  >
-                    {locationLoading ? (
-                      <div className="w-3.5 h-3.5 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <Navigation size={12} />
-                    )}
-                    Use Current Location
-                  </button>
+                    placeholder={
+                      getAddressType(form.address) === "home"
+                        ? "Enter your Home address details..."
+                        : getAddressType(form.address) === "office"
+                        ? "Enter your Office address details..."
+                        : "Enter your custom / own street address..."
+                    }
+                    className="w-full px-5 py-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-950 focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 transition-all outline-none resize-y min-h-[120px] text-slate-900 dark:text-white font-medium placeholder-slate-400 dark:placeholder:text-slate-500 shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
+                  />
                 </div>
-                <textarea
-                  name="address"
-                  value={getCleanAddressText(form.address)}
-                  onChange={handleAddressTextChange}
-                  disabled={!isEditing}
-                  placeholder={
-                    getAddressType(form.address) === "home"
-                      ? "Enter your Home address details..."
-                      : getAddressType(form.address) === "office"
-                      ? "Enter your Office address details..."
-                      : "Enter your custom / own street address..."
-                  }
-                  className="w-full px-5 py-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-950 focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 transition-all outline-none resize-y min-h-[120px] text-slate-900 dark:text-white font-medium placeholder-slate-400 dark:placeholder:text-slate-500 shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
-                />
               </div>
             </div>
-          </div>
+          )}
 
 
           {isEditing && (
