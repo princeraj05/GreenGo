@@ -132,7 +132,6 @@ export default function UserLayout() {
   };
 
   const desktopNavLinks = [
-    { to: "/user/dashboard", end: true, label: "Dashboard", icon: <LayoutDashboard size={20} /> },
     { to: "/user/menu", label: "Menu", icon: <UtensilsCrossed size={20} /> },
     { to: "/user/cart", label: "Cart", icon: <ShoppingCart size={20} /> },
     { to: "/user/orders", label: "My Orders", icon: <Clock size={20} /> },
@@ -141,7 +140,6 @@ export default function UserLayout() {
   ];
 
   const bottomNavLinks = [
-    { to: "/user/dashboard", end: true, label: "Home", icon: <Home size={20} /> },
     { to: "/user/menu", label: "Menu", icon: <UtensilsCrossed size={20} /> },
     { to: "/user/cart", label: "Cart", icon: <ShoppingCart size={20} />, badge: cartCount },
     { to: "/user/orders", label: "Orders", icon: <Clock size={20} />, badge: pendingCount },
