@@ -11,7 +11,7 @@ import Input from "../../components/ui/Input";
 export default function Profile() {
   const navigate = useNavigate();
   const [form, setForm] = useState({
-    name: "", email: "", phone: "", address: "", foodPreference: "", deliveryTime: "", notifications: ""
+    name: "", email: "", phone: "", address: "", addresses: [], foodPreference: "", deliveryTime: "", notifications: ""
   });
   const [originalForm, setOriginalForm] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -44,6 +44,11 @@ export default function Profile() {
             email: data.email || "",
             phone: data.phone || "",
             address: data.address || "",
+            addresses: Array.isArray(data.addresses) && data.addresses.length > 0
+              ? data.addresses
+              : data.address
+                ? [{ label: "Home", details: data.address, city: "Jaipur", state: "Rajasthan", isPrimary: true }]
+                : [{ label: "Home", details: "", city: "Jaipur", state: "Rajasthan", isPrimary: true }],
             foodPreference: data.foodPreference || "",
             deliveryTime: data.deliveryTime || "",
             notifications: data.notifications || ""
@@ -94,24 +99,20 @@ export default function Profile() {
         const data = await res.json();
         const addressText = data && data.display_name ? data.display_name : `Lat: ${latitude}, Lng: ${longitude}`;
         
-        const type = getAddressType(form.address);
-        if (type === "home") {
-          setForm(f => ({ ...f, address: `Home: ${addressText}` }));
-        } else if (type === "office") {
-          setForm(f => ({ ...f, address: `Office: ${addressText}` }));
-        } else {
-          setForm(f => ({ ...f, address: addressText }));
-        }
+        setForm(f => {
+          const nextAddresses = [...(f.addresses || [{ label: "Home", details: "", city: "Jaipur", state: "Rajasthan", isPrimary: true }])];
+          const primaryIndex = Math.max(nextAddresses.findIndex(addr => addr.isPrimary), 0);
+          nextAddresses[primaryIndex] = { ...nextAddresses[primaryIndex], details: addressText, isPrimary: true };
+          return { ...f, addresses: nextAddresses };
+        });
       } catch (err) {
         const fallbackText = `Lat: ${position.coords.latitude}, Lng: ${position.coords.longitude}`;
-        const type = getAddressType(form.address);
-        if (type === "home") {
-          setForm(f => ({ ...f, address: `Home: ${fallbackText}` }));
-        } else if (type === "office") {
-          setForm(f => ({ ...f, address: `Office: ${fallbackText}` }));
-        } else {
-          setForm(f => ({ ...f, address: fallbackText }));
-        }
+        setForm(f => {
+          const nextAddresses = [...(f.addresses || [{ label: "Home", details: "", city: "Jaipur", state: "Rajasthan", isPrimary: true }])];
+          const primaryIndex = Math.max(nextAddresses.findIndex(addr => addr.isPrimary), 0);
+          nextAddresses[primaryIndex] = { ...nextAddresses[primaryIndex], details: fallbackText, isPrimary: true };
+          return { ...f, addresses: nextAddresses };
+        });
       } finally {
         setLocationLoading(false);
       }
@@ -160,19 +161,58 @@ export default function Profile() {
     }
   };
 
+  const updateAddressField = (index, field, value) => {
+    const nextAddresses = [...(form.addresses || [])];
+    nextAddresses[index] = { ...nextAddresses[index], [field]: value };
+    setForm({ ...form, addresses: nextAddresses });
+  };
+
+  const addAddress = () => {
+    setForm({
+      ...form,
+      addresses: [
+        ...(form.addresses || []),
+        { label: "Home", details: "", city: "Jaipur", state: "Rajasthan", isPrimary: false }
+      ]
+    });
+  };
+
+  const removeAddress = (index) => {
+    const nextAddresses = (form.addresses || []).filter((_, i) => i !== index);
+    if (nextAddresses.length > 0 && !nextAddresses.some(addr => addr.isPrimary)) {
+      nextAddresses[0].isPrimary = true;
+    }
+    setForm({ ...form, addresses: nextAddresses });
+  };
+
+  const setPrimaryAddress = (index) => {
+    setForm({
+      ...form,
+      addresses: (form.addresses || []).map((addr, i) => ({ ...addr, isPrimary: i === index }))
+    });
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
       const token = await getToken();
       if (!token) return;
+      const primaryAddress = (form.addresses || []).find(addr => addr.isPrimary) || (form.addresses || [])[0];
+      const payload = {
+        ...form,
+        address: primaryAddress
+          ? [primaryAddress.label, primaryAddress.details, primaryAddress.city, primaryAddress.state].filter(Boolean).join(" - ")
+          : form.address,
+      };
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/profile`, {
         method: "PUT", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify(form)
+        body: JSON.stringify(payload)
       });
       if (res.ok) { 
         setMessage("Profile updated successfully"); 
         setMsgType("success"); 
-        setOriginalForm(form);
+        setOriginalForm(payload);
+        setForm(payload);
         setIsEditing(false);
       } 
       else { setMessage("Failed to update profile"); setMsgType("error"); }
@@ -185,6 +225,7 @@ export default function Profile() {
   };
 
   const favoriteFoods = foods.filter(food => favorites.includes(food._id));
+  const primaryAddress = (form.addresses || []).find(addr => addr.isPrimary) || (form.addresses || [])[0];
 
   if (loading) {
     return (
@@ -264,7 +305,11 @@ export default function Profile() {
                 </div>
                 <div className="bg-slate-50 dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/60 md:col-span-2 lg:col-span-3">
                   <span className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">Delivery Address</span>
-                  <span className="text-slate-900 dark:text-white font-extrabold whitespace-pre-wrap">{form.address || "N/A"}</span>
+                  <span className="text-slate-900 dark:text-white font-extrabold whitespace-pre-wrap">
+                    {primaryAddress
+                      ? [primaryAddress.label, primaryAddress.details, primaryAddress.city, primaryAddress.state].filter(Boolean).join(" - ")
+                      : form.address || "N/A"}
+                  </span>
                 </div>
               </div>
             ) : (
@@ -385,6 +430,48 @@ export default function Profile() {
                     <MapPin size={22} className="text-brand-500" /> Delivery Address
                   </h3>
                   <div className="space-y-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-xs font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider">Multiple Addresses</p>
+                      <button
+                        type="button"
+                        onClick={useCurrentLocation}
+                        className="flex items-center gap-1 px-2.5 py-1 bg-brand-50 dark:bg-brand-950/30 hover:bg-brand-100 dark:hover:bg-brand-900/40 text-brand-600 dark:text-brand-400 rounded-lg text-[10px] font-bold transition-all"
+                      >
+                        {locationLoading ? (
+                          <div className="w-3 h-3 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <Navigation size={10} />
+                        )}
+                        Get Location
+                      </button>
+                    </div>
+
+                    {(form.addresses || []).map((addr, index) => (
+                      <div key={index} className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/70 p-4 space-y-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          <input value={addr.label || ""} onChange={(e) => updateAddressField(index, "label", e.target.value)} placeholder="Home / Office" className="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-sm font-bold outline-none focus:border-brand-500" />
+                          <input value={addr.city || ""} onChange={(e) => updateAddressField(index, "city", e.target.value)} placeholder="City" className="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-sm font-bold outline-none focus:border-brand-500" />
+                          <input value={addr.state || ""} onChange={(e) => updateAddressField(index, "state", e.target.value)} placeholder="State" className="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-white text-sm font-bold outline-none focus:border-brand-500" />
+                        </div>
+                        <textarea value={addr.details || ""} onChange={(e) => updateAddressField(index, "details", e.target.value)} placeholder="Enter full address..." className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 focus:ring-2 focus:ring-brand-500/15 focus:border-brand-500 transition-all outline-none resize-y min-h-[80px] text-slate-900 dark:text-white font-medium text-sm placeholder-slate-400 dark:placeholder:text-slate-500 shadow-sm" />
+                        <div className="flex items-center justify-between gap-3">
+                          <button type="button" onClick={() => setPrimaryAddress(index)} className={`px-3 py-2 rounded-xl text-xs font-extrabold border transition-all ${addr.isPrimary ? "bg-brand-500 text-white border-brand-500" : "bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-200 border-slate-200 dark:border-slate-800"}`}>
+                            {addr.isPrimary ? "Primary Address" : "Set Primary"}
+                          </button>
+                          {(form.addresses || []).length > 1 && (
+                            <button type="button" onClick={() => removeAddress(index)} className="px-3 py-2 rounded-xl text-xs font-extrabold bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400">
+                              Remove
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+
+                    <button type="button" onClick={addAddress} className="w-full py-3 rounded-xl border border-dashed border-brand-300 dark:border-brand-800 text-brand-600 dark:text-brand-400 font-extrabold text-sm hover:bg-brand-50 dark:hover:bg-brand-950/20 transition-all">
+                      + Add New Address
+                    </button>
+                  </div>
+                  <div className="hidden">
                     <div>
                       <label className="text-xs font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider mb-2 block">Address Type</label>
                       <div className="flex flex-wrap gap-2.5">
@@ -484,7 +571,7 @@ export default function Profile() {
         initial={{ opacity: 0, y: 20 }} 
         animate={{ opacity: 1, y: 0 }} 
         transition={{ delay: 0.15 }}
-        className="mt-8"
+        className="hidden"
       >
         <Card className="p-6 md:p-10 border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-950">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800/60 mb-6">

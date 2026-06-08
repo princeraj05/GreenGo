@@ -52,6 +52,19 @@ const userSchema = new mongoose.Schema(
     default: ""
   },
 
+  addresses: [{
+    label: { type: String, default: "Home" },
+    details: { type: String, default: "" },
+    city: { type: String, default: "" },
+    state: { type: String, default: "" },
+    isPrimary: { type: Boolean, default: false }
+  }],
+
+  primaryAddressId: {
+    type: mongoose.Schema.Types.ObjectId,
+    default: null
+  },
+
   foodPreference: {
     type: String,
     default: ""

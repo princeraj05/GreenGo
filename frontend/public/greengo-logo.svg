@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="GreenGO">
+  <defs>
+    <linearGradient id="g" x1="18" y1="18" x2="108" y2="108" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#65d90f"/>
+      <stop offset="1" stop-color="#047857"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="#f7fff5"/>
+  <circle cx="68" cy="64" r="42" fill="none" stroke="url(#g)" stroke-width="11"/>
+  <path d="M14 43h34M9 61h35M18 79h30" stroke="#16a34a" stroke-width="8" stroke-linecap="round"/>
+  <path d="M37 75h67c-5 17-16 25-34 25s-29-8-33-25Z" fill="#063f2f"/>
+  <path d="M39 70c2-22 19-38 41-38 20 0 37 16 39 38H39Z" fill="url(#g)"/>
+  <path d="M79 62c10-20 26-17 31-17-1 12-7 24-25 27 1-6-1-9-6-10Z" fill="#fff"/>
+  <path d="M68 72c-12-15-25-11-31-8 5 11 15 17 31 17-2-4-2-7 0-9Z" fill="#eaffdf"/>
+</svg>

@@ -1,5 +1,6 @@
 import User from "../models/User.js";
 import Otp from "../models/Otp.js";
+import Food from "../models/Food.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import admin from "../config/firebase.js";
@@ -16,6 +17,44 @@ const sanitizeBody = (body = {}) => ({
   password: body.password ? "***" : body.password,
   idToken: body.idToken ? maskToken(body.idToken) : body.idToken,
 });
+
+const normalizeAddresses = (addresses = [], fallbackAddress = "") => {
+  const normalized = Array.isArray(addresses)
+    ? addresses
+        .map((addr) => ({
+          label: String(addr.label || "Home").trim() || "Home",
+          details: String(addr.details || addr.address || "").trim(),
+          city: String(addr.city || "").trim(),
+          state: String(addr.state || "").trim(),
+          isPrimary: Boolean(addr.isPrimary),
+        }))
+        .filter((addr) => addr.details)
+    : [];
+
+  if (normalized.length === 0 && fallbackAddress) {
+    normalized.push({
+      label: "Home",
+      details: String(fallbackAddress).replace(/^Home:\s*|^Office:\s*/i, "").trim(),
+      city: "Jaipur",
+      state: "Rajasthan",
+      isPrimary: true,
+    });
+  }
+
+  if (normalized.length > 0 && !normalized.some((addr) => addr.isPrimary)) {
+    normalized[0].isPrimary = true;
+  }
+
+  return normalized.map((addr, index) => ({
+    ...addr,
+    isPrimary: index === normalized.findIndex((item) => item.isPrimary),
+  }));
+};
+
+const formatAddress = (addr) => {
+  if (!addr) return "";
+  return [addr.label, addr.details, addr.city, addr.state].filter(Boolean).join(" - ");
+};
 
 /* ================= REGISTER ================= */
 
@@ -145,6 +184,12 @@ export const getMe = async (req, res) => {
   try {
 
     const user = await User.findById(req.user.id).select("-password");
+    if (user && (!user.addresses || user.addresses.length === 0) && user.address) {
+      user.addresses = normalizeAddresses([], user.address);
+      const primary = user.addresses.find((addr) => addr.isPrimary);
+      user.primaryAddressId = primary?._id || null;
+      await user.save();
+    }
 
     res.json(user);
 
@@ -163,7 +208,7 @@ export const getMe = async (req, res) => {
 
 export const updateProfile = async (req, res) => {
   try {
-    const { name, phone, address, foodPreference, deliveryTime, notifications } = req.body;
+    const { name, phone, address, addresses, primaryAddressId, foodPreference, deliveryTime, notifications } = req.body;
     
     const user = await User.findById(req.user.id);
     if (!user) {
@@ -172,7 +217,32 @@ export const updateProfile = async (req, res) => {
 
     user.name = name || user.name;
     user.phone = phone !== undefined ? phone : user.phone;
-    user.address = address !== undefined ? address : user.address;
+    if (addresses !== undefined) {
+      const nextAddresses = normalizeAddresses(addresses, address || user.address);
+      if (nextAddresses.length > 0) {
+        user.addresses = nextAddresses;
+        if (primaryAddressId) {
+          user.addresses.forEach((addr) => {
+            addr.isPrimary = String(addr._id) === String(primaryAddressId);
+          });
+          if (!user.addresses.some((addr) => addr.isPrimary)) {
+            user.addresses[0].isPrimary = true;
+          }
+        }
+        const primary = user.addresses.find((addr) => addr.isPrimary) || user.addresses[0];
+        user.primaryAddressId = primary._id;
+        user.address = formatAddress(primary);
+      } else {
+        user.addresses = [];
+        user.primaryAddressId = null;
+        user.address = "";
+      }
+    } else if (address !== undefined) {
+      user.address = address;
+      user.addresses = normalizeAddresses(user.addresses, address);
+      const primary = user.addresses.find((addr) => addr.isPrimary) || user.addresses[0];
+      user.primaryAddressId = primary?._id || null;
+    }
     user.foodPreference = foodPreference !== undefined ? foodPreference : user.foodPreference;
     user.deliveryTime = deliveryTime !== undefined ? deliveryTime : user.deliveryTime;
     user.notifications = notifications !== undefined ? notifications : user.notifications;
@@ -213,6 +283,91 @@ export const toggleFavorite = async (req, res) => {
     await user.save();
     res.json({ success: true, favorites: user.favorites });
   } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+/* ================= BUDGET ASSISTANT ================= */
+
+export const getBudgetRecommendations = async (req, res) => {
+  try {
+    const {
+      people = 1,
+      budgetMin = 0,
+      budgetMax = 500,
+      preference = "Both",
+      selectedTypes = []
+    } = req.body;
+
+    const numPeople = Math.max(Number(people) || 1, 1);
+    const maxBudget = Math.max(Number(budgetMax) || 500, Number(budgetMin) || 0);
+    const types = Array.isArray(selectedTypes) ? selectedTypes.map((type) => String(type).toLowerCase()) : [];
+
+    let foods = await Food.find().lean();
+
+    foods = foods.filter((food) => {
+      const name = String(food.name || "").toLowerCase();
+      const category = String(food.category || "").toLowerCase();
+      const description = String(food.description || "").toLowerCase();
+      const isVeg = food.veg === true || category.includes("veg") || name.includes("veg") || name.includes("paneer");
+      const isNonVeg = food.veg === false || category.includes("non-veg") || category.includes("chicken") || name.includes("chicken") || name.includes("egg");
+
+      if (preference === "Veg" && !isVeg) return false;
+      if (preference === "Non-Veg" && !isNonVeg) return false;
+
+      if (types.length === 0) return true;
+      return types.some((type) => {
+        if (type === "drinks") return category.includes("drink") || category.includes("water") || name.includes("drink") || name.includes("cola");
+        if (type === "desserts") return category.includes("dessert") || category.includes("sweet") || name.includes("cake") || name.includes("sweet");
+        return category.includes(type) || name.includes(type) || description.includes(type);
+      });
+    });
+
+    const budgetPerPerson = maxBudget / numPeople;
+    const rankedFoods = foods.sort((a, b) => {
+      const aScore = (a.rating || 0) * 10 + (a.ratingCount || 0) + (a.totalOrders || 0);
+      const bScore = (b.rating || 0) * 10 + (b.ratingCount || 0) + (b.totalOrders || 0);
+      return bScore - aScore || a.price - b.price;
+    });
+
+    const individualDishes = rankedFoods
+      .filter((food) => Number(food.price || 0) <= budgetPerPerson)
+      .slice(0, 6);
+
+    const mains = rankedFoods.filter((food) => {
+      const category = String(food.category || "").toLowerCase();
+      return !category.includes("drink") && !category.includes("water") && !category.includes("sweet") && !category.includes("dessert");
+    });
+    const sides = rankedFoods.filter((food) => {
+      const category = String(food.category || "").toLowerCase();
+      const name = String(food.name || "").toLowerCase();
+      return category.includes("drink") || category.includes("water") || category.includes("sweet") || category.includes("dessert") || name.includes("drink");
+    });
+
+    const combos = [];
+    const sidePool = sides.length > 0 ? sides : rankedFoods;
+    for (const main of mains.slice(0, 8)) {
+      for (const side of sidePool.slice(0, 8)) {
+        if (String(main._id) === String(side._id)) continue;
+        const total = Number(main.price || 0) + Number(side.price || 0);
+        if (total <= maxBudget) {
+          combos.push({
+            name: `${main.name} + ${side.name}`,
+            items: [main, side],
+            price: total,
+          });
+        }
+      }
+    }
+
+    res.json({
+      success: true,
+      individualDishes,
+      combos: combos.sort((a, b) => b.price - a.price).slice(0, 4),
+      estimatedCost: individualDishes[0] ? Number(individualDishes[0].price || 0) * numPeople : 0,
+    });
+  } catch (err) {
+    console.error("Budget assistant error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };

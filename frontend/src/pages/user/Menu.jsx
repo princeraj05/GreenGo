@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Search, ShoppingCart, UtensilsCrossed, Star, X, Heart, 
-  MapPin, Bell, Sun, Moon, Sparkles, Navigation, Clock 
+  MapPin, Bell, Sun, Moon, Sparkles, Navigation, Clock, ChevronDown, Plus 
 } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
 import Button from "../../components/ui/Button";
@@ -36,6 +36,8 @@ export default function Menu() {
   // NOTIFICATIONS & PROFILE
   const [notifications, setNotifications] = useState([]);
   const [user, setUser] = useState({});
+  const [showAddressPicker, setShowAddressPicker] = useState(false);
+  const [newAddress, setNewAddress] = useState({ label: "Home", details: "", city: "Jaipur", state: "Rajasthan" });
 
   // BANNERS STATE
   const [banners, setBanners] = useState([]);
@@ -120,7 +122,13 @@ export default function Menu() {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
-        setUser(await res.json());
+        const data = await res.json();
+        if (!Array.isArray(data.addresses) || data.addresses.length === 0) {
+          data.addresses = data.address
+            ? [{ label: "Home", details: data.address, city: "Jaipur", state: "Rajasthan", isPrimary: true }]
+            : [{ label: "Home", details: "Jaipur", city: "Jaipur", state: "Rajasthan", isPrimary: true }];
+        }
+        setUser(data);
       }
     } catch (err) {
       console.error(err);
@@ -300,6 +308,36 @@ export default function Menu() {
 
   const activeBannersList = banners.length > 0 ? banners : defaultBanners;
   const currentBanner = activeBannersList[currentBannerIdx];
+  const primaryAddress = (user.addresses || []).find(addr => addr.isPrimary) || (user.addresses || [])[0];
+  const primaryAddressText = primaryAddress
+    ? [primaryAddress.label, primaryAddress.city || primaryAddress.details, primaryAddress.state].filter(Boolean).join(" - ")
+    : "Home - Jaipur, Rajasthan";
+
+  const saveAddresses = async (addresses) => {
+    const token = await getToken();
+    const res = await fetch(`${API}/api/users/profile`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ addresses })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      setUser(data.user);
+    }
+  };
+
+  const setPrimaryAddress = async (index) => {
+    const addresses = (user.addresses || []).map((addr, i) => ({ ...addr, isPrimary: i === index }));
+    setUser({ ...user, addresses });
+    await saveAddresses(addresses);
+  };
+
+  const addAddress = async () => {
+    if (!newAddress.details.trim()) return;
+    const addresses = [...(user.addresses || []), { ...newAddress, isPrimary: !(user.addresses || []).length }];
+    setNewAddress({ label: "Home", details: "", city: "Jaipur", state: "Rajasthan" });
+    await saveAddresses(addresses);
+  };
 
   return (
     <div className="max-w-7xl mx-auto w-full pb-10 px-2 sm:px-4 relative animate-fade-in transition-colors">
@@ -307,19 +345,50 @@ export default function Menu() {
       {/* 1. HEADER SECTION */}
       <div className="flex items-center justify-between py-4 mb-4 border-b border-slate-100 dark:border-slate-800/60">
         {/* Left: Branding & Location */}
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-brand-500 flex items-center justify-center shadow-lg shadow-brand-500/30">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg shadow-brand-500/20 overflow-hidden border border-brand-100 dark:border-brand-900 bg-white [&>span]:hidden">
+            <img src="/greengo-logo.svg" alt="GreenGO" className="w-full h-full object-cover" />
             <span className="text-white text-xl">🍕</span>
           </div>
-          <div>
+          <div className="min-w-0 relative">
             <div className="flex items-center gap-1">
-              <span className="font-extrabold text-brand-500 text-lg tracking-tight">Green</span>
-              <span className="font-extrabold text-slate-900 dark:text-white text-lg tracking-tight">GO</span>
+              <span className="font-extrabold text-brand-500 text-2xl tracking-tight">Green</span>
+              <span className="font-extrabold text-slate-900 dark:text-white text-2xl tracking-tight">GO</span>
             </div>
-            <div className="flex items-center gap-1 text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-bold">
-              <MapPin size={10} className="text-brand-500 shrink-0" />
-              <span className="truncate max-w-[150px]">Home - Jaipur, Rajasthan</span>
-            </div>
+            <button
+              type="button"
+              onClick={() => setShowAddressPicker(!showAddressPicker)}
+              className="flex items-center gap-1 text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-bold max-w-[210px]"
+            >
+              <MapPin size={11} className="text-brand-500 shrink-0" />
+              <span className="truncate">{primaryAddressText}</span>
+              <ChevronDown size={12} className="shrink-0" />
+            </button>
+            {showAddressPicker && (
+              <div className="absolute left-0 top-full mt-3 w-[300px] max-w-[calc(100vw-2rem)] bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-2xl z-[100] p-3">
+                <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
+                  {(user.addresses || []).map((addr, index) => (
+                    <button key={index} type="button" onClick={() => { setPrimaryAddress(index); setShowAddressPicker(false); }} className={`w-full text-left p-3 rounded-xl border transition-all ${addr.isPrimary ? "border-brand-500 bg-brand-50 dark:bg-brand-950/30" : "border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900"}`}>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-extrabold text-sm text-slate-900 dark:text-white">{addr.label || "Address"}</span>
+                        {addr.isPrimary && <span className="text-[9px] font-black text-brand-600 dark:text-brand-400 uppercase">Primary</span>}
+                      </div>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold line-clamp-2 mt-1">{[addr.details, addr.city, addr.state].filter(Boolean).join(", ")}</p>
+                    </button>
+                  ))}
+                </div>
+                <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <input value={newAddress.label} onChange={(e) => setNewAddress({ ...newAddress, label: e.target.value })} placeholder="Home" className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-xs font-bold text-slate-900 dark:text-white outline-none" />
+                    <input value={newAddress.city} onChange={(e) => setNewAddress({ ...newAddress, city: e.target.value })} placeholder="City" className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-xs font-bold text-slate-900 dark:text-white outline-none" />
+                  </div>
+                  <input value={newAddress.details} onChange={(e) => setNewAddress({ ...newAddress, details: e.target.value })} placeholder="Full address" className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-xs font-bold text-slate-900 dark:text-white outline-none" />
+                  <button type="button" onClick={addAddress} className="w-full py-2 rounded-xl bg-brand-500 hover:bg-brand-600 text-white text-xs font-extrabold flex items-center justify-center gap-1">
+                    <Plus size={13} /> Add Address
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

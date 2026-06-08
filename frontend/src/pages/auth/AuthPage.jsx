@@ -9,6 +9,14 @@ import { auth, googleProvider } from "../../config/firebase";
 import { saveSession } from "../../utils/authStorage";
 
 export default function AuthPage() {
+  const loginSlides = [
+    "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=900",
+    "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80&w=900",
+    "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&q=80&w=900",
+    "https://images.unsplash.com/photo-1529042410759-befb1204b468?auto=format&fit=crop&q=80&w=900",
+    "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=900"
+  ];
+  const [currentHeroSlide, setCurrentHeroSlide] = useState(0);
   const [authMethod, setAuthMethod] = useState("email"); // "email" | "phone"
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -23,6 +31,13 @@ export default function AuthPage() {
 
   const navigate = useNavigate();
   const otpRefs = useRef([]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentHeroSlide((prev) => (prev + 1) % loginSlides.length);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, [loginSlides.length]);
 
   // Countdown timer for Resend OTP
   useEffect(() => {
@@ -292,6 +307,29 @@ export default function AuthPage() {
 
       {/* Main Container */}
       <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-[0_12px_40px_rgba(0,0,0,0.06)] border border-gray-100 dark:border-slate-800/80 px-6 py-10 md:px-8 transition-all duration-300 z-10">
+        <div className="-mx-2 -mt-4 mb-7 overflow-hidden rounded-3xl h-40 relative bg-slate-100 dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
+          <AnimatePresence mode="wait">
+            <motion.img
+              key={currentHeroSlide}
+              src={loginSlides[currentHeroSlide]}
+              alt="GreenGO food delivery"
+              initial={{ opacity: 0, scale: 1.04 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              transition={{ duration: 0.45 }}
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          </AnimatePresence>
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/75 via-slate-950/10 to-transparent" />
+          <div className="absolute bottom-4 left-4 right-4">
+            <p className="text-white text-xl font-black tracking-tight">Fresh food, fast delivery</p>
+            <div className="flex gap-1.5 mt-2">
+              {loginSlides.map((_, index) => (
+                <span key={index} className={`h-1.5 rounded-full transition-all ${currentHeroSlide === index ? "w-6 bg-brand-500" : "w-2 bg-white/60"}`} />
+              ))}
+            </div>
+          </div>
+        </div>
         
         {/* App Branding */}
         <div className="flex flex-col items-center mb-8">

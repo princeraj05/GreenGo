@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { X, ArrowLeft, Check, Sparkles, Plus, ShoppingCart } from "lucide-react";
 import Button from "../ui/Button";
 import { getImageUrl } from "../../utils/getApiUrl";
+import { getToken } from "../../utils/getToken";
 
 export default function BudgetAssistant({ isOpen, onClose, foods, onAddToCart }) {
   const [step, setStep] = useState(1);
@@ -9,6 +10,8 @@ export default function BudgetAssistant({ isOpen, onClose, foods, onAddToCart })
   const [budgetRange, setBudgetRange] = useState("");
   const [preference, setPreference] = useState("");
   const [selectedTypes, setSelectedTypes] = useState([]);
+  const [recommendationLoading, setRecommendationLoading] = useState(false);
+  const [recommendationError, setRecommendationError] = useState("");
   
   // Recommendations state
   const [results, setResults] = useState({
@@ -60,103 +63,39 @@ export default function BudgetAssistant({ isOpen, onClose, foods, onAddToCart })
     }
   }, [step]);
 
-  const generateRecommendations = () => {
-    // 1. Get selected budget bounds
+  const generateRecommendations = async () => {
+    setRecommendationLoading(true);
+    setRecommendationError("");
     const budgetObj = budgetOptions.find(o => o.label === budgetRange) || { min: 0, max: 500 };
-    const maxBudget = budgetObj.max;
-
-    // 2. Filter foods based on preference (Veg/Non-Veg)
-    let filtered = foods.filter(f => {
-      const isVeg = f.category?.toLowerCase() === "veg" || f.veg === true || f.name.toLowerCase().includes("veg") || f.name.toLowerCase().includes("paneer");
-      const isNonVeg = f.category?.toLowerCase() === "non-veg" || f.category?.toLowerCase() === "chicken" || f.name.toLowerCase().includes("chicken") || f.name.toLowerCase().includes("egg");
-
-      if (preference === "Veg") return isVeg;
-      if (preference === "Non-Veg") return isNonVeg;
-      return true; // Both
-    });
-
-    // 3. Filter by selected food types/categories
-    if (selectedTypes.length > 0) {
-      filtered = filtered.filter(f => {
-        return selectedTypes.some(type => {
-          const cat = f.category?.toLowerCase() || "";
-          const name = f.name?.toLowerCase() || "";
-          const desc = f.description?.toLowerCase() || "";
-          const t = type.toLowerCase();
-          
-          if (t === "drinks") return cat === "drinks" || cat === "water" || cat === "cold drink" || name.includes("cola") || name.includes("drink") || name.includes("water");
-          if (t === "desserts") return cat === "desserts" || cat === "sweet" || name.includes("cake") || name.includes("sweet") || name.includes("dessert");
-          if (t === "chicken") return cat === "chicken" || name.includes("chicken");
-          if (t === "pizza") return cat === "pizza" || name.includes("pizza");
-          if (t === "burger") return cat === "burger" || name.includes("burger");
-          
-          return cat.includes(t) || name.includes(t) || desc.includes(t);
-        });
+    try {
+      const token = await getToken();
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/budget-recommendations`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          people,
+          budgetMin: budgetObj.min,
+          budgetMax: budgetObj.max,
+          preference,
+          selectedTypes,
+        }),
       });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Unable to load recommendations");
+      setResults({
+        individualDishes: data.individualDishes || [],
+        combos: data.combos || [],
+        estimatedCost: data.estimatedCost || 0,
+      });
+    } catch (err) {
+      setRecommendationError(err.message || "Unable to load recommendations");
+      setResults({ individualDishes: [], combos: [], estimatedCost: 0 });
+    } finally {
+      setRecommendationLoading(false);
     }
-
-    // 4. Recommend individual dishes that are within budget
-    const numPeople = Number(people || 1);
-    const budgetPerPerson = maxBudget / numPeople;
-    
-    const individualDishes = filtered
-      .filter(f => f.price <= budgetPerPerson)
-      .sort((a, b) => b.rating - a.rating)
-      .slice(0, 5);
-
-    // 5. Build combos
-    const combos = [];
-    if (filtered.length >= 2) {
-      // Create a combo of Main dish + Drink/Dessert or two main dishes
-      const mains = filtered.filter(f => {
-        const cat = f.category?.toLowerCase() || "";
-        return !cat.includes("drink") && !cat.includes("water") && !cat.includes("sweet");
-      });
-      const sides = filtered.filter(f => {
-        const cat = f.category?.toLowerCase() || "";
-        return cat.includes("drink") || cat.includes("water") || cat.includes("sweet");
-      });
-
-      if (mains.length > 0 && sides.length > 0) {
-        // Main + Side combo
-        for (let m of mains.slice(0, 3)) {
-          for (let s of sides.slice(0, 3)) {
-            const totalPrice = m.price + s.price;
-            if (totalPrice <= budgetPerPerson * numPeople) {
-              combos.push({
-                name: `${m.name} + ${s.name}`,
-                items: [m, s],
-                price: totalPrice
-              });
-            }
-          }
-        }
-      } else {
-        // Fallback: Combine any 2 items
-        for (let i = 0; i < Math.min(filtered.length, 3); i++) {
-          for (let j = i + 1; j < Math.min(filtered.length, 4); j++) {
-            const totalPrice = filtered[i].price + filtered[j].price;
-            if (totalPrice <= budgetPerPerson * numPeople) {
-              combos.push({
-                name: `${filtered[i].name} & ${filtered[j].name}`,
-                items: [filtered[i], filtered[j]],
-                price: totalPrice
-              });
-            }
-          }
-        }
-      }
-    }
-
-    // Sort combos by total price descending but below budget
-    const validCombos = combos.sort((a, b) => b.price - a.price).slice(0, 3);
-    const estimatedCost = individualDishes.length > 0 ? individualDishes[0].price * numPeople : 0;
-
-    setResults({
-      individualDishes,
-      combos: validCombos,
-      estimatedCost
-    });
   };
 
   if (!isOpen) return null;
@@ -375,8 +314,12 @@ export default function BudgetAssistant({ isOpen, onClose, foods, onAddToCart })
 
               {/* Best Matching Foods */}
               <div className="space-y-3">
-                <h4 className="font-black text-slate-850 dark:text-white text-base tracking-tight">Best Matching Items</h4>
-                {results.individualDishes.length === 0 ? (
+                <h4 className="font-black text-slate-900 dark:text-white text-base tracking-tight">Best Matching Items</h4>
+                {recommendationLoading ? (
+                  <p className="text-slate-500 dark:text-slate-400 text-xs bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl text-center border border-slate-100 dark:border-slate-800/60">Finding best matches from menu...</p>
+                ) : recommendationError ? (
+                  <p className="text-red-600 dark:text-red-400 text-xs bg-red-50 dark:bg-red-950/20 p-4 rounded-xl text-center border border-red-100 dark:border-red-900/40">{recommendationError}</p>
+                ) : results.individualDishes.length === 0 ? (
                   <p className="text-slate-500 dark:text-slate-400 text-xs bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl text-center border border-slate-100 dark:border-slate-800/60">No direct products fit this budget/criteria. Try expanding filters.</p>
                 ) : (
                   <div className="flex flex-col gap-3">
@@ -385,7 +328,7 @@ export default function BudgetAssistant({ isOpen, onClose, foods, onAddToCart })
                         <img
                           src={getImageUrl(food.image)}
                           alt={food.name}
-                          className="w-16 h-16 object-contain rounded-xl bg-white dark:bg-slate-950 p-1 border border-slate-100 dark:border-slate-850 shrink-0"
+                          className="w-16 h-16 object-contain rounded-xl bg-white dark:bg-slate-950 p-1 border border-slate-100 dark:border-slate-800 shrink-0"
                           onError={(e) => { e.target.src = 'https://placehold.co/100?text=Food'; }}
                         />
                         <div className="flex-1 min-w-0">
@@ -410,8 +353,8 @@ export default function BudgetAssistant({ isOpen, onClose, foods, onAddToCart })
 
               {/* Recommended Combos */}
               {results.combos.length > 0 && (
-                <div className="space-y-3 pt-3 border-t border-slate-150 dark:border-slate-850">
-                  <h4 className="font-black text-slate-850 dark:text-white text-base tracking-tight">Recommended Combos for {peopleOptions.find(o => o.value === people)?.label}</h4>
+                <div className="space-y-3 pt-3 border-t border-slate-200 dark:border-slate-800">
+                  <h4 className="font-black text-slate-900 dark:text-white text-base tracking-tight">Recommended Combos for {peopleOptions.find(o => o.value === people)?.label}</h4>
                   <div className="flex flex-col gap-3">
                     {results.combos.map((combo, idx) => (
                       <div key={idx} className="bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl border border-brand-100/40 dark:border-brand-900/30 flex flex-col justify-between gap-3">
@@ -457,7 +400,7 @@ export default function BudgetAssistant({ isOpen, onClose, foods, onAddToCart })
                 setBudgetRange("");
                 setPreference("");
               }}
-              className="flex-1 py-3.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-sm transition-colors text-center"
+              className="flex-1 py-3.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-sm transition-colors text-center"
             >
               Reset & Try Again
             </button>
