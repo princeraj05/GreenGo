@@ -142,9 +142,9 @@ export default function UserLayout() {
 
   const bottomNavLinks = [
     { to: "/user/menu", label: "Home", icon: <Home size={20} /> },
-    { to: "/user/wishlist", label: "Wishlist", icon: <Heart size={20} /> },
     { to: "/user/cart", label: "Cart", icon: <ShoppingCart size={20} />, badge: cartCount },
     { to: "/user/orders", label: "Orders", icon: <Clock size={20} />, badge: pendingCount },
+    { to: "/user/wishlist", label: "Wishlist", icon: <Heart size={20} /> },
     { to: "/user/contact", label: "Message", icon: <MessageCircle size={20} /> },
   ];
 
@@ -275,7 +275,7 @@ export default function UserLayout() {
                 "flex flex-col items-center justify-center relative py-1.5 px-4 rounded-xl transition-all duration-300 active:scale-90",
                 isActive 
                   ? "text-brand-500 scale-105 bg-brand-500/10 dark:bg-brand-500/20 font-black" 
-                  : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 font-bold"
+                  : "text-slate-500 dark:text-slate-300 hover:text-slate-700 dark:hover:text-white font-bold"
               )}
             >
               <div className="relative">

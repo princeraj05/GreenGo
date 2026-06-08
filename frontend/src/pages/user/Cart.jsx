@@ -79,7 +79,7 @@ export default function Cart() {
   const total = subtotal - discountAmount + delivery;
 
   return (
-    <div className="max-w-6xl mx-auto w-full pb-10">
+    <div className="max-w-6xl mx-auto w-full pb-24 md:pb-10 px-1 sm:px-0">
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6 md:mb-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 md:gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
@@ -121,30 +121,30 @@ export default function Cart() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
                 >
-                  <Card hover className="p-3 md:p-5 flex flex-col sm:flex-row items-center gap-4 md:gap-6 group border-slate-100 dark:border-slate-800/60">
+                  <Card hover className="p-3 sm:p-4 md:p-5 flex flex-row items-center gap-3 sm:gap-4 md:gap-6 group border-slate-100 dark:border-slate-800/60 rounded-2xl md:rounded-3xl">
                     <img
                       src={getImageUrl(item.image)}
                       alt={item.name}
-                      className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 object-contain rounded-[1.25rem] bg-slate-50 dark:bg-slate-800 shadow-inner p-1.5 md:p-2 group-hover:scale-105 transition-transform"
+                      className="w-16 h-16 sm:w-24 sm:h-24 md:w-28 md:h-28 shrink-0 object-contain rounded-2xl bg-slate-50 dark:bg-slate-800 shadow-inner p-1.5 md:p-2 group-hover:scale-105 transition-transform"
                       onError={(e) => { e.target.src = 'https://placehold.co/400x300?text=Food'; }}
                     />
 
-                    <div className="flex-1 text-center sm:text-left w-full">
-                      <h3 className="text-base sm:text-lg md:text-xl font-bold text-slate-900 dark:text-white mb-0.5 md:mb-1 group-hover:text-brand-600 transition-colors">{item.name}</h3>
-                      <p className="text-slate-900 dark:text-white font-black text-base sm:text-lg md:text-xl mb-3 md:mb-4">₹{item.price}</p>
+                    <div className="flex-1 text-left min-w-0">
+                      <h3 className="text-sm sm:text-lg md:text-xl font-bold text-slate-900 dark:text-white mb-0.5 md:mb-1 group-hover:text-brand-600 transition-colors truncate">{item.name}</h3>
+                      <p className="text-slate-900 dark:text-white font-black text-sm sm:text-lg md:text-xl mb-2 md:mb-4">₹{item.price}</p>
                       
-                      <div className="flex items-center justify-center sm:justify-start gap-4">
+                      <div className="flex items-center justify-start gap-2 sm:gap-4">
                         <div className="flex items-center bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-0.5 md:p-1 shadow-sm">
-                          <button onClick={() => updateQty(item._id, "dec")} className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-lg hover:bg-white dark:hover:bg-slate-800 hover:shadow-sm text-slate-700 dark:text-slate-300 font-bold transition-all"><Minus size={14} /></button>
-                          <span className="w-10 md:w-12 text-center font-bold text-sm md:text-base text-slate-900 dark:text-white">{item.qty}</span>
-                          <button onClick={() => updateQty(item._id, "inc")} className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-lg hover:bg-white dark:hover:bg-slate-800 hover:shadow-sm text-slate-700 dark:text-slate-300 font-bold transition-all"><Plus size={14} /></button>
+                          <button onClick={() => updateQty(item._id, "dec")} className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 flex items-center justify-center rounded-lg hover:bg-white dark:hover:bg-slate-800 hover:shadow-sm text-slate-700 dark:text-slate-300 font-bold transition-all"><Minus size={13} /></button>
+                          <span className="w-8 sm:w-10 md:w-12 text-center font-bold text-xs sm:text-sm md:text-base text-slate-900 dark:text-white">{item.qty}</span>
+                          <button onClick={() => updateQty(item._id, "inc")} className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 flex items-center justify-center rounded-lg hover:bg-white dark:hover:bg-slate-800 hover:shadow-sm text-slate-700 dark:text-slate-300 font-bold transition-all"><Plus size={13} /></button>
                         </div>
                       </div>
                     </div>
 
-                    <div className="w-full sm:w-auto flex justify-center sm:justify-end">
-                      <button onClick={() => removeItem(item._id)} className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-red-500 hover:text-white bg-red-50 dark:bg-red-950/30 hover:bg-red-500 dark:hover:bg-red-600 rounded-xl md:rounded-2xl transition-all shadow-sm" title="Remove">
-                        <Trash2 size={18} />
+                    <div className="shrink-0 flex justify-end">
+                      <button onClick={() => removeItem(item._id)} className="w-9 h-9 md:w-12 md:h-12 flex items-center justify-center text-red-500 hover:text-white bg-red-50 dark:bg-red-950/30 hover:bg-red-500 dark:hover:bg-red-600 rounded-xl md:rounded-2xl transition-all shadow-sm" title="Remove">
+                        <Trash2 size={16} />
                       </button>
                     </div>
                   </Card>

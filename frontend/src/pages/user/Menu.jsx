@@ -76,10 +76,10 @@ export default function Menu() {
 
   // CATEGORIES LIST (Requested category mapping)
   const categoriesList = [
+    { id: "All", name: "All", icon: "All" },
     { id: "Starter", name: "Starter", icon: "ST" },
     { id: "Combo", name: "Combo", icon: "CB" },
     { id: "Roti", name: "Roti", icon: "RT" },
-    { id: "All", name: "All", icon: "🍽️" },
     { id: "Pizza", name: "Pizza", icon: "🍕" },
     { id: "Burger", name: "Burger", icon: "🍔" },
     { id: "Chicken", name: "Chicken", icon: "🍗" },
@@ -326,6 +326,66 @@ export default function Menu() {
     ? [primaryAddress.label, formatAddressLine(primaryAddress)].filter(Boolean).join(" - ")
     : "Select address";
 
+  const getCategoryImage = (cat) => {
+    if (cat.id === "All") return "/greengo-logo.svg";
+    const selected = cat.id.toLowerCase();
+    const match = foods.find((food) => {
+      const foodCategory = (food.category || "").toLowerCase();
+      if (foodCategory === selected) return true;
+      if (selected === "drinks") return ["drinks", "water", "cold drink"].includes(foodCategory);
+      if (selected === "non-veg") return ["non-veg", "chicken"].includes(foodCategory);
+      return (food.name || "").toLowerCase().includes(selected);
+    });
+    const image = match?.categoryImage || match?.image || "";
+    if (!image) return "";
+    return image.startsWith("http") || image.startsWith("/") ? image : getImageUrl(image);
+  };
+
+  const getCartItem = (food) => cart.find((item) => item._id === food._id);
+
+  const renderCartAction = (food) => {
+    const cartItem = getCartItem(food);
+    if (!cartItem) {
+      return (
+        <button
+          onClick={() => updateQuantity(food, 1)}
+          className="px-3.5 py-2 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs shadow-md shadow-brand-500/20 active:scale-95 transition-all"
+        >
+          + Add
+        </button>
+      );
+    }
+
+    return (
+      <div className="flex items-center justify-end gap-1.5">
+        <button
+          type="button"
+          onClick={() => navigate("/user/cart")}
+          className="px-2.5 py-2 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-950 text-[10px] font-black shadow-sm"
+        >
+          Cart
+        </button>
+        <div className="flex items-center bg-brand-50 dark:bg-brand-950/40 border border-brand-100 dark:border-brand-800 rounded-xl p-0.5">
+          <button
+            onClick={() => updateQuantity(food, cartItem.qty - 1)}
+            className="w-8 h-8 rounded-lg bg-white dark:bg-slate-900 text-brand-600 dark:text-brand-300 font-extrabold flex items-center justify-center border border-slate-100 dark:border-slate-800"
+          >
+            -
+          </button>
+          <span className="font-black text-slate-800 dark:text-white px-2 text-xs min-w-7 text-center">
+            {cartItem.qty}
+          </span>
+          <button
+            onClick={() => updateQuantity(food, cartItem.qty + 1)}
+            className="w-8 h-8 rounded-lg bg-brand-500 text-white font-extrabold flex items-center justify-center shadow-md shadow-brand-500/20"
+          >
+            +
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   const saveAddresses = async (addresses) => {
     const token = await getToken();
     const res = await fetch(`${API}/api/users/profile`, {
@@ -356,22 +416,22 @@ export default function Menu() {
     <div className="max-w-7xl mx-auto w-full pb-10 px-2 sm:px-4 relative animate-fade-in transition-colors">
       
       {/* 1. HEADER SECTION */}
-      <div className="flex items-center justify-between py-4 mb-4 border-b border-slate-100 dark:border-slate-800/60">
+      <div className="flex items-center justify-between gap-3 py-4 mb-4 border-b border-slate-100 dark:border-slate-800/60">
         {/* Left: Branding & Location */}
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg shadow-brand-500/20 overflow-hidden border border-brand-100 dark:border-brand-900 bg-white [&>span]:hidden">
+        <div className="flex flex-1 items-center gap-3 min-w-0">
+          <div className="w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center shadow-lg shadow-brand-500/20 overflow-hidden border border-brand-100 dark:border-brand-900 bg-white [&>span]:hidden">
             <img src="/greengo-logo.svg" alt="GreenGO" className="w-full h-full object-cover" />
             <span className="text-white text-xl">🍕</span>
           </div>
-          <div className="min-w-0 relative">
+          <div className="min-w-0 relative flex-1">
             <div className="flex items-center gap-1">
-              <span className="font-extrabold text-brand-500 text-2xl tracking-tight">Green</span>
-              <span className="font-extrabold text-slate-900 dark:text-white text-2xl tracking-tight">GO</span>
+              <span className="font-extrabold text-brand-500 text-xl sm:text-2xl tracking-tight">Green</span>
+              <span className="font-extrabold text-slate-900 dark:text-white text-xl sm:text-2xl tracking-tight">GO</span>
             </div>
             <button
               type="button"
               onClick={() => setShowAddressPicker(!showAddressPicker)}
-              className="flex items-center gap-1 text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-bold max-w-[210px]"
+              className="flex items-center gap-1 text-[10px] sm:text-xs text-slate-600 dark:text-slate-300 font-bold max-w-[150px] sm:max-w-[260px]"
             >
               <MapPin size={11} className="text-brand-500 shrink-0" />
               <span className="truncate">{primaryAddressText}</span>
@@ -406,7 +466,7 @@ export default function Menu() {
         </div>
 
         {/* Right Actions */}
-        <div className="flex items-center gap-1.5 sm:gap-2.5">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2.5">
           {/* Theme Switcher */}
           <button
             onClick={toggleTheme}
@@ -527,21 +587,32 @@ export default function Menu() {
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Food Categories</h3>
         </div>
-        <div className="flex gap-3.5 overflow-x-auto no-scrollbar py-2">
+        <div className="flex gap-3 overflow-x-auto no-scrollbar py-2">
           {categoriesList.map(cat => {
             const isSelected = category.toLowerCase() === cat.id.toLowerCase();
+            const categoryImage = getCategoryImage(cat);
             return (
               <button
                 key={cat.id}
                 onClick={() => setCategory(cat.id)}
-                className={`flex flex-col items-center gap-2 px-5 py-4.5 rounded-2xl border min-w-[90px] transition-all select-none duration-300 ${
+                className={`flex min-w-[76px] sm:min-w-[88px] flex-col items-center gap-2 transition-all select-none duration-300 ${
                   isSelected
-                    ? "bg-brand-500 text-white border-brand-500 shadow-md shadow-brand-500/20 scale-105 font-black"
-                    : "bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                    ? "text-brand-600 dark:text-brand-300 scale-105 font-black"
+                    : "text-slate-700 dark:text-slate-200"
                 }`}
               >
-                <span className="text-2.5xl">{cat.icon}</span>
-                <span className="text-xs font-extrabold tracking-wide">{cat.name}</span>
+                <span className={`w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-full border flex items-center justify-center overflow-hidden shadow-sm transition-all ${
+                  isSelected
+                    ? "bg-brand-500 border-brand-500 shadow-brand-500/25"
+                    : "bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-700"
+                }`}>
+                  {categoryImage ? (
+                    <img src={categoryImage} alt={cat.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className={`text-base font-black ${isSelected ? "text-white" : "text-slate-700 dark:text-slate-100"}`}>{cat.icon}</span>
+                  )}
+                </span>
+                <span className="text-[11px] sm:text-xs font-extrabold tracking-wide text-center leading-tight">{cat.name}</span>
               </button>
             );
           })}
@@ -588,8 +659,8 @@ export default function Menu() {
                 >
                   {food.name}
                 </h4>
-                <p className="text-[11px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider mb-2.5">In Category: {food.category}</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed mb-4.5 font-medium flex-1">{food.description}</p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-300 font-bold uppercase tracking-wider mb-2.5">In Category: {food.category}</p>
+                <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed mb-4.5 font-medium flex-1">{food.description}</p>
                 
                 {/* Actions */}
                 <div className="flex items-center justify-between gap-3 mt-auto pt-3 border-t border-slate-100 dark:border-slate-800/50">
@@ -607,33 +678,7 @@ export default function Menu() {
                       <Heart size={14} className={isFavorite(food._id) ? "fill-red-500 text-red-500" : ""} />
                     </button>
 
-                    {/* Add Quantity / Add Button */}
-                    {cart.find(i => i._id === food._id) ? (
-                      <div className="flex items-center bg-brand-50 dark:bg-brand-950/30 border border-brand-100 dark:border-brand-900 rounded-xl p-0.5">
-                        <button
-                          onClick={() => updateQuantity(food, (cart.find(i => i._id === food._id)?.qty || 0) - 1)}
-                          className="w-8 h-8 rounded-lg bg-white dark:bg-slate-900 text-brand-600 dark:text-brand-400 font-extrabold flex items-center justify-center border border-slate-100 dark:border-slate-800"
-                        >
-                          -
-                        </button>
-                        <span className="font-black text-slate-800 dark:text-white px-2.5 text-xs">
-                          {cart.find(i => i._id === food._id)?.qty}
-                        </span>
-                        <button
-                          onClick={() => updateQuantity(food, (cart.find(i => i._id === food._id)?.qty || 0) + 1)}
-                          className="w-8 h-8 rounded-lg bg-brand-500 text-white font-extrabold flex items-center justify-center shadow-md shadow-brand-500/20"
-                        >
-                          +
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => updateQuantity(food, 1)}
-                        className="px-3.5 py-2 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs shadow-md shadow-brand-500/20 active:scale-95 transition-all"
-                      >
-                        + Add
-                      </button>
-                    )}
+                    {renderCartAction(food)}
                   </div>
                 </div>
               </div>
@@ -682,8 +727,8 @@ export default function Menu() {
                 >
                   {food.name}
                 </h4>
-                <p className="text-[11px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider mb-2.5">In Category: {food.category}</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed mb-4.5 font-medium flex-1">{food.description}</p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-300 font-bold uppercase tracking-wider mb-2.5">In Category: {food.category}</p>
+                <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed mb-4.5 font-medium flex-1">{food.description}</p>
                 
                 {/* Actions */}
                 <div className="flex items-center justify-between gap-3 mt-auto pt-3 border-t border-slate-100 dark:border-slate-800/50">
@@ -701,33 +746,7 @@ export default function Menu() {
                       <Heart size={14} className={isFavorite(food._id) ? "fill-red-500 text-red-500" : ""} />
                     </button>
 
-                    {/* Add Quantity / Add Button */}
-                    {cart.find(i => i._id === food._id) ? (
-                      <div className="flex items-center bg-brand-50 dark:bg-brand-950/30 border border-brand-100 dark:border-brand-900 rounded-xl p-0.5">
-                        <button
-                          onClick={() => updateQuantity(food, (cart.find(i => i._id === food._id)?.qty || 0) - 1)}
-                          className="w-8 h-8 rounded-lg bg-white dark:bg-slate-900 text-brand-600 dark:text-brand-400 font-extrabold flex items-center justify-center border border-slate-100 dark:border-slate-800"
-                        >
-                          -
-                        </button>
-                        <span className="font-black text-slate-800 dark:text-white px-2.5 text-xs">
-                          {cart.find(i => i._id === food._id)?.qty}
-                        </span>
-                        <button
-                          onClick={() => updateQuantity(food, (cart.find(i => i._id === food._id)?.qty || 0) + 1)}
-                          className="w-8 h-8 rounded-lg bg-brand-500 text-white font-extrabold flex items-center justify-center shadow-md shadow-brand-500/20"
-                        >
-                          +
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => updateQuantity(food, 1)}
-                        className="px-3.5 py-2 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs shadow-md shadow-brand-500/20 active:scale-95 transition-all"
-                      >
-                        + Add
-                      </button>
-                    )}
+                    {renderCartAction(food)}
                   </div>
                 </div>
               </div>
@@ -790,8 +809,8 @@ export default function Menu() {
                   >
                     {food.name}
                   </h4>
-                  <p className="text-[11px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider mb-2.5">Category: {food.category}</p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed mb-4.5 font-medium flex-1">{food.description}</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-300 font-bold uppercase tracking-wider mb-2.5">Category: {food.category}</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed mb-4.5 font-medium flex-1">{food.description}</p>
                   
                   <div className="flex items-center justify-between gap-3 mt-auto pt-3 border-t border-slate-100 dark:border-slate-800/50">
                     <span className="text-base font-black text-slate-900 dark:text-white leading-tight">₹{food.price}</span>
@@ -803,32 +822,7 @@ export default function Menu() {
                         <Heart size={14} className={isFavorite(food._id) ? "fill-red-500 text-red-500" : ""} />
                       </button>
 
-                      {cart.find(i => i._id === food._id) ? (
-                        <div className="flex items-center bg-brand-50 dark:bg-brand-950/30 border border-brand-100 dark:border-brand-900 rounded-xl p-0.5">
-                          <button
-                            onClick={() => updateQuantity(food, (cart.find(i => i._id === food._id)?.qty || 0) - 1)}
-                            className="w-8 h-8 rounded-lg bg-white dark:bg-slate-900 text-brand-600 dark:text-brand-400 font-extrabold flex items-center justify-center border border-slate-100 dark:border-slate-800"
-                          >
-                            -
-                          </button>
-                          <span className="font-black text-slate-800 dark:text-white px-2.5 text-xs">
-                            {cart.find(i => i._id === food._id)?.qty}
-                          </span>
-                          <button
-                            onClick={() => updateQuantity(food, (cart.find(i => i._id === food._id)?.qty || 0) + 1)}
-                            className="w-8 h-8 rounded-lg bg-brand-500 text-white font-extrabold flex items-center justify-center shadow-md shadow-brand-500/20"
-                          >
-                            +
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => updateQuantity(food, 1)}
-                          className="px-3.5 py-2 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs shadow-md shadow-brand-500/20 active:scale-95 transition-all"
-                        >
-                          + Add
-                        </button>
-                      )}
+                      {renderCartAction(food)}
                     </div>
                   </div>
                 </div>

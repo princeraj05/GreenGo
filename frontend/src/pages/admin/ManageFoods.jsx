@@ -14,7 +14,7 @@ export default function ManageFoods() {
     "Water", "Cold Drink", "Fast Food", "Main Course"
   ];
   const [foods, setFoods] = useState([]);
-  const [form, setForm] = useState({ name: "", price: "", description: "", category: "Veg", image: null });
+  const [form, setForm] = useState({ name: "", price: "", description: "", category: "Veg", categoryImage: "", image: null });
   const [preview, setPreview] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -56,6 +56,7 @@ export default function ManageFoods() {
       fd.append("price", form.price);
       fd.append("description", form.description);
       fd.append("category", form.category || "Veg");
+      fd.append("categoryImage", form.categoryImage || "");
       if (form.image) fd.append("image", form.image);
       
       if (editingId) {
@@ -70,7 +71,7 @@ export default function ManageFoods() {
   };
 
   const resetForm = () => {
-    setForm({ name: "", price: "", description: "", category: "Veg", image: null });
+    setForm({ name: "", price: "", description: "", category: "Veg", categoryImage: "", image: null });
     setPreview(null);
     setEditingId(null);
     const input = document.getElementById("foodImageInput");
@@ -78,7 +79,7 @@ export default function ManageFoods() {
   };
 
   const startEdit = (food) => {
-    setForm({ name: food.name, price: food.price, description: food.description, category: food.category || "Veg", image: null });
+    setForm({ name: food.name, price: food.price, description: food.description, category: food.category || "Veg", categoryImage: food.categoryImage || "", image: null });
     setPreview(food.image?.startsWith('http') ? food.image : `${import.meta.env.VITE_API_URL}/uploads/${food.image}`);
     setEditingId(food._id);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -149,6 +150,20 @@ export default function ManageFoods() {
                 <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Description</label>
                 <textarea name="description" placeholder="A short, tasty description..." value={form.description} onChange={handleChange} rows={4}
                   className="w-full px-5 py-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-950 focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 transition-all outline-none resize-y text-slate-900 dark:text-white font-medium placeholder-slate-400 dark:placeholder:text-slate-500" />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Category Image URL</label>
+                <Input
+                  name="categoryImage"
+                  placeholder="Optional image URL for this category circle"
+                  value={form.categoryImage}
+                  onChange={handleChange}
+                  className="bg-slate-50 dark:bg-slate-900"
+                />
+                <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">
+                  Add once per category; user menu will use it as the category icon.
+                </p>
               </div>
               
               <div>
