@@ -21,7 +21,10 @@ router.post(
   "/",
   protect,
   adminOnly,
-  upload.single("image"),
+  upload.fields([
+    { name: "image", maxCount: 1 },
+    { name: "categoryImage", maxCount: 1 }
+  ]),
   addFood
 );
 
@@ -30,7 +33,10 @@ router.put(
   "/:id",
   protect,
   adminOnly,
-  upload.single("image"),
+  upload.fields([
+    { name: "image", maxCount: 1 },
+    { name: "categoryImage", maxCount: 1 }
+  ]),
   updateFood
 );
 

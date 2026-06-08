@@ -14,8 +14,9 @@ export default function ManageFoods() {
     "Water", "Cold Drink", "Fast Food", "Main Course"
   ];
   const [foods, setFoods] = useState([]);
-  const [form, setForm] = useState({ name: "", price: "", description: "", category: "Veg", categoryImage: "", image: null });
+  const [form, setForm] = useState({ name: "", price: "", description: "", category: "Veg", categoryImage: "", image: null, categoryImageFile: null });
   const [preview, setPreview] = useState(null);
+  const [categoryPreview, setCategoryPreview] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -38,6 +39,14 @@ export default function ManageFoods() {
       } else {
         setPreview(null);
       }
+    } else if (name === "categoryImage") {
+      const file = files[0];
+      setForm({ ...form, categoryImageFile: file });
+      if (file) {
+        setCategoryPreview(URL.createObjectURL(file));
+      } else {
+        setCategoryPreview(form.categoryImage || null);
+      }
     } else {
       setForm({ ...form, [name]: value });
     }
@@ -56,8 +65,9 @@ export default function ManageFoods() {
       fd.append("price", form.price);
       fd.append("description", form.description);
       fd.append("category", form.category || "Veg");
-      fd.append("categoryImage", form.categoryImage || "");
+      fd.append("categoryImageCurrent", form.categoryImage || "");
       if (form.image) fd.append("image", form.image);
+      if (form.categoryImageFile) fd.append("categoryImage", form.categoryImageFile);
       
       if (editingId) {
         await API.put(`/api/foods/${editingId}`, fd, { headers: { Authorization: `Bearer ${token}` } });
@@ -71,16 +81,20 @@ export default function ManageFoods() {
   };
 
   const resetForm = () => {
-    setForm({ name: "", price: "", description: "", category: "Veg", categoryImage: "", image: null });
+    setForm({ name: "", price: "", description: "", category: "Veg", categoryImage: "", image: null, categoryImageFile: null });
     setPreview(null);
+    setCategoryPreview(null);
     setEditingId(null);
     const input = document.getElementById("foodImageInput");
     if (input) input.value = "";
+    const categoryInput = document.getElementById("categoryImageInput");
+    if (categoryInput) categoryInput.value = "";
   };
 
   const startEdit = (food) => {
-    setForm({ name: food.name, price: food.price, description: food.description, category: food.category || "Veg", categoryImage: food.categoryImage || "", image: null });
+    setForm({ name: food.name, price: food.price, description: food.description, category: food.category || "Veg", categoryImage: food.categoryImage || "", image: null, categoryImageFile: null });
     setPreview(food.image?.startsWith('http') ? food.image : `${import.meta.env.VITE_API_URL}/uploads/${food.image}`);
+    setCategoryPreview(food.categoryImage || null);
     setEditingId(food._id);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -153,16 +167,25 @@ export default function ManageFoods() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Category Image URL</label>
-                <Input
-                  name="categoryImage"
-                  placeholder="Optional image URL for this category circle"
-                  value={form.categoryImage}
-                  onChange={handleChange}
-                  className="bg-slate-50 dark:bg-slate-900"
-                />
+                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Category Image</label>
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                  <label className="relative flex-1 cursor-pointer">
+                    <input id="categoryImageInput" name="categoryImage" type="file" onChange={handleChange} accept="image/*" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+                    <div className="w-full px-5 py-4 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex items-center justify-center gap-3 text-slate-500 dark:text-slate-400 hover:border-brand-300 transition-colors">
+                      <ImagePlus size={20} className="text-brand-500" />
+                      <span className="font-medium">Choose category icon image</span>
+                    </div>
+                  </label>
+                  <div className="w-16 h-16 rounded-full border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 overflow-hidden flex items-center justify-center shrink-0">
+                    {categoryPreview ? (
+                      <img src={categoryPreview} alt="Category preview" className="w-full h-full object-cover" />
+                    ) : (
+                      <UtensilsCrossed size={22} className="text-slate-400 dark:text-slate-600" />
+                    )}
+                  </div>
+                </div>
                 <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">
-                  Add once per category; user menu will use it as the category icon.
+                  Same category ke liye ye image tab tak rahegi jab tak admin nayi image upload nahi karta.
                 </p>
               </div>
               

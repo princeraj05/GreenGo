@@ -265,6 +265,16 @@ export default function Menu() {
   };
 
   // RECOMMENDATION & FILTER LOGIC
+  const matchesUserFoodPreference = (food) => {
+    const preference = String(user.foodPreference || "").toLowerCase();
+    if (!preference.includes("veg")) return true;
+    const cat = String(food.category || "").toLowerCase();
+    const name = String(food.name || "").toLowerCase();
+    const isNonVeg = food.veg === false || cat === "non-veg" || cat === "chicken" || name.includes("chicken") || name.includes("mutton") || name.includes("egg");
+    if (preference.includes("non")) return isNonVeg;
+    return !isNonVeg && (food.veg === true || cat === "veg" || name.includes("veg") || name.includes("paneer") || !["non-veg", "chicken"].includes(cat));
+  };
+
   const filteredFoods = foods.filter(food => {
     const matchesSearch = food.name.toLowerCase().includes(search.toLowerCase()) || 
                           (food.description || "").toLowerCase().includes(search.toLowerCase());
@@ -291,17 +301,19 @@ export default function Menu() {
       }
     }
     
-    return matchesSearch && matchesCategory;
+    return matchesSearch && matchesCategory && matchesUserFoodPreference(food);
   });
 
   // POPULAR DISHES (Ranked by highest rating)
   const popularDishes = foods
+    .filter(matchesUserFoodPreference)
     .filter(f => f.rating > 0)
     .sort((a, b) => b.rating - a.rating)
     .slice(0, 4);
 
   // RECOMMENDED FOR YOU (Ranked by popularity or recent updates)
   const recommendedFoods = foods
+    .filter(matchesUserFoodPreference)
     .filter(f => f.ratingCount >= 0)
     .sort((a, b) => b.ratingCount - a.ratingCount || b.updatedAt - a.updatedAt)
     .slice(0, 4);
@@ -627,7 +639,7 @@ export default function Menu() {
             {popularDishes.map((food) => (
               <div 
                 key={food._id} 
-                className="bg-white dark:bg-slate-900 rounded-3xl p-4.5 border border-slate-100 dark:border-slate-800/60 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col group relative overflow-hidden"
+                className="bg-white dark:bg-slate-900 rounded-3xl p-4.5 pb-5 border border-slate-100 dark:border-slate-800/60 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col group relative overflow-hidden min-h-[390px]"
               >
                 {/* Image & Buttons */}
                 <div 
@@ -641,7 +653,7 @@ export default function Menu() {
                     onError={(e) => { e.target.src = 'https://placehold.co/400x300?text=Food'; }}
                   />
                   {/* Delivery time indicator */}
-                  <div className="absolute bottom-2 left-2 bg-slate-950/80 backdrop-blur-md px-2 py-0.5 rounded-md text-[9px] font-black text-white flex items-center gap-1">
+                  <div className="absolute bottom-2 left-2 bg-slate-950/95 dark:bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-black text-white dark:text-slate-950 flex items-center gap-1 shadow-sm">
                     <Clock size={10} className="text-brand-400" />
                     <span>25-30 min</span>
                   </div>
@@ -665,8 +677,8 @@ export default function Menu() {
                 {/* Actions */}
                 <div className="flex items-center justify-between gap-3 mt-auto pt-3 border-t border-slate-100 dark:border-slate-800/50">
                   <div className="flex flex-col">
-                    <span className="text-[10px] font-bold text-slate-400 line-through">₹{Math.round(food.price * 1.25)}</span>
-                    <span className="text-base font-black text-slate-900 dark:text-white leading-tight">₹{food.price}</span>
+                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-300 line-through leading-none">₹{Math.round(food.price * 1.25)}</span>
+                    <span className="text-lg font-black text-slate-950 dark:text-white leading-none pt-1 tabular-nums">₹{food.price}</span>
                   </div>
                   
                   <div className="flex items-center gap-1.5">
@@ -695,7 +707,7 @@ export default function Menu() {
             {recommendedFoods.map((food) => (
               <div 
                 key={food._id} 
-                className="bg-white dark:bg-slate-900 rounded-3xl p-4.5 border border-slate-100 dark:border-slate-800/60 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col group relative overflow-hidden"
+                className="bg-white dark:bg-slate-900 rounded-3xl p-4.5 pb-5 border border-slate-100 dark:border-slate-800/60 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col group relative overflow-hidden min-h-[390px]"
               >
                 {/* Image & Buttons */}
                 <div 
@@ -709,7 +721,7 @@ export default function Menu() {
                     onError={(e) => { e.target.src = 'https://placehold.co/400x300?text=Food'; }}
                   />
                   {/* Delivery time indicator */}
-                  <div className="absolute bottom-2 left-2 bg-slate-950/80 backdrop-blur-md px-2 py-0.5 rounded-md text-[9px] font-black text-white flex items-center gap-1">
+                  <div className="absolute bottom-2 left-2 bg-slate-950/95 dark:bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-black text-white dark:text-slate-950 flex items-center gap-1 shadow-sm">
                     <Clock size={10} className="text-brand-400" />
                     <span>20-25 min</span>
                   </div>
@@ -733,8 +745,8 @@ export default function Menu() {
                 {/* Actions */}
                 <div className="flex items-center justify-between gap-3 mt-auto pt-3 border-t border-slate-100 dark:border-slate-800/50">
                   <div className="flex flex-col">
-                    <span className="text-[10px] font-bold text-slate-400 line-through">₹{Math.round(food.price * 1.2)}</span>
-                    <span className="text-base font-black text-slate-900 dark:text-white leading-tight">₹{food.price}</span>
+                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-300 line-through leading-none">₹{Math.round(food.price * 1.2)}</span>
+                    <span className="text-lg font-black text-slate-950 dark:text-white leading-none pt-1 tabular-nums">₹{food.price}</span>
                   </div>
                   
                   <div className="flex items-center gap-1.5">
@@ -781,7 +793,7 @@ export default function Menu() {
               {filteredFoods.map((food) => (
                 <div 
                   key={food._id} 
-                  className="bg-white dark:bg-slate-900 rounded-3xl p-4.5 border border-slate-100 dark:border-slate-800/60 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col group relative overflow-hidden"
+                  className="bg-white dark:bg-slate-900 rounded-3xl p-4.5 pb-5 border border-slate-100 dark:border-slate-800/60 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col group relative overflow-hidden min-h-[390px]"
                 >
                   <div 
                     onClick={() => selectFoodDetails(food)}
@@ -793,7 +805,7 @@ export default function Menu() {
                       className="max-w-full max-h-full object-contain rounded-xl transition-transform duration-500 group-hover:scale-105"
                       onError={(e) => { e.target.src = 'https://placehold.co/400x300?text=Food'; }}
                     />
-                    <div className="absolute bottom-2 left-2 bg-slate-950/80 backdrop-blur-md px-2 py-0.5 rounded-md text-[9px] font-black text-white flex items-center gap-1">
+                    <div className="absolute bottom-2 left-2 bg-slate-950/95 dark:bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-black text-white dark:text-slate-950 flex items-center gap-1 shadow-sm">
                       <Clock size={10} className="text-brand-400" />
                       <span>20-30 min</span>
                     </div>
@@ -813,7 +825,7 @@ export default function Menu() {
                   <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed mb-4.5 font-medium flex-1">{food.description}</p>
                   
                   <div className="flex items-center justify-between gap-3 mt-auto pt-3 border-t border-slate-100 dark:border-slate-800/50">
-                    <span className="text-base font-black text-slate-900 dark:text-white leading-tight">₹{food.price}</span>
+                    <span className="text-lg font-black text-slate-950 dark:text-white leading-none py-1 tabular-nums">₹{food.price}</span>
                     <div className="flex items-center gap-1.5">
                       <button
                         onClick={() => toggleFavoriteFood(food._id)}

@@ -237,6 +237,33 @@ export default function Profile() {
 
   const favoriteFoods = foods.filter(food => favorites.includes(food._id));
   const primaryAddress = (form.addresses || []).find(addr => addr.isPrimary) || (form.addresses || [])[0];
+  const activeFoodPreference = String(form.foodPreference || "").toLowerCase().includes("non") ? "Non-Veg" : String(form.foodPreference || "").toLowerCase().includes("veg") ? "Veg" : "";
+
+  const saveFoodPreference = async (preference) => {
+    const nextForm = { ...form, foodPreference: preference };
+    setForm(nextForm);
+    try {
+      const token = await getToken();
+      if (!token) return;
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/profile`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify(nextForm)
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setForm(prev => ({ ...prev, foodPreference: data.user?.foodPreference || preference }));
+        setOriginalForm(prev => ({ ...(prev || nextForm), foodPreference: data.user?.foodPreference || preference }));
+        setMessage(`${preference} preference saved`);
+        setMsgType("success");
+        setTimeout(() => setMessage(""), 2500);
+      }
+    } catch {
+      setMessage("Failed to update food preference");
+      setMsgType("error");
+      setTimeout(() => setMessage(""), 3000);
+    }
+  };
 
   if (loading) {
     return (
@@ -308,7 +335,25 @@ export default function Profile() {
                 </div>
                 <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-700">
                   <span className="text-xs text-slate-500 dark:text-slate-300 uppercase tracking-wider block mb-1">Food Preference</span>
-                  <span className="text-slate-950 dark:text-slate-50 font-extrabold break-words">{form.foodPreference || "N/A"}</span>
+                  <div className="mt-2 grid grid-cols-2 gap-2 rounded-2xl bg-slate-100 dark:bg-slate-950 p-1 border border-slate-200 dark:border-slate-800">
+                    {["Veg", "Non-Veg"].map((preference) => {
+                      const active = activeFoodPreference === preference;
+                      return (
+                        <button
+                          key={preference}
+                          type="button"
+                          onClick={() => saveFoodPreference(preference)}
+                          className={`py-2 rounded-xl text-xs font-black transition-all ${
+                            active
+                              ? "bg-brand-500 text-white shadow-sm"
+                              : "text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-900"
+                          }`}
+                        >
+                          {preference}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
                 <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-700">
                   <span className="text-xs text-slate-500 dark:text-slate-300 uppercase tracking-wider block mb-1">Delivery Time</span>
@@ -350,45 +395,21 @@ export default function Profile() {
                   
                   <div className="relative">
                     <label className="text-xs font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider mb-1.5 ml-1 block">Food Preference</label>
-                    <div className="relative mb-2.5">
-                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400"><Utensils size={16} /></div>
-                      <Input name="foodPreference" value={form.foodPreference} onChange={handleChange} placeholder="Veg, Non-Veg, Vegan..." className="pl-10" />
-                    </div>
-                    <div className="flex flex-wrap gap-1.5">
-                      {[
-                        { label: "Veg", value: "Veg" },
-                        { label: "Non-Veg", value: "Non-Veg" },
-                        { label: "Sweets", value: "Sweets" },
-                        { label: "Spicy", value: "Spicy" },
-                        { label: "Vegan", value: "Vegan" }
-                      ].map((p) => {
-                        const currentPrefs = form.foodPreference
-                          ? form.foodPreference.split(",").map(item => item.trim().toLowerCase())
-                          : [];
-                        const active = currentPrefs.includes(p.value.toLowerCase());
+                    <div className="grid grid-cols-2 gap-2 rounded-2xl bg-slate-100 dark:bg-slate-950 p-1 border border-slate-200 dark:border-slate-800">
+                      {["Veg", "Non-Veg"].map((preference) => {
+                        const active = activeFoodPreference === preference;
                         return (
                           <button
-                            key={p.value}
+                            key={preference}
                             type="button"
-                            onClick={() => {
-                              const list = form.foodPreference
-                                ? form.foodPreference.split(",").map(item => item.trim()).filter(Boolean)
-                                : [];
-                              let newList;
-                              if (list.some(item => item.toLowerCase() === p.value.toLowerCase())) {
-                                newList = list.filter(item => item.toLowerCase() !== p.value.toLowerCase());
-                              } else {
-                                newList = [...list, p.value];
-                              }
-                              setForm({ ...form, foodPreference: newList.join(", ") });
-                            }}
-                            className={`px-2.5 py-1 rounded-full text-[10px] font-bold border transition-all ${
+                            onClick={() => setForm({ ...form, foodPreference: preference })}
+                            className={`py-2.5 rounded-xl text-xs font-black transition-all ${
                               active
-                                ? "bg-brand-500 text-white border-brand-500 shadow-sm"
-                                : "bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800"
+                                ? "bg-brand-500 text-white shadow-sm"
+                                : "text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-900"
                             }`}
                           >
-                            {p.label}
+                            {preference}
                           </button>
                         );
                       })}
