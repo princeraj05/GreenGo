@@ -96,29 +96,6 @@ export default function Contact() {
         >
           <div className="space-y-5">
             <div>
-              <label className="text-sm font-bold text-slate-700 dark:text-slate-350 mb-2 block">Name</label>
-              <input
-                required
-                name="name"
-                value={form.name}
-                onChange={(event) => setForm({ ...form, name: event.target.value })}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-brand-500/10 focus:border-brand-500 transition-all outline-none font-medium text-sm"
-                placeholder="Your Name"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-bold text-slate-700 dark:text-slate-355 mb-2 block">Email</label>
-              <input
-                type="email"
-                required
-                name="email"
-                value={form.email}
-                onChange={(event) => setForm({ ...form, email: event.target.value })}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-brand-500/10 focus:border-brand-500 transition-all outline-none font-medium text-sm"
-                placeholder="Your Email"
-              />
-            </div>
-            <div>
               <label className="text-sm font-bold text-slate-700 dark:text-slate-355 mb-2 block">Message</label>
               <textarea
                 required
