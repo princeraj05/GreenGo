@@ -80,35 +80,35 @@ export default function Cart() {
 
   return (
     <div className="max-w-6xl mx-auto w-full pb-10">
-      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6 md:mb-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 md:gap-4">
         <div>
-          <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
             My Cart
           </h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-2 text-lg font-medium">Review your items before proceeding to checkout.</p>
+          <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm sm:text-base md:text-lg font-medium">Review your items before proceeding to checkout.</p>
         </div>
         {cart.length > 0 && (
-          <Button variant="ghost" onClick={() => navigate('/user/menu')} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800">
-            <Plus size={16} className="mr-2" /> Add More Items
+          <Button variant="ghost" onClick={() => navigate('/user/menu')} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 py-2.5 px-4 text-sm">
+            <Plus size={14} className="mr-2" /> Add More Items
           </Button>
         )}
       </motion.div>
 
       {cart.length === 0 ? (
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
-          <Card className="p-16 text-center flex flex-col items-center border-slate-100 dark:border-slate-800/60 rounded-[2.5rem]">
-            <div className="w-32 h-32 bg-slate-50 dark:bg-slate-900 text-slate-300 dark:text-slate-600 rounded-full flex items-center justify-center mb-8">
-              <ShoppingBag size={64} />
+          <Card className="p-8 sm:p-12 md:p-16 text-center flex flex-col items-center border-slate-100 dark:border-slate-800/60 rounded-3xl md:rounded-[2.5rem]">
+            <div className="w-20 h-20 sm:w-28 sm:h-28 bg-slate-50 dark:bg-slate-900 text-slate-300 dark:text-slate-600 rounded-full flex items-center justify-center mb-6 md:mb-8">
+              <ShoppingBag className="w-10 h-10 sm:w-14 sm:h-14" />
             </div>
-            <h2 className="text-3xl font-black text-slate-900 dark:text-white mb-4">Your cart is feeling light</h2>
-            <p className="text-slate-500 dark:text-slate-400 mb-8 max-w-sm text-lg font-medium">Looks like you haven't added anything to your cart yet. Let's get some food!</p>
-            <Button onClick={() => navigate('/user/menu')} size="lg" className="gap-2 px-8 rounded-full">
-              Browse Menu <ArrowRight size={20} />
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 dark:text-white mb-2 md:mb-4">Your cart is feeling light</h2>
+            <p className="text-slate-500 dark:text-slate-400 mb-6 md:mb-8 max-w-sm text-sm sm:text-base font-medium">Looks like you haven't added anything to your cart yet. Let's get some food!</p>
+            <Button onClick={() => navigate('/user/menu')} className="gap-2 px-6 py-2.5 text-sm md:px-8 md:py-3.5 md:text-base rounded-full">
+              Browse Menu <ArrowRight size={16} />
             </Button>
           </Card>
         </motion.div>
       ) : (
-        <div className="flex flex-col lg:flex-row gap-8">
+        <div className="flex flex-col lg:flex-row gap-6 md:gap-8">
           
           {/* Cart Items */}
           <div className="flex-1 space-y-4">
@@ -121,30 +121,30 @@ export default function Cart() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
                 >
-                  <Card hover className="p-4 md:p-6 flex flex-col sm:flex-row items-center gap-6 group border-slate-100 dark:border-slate-800/60">
+                  <Card hover className="p-3 md:p-5 flex flex-col sm:flex-row items-center gap-4 md:gap-6 group border-slate-100 dark:border-slate-800/60">
                     <img
                       src={getImageUrl(item.image)}
                       alt={item.name}
-                      className="w-28 h-28 object-contain rounded-[1.25rem] bg-slate-50 dark:bg-slate-800 shadow-inner p-2 group-hover:scale-105 transition-transform"
+                      className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 object-contain rounded-[1.25rem] bg-slate-50 dark:bg-slate-800 shadow-inner p-1.5 md:p-2 group-hover:scale-105 transition-transform"
                       onError={(e) => { e.target.src = 'https://placehold.co/400x300?text=Food'; }}
                     />
 
                     <div className="flex-1 text-center sm:text-left w-full">
-                      <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-1 group-hover:text-brand-600 transition-colors">{item.name}</h3>
-                      <p className="text-slate-900 dark:text-white font-black text-xl mb-4">₹{item.price}</p>
+                      <h3 className="text-base sm:text-lg md:text-xl font-bold text-slate-900 dark:text-white mb-0.5 md:mb-1 group-hover:text-brand-600 transition-colors">{item.name}</h3>
+                      <p className="text-slate-900 dark:text-white font-black text-base sm:text-lg md:text-xl mb-3 md:mb-4">₹{item.price}</p>
                       
                       <div className="flex items-center justify-center sm:justify-start gap-4">
-                        <div className="flex items-center bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-1 shadow-sm">
-                          <button onClick={() => updateQty(item._id, "dec")} className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white dark:hover:bg-slate-800 hover:shadow-sm text-slate-700 dark:text-slate-300 font-bold transition-all"><Minus size={16} /></button>
-                          <span className="w-12 text-center font-bold text-slate-900 dark:text-white">{item.qty}</span>
-                          <button onClick={() => updateQty(item._id, "inc")} className="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white dark:hover:bg-slate-800 hover:shadow-sm text-slate-700 dark:text-slate-300 font-bold transition-all"><Plus size={16} /></button>
+                        <div className="flex items-center bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-0.5 md:p-1 shadow-sm">
+                          <button onClick={() => updateQty(item._id, "dec")} className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-lg hover:bg-white dark:hover:bg-slate-800 hover:shadow-sm text-slate-700 dark:text-slate-300 font-bold transition-all"><Minus size={14} /></button>
+                          <span className="w-10 md:w-12 text-center font-bold text-sm md:text-base text-slate-900 dark:text-white">{item.qty}</span>
+                          <button onClick={() => updateQty(item._id, "inc")} className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-lg hover:bg-white dark:hover:bg-slate-800 hover:shadow-sm text-slate-700 dark:text-slate-300 font-bold transition-all"><Plus size={14} /></button>
                         </div>
                       </div>
                     </div>
 
                     <div className="w-full sm:w-auto flex justify-center sm:justify-end">
-                      <button onClick={() => removeItem(item._id)} className="w-12 h-12 flex items-center justify-center text-red-500 hover:text-white bg-red-50 dark:bg-red-950/30 hover:bg-red-500 dark:hover:bg-red-600 rounded-2xl transition-all shadow-sm" title="Remove">
-                        <Trash2 size={20} />
+                      <button onClick={() => removeItem(item._id)} className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-red-500 hover:text-white bg-red-50 dark:bg-red-950/30 hover:bg-red-500 dark:hover:bg-red-600 rounded-xl md:rounded-2xl transition-all shadow-sm" title="Remove">
+                        <Trash2 size={18} />
                       </button>
                     </div>
                   </Card>
@@ -154,38 +154,38 @@ export default function Cart() {
           </div>
 
           {/* Checkout Summary */}
-          <div className="w-full lg:w-[420px] shrink-0 sticky top-24 h-fit">
+          <div className="w-full lg:w-[400px] shrink-0 sticky top-24 h-fit">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
               
-              <Card className="p-6 mb-6 border-slate-100 dark:border-slate-800/60">
-                <h3 className="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2"><Ticket size={20} className="text-brand-500" /> Have a Promo Code?</h3>
+              <Card className="p-4 md:p-6 mb-4 md:mb-6 border-slate-100 dark:border-slate-800/60 rounded-2xl">
+                <h3 className="font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2 text-sm md:text-base"><Ticket size={18} className="text-brand-500" /> Have a Promo Code?</h3>
                 <div className="flex gap-2">
                   <Input 
                     type="text" 
                     value={promo}
                     onChange={e => setPromo(e.target.value.toUpperCase())}
                     placeholder="e.g. SAVE20" 
-                    className="font-bold tracking-widest bg-slate-50 dark:bg-slate-950"
+                    className="font-bold tracking-widest bg-slate-50 dark:bg-slate-950 py-2 text-sm"
                   />
-                  <Button onClick={applyPromo} variant="secondary" className="px-6" disabled={promoLoading}>
+                  <Button onClick={applyPromo} variant="secondary" className="px-4 text-sm" disabled={promoLoading}>
                     {promoLoading ? "..." : "Apply"}
                   </Button>
                 </div>
               </Card>
 
-              <Card className="p-8 relative overflow-hidden border-slate-100 dark:border-slate-800/60 rounded-[2rem]">
+              <Card className="p-5 md:p-8 relative overflow-hidden border-slate-100 dark:border-slate-800/60 rounded-3xl md:rounded-[2rem]">
                 <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-brand-400 to-brand-600"></div>
                 
-                <h3 className="text-xl font-black text-slate-900 dark:text-white mb-6 text-center">Receipt Summary</h3>
+                <h3 className="text-lg md:text-xl font-black text-slate-900 dark:text-white mb-4 md:mb-6 text-center">Receipt Summary</h3>
                 
-                <div className="space-y-4 mb-6 text-slate-500 dark:text-slate-400 font-medium border-b border-slate-100 dark:border-slate-800/60 pb-6">
+                <div className="space-y-3 md:space-y-4 mb-4 md:mb-6 text-xs md:text-sm text-slate-500 dark:text-slate-400 font-medium border-b border-slate-100 dark:border-slate-800/60 pb-4 md:pb-6">
                   <div className="flex justify-between items-center">
                     <span>Subtotal ({cart.length} items)</span>
                     <span className="text-slate-900 dark:text-white font-bold">₹{subtotal.toFixed(2)}</span>
                   </div>
                   {discount > 0 && (
-                    <div className="flex justify-between items-center text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/20 p-3 rounded-xl -mx-3 px-3 border border-emerald-100/50 dark:border-emerald-950/30">
-                      <span className="flex items-center gap-2"><Ticket size={16} /> Discount Applied</span>
+                    <div className="flex justify-between items-center text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/20 p-2.5 rounded-xl -mx-2 px-2.5 border border-emerald-100/50 dark:border-emerald-950/30">
+                      <span className="flex items-center gap-1.5"><Ticket size={14} /> Discount Applied</span>
                       <span className="font-bold">-₹{discountAmount.toFixed(2)}</span>
                     </div>
                   )}
@@ -195,17 +195,16 @@ export default function Cart() {
                   </div>
                 </div>
                 
-                <div className="flex justify-between items-center mb-8">
-                  <span className="text-xl font-bold text-slate-900 dark:text-white">Total To Pay</span>
-                  <span className="text-4xl font-black text-slate-900 dark:text-white">₹{total.toFixed(2)}</span>
+                <div className="flex justify-between items-center mb-6 md:mb-8">
+                  <span className="text-base md:text-lg font-bold text-slate-900 dark:text-white">Total To Pay</span>
+                  <span className="text-2xl md:text-4xl font-black text-slate-900 dark:text-white">₹{total.toFixed(2)}</span>
                 </div>
 
                 <Button
                   onClick={() => navigate("/user/checkout")}
-                  size="lg"
-                  className="w-full gap-2 rounded-full py-5 text-lg shadow-brand-500/25"
+                  className="w-full gap-2 rounded-full py-3.5 text-sm md:text-base font-bold shadow-brand-500/25"
                 >
-                  <ShieldCheck size={22} />
+                  <ShieldCheck size={18} />
                   Checkout Securely
                 </Button>
               </Card>

@@ -153,28 +153,28 @@ export default function Orders() {
 
   return (
     <div className="max-w-5xl mx-auto w-full pb-10">
-      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
-        <h1 className="text-4xl font-black text-slate-900 tracking-tight flex items-center gap-4">
-          <div className="w-12 h-12 bg-brand-50 rounded-2xl flex items-center justify-center text-brand-600">
-            <Package size={28} />
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6 md:mb-10">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-brand-50 rounded-xl sm:rounded-2xl flex items-center justify-center text-brand-600 shrink-0">
+            <Package size={22} />
           </div>
           My Orders
         </h1>
-        <p className="text-slate-500 mt-2 text-lg font-medium">Track your delicious food journey.</p>
+        <p className="text-slate-500 mt-1 text-sm sm:text-base md:text-lg font-medium">Track your delicious food journey.</p>
       </motion.div>
 
       {orders.length === 0 ? (
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
-          <Card className="text-center py-20 border-slate-100">
-            <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-300">
-              <ShoppingBag size={48} />
+          <Card className="text-center py-12 md:py-20 border-slate-100 rounded-3xl">
+            <div className="w-16 h-16 sm:w-24 sm:h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 md:mb-6 text-slate-300">
+              <ShoppingBag className="w-8 h-8 sm:w-12 sm:h-12" />
             </div>
-            <h3 className="text-2xl font-black text-slate-900 mb-2">No orders yet</h3>
-            <p className="text-slate-500 font-medium">Time to order some tasty food!</p>
+            <h3 className="text-lg sm:text-xl md:text-2xl font-black text-slate-900 mb-1.5 md:mb-2">No orders yet</h3>
+            <p className="text-slate-500 text-xs sm:text-sm font-medium">Time to order some tasty food!</p>
           </Card>
         </motion.div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6">
           {orders.map((o, idx) => (
             <motion.div 
               key={o._id}
@@ -182,24 +182,24 @@ export default function Orders() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.1 }}
             >
-              <Card className="p-6 md:p-8 border-slate-100">
+              <Card className="p-4 sm:p-6 md:p-8 border-slate-100 rounded-3xl">
                 
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 md:mb-8">
                   <div>
-                    <h3 className="text-lg font-bold text-slate-900">
+                    <h3 className="text-base sm:text-lg font-bold text-slate-900">
                       Order
                     </h3>
-                    <p className="text-slate-500 text-sm mt-1 font-medium">{new Date(o.createdAt).toLocaleString()}</p>
+                    <p className="text-slate-405 dark:text-slate-500 text-xs mt-0.5 font-medium">{new Date(o.createdAt).toLocaleString()}</p>
                   </div>
-                  <Badge variant={o.status === "Delivered" ? "success" : "brand"} className="px-4 py-2 text-sm gap-2 uppercase tracking-wide">
+                  <Badge variant={o.status === "Delivered" ? "success" : "brand"} className="px-3 py-1.5 text-xs gap-1.5 uppercase tracking-wide w-fit">
                     {getStatusIcon(o.status)}
                     {o.status}
                   </Badge>
                 </div>
 
                 {/* TRACKER */}
-                <div className="mb-10 relative">
-                  <div className="overflow-hidden h-3 mb-4 text-xs flex rounded-full bg-slate-100 shadow-inner">
+                <div className="mb-6 md:mb-10 relative">
+                  <div className="overflow-hidden h-2.5 mb-3 text-xs flex rounded-full bg-slate-100 shadow-inner">
                     <motion.div 
                       initial={{ width: 0 }}
                       animate={{ width: `${getProgress(o.status)}%` }}
@@ -207,7 +207,7 @@ export default function Orders() {
                       className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-brand-400 to-brand-600" 
                     />
                   </div>
-                  <div className="flex justify-between text-xs font-bold text-slate-400 px-1 uppercase tracking-wider">
+                  <div className="flex justify-between text-[10px] font-bold text-slate-400 px-0.5 uppercase tracking-wider">
                     <span className={getProgress(o.status) >= 25 ? "text-brand-600" : ""}>Placed</span>
                     <span className={getProgress(o.status) >= 50 ? "text-brand-600" : ""}>Preparing</span>
                     <span className={getProgress(o.status) >= 75 ? "text-brand-600" : ""}>On the way</span>
@@ -215,41 +215,41 @@ export default function Orders() {
                   </div>
                 </div>
 
-                <div className="bg-slate-50/50 rounded-2xl p-2 mb-6 border border-slate-100">
+                <div className="bg-slate-50/50 dark:bg-slate-900/40 rounded-2xl p-1.5 mb-4 md:mb-6 border border-slate-100 dark:border-slate-800/60">
                   {o.items.map((i, iIdx) => (
-                    <div key={iIdx} className="flex items-center gap-4 p-3 border-b border-slate-100 last:border-0 hover:bg-white rounded-xl transition-colors">
+                    <div key={iIdx} className="flex items-center gap-3 p-2.5 border-b border-slate-100 dark:border-slate-800/40 last:border-0 hover:bg-white dark:hover:bg-slate-900 rounded-xl transition-colors">
                       <img 
                         src={getImageUrl(i.image)}
-                        className="w-16 h-16 rounded-xl object-contain bg-slate-100 p-1" 
+                        className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl object-contain bg-slate-100 dark:bg-slate-850 p-1 shrink-0" 
                         onError={(e) => { e.target.src = 'https://placehold.co/400x300?text=Food'; }}
                         alt={i.name}
                       />
-                      <div className="flex-1">
-                        <p className="font-bold text-slate-900">{i.name}</p>
-                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-1 text-sm font-medium">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-sm sm:text-base text-slate-900 dark:text-white truncate">{i.name}</p>
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-0.5 text-xs font-medium">
                           <span className="text-slate-500">Qty: {i.qty}</span>
                           
                           {o.status === "Delivered" && (() => {
                             const itemReview = reviews.find(r => String(r.orderId) === String(o._id) && String(r.foodId) === String(i.foodId));
                             if (itemReview) {
                               return (
-                                <div className="flex items-center gap-2.5 bg-white border border-slate-100 px-2 py-0.5 rounded-lg text-xs font-bold shadow-sm">
+                                <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 px-1.5 py-0.5 rounded-lg text-[10px] font-bold shadow-sm">
                                   <span className="flex items-center text-amber-500 gap-0.5">
                                     ★ {itemReview.rating}
                                   </span>
                                   <button 
                                     onClick={() => handleOpenEditReview(itemReview, o, i)}
-                                    className="text-blue-500 hover:text-blue-600 flex items-center gap-1 font-extrabold transition-colors cursor-pointer"
+                                    className="text-blue-500 hover:text-blue-600 flex items-center gap-0.5 font-extrabold transition-colors cursor-pointer"
                                     title="Edit Review"
                                   >
-                                    <Edit3 size={11} /> Edit
+                                    <Edit3 size={10} /> Edit
                                   </button>
                                   <button 
                                     onClick={() => handleDeleteReview(itemReview._id)}
-                                    className="text-red-500 hover:text-red-600 flex items-center gap-1 font-extrabold transition-colors cursor-pointer"
+                                    className="text-red-500 hover:text-red-600 flex items-center gap-0.5 font-extrabold transition-colors cursor-pointer"
                                     title="Delete Review"
                                   >
-                                    <Trash2 size={11} /> Delete
+                                    <Trash2 size={10} /> Delete
                                   </button>
                                 </div>
                               );
@@ -257,7 +257,7 @@ export default function Orders() {
                               return (
                                 <button
                                   onClick={() => handleOpenWriteReview(o, i)}
-                                  className="text-brand-600 hover:text-brand-700 hover:underline text-xs font-black uppercase tracking-wider flex items-center gap-1 bg-white border border-slate-100 px-2.5 py-0.5 rounded-lg shadow-sm transition-colors cursor-pointer"
+                                  className="text-brand-600 hover:text-brand-700 hover:underline text-[10px] font-black uppercase tracking-wider flex items-center gap-0.5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-850 px-2 py-0.5 rounded-lg shadow-sm transition-colors cursor-pointer"
                                 >
                                   Write Review
                                 </button>
@@ -266,25 +266,25 @@ export default function Orders() {
                           })()}
                         </div>
                       </div>
-                      <p className="font-bold text-slate-900 text-lg">₹{i.price * i.qty}</p>
+                      <p className="font-bold text-slate-900 dark:text-white text-sm sm:text-base md:text-lg shrink-0">₹{i.price * i.qty}</p>
                     </div>
                   ))}
                 </div>
 
-                <div className="flex justify-between items-center border-t border-slate-100 pt-6">
-                  <div className="space-y-1">
-                    <p className="text-slate-500 font-medium text-sm">
-                      Payment Method: <span className="text-slate-900 font-bold">{o.paymentMethod || "COD"}</span>
+                <div className="flex justify-between items-center border-t border-slate-100 dark:border-slate-800/60 pt-4 md:pt-6">
+                  <div className="space-y-0.5">
+                    <p className="text-slate-500 text-xs md:text-sm font-medium">
+                      Payment: <span className="text-slate-900 dark:text-white font-bold">{o.paymentMethod || "COD"}</span>
                     </p>
                     {o.distance !== undefined && o.distance !== null && (
-                      <p className="text-slate-500 font-medium text-sm">
-                        Delivery Distance: <span className="text-slate-900 font-bold">{o.distance} km</span>
+                      <p className="text-slate-500 text-xs md:text-sm font-medium">
+                        Distance: <span className="text-slate-900 dark:text-white font-bold">{o.distance} km</span>
                       </p>
                     )}
                   </div>
                   <div className="text-right">
-                    <p className="text-slate-500 font-medium text-sm mb-1">Total Amount</p>
-                    <h3 className="text-3xl font-black text-brand-600">₹{o.total}</h3>
+                    <p className="text-slate-550 dark:text-slate-400 text-xs font-medium mb-0.5">Total Amount</p>
+                    <h3 className="text-xl sm:text-2xl md:text-3xl font-black text-brand-600">₹{o.total}</h3>
                   </div>
                 </div>
               </Card>
@@ -301,32 +301,32 @@ export default function Orders() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 w-full max-w-md overflow-hidden flex flex-col p-6 sm:p-8"
+              className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 w-full max-w-md overflow-hidden flex flex-col p-5 sm:p-7"
             >
               {/* Header */}
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-2xl font-black text-slate-900 tracking-tight">
+              <div className="flex justify-between items-center mb-5">
+                <h3 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
                   {editingReviewId ? "Edit Review" : "Write Review"}
                 </h3>
                 <button
                   onClick={() => setReviewModalOpen(false)}
-                  className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors"
+                  className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
                 >
-                  <X size={20} />
+                  <X size={18} />
                 </button>
               </div>
 
               {/* Body */}
-              <div className="space-y-6">
+              <div className="space-y-4 md:space-y-6">
                 <div>
-                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Item</h4>
-                  <p className="font-bold text-slate-800 text-lg">{selectedFoodItem.name}</p>
+                  <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Item</h4>
+                  <p className="font-bold text-slate-800 dark:text-white text-base md:text-lg">{selectedFoodItem.name}</p>
                 </div>
 
                 {/* Rating selection */}
                 <div>
-                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 text-center">Your Rating</h4>
-                  <div className="flex gap-2 justify-center">
+                  <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 text-center">Your Rating</h4>
+                  <div className="flex gap-1.5 justify-center">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <button
                         key={star}
@@ -335,9 +335,9 @@ export default function Orders() {
                         className="transition-transform active:scale-90 text-yellow-400 focus:outline-none"
                       >
                         <Star
-                          size={36}
+                          size={30}
                           fill={star <= rating ? "currentColor" : "none"}
-                          className={star <= rating ? "text-amber-500" : "text-slate-200"}
+                          className={star <= rating ? "text-amber-500" : "text-slate-200 dark:text-slate-800"}
                         />
                       </button>
                     ))}
@@ -346,30 +346,30 @@ export default function Orders() {
 
                 {/* Text selection */}
                 <div>
-                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Review Comment</h4>
+                  <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Review Comment</h4>
                   <textarea
                     placeholder="Tell us what you loved or how we can improve this dish..."
                     value={reviewText}
                     onChange={(e) => setReviewText(e.target.value)}
-                    rows={4}
-                    className="w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium outline-none transition focus:border-brand-400 focus:bg-white focus:ring-2 focus:ring-brand-100"
+                    rows={3}
+                    className="w-full resize-none rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3 py-2.5 text-xs sm:text-sm font-medium outline-none transition focus:border-brand-400 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-brand-100/10 text-slate-900 dark:text-white placeholder-slate-405"
                   />
                 </div>
               </div>
 
               {/* Submit */}
-              <div className="mt-8 flex gap-3">
+              <div className="mt-6 flex gap-2.5">
                 <Button
                   variant="secondary"
                   onClick={() => setReviewModalOpen(false)}
-                  className="flex-1 rounded-2xl py-3.5"
+                  className="flex-1 rounded-xl py-2.5 text-sm"
                 >
                   Cancel
                 </Button>
                 <Button
                   disabled={!reviewText.trim()}
                   onClick={handleSubmitReview}
-                  className="flex-1 rounded-2xl py-3.5 shadow-brand-500/20"
+                  className="flex-1 rounded-xl py-2.5 text-sm shadow-brand-500/20"
                 >
                   Submit
                 </Button>

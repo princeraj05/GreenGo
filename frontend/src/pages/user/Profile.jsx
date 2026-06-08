@@ -199,16 +199,16 @@ export default function Profile() {
       
       {/* Header with Dynamic Avatar */}
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-        <Card className="p-8 mb-8 flex flex-col md:flex-row items-center gap-8 border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-950">
+        <Card className="p-5 md:p-8 mb-6 md:mb-8 flex flex-col md:flex-row items-center gap-4 md:gap-8 border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-950">
           <div className="relative">
-            <div className="w-32 h-32 rounded-full bg-gradient-to-tr from-brand-400 to-brand-600 shadow-xl shadow-brand-500/30 flex items-center justify-center text-5xl text-white font-black border-4 border-white dark:border-slate-900 z-10 relative">
-              {form.name ? form.name.charAt(0).toUpperCase() : <User size={48} />}
+            <div className="w-20 h-20 md:w-32 md:h-32 rounded-full bg-gradient-to-tr from-brand-400 to-brand-600 shadow-xl shadow-brand-500/30 flex items-center justify-center text-3xl md:text-5xl text-white font-black border-4 border-white dark:border-slate-900 z-10 relative">
+              {form.name ? form.name.charAt(0).toUpperCase() : <User className="w-10 h-10 md:w-12 md:h-12" />}
             </div>
             <div className="absolute inset-0 bg-brand-500 rounded-full blur-2xl opacity-40 animate-pulse"></div>
           </div>
           <div className="text-center md:text-left">
-            <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">{form.name || "Food Lover"}</h1>
-            <p className="text-slate-505 dark:text-slate-400 mt-2 text-lg font-medium">Manage your personal information and preferences.</p>
+            <h1 className="text-2xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight">{form.name || "Food Lover"}</h1>
+            <p className="text-slate-505 dark:text-slate-400 mt-1.5 md:mt-2 text-sm md:text-lg font-medium">Manage your personal information and preferences.</p>
           </div>
         </Card>
       </motion.div>
@@ -221,242 +221,261 @@ export default function Profile() {
       )}
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-        <Card className="p-6 md:p-10 border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-950">
+        <Card className="p-5 md:p-8 border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-950">
           
-          <div className="mb-10">
+          <div>
             <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100 dark:border-slate-800/60">
-              <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-3 text-xl">
-                <User size={24} className="text-brand-500" /> Account Information
+              <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-3 text-lg md:text-xl">
+                <User size={22} className="text-brand-500" /> Account Details
               </h3>
               {!isEditing && (
                 <Button
                   type="button"
                   onClick={() => setIsEditing(true)}
                   size="sm"
-                  className="rounded-xl px-5 py-2.5 bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs"
+                  className="rounded-xl px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs"
                 >
-                  ⚙️ Edit Account
+                  ⚙️ Edit Profile
                 </Button>
               )}
             </div>
-            {isEditing && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="relative">
-                <label className="text-xs font-bold text-slate-505 dark:text-slate-400 uppercase tracking-wider mb-2 ml-1 block">Full Name</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400"><User size={18} /></div>
-                  <Input name="name" value={form.name} onChange={handleChange} placeholder="John Doe" className="pl-12" disabled={!isEditing} />
-                </div>
-              </div>
-              <div className="relative">
-                <label className="text-xs font-bold text-slate-505 dark:text-slate-400 uppercase tracking-wider mb-2 ml-1 block">Email Address</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400"><Mail size={18} /></div>
-                  <Input name="email" value={form.email} readOnly disabled placeholder="you@example.com" className="pl-12 bg-slate-50 dark:bg-slate-900/40 text-slate-400 dark:text-slate-505 cursor-not-allowed opacity-80" />
-                </div>
-              </div>
-              <div className="relative">
-                <label className="text-xs font-bold text-slate-505 dark:text-slate-400 uppercase tracking-wider mb-2 ml-1 block">Mobile Number</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400"><Phone size={18} /></div>
-                  <Input name="phone" value={form.phone} onChange={handleChange} placeholder="+1 234 567 890" className="pl-12" disabled={!isEditing} />
-                </div>
-              </div>
-              
-              <div className="relative">
-                <label className="text-xs font-bold text-slate-505 dark:text-slate-400 uppercase tracking-wider mb-2 ml-1 block">Food Preference</label>
-                <div className="relative mb-3">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400"><Utensils size={18} /></div>
-                  <Input name="foodPreference" value={form.foodPreference} onChange={handleChange} placeholder="Veg, Non-Veg, Vegan..." className="pl-12" disabled={!isEditing} />
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    { label: "🟢 Veg", value: "Veg" },
-                    { label: "🔴 Non-Veg", value: "Non-Veg" },
-                    { label: "🍰 Sweets", value: "Sweets" },
-                    { label: "🌶️ Spicy", value: "Spicy" },
-                    { label: "🥗 Vegan", value: "Vegan" }
-                  ].map((p) => {
-                    const currentPrefs = form.foodPreference
-                      ? form.foodPreference.split(",").map(item => item.trim().toLowerCase())
-                      : [];
-                    const active = currentPrefs.includes(p.value.toLowerCase());
-                    return (
-                      <button
-                        key={p.value}
-                        type="button"
-                        disabled={!isEditing}
-                        onClick={() => {
-                          const list = form.foodPreference
-                            ? form.foodPreference.split(",").map(item => item.trim()).filter(Boolean)
-                            : [];
-                          let newList;
-                          if (list.some(item => item.toLowerCase() === p.value.toLowerCase())) {
-                            newList = list.filter(item => item.toLowerCase() !== p.value.toLowerCase());
-                          } else {
-                            newList = [...list, p.value];
-                          }
-                          setForm({ ...form, foodPreference: newList.join(", ") });
-                        }}
-                        className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
-                          active
-                            ? "bg-brand-500 text-white border-brand-500 shadow-sm"
-                            : "bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800"
-                        } disabled:opacity-75 disabled:cursor-not-allowed`}
-                      >
-                        {p.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
 
-              <div className="relative">
-                <label className="text-xs font-bold text-slate-505 dark:text-slate-400 uppercase tracking-wider mb-2 ml-1 block">Delivery Time</label>
-                <div className="relative mb-3">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400"><Clock size={18} /></div>
-                  <Input name="deliveryTime" value={form.deliveryTime} onChange={handleChange} placeholder="e.g. 7:00 PM" className="pl-12" disabled={!isEditing} />
+            {!isEditing ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in text-sm font-medium text-slate-700 dark:text-slate-300">
+                <div className="bg-slate-50 dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/60">
+                  <span className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">Full Name</span>
+                  <span className="text-slate-905 dark:text-white font-extrabold">{form.name || "N/A"}</span>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  {[
-                    { label: "ASAP", value: "ASAP" },
-                    { label: "1:00 PM", value: "1:00 PM" },
-                    { label: "8:00 PM", value: "8:00 PM" }
-                  ].map((t) => (
-                    <button
-                      key={t.value}
-                      type="button"
-                      disabled={!isEditing}
-                      onClick={() => setForm({ ...form, deliveryTime: t.value })}
-                      className="px-3 py-1.5 rounded-full text-xs font-bold border bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all disabled:opacity-75 disabled:cursor-not-allowed"
-                    >
-                      🕒 {t.label}
-                    </button>
-                  ))}
+                <div className="bg-slate-50 dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/60">
+                  <span className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">Email Address</span>
+                  <span className="text-slate-905 dark:text-white font-extrabold">{form.email || "N/A"}</span>
+                </div>
+                <div className="bg-slate-50 dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/60">
+                  <span className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">Mobile Number</span>
+                  <span className="text-slate-905 dark:text-white font-extrabold">{form.phone || "N/A"}</span>
+                </div>
+                <div className="bg-slate-50 dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/60">
+                  <span className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">Food Preference</span>
+                  <span className="text-slate-905 dark:text-white font-extrabold">{form.foodPreference || "N/A"}</span>
+                </div>
+                <div className="bg-slate-50 dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/60">
+                  <span className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">Delivery Time</span>
+                  <span className="text-slate-905 dark:text-white font-extrabold">{form.deliveryTime || "N/A"}</span>
+                </div>
+                <div className="bg-slate-50 dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/60 md:col-span-2 lg:col-span-3">
+                  <span className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">Delivery Address</span>
+                  <span className="text-slate-905 dark:text-white font-extrabold whitespace-pre-wrap">{form.address || "N/A"}</span>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-8 animate-fade-in">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                  <div className="relative">
+                    <label className="text-xs font-bold text-slate-500 dark:text-slate-450 uppercase tracking-wider mb-1.5 ml-1 block">Full Name</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400"><User size={16} /></div>
+                      <Input name="name" value={form.name} onChange={handleChange} placeholder="John Doe" className="pl-10" />
+                    </div>
+                  </div>
+                  <div className="relative">
+                    <label className="text-xs font-bold text-slate-500 dark:text-slate-450 uppercase tracking-wider mb-1.5 ml-1 block">Email Address</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400"><Mail size={16} /></div>
+                      <Input name="email" value={form.email} readOnly disabled placeholder="you@example.com" className="pl-10 bg-slate-55/60 dark:bg-slate-900/40 text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-80" />
+                    </div>
+                  </div>
+                  <div className="relative">
+                    <label className="text-xs font-bold text-slate-500 dark:text-slate-450 uppercase tracking-wider mb-1.5 ml-1 block">Mobile Number</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400"><Phone size={16} /></div>
+                      <Input name="phone" value={form.phone} onChange={handleChange} placeholder="+1 234 567 890" className="pl-10" />
+                    </div>
+                  </div>
                   
-                  <div className="relative flex items-center border border-slate-200 dark:border-slate-800 rounded-full px-3 py-1.5 bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
-                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 mr-2">Custom:</span>
-                    <input
-                      type="time"
-                      disabled={!isEditing}
-                      onChange={(e) => {
-                        if (!e.target.value) return;
-                        const [h, m] = e.target.value.split(":");
-                        const hours = parseInt(h);
-                        const ampm = hours >= 12 ? "PM" : "AM";
-                        const formattedHours = hours % 12 || 12;
-                        setForm({ ...form, deliveryTime: `${formattedHours}:${m} ${ampm}` });
-                      }}
-                      className="bg-transparent text-xs font-bold text-slate-700 dark:text-slate-200 outline-none cursor-pointer disabled:cursor-not-allowed"
-                    />
+                  <div className="relative">
+                    <label className="text-xs font-bold text-slate-500 dark:text-slate-450 uppercase tracking-wider mb-1.5 ml-1 block">Food Preference</label>
+                    <div className="relative mb-2.5">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400"><Utensils size={16} /></div>
+                      <Input name="foodPreference" value={form.foodPreference} onChange={handleChange} placeholder="Veg, Non-Veg, Vegan..." className="pl-10" />
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {[
+                        { label: "Veg", value: "Veg" },
+                        { label: "Non-Veg", value: "Non-Veg" },
+                        { label: "Sweets", value: "Sweets" },
+                        { label: "Spicy", value: "Spicy" },
+                        { label: "Vegan", value: "Vegan" }
+                      ].map((p) => {
+                        const currentPrefs = form.foodPreference
+                          ? form.foodPreference.split(",").map(item => item.trim().toLowerCase())
+                          : [];
+                        const active = currentPrefs.includes(p.value.toLowerCase());
+                        return (
+                          <button
+                            key={p.value}
+                            type="button"
+                            onClick={() => {
+                              const list = form.foodPreference
+                                ? form.foodPreference.split(",").map(item => item.trim()).filter(Boolean)
+                                : [];
+                              let newList;
+                              if (list.some(item => item.toLowerCase() === p.value.toLowerCase())) {
+                                newList = list.filter(item => item.toLowerCase() !== p.value.toLowerCase());
+                              } else {
+                                newList = [...list, p.value];
+                              }
+                              setForm({ ...form, foodPreference: newList.join(", ") });
+                            }}
+                            className={`px-2.5 py-1 rounded-full text-[10px] font-bold border transition-all ${
+                              active
+                                ? "bg-brand-500 text-white border-brand-500 shadow-sm"
+                                : "bg-slate-50 dark:bg-slate-900 text-slate-655 dark:text-slate-350 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800"
+                            }`}
+                          >
+                            {p.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="relative">
+                    <label className="text-xs font-bold text-slate-500 dark:text-slate-450 uppercase tracking-wider mb-1.5 ml-1 block">Delivery Time</label>
+                    <div className="relative mb-2.5">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400"><Clock size={16} /></div>
+                      <Input name="deliveryTime" value={form.deliveryTime} onChange={handleChange} placeholder="e.g. 7:00 PM" className="pl-10" />
+                    </div>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {[
+                        { label: "ASAP", value: "ASAP" },
+                        { label: "1:00 PM", value: "1:00 PM" },
+                        { label: "8:00 PM", value: "8:00 PM" }
+                      ].map((t) => (
+                        <button
+                          key={t.value}
+                          type="button"
+                          onClick={() => setForm({ ...form, deliveryTime: t.value })}
+                          className="px-2.5 py-1 rounded-full text-[10px] font-bold border bg-slate-50 dark:bg-slate-900 text-slate-655 dark:text-slate-350 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+                        >
+                          {t.label}
+                        </button>
+                      ))}
+                      
+                      <div className="relative flex items-center border border-slate-200 dark:border-slate-800 rounded-full px-2 py-1 bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
+                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-550 mr-1.5">Custom:</span>
+                        <input
+                          type="time"
+                          onChange={(e) => {
+                            if (!e.target.value) return;
+                            const [h, m] = e.target.value.split(":");
+                            const hours = parseInt(h);
+                            const ampm = hours >= 12 ? "PM" : "AM";
+                            const formattedHours = hours % 12 || 12;
+                            setForm({ ...form, deliveryTime: `${formattedHours}:${m} ${ampm}` });
+                          }}
+                          className="bg-transparent text-[10px] font-bold text-slate-700 dark:text-slate-200 outline-none cursor-pointer"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
+
+                <div className="pt-6 border-t border-slate-100 dark:border-slate-800/60">
+                  <h3 className="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-3 text-lg">
+                    <MapPin size={22} className="text-brand-500" /> Delivery Address
+                  </h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-xs font-bold text-slate-500 dark:text-slate-450 uppercase tracking-wider mb-2 block">Address Type</label>
+                      <div className="flex flex-wrap gap-2.5">
+                        {[
+                          { id: "home", label: "Home", icon: "🏠" },
+                          { id: "office", label: "Office", icon: "🏢" },
+                          { id: "custom", label: "Custom", icon: "📍" }
+                        ].map((t) => {
+                          const active = getAddressType(form.address) === t.id;
+                          return (
+                            <button
+                              key={t.id}
+                              type="button"
+                              onClick={() => handleAddressTypeChange(t.id)}
+                              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold border transition-all ${
+                                active
+                                  ? "bg-brand-500 text-white border-brand-500 shadow-sm"
+                                  : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-350 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800"
+                              }`}
+                            >
+                              <span>{t.icon}</span>
+                              <span>{t.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <div className="flex justify-between items-center mb-1.5">
+                        <label className="text-xs font-bold text-slate-500 dark:text-slate-450 uppercase tracking-wider ml-1">Address Details</label>
+                        <button
+                          type="button"
+                          onClick={useCurrentLocation}
+                          className="flex items-center gap-1 px-2.5 py-1 bg-brand-50 dark:bg-brand-950/30 hover:bg-brand-100 dark:hover:bg-brand-900/40 text-brand-600 dark:text-brand-400 rounded-lg text-[10px] font-bold transition-all"
+                        >
+                          {locationLoading ? (
+                            <div className="w-3 h-3 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <Navigation size={10} />
+                          )}
+                          Get Location
+                        </button>
+                      </div>
+                      <textarea
+                        name="address"
+                        value={getCleanAddressText(form.address)}
+                        onChange={handleAddressTextChange}
+                        placeholder={
+                          getAddressType(form.address) === "home"
+                            ? "Enter your Home address..."
+                            : getAddressType(form.address) === "office"
+                            ? "Enter your Office address..."
+                            : "Enter street address details..."
+                        }
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-brand-500/15 focus:border-brand-500 transition-all outline-none resize-y min-h-[90px] text-slate-900 dark:text-white font-medium text-sm placeholder-slate-400 dark:placeholder:text-slate-500 shadow-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-6 border-t border-slate-100 dark:border-slate-800/60 flex justify-end gap-3">
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      setForm(originalForm);
+                      setIsEditing(false);
+                    }}
+                    variant="secondary"
+                    className="px-6 py-2.5 text-sm rounded-xl"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="px-6 py-2.5 text-sm rounded-xl shadow-brand-500/20"
+                  >
+                    {saving ? (
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <>
+                        <Save size={16} className="mr-1.5" />
+                        Save Changes
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
-            </div>
             )}
           </div>
-
-          {isEditing && (
-            <div className="mb-10">
-              <h3 className="font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-3 text-xl pb-4 border-b border-slate-100 dark:border-slate-800/60">
-                <MapPin size={24} className="text-brand-500" /> Delivery Information
-              </h3>
-              <div className="space-y-6">
-                <div className="relative">
-                  <label className="text-xs font-bold text-slate-550 dark:text-slate-400 uppercase tracking-wider mb-3 ml-1 block">Address Type</label>
-                  <div className="flex flex-wrap gap-3 mb-4">
-                    {[
-                      { id: "home", label: "Home", icon: "🏠" },
-                      { id: "office", label: "Office", icon: "🏢" },
-                      { id: "custom", label: "Own Address", icon: "📍" }
-                    ].map((t) => {
-                      const active = getAddressType(form.address) === t.id;
-                      return (
-                        <button
-                          key={t.id}
-                          type="button"
-                          disabled={!isEditing}
-                          onClick={() => handleAddressTypeChange(t.id)}
-                          className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold border transition-all ${
-                            active
-                              ? "bg-brand-500 text-white border-brand-500 shadow-md shadow-brand-500/20"
-                              : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-355 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800"
-                          } disabled:opacity-75 disabled:cursor-not-allowed`}
-                        >
-                          <span>{t.icon}</span>
-                          <span>{t.label}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                  
-                  <div className="flex justify-between items-center mb-2">
-                    <label className="text-xs font-bold text-slate-505 dark:text-slate-400 uppercase tracking-wider ml-1 block">Delivery Address Details</label>
-                    <button
-                      type="button"
-                      disabled={!isEditing}
-                      onClick={useCurrentLocation}
-                      className="flex items-center gap-1.5 px-3.5 py-1.5 bg-brand-50 dark:bg-brand-950/30 hover:bg-brand-100 dark:hover:bg-brand-900/40 text-brand-600 dark:text-brand-405 rounded-xl text-xs font-bold transition-all shadow-sm disabled:opacity-75 disabled:cursor-not-allowed"
-                    >
-                      {locationLoading ? (
-                        <div className="w-3.5 h-3.5 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
-                      ) : (
-                        <Navigation size={12} />
-                      )}
-                      Use Current Location
-                    </button>
-                  </div>
-                  <textarea
-                    name="address"
-                    value={getCleanAddressText(form.address)}
-                    onChange={handleAddressTextChange}
-                    disabled={!isEditing}
-                    placeholder={
-                      getAddressType(form.address) === "home"
-                        ? "Enter your Home address details..."
-                        : getAddressType(form.address) === "office"
-                        ? "Enter your Office address details..."
-                        : "Enter your custom / own street address..."
-                    }
-                    className="w-full px-5 py-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-950 focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 transition-all outline-none resize-y min-h-[120px] text-slate-900 dark:text-white font-medium placeholder-slate-400 dark:placeholder:text-slate-500 shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-
-          {isEditing && (
-            <div className="mt-10 flex justify-end gap-4 pt-6 border-t border-slate-100 dark:border-slate-800/60">
-              <Button
-                type="button"
-                onClick={() => {
-                  setForm(originalForm);
-                  setIsEditing(false);
-                }}
-                variant="secondary"
-                size="lg"
-                className="px-8 py-4 text-lg rounded-full"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleSave}
-                disabled={saving}
-                size="lg"
-                className="px-10 py-4 text-lg rounded-full shadow-brand-500/25"
-              >
-                {saving ? (
-                  <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <>
-                    <Save size={20} className="mr-2" />
-                    Save Changes
-                  </>
-                )}
-              </Button>
-            </div>
-          )}
         </Card>
       </motion.div>
 

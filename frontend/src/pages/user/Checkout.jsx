@@ -276,30 +276,30 @@ export default function Checkout() {
 
   return (
     <div className="max-w-5xl mx-auto w-full pb-10">
-      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
-        <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">Checkout Securely</h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-2 text-lg font-medium">Complete your order details and payment.</p>
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6 md:mb-10">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight">Checkout Securely</h1>
+        <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm sm:text-base md:text-lg font-medium">Complete your order details and payment.</p>
       </motion.div>
 
-      <div className="flex flex-col lg:flex-row gap-8">
-        <div className="flex-1 space-y-6">
+      <div className="flex flex-col lg:flex-row gap-6 md:gap-8">
+        <div className="flex-1 space-y-4 md:space-y-6">
           {/* Delivery Details Section */}
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-            <Card className="p-6 md:p-8 relative overflow-hidden border-slate-100 dark:border-slate-800/60">
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-8 flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
-                <MapPin size={24} className="text-brand-500" />
+            <Card className="p-4 sm:p-6 md:p-8 relative overflow-hidden border-slate-100 dark:border-slate-800/60 rounded-3xl">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4 md:mb-6 flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
+                <MapPin size={20} className="text-brand-500" />
                 Delivery Details
               </h2>
               
-              <div className="space-y-6 relative z-10">
+              <div className="space-y-4 md:space-y-6 relative z-10">
                 <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <label className="text-sm font-bold text-slate-700 dark:text-slate-300 block">Delivery Address</label>
-                    <Button variant="ghost" size="sm" onClick={useCurrentLocation} className="text-brand-600 gap-2 px-3 bg-brand-50 dark:bg-brand-950/40 hover:bg-brand-100 dark:hover:bg-slate-800 rounded-xl">
+                  <div className="flex justify-between items-center mb-1.5">
+                    <label className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 block">Delivery Address</label>
+                    <Button variant="ghost" size="sm" onClick={useCurrentLocation} className="text-brand-600 gap-1.5 px-2.5 py-1 bg-brand-50 dark:bg-brand-950/40 hover:bg-brand-100 dark:hover:bg-slate-800 rounded-lg text-xs">
                       {locationLoading ? (
-                        <div className="w-4 h-4 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+                        <div className="w-3.5 h-3.5 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
                       ) : (
-                        <Navigation size={14} />
+                        <Navigation size={12} />
                       )}
                       Use Current Location
                     </Button>
@@ -311,34 +311,34 @@ export default function Checkout() {
                       setAddress(e.target.value);
                       setUserCoords(null);
                     }}
-                    className="w-full px-5 py-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 transition-all outline-none resize-y min-h-[120px] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 font-medium shadow-sm"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-brand-500/15 focus:border-brand-500 transition-all outline-none resize-y min-h-[90px] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder:text-slate-500 text-sm font-medium shadow-sm"
                   />
                 </div>
 
 
                 <div>
-                  <label className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 block">Phone Number</label>
+                  <label className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5 block">Phone Number</label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                      <Phone size={18} className="text-slate-400 dark:text-slate-500" />
+                      <Phone size={16} className="text-slate-400 dark:text-slate-500" />
                     </div>
                     <Input
                       type="tel"
                       placeholder="Enter phone number"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      className="pl-12 py-3.5 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white border-slate-200 dark:border-slate-800 rounded-2xl"
+                      className="pl-10 py-2.5 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white border-slate-200 dark:border-slate-800 rounded-xl text-sm"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 block">Order Notes / Instructions (Optional)</label>
+                  <label className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5 block">Order Notes / Instructions (Optional)</label>
                   <textarea
                     placeholder="e.g. Make it extra spicy, don't add onions, ring bell twice..."
                     value={customMessage}
                     onChange={(e) => setCustomMessage(e.target.value)}
-                    className="w-full px-5 py-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-905 focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 transition-all outline-none resize-y min-h-[80px] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-505 font-medium shadow-sm"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-905 focus:ring-2 focus:ring-brand-500/15 focus:border-brand-500 transition-all outline-none resize-y min-h-[70px] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder:text-slate-505 text-sm font-medium shadow-sm"
                   />
                 </div>
               </div>
@@ -347,20 +347,20 @@ export default function Checkout() {
 
           {/* Payment Options Section */}
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}>
-            <Card className="p-6 md:p-8 border-slate-100 dark:border-slate-800/60">
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
-                <CreditCard size={24} className="text-brand-500" />
+            <Card className="p-4 sm:p-6 md:p-8 border-slate-100 dark:border-slate-800/60 rounded-3xl">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4 md:mb-6 flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
+                <CreditCard size={20} className="text-brand-500" />
                 Payment Method
               </h2>
 
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {paymentOptions.map((opt) => (
                   <label 
                     key={opt.id}
                     className={cn(
-                      "flex items-center p-5 border-2 rounded-[1.25rem] cursor-pointer transition-all duration-300",
+                      "flex items-center p-3.5 sm:p-5 border-2 rounded-2xl cursor-pointer transition-all duration-300",
                       paymentMethod === opt.id 
-                        ? "border-brand-500 bg-brand-50/50 dark:bg-brand-500/10 shadow-md shadow-brand-500/10" 
+                        ? "border-brand-500 bg-brand-50/50 dark:bg-brand-500/10 shadow-sm" 
                         : "border-slate-100 dark:border-slate-800/60 hover:border-slate-300 dark:hover:border-slate-700 bg-slate-50/50 dark:bg-slate-900/40"
                     )}
                   >
@@ -370,24 +370,24 @@ export default function Checkout() {
                       value={opt.id} 
                       checked={paymentMethod === opt.id}
                       onChange={(e) => setPaymentMethod(e.target.value)}
-                      className="w-5 h-5 text-brand-600 focus:ring-brand-500 border-slate-300 dark:border-slate-700"
+                      className="w-4 h-4 text-brand-600 focus:ring-brand-500 border-slate-300 dark:border-slate-700"
                     />
-                    <div className="ml-5 flex items-center gap-4">
-                      <div className={cn("w-10 h-10 rounded-full flex items-center justify-center transition-colors", paymentMethod === opt.id ? "bg-brand-100 dark:bg-brand-950 text-brand-600 dark:text-brand-400" : "bg-white dark:bg-slate-950 text-slate-400 dark:text-slate-500 shadow-sm")}>
+                    <div className="ml-4 flex items-center gap-3">
+                      <div className={cn("w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-colors shrink-0", paymentMethod === opt.id ? "bg-brand-100 dark:bg-brand-950 text-brand-600 dark:text-brand-400" : "bg-white dark:bg-slate-950 text-slate-400 dark:text-slate-500 shadow-sm")}>
                         {opt.icon}
                       </div>
                       <div>
-                        <span className="block font-bold text-slate-900 dark:text-white text-lg">{opt.title}</span>
-                        <span className="text-sm text-slate-500 dark:text-slate-400 font-medium">{opt.desc}</span>
+                        <span className="block font-bold text-slate-900 dark:text-white text-sm sm:text-base">{opt.title}</span>
+                        <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{opt.desc}</span>
                       </div>
                     </div>
                   </label>
                 ))}
               </div>
 
-              <div className="mt-6 p-4 rounded-2xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/30 flex items-start gap-3">
-                <span className="text-sm">ℹ️</span>
-                <p className="text-xs text-amber-800 dark:text-amber-300 font-medium leading-relaxed">
+              <div className="mt-5 p-3 rounded-xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-100/60 dark:border-amber-900/20 flex items-start gap-2.5">
+                <span className="text-xs">ℹ️</span>
+                <p className="text-[11px] text-amber-800 dark:text-amber-300 font-medium leading-relaxed">
                   If payment icons, UPI logos, or QR codes fail to load, please temporarily disable any ad-blockers, tracking protection, or privacy shields (such as Brave Shield) for this site. Security extensions often mistakenly block secure payment assets.
                 </p>
               </div>
@@ -396,42 +396,42 @@ export default function Checkout() {
         </div>
 
         {/* Order Summary */}
-        <div className="w-full lg:w-[400px] shrink-0">
+        <div className="w-full lg:w-[380px] shrink-0">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-            <Card className="p-8 sticky top-24 border-slate-100 dark:border-slate-800/60 rounded-[2rem]">
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6 border-b border-slate-100 dark:border-slate-800 pb-4">Order Summary</h3>
+            <Card className="p-5 md:p-8 sticky top-24 border-slate-100 dark:border-slate-800/60 rounded-3xl md:rounded-[2rem]">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 border-b border-slate-100 dark:border-slate-800 pb-3">Order Summary</h3>
               
-              <div className="space-y-4 mb-6">
-                <div className="flex justify-between items-center text-slate-500 dark:text-slate-400 font-medium text-lg">
+              <div className="space-y-3 mb-4 md:mb-6 text-sm text-slate-550 dark:text-slate-400 font-medium">
+                <div className="flex justify-between items-center">
                   <span>Subtotal ({cart.length} items)</span>
                   <span className="font-bold text-slate-900 dark:text-white">₹{subtotal}</span>
                 </div>
                 
-                <div className="flex justify-between items-center text-slate-500 dark:text-slate-400 font-medium text-lg">
+                <div className="flex justify-between items-center">
                   <span>Delivery Charge</span>
                   <span className="font-bold text-slate-900 dark:text-white">₹{deliveryCharge}</span>
                 </div>
               </div>
               
-              <div className="flex justify-between items-center pt-6 border-t border-dashed border-slate-200 dark:border-slate-800 mb-8">
-                <span className="text-2xl font-bold text-slate-900 dark:text-white">Total</span>
-                <span className="text-4xl font-black text-brand-500">₹{total}</span>
+              <div className="flex justify-between items-center pt-4 border-t border-dashed border-slate-200 dark:border-slate-800 mb-6 md:mb-8">
+                <span className="text-lg font-bold text-slate-900 dark:text-white">Total</span>
+                <span className="text-2xl md:text-3xl font-black text-brand-500">₹{total}</span>
               </div>
 
               <Button
                 onClick={placeOrder}
                 disabled={loading}
-                className="w-full py-5 text-lg gap-2 rounded-2xl shadow-brand-500/25 transition-transform hover:-translate-y-1"
+                className="w-full py-3 text-sm md:py-4 md:text-base font-bold gap-2 rounded-xl md:rounded-2xl shadow-brand-500/25 transition-transform hover:-translate-y-0.5"
               >
                 {loading ? (
-                  <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <>
-                    <CheckCircle size={22} /> Confirm Order
+                    <CheckCircle size={18} /> Confirm Order
                   </>
                 )}
               </Button>
-              <p className="text-center text-sm text-slate-400 dark:text-slate-500 mt-6 font-medium">
+              <p className="text-center text-xs text-slate-400 dark:text-slate-500 mt-4 md:mt-6 font-medium">
                 By placing your order, you agree to our Terms of Service & Privacy Policy.
               </p>
             </Card>
