@@ -138,19 +138,19 @@ export default function App() {
     return (
       <div className="fixed inset-0 bg-slate-950 flex flex-col items-center justify-center p-6 text-center text-white z-[99999]">
         <div className="relative mb-6">
-          <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center text-5xl shadow-xl shadow-orange-500/25 animate-bounce">
+          <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-brand-500 to-brand-300 flex items-center justify-center text-5xl shadow-xl shadow-brand-500/25 animate-bounce">
             🍔
           </div>
-          <div className="absolute -inset-1 bg-gradient-to-br from-orange-500 to-red-600 rounded-3xl blur opacity-30 animate-pulse -z-10"></div>
+          <div className="absolute -inset-1 bg-gradient-to-br from-brand-500 to-brand-300 rounded-3xl blur opacity-30 animate-pulse -z-10"></div>
         </div>
-        <h1 className="text-3xl font-black tracking-tight mb-2 bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">
+        <h1 className="text-3xl font-black tracking-tight mb-2 bg-gradient-to-r from-brand-500 to-brand-300 bg-clip-text text-transparent">
           ByteBite
         </h1>
         <p className="text-slate-500 text-xs font-bold tracking-widest uppercase mb-8">
           Delivering Happiness
         </p>
         <div className="flex items-center gap-2.5 text-slate-400 text-xs font-bold bg-slate-900 px-4.5 py-2.5 rounded-full border border-slate-800 shadow-lg">
-          <div className="w-4 h-4 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-4 h-4 border-2 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
           Restoring Session...
         </div>
       </div>

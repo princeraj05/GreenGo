@@ -4,9 +4,9 @@ export default function ActiveOrdersCard({ activeOrdersCount }) {
   if (activeOrdersCount === 0) return null;
 
   return (
-    <div className="bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-950/20 dark:to-red-950/20 rounded-2xl p-6 border border-orange-100 dark:border-orange-900/50 shadow-sm mb-10 relative overflow-hidden">
+    <div className="bg-gradient-to-r from-brand-50 to-brand-100 dark:from-brand-950/20 dark:to-brand-900/20 rounded-2xl p-6 border border-brand-100 dark:border-brand-900/50 shadow-sm mb-10 relative overflow-hidden">
       <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
-        <svg className="w-32 h-32 text-orange-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+        <svg className="w-32 h-32 text-brand-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
       </div>
       
       <div className="flex flex-col sm:flex-row items-center justify-between gap-6 relative z-10">

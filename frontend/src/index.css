@@ -4,6 +4,63 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* Brand colors */
+  --brand-50: #f0fdf4;
+  --brand-100: #dcfce7;
+  --brand-200: #bbf7d0;
+  --brand-300: #86efac;
+  --brand-400: #22c55e; /* Secondary Green (Light Mode) */
+  --brand-500: #16a34a; /* Primary Green (Light Mode) */
+  --brand-600: #15803d; /* Hover Green (Light Mode) */
+  --brand-700: #166534;
+  --brand-800: #14532d;
+  --brand-900: #134e5e;
+  --brand-950: #052e16;
+
+  /* Slate colors for general UI in Light Mode */
+  --slate-50: #fcfdfc; /* Clean green-tinted light background */
+  --slate-100: #f3f4f6;
+  --slate-200: #e5e7eb;
+  --slate-300: #d1d5db;
+  --slate-400: #9ca3af;
+  --slate-500: #6b7280;
+  --slate-600: #4b5563;
+  --slate-700: #374151;
+  --slate-800: #1f2937;
+  --slate-900: #111827;
+  --slate-950: #030712;
+}
+
+.dark {
+  /* Brand colors for Dark Mode */
+  --brand-50: #092c11;
+  --brand-100: #0b3c18;
+  --brand-200: #86efac;
+  --brand-300: #86efac;
+  --brand-400: #4ade80; /* Secondary Green */
+  --brand-500: #32d74b; /* Primary Green / Button (Dark Mode) */
+  --brand-600: #22c55e; /* Hover Green (Dark Mode) */
+  --brand-700: #15803d;
+  --brand-800: #166534;
+  --brand-900: #14532d;
+  --brand-950: #052e16;
+
+  /* Slate colors for general UI in Dark Mode (GreenGO style) */
+  --slate-50: #ffffff;
+  --slate-100: #121a14;
+  --slate-200: #374151;
+  --slate-300: #4b5563;
+  --slate-400: #9ca3af;
+  --slate-500: #6b7280;
+  --slate-600: #9ca3af;
+  --slate-700: #374151;
+  --slate-800: #1c271e;
+  --slate-900: #121a14; /* Cards background */
+  --slate-950: #0b0f0c; /* Background */
+}
+
+
 @layer base {
   html {
     -webkit-tap-highlight-color: transparent;

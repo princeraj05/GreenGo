@@ -27,13 +27,13 @@ export default function ForgotPassword() {
     <div className="min-h-screen w-full flex items-center justify-center bg-gray-50 dark:bg-transparent px-4 py-10 overflow-hidden relative">
 
       {/* Decorative Background Elements */}
-      <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-orange-500/10 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
-      <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-red-500/10 rounded-full blur-[100px] translate-x-1/3 translate-y-1/3 pointer-events-none" />
+      <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-brand-500/10 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-brand-300/10 rounded-full blur-[100px] translate-x-1/3 translate-y-1/3 pointer-events-none" />
 
       <div className="relative w-full max-w-md z-10">
 
         <div className="flex flex-col items-center mb-8">
-          <Link to="/" className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center shadow-xl shadow-orange-500/30 mb-4 hover:scale-105 transition-transform">
+          <Link to="/" className="w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-300 flex items-center justify-center shadow-xl shadow-brand-500/30 mb-4 hover:scale-105 transition-transform">
             <span className="text-3xl text-white">🍔</span>
           </Link>
           <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">ByteBite</h1>
@@ -73,7 +73,7 @@ export default function ForgotPassword() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-4 mt-4 rounded-xl bg-gradient-to-r from-orange-500 to-red-600 text-white font-black text-lg shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 hover:-translate-y-1 transition-all active:scale-95 disabled:opacity-70 disabled:hover:translate-y-0 disabled:hover:shadow-orange-500/30"
+              className="w-full py-4 mt-4 rounded-xl bg-gradient-to-r from-brand-500 to-brand-400 text-white font-black text-lg shadow-lg shadow-brand-500/30 hover:shadow-brand-500/50 hover:-translate-y-1 transition-all active:scale-95 disabled:opacity-70 disabled:hover:translate-y-0 disabled:hover:shadow-brand-500/30"
             >
               {loading ? "Sending link..." : "Send Reset Link →"}
             </button>
