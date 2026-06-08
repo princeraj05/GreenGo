@@ -308,6 +308,7 @@ export default function Menu() {
 
   const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
   const cartCount = cart.reduce((sum, item) => sum + item.qty, 0);
+  const unreadNotificationCount = notifications.filter((item) => !(item.isRead || item.read)).length;
 
   const activeBannersList = banners.length > 0 ? banners : defaultBanners;
   const currentBanner = activeBannersList[currentBannerIdx];
@@ -417,13 +418,13 @@ export default function Menu() {
 
           {/* Notifications Icon with unread badge */}
           <button
-            onClick={() => navigate("/user/contact")}
+            onClick={() => navigate("/user/notifications")}
             className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800 relative"
           >
             <Bell size={16} />
-            {notifications.length > 0 && (
+            {unreadNotificationCount > 0 && (
               <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-black h-4 min-w-[16px] px-1 rounded-full flex items-center justify-center border border-white dark:border-slate-900">
-                {notifications.length}
+                {unreadNotificationCount}
               </span>
             )}
           </button>

@@ -1,4 +1,5 @@
 import Contact from "../models/Contact.js";
+import Notification from "../models/Notification.js";
 import { sendContactReplyEmail } from "../services/emailService.js";
 
 const getSafeEmailError = (error) => {
@@ -80,6 +81,15 @@ export const replyToContact = async (req, res) => {
     }
 
     await contact.save();
+
+    if (contact.uid) {
+      await Notification.create({
+        userId: contact.uid,
+        title: "Support reply",
+        message: `Admin replied to your message: ${cleanReply.slice(0, 120)}${cleanReply.length > 120 ? "..." : ""}`,
+        type: "info",
+      });
+    }
 
     res.json({
       success: true,

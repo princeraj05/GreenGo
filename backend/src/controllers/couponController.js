@@ -1,4 +1,5 @@
 import Coupon from "../models/Coupon.js";
+import Notification from "../models/Notification.js";
 
 /* ================= CREATE COUPON ================= */
 export const createCoupon = async (req, res) => {
@@ -19,6 +20,14 @@ export const createCoupon = async (req, res) => {
       expiryDate,
       active
     });
+
+    if (active !== false) {
+      await Notification.create({
+        title: "New coupon available",
+        message: `${title || "New promo code"} is live. Use code ${String(code || "").toUpperCase()} and save on your next order.`,
+        type: "success",
+      });
+    }
 
     res.json({ success: true, coupon });
   } catch (err) {

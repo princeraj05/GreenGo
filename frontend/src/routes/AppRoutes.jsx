@@ -21,6 +21,7 @@ const Profile = lazy(() => import("../pages/user/Profile"));
 const UserContact = lazy(() => import("../pages/user/Contact"));
 const Wishlist = lazy(() => import("../pages/user/Wishlist"));
 const BudgetAssistantPage = lazy(() => import("../pages/user/BudgetAssistantPage"));
+const Notifications = lazy(() => import("../pages/user/Notifications"));
 
 /* ADMIN */
 import AdminLayout from "../pages/admin/AdminLayout";
@@ -74,6 +75,7 @@ export default function AppRoutes() {
           <Route path="wishlist" element={<Wishlist />} />
           <Route path="contact" element={<UserContact />} />
           <Route path="budget-assistant" element={<BudgetAssistantPage />} />
+          <Route path="notifications" element={<Notifications />} />
         </Route>
 
         {/* ADMIN PANEL */}

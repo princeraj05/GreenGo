@@ -125,7 +125,7 @@ export default function ManageNotifications() {
             
             <form onSubmit={handleSend} className="space-y-5">
               <div>
-                <label className="block text-sm font-bold text-slate-700 dark:text-slate-350 mb-2">Title *</label>
+                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Title *</label>
                 <input 
                   type="text"
                   className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all placeholder:text-slate-450 dark:placeholder:text-slate-500 font-medium text-sm"
@@ -139,7 +139,7 @@ export default function ManageNotifications() {
               <div>
                 <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Message Body *</label>
                 <textarea 
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none min-h-[120px] text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-955 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all placeholder:text-slate-455 dark:placeholder:text-slate-500 font-medium text-sm resize-none"
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none min-h-[120px] text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500 font-medium text-sm resize-none"
                   placeholder="Type your announcement or deal details..." 
                   required 
                   value={form.message} 
@@ -199,7 +199,7 @@ export default function ManageNotifications() {
             
             <div className="flex flex-col gap-4 overflow-y-auto pr-1 flex-1">
               {notifications.length === 0 ? (
-                <div className="text-center py-20 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center text-slate-400 dark:text-slate-550 gap-2">
+                <div className="text-center py-20 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 gap-2">
                   <span>📢</span>
                   <p className="font-bold">No active broadcast messages found.</p>
                 </div>
@@ -209,7 +209,7 @@ export default function ManageNotifications() {
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <h4 className="font-extrabold text-slate-800 dark:text-white text-base leading-tight">{n.title}</h4>
-                        <span className="text-[11px] text-slate-400 dark:text-slate-550 block mt-1 leading-none">
+                        <span className="text-[11px] text-slate-400 dark:text-slate-500 block mt-1 leading-none">
                           Sent: {new Date(n.createdAt).toLocaleString()}
                         </span>
                       </div>

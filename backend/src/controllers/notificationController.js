@@ -30,7 +30,10 @@ export const getAllNotifications = async (req, res) => {
         { expiresAt: { $gt: new Date() } }
       ]
     }).sort({ createdAt: -1 });
-    res.json(notifications);
+    res.json(notifications.map((notification) => ({
+      ...notification.toObject(),
+      isRead: Boolean(notification.read || (notification.readBy || []).includes(req.user.id)),
+    })));
   } catch (err) {
     res.status(500).json({ message: "Server error" });
   }
@@ -106,7 +109,30 @@ export const deleteNotification = async (req, res) => {
 export const markAsRead = async (req, res) => {
   try {
     const notificationId = req.params.id;
-    await Notification.findByIdAndUpdate(notificationId, { read: true });
+    const notification = await Notification.findOne({
+      _id: notificationId,
+      $or: [
+        { userId: req.user.id },
+        { userId: { $exists: false } },
+        { userId: null },
+        { userId: "" }
+      ]
+    });
+
+    if (!notification) {
+      return res.status(404).json({ message: "Notification not found" });
+    }
+
+    if (notification.userId) {
+      notification.read = true;
+    }
+    if (!notification.readBy) {
+      notification.readBy = [];
+    }
+    if (!(notification.readBy || []).includes(req.user.id)) {
+      notification.readBy.push(req.user.id);
+    }
+    await notification.save();
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ message: "Server error" });

@@ -2,7 +2,7 @@ import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { 
   LayoutDashboard, UtensilsCrossed, ShoppingCart, 
-  Clock, User, Phone, LogOut, Menu, X, Home, Sun, Moon, Heart, MessageCircle
+  Clock, User, Phone, LogOut, Menu, X, Home, Sun, Moon, Heart, MessageCircle, Bell
 } from "lucide-react";
 import { getToken } from "../../utils/getToken";
 import { clearSession } from "../../utils/authStorage";
@@ -136,6 +136,7 @@ export default function UserLayout() {
     { to: "/user/wishlist", label: "Wishlist", icon: <Heart size={20} /> },
     { to: "/user/cart", label: "Cart", icon: <ShoppingCart size={20} /> },
     { to: "/user/orders", label: "Orders", icon: <Clock size={20} /> },
+    { to: "/user/notifications", label: "Notifications", icon: <Bell size={20} /> },
     { to: "/user/contact", label: "Message", icon: <MessageCircle size={20} /> },
   ];
 

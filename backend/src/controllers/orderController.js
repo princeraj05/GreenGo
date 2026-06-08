@@ -1,5 +1,6 @@
 import Order from "../models/Order.js";
 import Settings from "../models/Settings.js";
+import Notification from "../models/Notification.js";
 
 function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
   const R = 6371; // Earth's radius in km
@@ -99,6 +100,13 @@ export const createOrder = async (req, res) => {
       customMessage: customMessage || ""
     });
 
+    await Notification.create({
+      userId: req.user.id,
+      title: "Order placed",
+      message: `Your order #${String(order._id).slice(-6).toUpperCase()} has been placed successfully.`,
+      type: "success",
+    });
+
     res.json({
       success:true,
       order
@@ -153,6 +161,7 @@ export const updateOrderStatus = async (req,res)=>{
   try {
     const order = await Order.findById(orderId);
     if(!order) return res.status(404).json({message:"Order not found"});
+    const previousStatus = order.status;
 
     // Only apply stats when transitioning to Delivered
     if (status === "Delivered" && order.status !== "Delivered") {
@@ -184,6 +193,22 @@ export const updateOrderStatus = async (req,res)=>{
     }
 
     await Order.findByIdAndUpdate(orderId, update);
+
+    if (status && status !== previousStatus) {
+      const statusMessages = {
+        Pending: "Your order is pending confirmation.",
+        Preparing: "Your order is now being prepared.",
+        "Out for Delivery": "Your order is out for delivery.",
+        Delivered: "Your order has been delivered. Enjoy your meal!",
+      };
+
+      await Notification.create({
+        userId: order.userId,
+        title: `Order ${status}`,
+        message: `Order #${String(order._id).slice(-6).toUpperCase()}: ${statusMessages[status] || `Status changed to ${status}.`}`,
+        type: status === "Delivered" ? "success" : "info",
+      });
+    }
     res.json({success:true});
   } catch (err) {
     console.error("Update status error:", err);
