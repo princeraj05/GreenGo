@@ -143,7 +143,6 @@ export default function UserLayout() {
     { to: "/user/menu", label: "Menu", icon: <UtensilsCrossed size={20} /> },
     { to: "/user/cart", label: "Cart", icon: <ShoppingCart size={20} />, badge: cartCount },
     { to: "/user/orders", label: "Orders", icon: <Clock size={20} />, badge: pendingCount },
-    { to: "/user/profile", label: "Profile", icon: <User size={20} /> },
     { to: "/user/contact", label: "Contact", icon: <Phone size={20} /> },
   ];
 
@@ -232,7 +231,7 @@ export default function UserLayout() {
             </div>
             <span className="font-extrabold text-slate-900 dark:text-white text-lg">ByteBite</span>
           </div>
-          {/* Right actions (theme toggle) */}
+          {/* Right actions (theme toggle + profile) */}
           <div className="flex items-center gap-2">
             <button
               onClick={toggleTheme}
@@ -240,6 +239,12 @@ export default function UserLayout() {
               aria-label="Toggle Theme"
             >
               {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
+            <button 
+              onClick={() => navigate("/user/profile")}
+              className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors border border-slate-100 dark:border-slate-800 shadow-sm"
+            >
+              <User size={18} />
             </button>
           </div>
         </div>

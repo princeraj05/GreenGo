@@ -386,56 +386,6 @@ export default function Profile() {
             </div>
           </div>
 
-          <div className="mb-6">
-            <h3 className="font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-3 text-xl pb-4 border-b border-slate-100 dark:border-slate-800/60">
-              <Settings size={24} className="text-brand-500" /> Preferences
-            </h3>
-            <div className="space-y-4">
-              <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 ml-1 block">Notification Channels</label>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {[
-                  { label: "Email Notifications", value: "Email", icon: "📧" },
-                  { label: "SMS Notifications", value: "SMS", icon: "💬" },
-                  { label: "Push Notifications", value: "Push", icon: "📱" }
-                ].map((n) => {
-                  const currentChannels = form.notifications
-                    ? form.notifications.split(",").map(c => c.trim().toLowerCase())
-                    : [];
-                  const active = currentChannels.includes(n.value.toLowerCase());
-                  
-                  return (
-                    <button
-                      key={n.value}
-                      type="button"
-                      onClick={() => {
-                        const list = form.notifications
-                          ? form.notifications.split(",").map(c => c.trim()).filter(Boolean)
-                          : [];
-                        let newList;
-                        if (list.some(c => c.toLowerCase() === n.value.toLowerCase())) {
-                          newList = list.filter(c => c.toLowerCase() !== n.value.toLowerCase());
-                        } else {
-                          newList = [...list, n.value];
-                        }
-                        setForm({ ...form, notifications: newList.join(", ") });
-                      }}
-                      className={`flex flex-col items-center justify-center p-5 rounded-2xl border transition-all ${
-                        active
-                          ? "bg-brand-50/50 dark:bg-brand-950/30 border-brand-500 text-brand-700 dark:text-brand-400 shadow-sm"
-                          : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
-                      }`}
-                    >
-                      <span className="text-2xl mb-2">{n.icon}</span>
-                      <span className="text-sm font-bold">{n.label}</span>
-                      <span className="text-[11px] font-semibold mt-1 text-slate-400 dark:text-slate-500">
-                        {active ? "Enabled" : "Disabled"}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
 
           <div className="mt-10 flex justify-end pt-6 border-t border-slate-100 dark:border-slate-800/60">
             <Button
