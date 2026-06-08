@@ -8,6 +8,11 @@ import Input from "../../components/ui/Input";
 import Card from "../../components/ui/Card";
 
 export default function ManageFoods() {
+  const categoryOptions = [
+    "Veg", "Non-Veg", "Pizza", "Burger", "Starter", "Combo", "Roti",
+    "Chicken", "Biryani", "Pasta", "Desserts", "Drinks", "Sweet",
+    "Water", "Cold Drink", "Fast Food", "Main Course"
+  ];
   const [foods, setFoods] = useState([]);
   const [form, setForm] = useState({ name: "", price: "", description: "", category: "Veg", image: null });
   const [preview, setPreview] = useState(null);
@@ -133,11 +138,9 @@ export default function ManageFoods() {
                     onChange={handleChange} 
                     className="w-full px-5 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-950 focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 transition-all outline-none text-slate-900 dark:text-white font-medium"
                   >
-                    <option value="Veg" className="bg-white dark:bg-slate-900">Veg</option>
-                    <option value="Non-Veg" className="bg-white dark:bg-slate-900">Non-Veg</option>
-                    <option value="Sweet" className="bg-white dark:bg-slate-900">Sweet</option>
-                    <option value="Water" className="bg-white dark:bg-slate-900">Water</option>
-                    <option value="Cold Drink" className="bg-white dark:bg-slate-900">Cold Drink</option>
+                    {categoryOptions.map((option) => (
+                      <option key={option} value={option} className="bg-white dark:bg-slate-900">{option}</option>
+                    ))}
                   </select>
                 </div>
               </div>

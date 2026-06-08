@@ -37,7 +37,7 @@ export default function Menu() {
   const [notifications, setNotifications] = useState([]);
   const [user, setUser] = useState({});
   const [showAddressPicker, setShowAddressPicker] = useState(false);
-  const [newAddress, setNewAddress] = useState({ label: "Home", details: "", city: "Jaipur", state: "Rajasthan" });
+  const [newAddress, setNewAddress] = useState({ label: "Home", details: "", city: "", state: "" });
 
   // BANNERS STATE
   const [banners, setBanners] = useState([]);
@@ -76,6 +76,9 @@ export default function Menu() {
 
   // CATEGORIES LIST (Requested category mapping)
   const categoriesList = [
+    { id: "Starter", name: "Starter", icon: "ST" },
+    { id: "Combo", name: "Combo", icon: "CB" },
+    { id: "Roti", name: "Roti", icon: "RT" },
     { id: "All", name: "All", icon: "🍽️" },
     { id: "Pizza", name: "Pizza", icon: "🍕" },
     { id: "Burger", name: "Burger", icon: "🍔" },
@@ -125,8 +128,8 @@ export default function Menu() {
         const data = await res.json();
         if (!Array.isArray(data.addresses) || data.addresses.length === 0) {
           data.addresses = data.address
-            ? [{ label: "Home", details: data.address, city: "Jaipur", state: "Rajasthan", isPrimary: true }]
-            : [{ label: "Home", details: "Jaipur", city: "Jaipur", state: "Rajasthan", isPrimary: true }];
+            ? [{ label: "Home", details: data.address, city: "", state: "", isPrimary: true }]
+            : [{ label: "Home", details: "", city: "", state: "", isPrimary: true }];
         }
         setUser(data);
       }
@@ -308,10 +311,19 @@ export default function Menu() {
 
   const activeBannersList = banners.length > 0 ? banners : defaultBanners;
   const currentBanner = activeBannersList[currentBannerIdx];
+  const cleanAddressPart = (value = "") => String(value)
+    .replace(/\b(?:Jaipur|Rajasthan)\b/gi, "")
+    .replace(/\s*,\s*,/g, ",")
+    .replace(/^[\s,.-]+|[\s,.-]+$/g, "")
+    .trim();
+  const formatAddressLine = (addr) => {
+    if (!addr) return "";
+    return [addr.details, addr.city, addr.state].map(cleanAddressPart).filter(Boolean).join(", ");
+  };
   const primaryAddress = (user.addresses || []).find(addr => addr.isPrimary) || (user.addresses || [])[0];
   const primaryAddressText = primaryAddress
-    ? [primaryAddress.label, primaryAddress.city || primaryAddress.details, primaryAddress.state].filter(Boolean).join(" - ")
-    : "Home - Jaipur, Rajasthan";
+    ? [primaryAddress.label, formatAddressLine(primaryAddress)].filter(Boolean).join(" - ")
+    : "Select address";
 
   const saveAddresses = async (addresses) => {
     const token = await getToken();
@@ -335,7 +347,7 @@ export default function Menu() {
   const addAddress = async () => {
     if (!newAddress.details.trim()) return;
     const addresses = [...(user.addresses || []), { ...newAddress, isPrimary: !(user.addresses || []).length }];
-    setNewAddress({ label: "Home", details: "", city: "Jaipur", state: "Rajasthan" });
+    setNewAddress({ label: "Home", details: "", city: "", state: "" });
     await saveAddresses(addresses);
   };
 
@@ -373,7 +385,7 @@ export default function Menu() {
                         <span className="font-extrabold text-sm text-slate-900 dark:text-white">{addr.label || "Address"}</span>
                         {addr.isPrimary && <span className="text-[9px] font-black text-brand-600 dark:text-brand-400 uppercase">Primary</span>}
                       </div>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold line-clamp-2 mt-1">{[addr.details, addr.city, addr.state].filter(Boolean).join(", ")}</p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold line-clamp-2 mt-1">{formatAddressLine(addr) || "Address details required"}</p>
                     </button>
                   ))}
                 </div>
@@ -502,7 +514,7 @@ export default function Menu() {
         </div>
 
         <button 
-          onClick={() => setIsBudgetOpen(true)}
+          onClick={() => navigate("/user/budget-assistant")}
           className="shrink-0 px-6 py-3 bg-brand-500 hover:bg-brand-600 text-white font-extrabold rounded-xl transition-all active:scale-95 text-sm shadow-md shadow-brand-500/25"
         >
           Start Now

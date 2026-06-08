@@ -162,10 +162,11 @@ export default function UserLayout() {
         {/* Brand */}
         <div className="px-6 h-20 flex items-center justify-between border-b border-slate-100 dark:border-slate-800/50">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-brand-500 flex items-center justify-center shadow-md shadow-brand-500/20">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-md shadow-brand-500/20 overflow-hidden bg-white border border-brand-100 dark:border-brand-900 [&>span]:hidden">
+              <img src="/greengo-logo.svg" alt="GreenGO" className="w-full h-full object-cover" />
               <span className="text-white text-xl">🍔</span>
             </div>
-            <span className="text-slate-900 dark:text-white font-extrabold text-xl tracking-tight">ByteBite</span>
+            <span className="text-slate-900 dark:text-white font-extrabold text-xl tracking-tight"><span className="text-brand-500">Green</span>GO</span>
           </div>
           <button
             onClick={toggleTheme}
@@ -230,7 +231,7 @@ export default function UserLayout() {
             <div className="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center">
               <span className="text-white text-sm">🍔</span>
             </div>
-            <span className="font-extrabold text-slate-900 dark:text-white text-lg">ByteBite</span>
+            <span className="font-extrabold text-slate-900 dark:text-white text-lg"><span className="text-brand-500">Green</span>GO</span>
           </div>
           {/* Right actions (theme toggle + profile) */}
           <div className="flex items-center gap-2">

@@ -18,14 +18,20 @@ const sanitizeBody = (body = {}) => ({
   idToken: body.idToken ? maskToken(body.idToken) : body.idToken,
 });
 
+const cleanAddressPart = (value = "") => String(value)
+  .replace(/\b(?:Jaipur|Rajasthan)\b/gi, "")
+  .replace(/\s*,\s*,/g, ",")
+  .replace(/^[\s,.-]+|[\s,.-]+$/g, "")
+  .trim();
+
 const normalizeAddresses = (addresses = [], fallbackAddress = "") => {
   const normalized = Array.isArray(addresses)
     ? addresses
         .map((addr) => ({
           label: String(addr.label || "Home").trim() || "Home",
-          details: String(addr.details || addr.address || "").trim(),
-          city: String(addr.city || "").trim(),
-          state: String(addr.state || "").trim(),
+          details: cleanAddressPart(addr.details || addr.address || ""),
+          city: cleanAddressPart(addr.city || ""),
+          state: cleanAddressPart(addr.state || ""),
           isPrimary: Boolean(addr.isPrimary),
         }))
         .filter((addr) => addr.details)
@@ -34,9 +40,9 @@ const normalizeAddresses = (addresses = [], fallbackAddress = "") => {
   if (normalized.length === 0 && fallbackAddress) {
     normalized.push({
       label: "Home",
-      details: String(fallbackAddress).replace(/^Home:\s*|^Office:\s*/i, "").trim(),
-      city: "Jaipur",
-      state: "Rajasthan",
+      details: cleanAddressPart(String(fallbackAddress).replace(/^Home:\s*|^Office:\s*/i, "")),
+      city: "",
+      state: "",
       isPrimary: true,
     });
   }
@@ -55,6 +61,15 @@ const formatAddress = (addr) => {
   if (!addr) return "";
   return [addr.label, addr.details, addr.city, addr.state].filter(Boolean).join(" - ");
 };
+
+const budgetDummyFoods = [
+  { _id: "dummy-paneer-roll", name: "Paneer Roll", price: 129, category: "Veg", description: "Budget friendly paneer roll", rating: 4.4, ratingCount: 24, totalOrders: 80, image: "" },
+  { _id: "dummy-chicken-burger", name: "Chicken Burger", price: 169, category: "Chicken", description: "Juicy chicken burger combo base", rating: 4.5, ratingCount: 32, totalOrders: 100, image: "" },
+  { _id: "dummy-veg-pizza", name: "Veg Pizza", price: 199, category: "Pizza", description: "Loaded veggie pizza", rating: 4.3, ratingCount: 28, totalOrders: 75, image: "" },
+  { _id: "dummy-roti-combo", name: "Roti Sabzi Combo", price: 149, category: "Roti", description: "Homestyle roti with sabzi", rating: 4.2, ratingCount: 20, totalOrders: 70, image: "" },
+  { _id: "dummy-lassi", name: "Sweet Lassi", price: 69, category: "Drinks", description: "Cold Punjabi lassi", rating: 4.6, ratingCount: 18, totalOrders: 60, image: "" },
+  { _id: "dummy-gulab-jamun", name: "Gulab Jamun", price: 79, category: "Desserts", description: "Classic sweet dessert", rating: 4.7, ratingCount: 22, totalOrders: 55, image: "" },
+];
 
 /* ================= REGISTER ================= */
 
@@ -304,6 +319,9 @@ export const getBudgetRecommendations = async (req, res) => {
     const types = Array.isArray(selectedTypes) ? selectedTypes.map((type) => String(type).toLowerCase()) : [];
 
     let foods = await Food.find().lean();
+    if (foods.length === 0) {
+      foods = budgetDummyFoods;
+    }
 
     foods = foods.filter((food) => {
       const name = String(food.name || "").toLowerCase();

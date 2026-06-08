@@ -137,7 +137,7 @@ export default function ManageNotifications() {
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-slate-700 dark:text-slate-355 mb-2">Message Body *</label>
+                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Message Body *</label>
                 <textarea 
                   className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none min-h-[120px] text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-955 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all placeholder:text-slate-455 dark:placeholder:text-slate-500 font-medium text-sm resize-none"
                   placeholder="Type your announcement or deal details..." 
@@ -148,7 +148,7 @@ export default function ManageNotifications() {
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-slate-700 dark:text-slate-355 mb-2">Broadcast Category</label>
+                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Broadcast Category</label>
                 <select 
                   className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-bold text-sm cursor-pointer"
                   value={form.type} 
@@ -161,7 +161,7 @@ export default function ManageNotifications() {
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-slate-700 dark:text-slate-355 mb-2 flex items-center gap-1.5">
+                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-1.5">
                   <Calendar size={15} />
                   Expiry Date & Time (Optional)
                 </label>

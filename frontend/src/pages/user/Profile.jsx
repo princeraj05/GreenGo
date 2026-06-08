@@ -47,8 +47,8 @@ export default function Profile() {
             addresses: Array.isArray(data.addresses) && data.addresses.length > 0
               ? data.addresses
               : data.address
-                ? [{ label: "Home", details: data.address, city: "Jaipur", state: "Rajasthan", isPrimary: true }]
-                : [{ label: "Home", details: "", city: "Jaipur", state: "Rajasthan", isPrimary: true }],
+                ? [{ label: "Home", details: data.address, city: "", state: "", isPrimary: true }]
+                : [{ label: "Home", details: "", city: "", state: "", isPrimary: true }],
             foodPreference: data.foodPreference || "",
             deliveryTime: data.deliveryTime || "",
             notifications: data.notifications || ""
@@ -100,7 +100,7 @@ export default function Profile() {
         const addressText = data && data.display_name ? data.display_name : `Lat: ${latitude}, Lng: ${longitude}`;
         
         setForm(f => {
-          const nextAddresses = [...(f.addresses || [{ label: "Home", details: "", city: "Jaipur", state: "Rajasthan", isPrimary: true }])];
+          const nextAddresses = [...(f.addresses || [{ label: "Home", details: "", city: "", state: "", isPrimary: true }])];
           const primaryIndex = Math.max(nextAddresses.findIndex(addr => addr.isPrimary), 0);
           nextAddresses[primaryIndex] = { ...nextAddresses[primaryIndex], details: addressText, isPrimary: true };
           return { ...f, addresses: nextAddresses };
@@ -108,7 +108,7 @@ export default function Profile() {
       } catch (err) {
         const fallbackText = `Lat: ${position.coords.latitude}, Lng: ${position.coords.longitude}`;
         setForm(f => {
-          const nextAddresses = [...(f.addresses || [{ label: "Home", details: "", city: "Jaipur", state: "Rajasthan", isPrimary: true }])];
+          const nextAddresses = [...(f.addresses || [{ label: "Home", details: "", city: "", state: "", isPrimary: true }])];
           const primaryIndex = Math.max(nextAddresses.findIndex(addr => addr.isPrimary), 0);
           nextAddresses[primaryIndex] = { ...nextAddresses[primaryIndex], details: fallbackText, isPrimary: true };
           return { ...f, addresses: nextAddresses };
@@ -136,6 +136,17 @@ export default function Profile() {
     if (a.startsWith("Home: ")) return a.substring(6);
     if (a.startsWith("Office: ")) return a.substring(8);
     return a;
+  };
+
+  const cleanAddressPart = (value = "") => String(value)
+    .replace(/\b(?:Jaipur|Rajasthan)\b/gi, "")
+    .replace(/\s*,\s*,/g, ",")
+    .replace(/^[\s,.-]+|[\s,.-]+$/g, "")
+    .trim();
+
+  const formatAddressLine = (addr) => {
+    if (!addr) return "";
+    return [addr.details, addr.city, addr.state].map(cleanAddressPart).filter(Boolean).join(", ");
   };
 
   const handleAddressTypeChange = (type) => {
@@ -172,7 +183,7 @@ export default function Profile() {
       ...form,
       addresses: [
         ...(form.addresses || []),
-        { label: "Home", details: "", city: "Jaipur", state: "Rajasthan", isPrimary: false }
+        { label: "Home", details: "", city: "", state: "", isPrimary: false }
       ]
     });
   };
@@ -201,7 +212,7 @@ export default function Profile() {
       const payload = {
         ...form,
         address: primaryAddress
-          ? [primaryAddress.label, primaryAddress.details, primaryAddress.city, primaryAddress.state].filter(Boolean).join(" - ")
+          ? [primaryAddress.label, formatAddressLine(primaryAddress)].filter(Boolean).join(" - ")
           : form.address,
       };
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/profile`, {
@@ -282,32 +293,32 @@ export default function Profile() {
             </div>
 
             {!isEditing ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in text-sm font-medium text-slate-700 dark:text-slate-300">
-                <div className="bg-slate-50 dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/60">
-                  <span className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">Full Name</span>
-                  <span className="text-slate-900 dark:text-white font-extrabold">{form.name || "N/A"}</span>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in text-sm font-medium text-slate-700 dark:text-slate-200">
+                <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-700">
+                  <span className="text-xs text-slate-500 dark:text-slate-300 uppercase tracking-wider block mb-1">Full Name</span>
+                  <span className="text-slate-950 dark:text-slate-50 font-extrabold break-words">{form.name || "N/A"}</span>
                 </div>
-                <div className="bg-slate-50 dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/60">
-                  <span className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">Email Address</span>
-                  <span className="text-slate-900 dark:text-white font-extrabold">{form.email || "N/A"}</span>
+                <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-700">
+                  <span className="text-xs text-slate-500 dark:text-slate-300 uppercase tracking-wider block mb-1">Email Address</span>
+                  <span className="text-slate-950 dark:text-slate-50 font-extrabold break-words">{form.email || "N/A"}</span>
                 </div>
-                <div className="bg-slate-50 dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/60">
-                  <span className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">Mobile Number</span>
-                  <span className="text-slate-900 dark:text-white font-extrabold">{form.phone || "N/A"}</span>
+                <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-700">
+                  <span className="text-xs text-slate-500 dark:text-slate-300 uppercase tracking-wider block mb-1">Mobile Number</span>
+                  <span className="text-slate-950 dark:text-slate-50 font-extrabold break-words">{form.phone || "N/A"}</span>
                 </div>
-                <div className="bg-slate-50 dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/60">
-                  <span className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">Food Preference</span>
-                  <span className="text-slate-900 dark:text-white font-extrabold">{form.foodPreference || "N/A"}</span>
+                <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-700">
+                  <span className="text-xs text-slate-500 dark:text-slate-300 uppercase tracking-wider block mb-1">Food Preference</span>
+                  <span className="text-slate-950 dark:text-slate-50 font-extrabold break-words">{form.foodPreference || "N/A"}</span>
                 </div>
-                <div className="bg-slate-50 dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/60">
-                  <span className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">Delivery Time</span>
-                  <span className="text-slate-900 dark:text-white font-extrabold">{form.deliveryTime || "N/A"}</span>
+                <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-700">
+                  <span className="text-xs text-slate-500 dark:text-slate-300 uppercase tracking-wider block mb-1">Delivery Time</span>
+                  <span className="text-slate-950 dark:text-slate-50 font-extrabold break-words">{form.deliveryTime || "N/A"}</span>
                 </div>
-                <div className="bg-slate-50 dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/60 md:col-span-2 lg:col-span-3">
-                  <span className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">Delivery Address</span>
-                  <span className="text-slate-900 dark:text-white font-extrabold whitespace-pre-wrap">
+                <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 md:col-span-2 lg:col-span-3">
+                  <span className="text-xs text-slate-500 dark:text-slate-300 uppercase tracking-wider block mb-1">Delivery Address</span>
+                  <span className="text-slate-950 dark:text-slate-50 font-extrabold whitespace-pre-wrap break-words">
                     {primaryAddress
-                      ? [primaryAddress.label, primaryAddress.details, primaryAddress.city, primaryAddress.state].filter(Boolean).join(" - ")
+                      ? [primaryAddress.label, formatAddressLine(primaryAddress)].filter(Boolean).join(" - ")
                       : form.address || "N/A"}
                   </span>
                 </div>

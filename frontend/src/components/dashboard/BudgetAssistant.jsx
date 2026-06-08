@@ -45,8 +45,8 @@ export default function BudgetAssistant({ isOpen, onClose, foods, onAddToCart })
   ];
 
   const foodTypes = [
-    "Pizza", "Burger", "Chicken", "Biryani", "Pasta", 
-    "Drinks", "Desserts", "Fast Food", "Main Course"
+    "Pizza", "Burger", "Starter", "Combo", "Roti", "Chicken", "Biryani", "Pasta",
+    "Drinks", "Desserts", "Veg", "Non-Veg", "Fast Food", "Main Course"
   ];
 
   const toggleType = (type) => {
@@ -169,7 +169,7 @@ export default function BudgetAssistant({ isOpen, onClose, foods, onAddToCart })
                     className={`py-4 px-5 rounded-2xl font-bold border-2 text-sm text-left flex items-center justify-between transition-all ${
                       people === opt.value 
                         ? "border-brand-500 bg-brand-50/10 text-brand-650 dark:text-brand-400" 
-                        : "border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/60 text-slate-700 dark:text-slate-355"
+                        : "border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/60 text-slate-700 dark:text-slate-300"
                     }`}
                   >
                     <span>👤 {opt.label}</span>
@@ -200,7 +200,7 @@ export default function BudgetAssistant({ isOpen, onClose, foods, onAddToCart })
                     className={`py-4 px-5 rounded-2xl font-bold border-2 text-sm text-left flex items-center justify-between transition-all ${
                       budgetRange === opt.label 
                         ? "border-brand-500 bg-brand-50/10 text-brand-650 dark:text-brand-400" 
-                        : "border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/60 text-slate-700 dark:text-slate-355"
+                        : "border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/60 text-slate-700 dark:text-slate-300"
                     }`}
                   >
                     <span>💵 {opt.label}</span>
@@ -231,7 +231,7 @@ export default function BudgetAssistant({ isOpen, onClose, foods, onAddToCart })
                     className={`py-4.5 px-6 rounded-2xl font-bold border-2 text-sm text-left flex items-center justify-between transition-all ${
                       preference === opt.value 
                         ? "border-brand-500 bg-brand-50/10 text-brand-650 dark:text-brand-400" 
-                        : "border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/60 text-slate-700 dark:text-slate-355"
+                        : "border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/60 text-slate-700 dark:text-slate-300"
                     }`}
                   >
                     <span className="flex items-center gap-3">
