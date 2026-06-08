@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   LayoutDashboard, UtensilsCrossed, Package, Users, 
   MessageSquare, Ticket, Bell, LineChart, Settings, 
-  LogOut, Menu, X, Star, Plus, MoreHorizontal, Sun, Moon
+  LogOut, Menu, X, Star, Plus, MoreHorizontal, Sun, Moon, Image
 } from "lucide-react";
 import { getToken } from "../../utils/getToken";
 import { clearSession } from "../../utils/authStorage";
@@ -117,6 +117,7 @@ export default function AdminLayout() {
     { to: "/admin/users", label: "Users", icon: <Users size={20} /> },
     { to: "/admin/contacts", label: "Messages", icon: <MessageSquare size={20} /> },
     { to: "/admin/coupons", label: "Coupons", icon: <Ticket size={20} /> },
+    { to: "/admin/banners", label: "Banners", icon: <Image size={20} /> },
     { to: "/admin/notifications", label: "Notifications", icon: <Bell size={20} /> },
     { to: "/admin/analytics", label: "Analytics", icon: <LineChart size={20} /> },
     { to: "/admin/reviews", label: "Reviews", icon: <Star size={20} /> },
@@ -141,6 +142,7 @@ export default function AdminLayout() {
   const moreSheetLinks = [
     { to: "/admin/contacts", label: "Messages", icon: <MessageSquare size={20} />, badge: unreadCount },
     { to: "/admin/coupons", label: "Coupons", icon: <Ticket size={20} /> },
+    { to: "/admin/banners", label: "Banners", icon: <Image size={20} /> },
     { to: "/admin/notifications", label: "Alerts", icon: <Bell size={20} /> },
     { to: "/admin/analytics", label: "Analytics", icon: <LineChart size={20} /> },
     { to: "/admin/settings", label: "Settings", icon: <Settings size={20} /> },

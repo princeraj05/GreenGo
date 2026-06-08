@@ -9,6 +9,7 @@ if (dns.setDefaultResultOrder) {
 }
 
 import connectDB from "./config/db.js";
+import bannerRoutes from "./routes/bannerRoutes.js";
 
 // ROUTES
 import userRoutes from "./routes/userRoutes.js";
@@ -114,6 +115,7 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/admin/analytics", adminAnalyticsRoutes);
 app.use("/api/coupons", couponRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/banners", bannerRoutes);
 
 /* ================= TEST ROUTE ================= */
 
