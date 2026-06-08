@@ -1,28 +1,28 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  /* Brand colors */
-  --brand-50: #f0fdf4;
-  --brand-100: #dcfce7;
-  --brand-200: #bbf7d0;
-  --brand-300: #86efac;
-  --brand-400: #22c55e; /* Secondary Green (Light Mode) */
-  --brand-500: #16a34a; /* Primary Green (Light Mode) */
-  --brand-600: #15803d; /* Hover Green (Light Mode) */
-  --brand-700: #166534;
-  --brand-800: #14532d;
-  --brand-900: #134e5e;
-  --brand-950: #052e16;
+  /* Brand colors (GoGreen Palette) */
+  --brand-50: #F2FAF3; /* Secondary background */
+  --brand-100: #E5F6E8;
+  --brand-200: #C3ECCB;
+  --brand-300: #92DBA0;
+  --brand-400: #1FAF38; /* Primary Green */
+  --brand-500: #1FAF38; /* Primary Green */
+  --brand-600: #148C2A; /* Dark green */
+  --brand-700: #0F6B20;
+  --brand-800: #0B4A16;
+  --brand-900: #07300E;
+  --brand-950: #031707;
 
   /* Slate colors for general UI in Light Mode */
-  --slate-50: #fcfdfc; /* Clean green-tinted light background */
-  --slate-100: #f3f4f6;
-  --slate-200: #e5e7eb;
-  --slate-300: #d1d5db;
+  --slate-50: #FFFFFF; /* Background */
+  --slate-100: #F2FAF3; /* Secondary background */
+  --slate-200: #E5E7EB; /* Border color */
+  --slate-300: #D1D5DB;
   --slate-400: #9ca3af;
   --slate-500: #6b7280;
   --slate-600: #4b5563;
