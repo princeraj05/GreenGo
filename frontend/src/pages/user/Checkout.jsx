@@ -494,7 +494,7 @@ export default function Checkout() {
                     placeholder="e.g. Make it extra spicy, don't add onions, ring bell twice..."
                     value={customMessage}
                     onChange={(e) => setCustomMessage(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-905 focus:ring-2 focus:ring-brand-500/15 focus:border-brand-500 transition-all outline-none resize-y min-h-[70px] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder:text-slate-505 text-sm font-medium shadow-sm"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-brand-500/15 focus:border-brand-500 transition-all outline-none resize-y min-h-[70px] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder:text-slate-500 text-sm font-medium shadow-sm"
                   />
                 </div>
               </div>
@@ -557,7 +557,7 @@ export default function Checkout() {
             <Card className="p-5 md:p-8 sticky top-24 border-slate-100 dark:border-slate-800/60 rounded-3xl md:rounded-[2rem]">
               <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 border-b border-slate-100 dark:border-slate-800 pb-3">Order Summary</h3>
               
-              <div className="space-y-3 mb-4 md:mb-6 text-sm text-slate-550 dark:text-slate-400 font-medium">
+              <div className="space-y-3 mb-4 md:mb-6 text-sm text-slate-500 dark:text-slate-400 font-medium">
                 <div className="flex justify-between items-center">
                   <span>Subtotal ({totalItems} items)</span>
                   <span className="font-bold text-slate-900 dark:text-white">₹{subtotal}</span>

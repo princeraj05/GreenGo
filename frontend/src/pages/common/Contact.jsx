@@ -118,7 +118,7 @@ export default function Contact() {
           
           {/* Form */}
           <Section>
-            <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 md:p-10 shadow-premium border border-slate-100 dark:border-slate-850">
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 md:p-10 shadow-premium border border-slate-100 dark:border-slate-800">
               <h2 className="text-3xl font-black text-gray-900 dark:text-white mb-2">Send a Message</h2>
               <p className="text-gray-500 dark:text-slate-400 font-medium mb-8">Fill in the form and we'll get back to you within 2 hours.</p>
 

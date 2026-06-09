@@ -140,7 +140,7 @@ export default function UserDashboard() {
                     {isSuccess ? <Sparkles size={20} /> : isWarning ? <AlertTriangle size={20} /> : <Bell size={20} />}
                   </div>
                   <div className="space-y-1 flex-1 min-w-0">
-                    <h4 className="font-extrabold text-sm text-slate-850 dark:text-white leading-tight truncate">
+                    <h4 className="font-extrabold text-sm text-slate-800 dark:text-white leading-tight truncate">
                       {n.title}
                     </h4>
                     <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 leading-relaxed break-words">

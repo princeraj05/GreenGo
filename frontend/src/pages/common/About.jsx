@@ -99,7 +99,7 @@ export default function About() {
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-400 to-red-500"></div>
               <span className="text-6xl mb-6 block">🎯</span>
               <h2 className="text-3xl font-black text-gray-900 dark:text-white mb-6">Our Mission</h2>
-              <p className="text-lg md:text-xl text-gray-600 dark:text-slate-350 leading-relaxed font-medium">
+              <p className="text-lg md:text-xl text-gray-600 dark:text-slate-300 leading-relaxed font-medium">
                 To make premium quality food accessible to everyone — fast, fresh, and affordable. We connect passionate restaurants with hungry customers, ensuring every meal is a memorable experience.
               </p>
             </div>

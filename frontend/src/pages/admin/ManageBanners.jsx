@@ -255,7 +255,7 @@ export default function ManageBanners() {
 
                     <div className="flex justify-between items-start gap-2 mb-1.5">
                       <h3 className="font-extrabold text-slate-800 dark:text-white text-base">{banner.title}</h3>
-                      <span className={`text-[10px] uppercase font-black px-2 py-0.5 rounded-full ${banner.active ? 'bg-brand-100 text-brand-700 dark:bg-brand-950/40 dark:text-brand-400' : 'bg-slate-250 text-slate-550 dark:bg-slate-800 dark:text-slate-400'}`}>
+                      <span className={`text-[10px] uppercase font-black px-2 py-0.5 rounded-full ${banner.active ? 'bg-brand-100 text-brand-700 dark:bg-brand-950/40 dark:text-brand-400' : 'bg-slate-200 text-slate-500 dark:bg-slate-800 dark:text-slate-400'}`}>
                         {banner.active ? 'Active' : 'Inactive'}
                       </span>
                     </div>
@@ -273,7 +273,7 @@ export default function ManageBanners() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleEdit(banner)}
-                        className="p-2 bg-slate-50 hover:bg-slate-100 dark:bg-slate-850 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-350 rounded-lg transition-colors border border-slate-100 dark:border-slate-800 shadow-sm"
+                        className="p-2 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg transition-colors border border-slate-100 dark:border-slate-800 shadow-sm"
                       >
                         ✏️
                       </button>

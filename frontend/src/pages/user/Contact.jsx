@@ -87,7 +87,7 @@ export default function Contact() {
             <MessageCircle className="w-6 h-6 md:w-8 md:h-8 text-brand-500" />
             Support
           </h2>
-          <p className="text-slate-550 dark:text-slate-400 mt-1 text-xs sm:text-sm md:text-base font-medium">We're here to help. Send our team a message.</p>
+          <p className="text-slate-500 dark:text-slate-400 mt-1 text-xs sm:text-sm md:text-base font-medium">We're here to help. Send our team a message.</p>
         </div>
 
         <form
@@ -161,7 +161,7 @@ export default function Contact() {
                       <p className="text-xs sm:text-sm leading-relaxed mt-1 font-medium">{contact.reply}</p>
                     </div>
                   ) : (
-                    <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 text-slate-505 dark:text-slate-400 p-3 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-2 transition-colors">
+                    <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 text-slate-500 dark:text-slate-400 p-3 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-2 transition-colors">
                       <div className="flex items-center gap-1">
                         <span className="w-1.5 h-1.5 bg-brand-500 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
                         <span className="w-1.5 h-1.5 bg-brand-500 rounded-full animate-bounce [animation-delay:-0.15s]"></span>

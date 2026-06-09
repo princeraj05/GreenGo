@@ -38,7 +38,8 @@ const AdminLayout = lazy(() => import("../pages/admin/AdminLayout"));
 const AdminDashboard = lazy(() => import("../pages/admin/AdminDashboard"));
 const ManageFoods = lazy(() => import("../pages/admin/ManageFoods"));
 const ManageOrders = lazy(() => import("../pages/admin/ManageOrders"));
-const ManageUsers = lazy(() => import("../pages/admin/ManageUsers"));
+const CustomerUsers = lazy(() => import("../pages/admin/users/CustomerUsers"));
+const DeliveryBoyUsers = lazy(() => import("../pages/admin/users/DeliveryBoyUsers"));
 const Contacts = lazy(() => import("../pages/admin/Contacts"));
 const ManageSettings = lazy(() => import("../pages/admin/ManageSettings"));
 const ManageCoupons = lazy(() => import("../pages/admin/ManageCoupons"));
@@ -123,7 +124,9 @@ export default function AppRoutes() {
           <Route path="foods" element={<ManageFoods />} />
           <Route path="orders" element={<ManageOrders />} />
           <Route path="orders/:id/tracking" element={<OrderTrackingPage role="admin" />} />
-          <Route path="users" element={<ManageUsers />} />
+          <Route path="users" element={<Navigate to="/admin/users/customers" replace />} />
+          <Route path="users/customers" element={<CustomerUsers />} />
+          <Route path="users/delivery-boys" element={<DeliveryBoyUsers />} />
           <Route path="contacts" element={<Contacts />} />
           <Route path="settings" element={<ManageSettings />} />
           <Route path="coupons" element={<ManageCoupons />} />

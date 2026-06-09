@@ -261,14 +261,14 @@ export default function AdminLayout() {
         </div>
 
         {/* Topbar for Desktop viewports */}
-        <div className="sticky top-0 z-30 h-20 hidden md:flex items-center justify-between px-6 lg:px-10 bg-white/70 dark:bg-slate-950/70 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50 shadow-sm transition-colors duration-300">
+        <div className="sticky top-0 z-30 h-20 hidden md:flex items-center justify-between px-6 lg:px-10 bg-white/70 dark:bg-slate-950 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-950 shadow-sm dark:shadow-none transition-colors duration-300">
           <h2 className="text-xl font-bold text-slate-800 dark:text-white tracking-tight">Admin Portal</h2>
 
           <div className="flex items-center gap-4">
              {/* Theme Toggle Button */}
              <button
                onClick={toggleTheme}
-               className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-900 flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-brand-50 dark:hover:bg-slate-850 hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
+               className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-900 flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-brand-50 dark:hover:bg-slate-800 hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
                title="Toggle Theme"
              >
                 {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
@@ -294,10 +294,10 @@ export default function AdminLayout() {
         </div>
 
         {/* Dynamic Page Content - adjusted padding at the bottom for mobile */}
-        <div className="flex-1 p-4 sm:p-6 lg:p-10 pb-24 md:pb-10 relative overflow-hidden bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
+        <div className="flex-1 p-4 sm:p-6 lg:p-10 pb-24 md:pb-10 relative overflow-hidden bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
            {/* Decorative Background Elements */}
-           <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-brand-50 dark:bg-brand-950/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
-           <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-50/50 dark:bg-blue-950/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/3 pointer-events-none"></div>
+           <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-brand-50 dark:bg-transparent rounded-full blur-[120px] -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
+           <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-50/50 dark:bg-transparent rounded-full blur-[100px] translate-y-1/2 -translate-x-1/3 pointer-events-none"></div>
            
            <div className="relative z-10 w-full h-full max-w-7xl mx-auto">
              <Outlet />

@@ -455,7 +455,7 @@ export default function AuthPage() {
                   </label>
                   <div className="flex gap-2.5">
                     {/* Country Code Selector (Zomato style +91) */}
-                    <div className="px-3 py-3.5 rounded-2xl border border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 text-sm font-bold text-gray-700 dark:text-slate-350 select-none flex items-center">
+                    <div className="px-3 py-3.5 rounded-2xl border border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 text-sm font-bold text-gray-700 dark:text-slate-300 select-none flex items-center">
                       🇮🇳 +91
                     </div>
                     <input

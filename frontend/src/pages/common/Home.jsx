@@ -218,14 +218,14 @@ export default function Home() {
                           <Star key={idx} size={18} fill="currentColor" className="text-yellow-400" />
                         ))}
                         {[...Array(5 - r.rating)].map((_, idx) => (
-                          <Star key={idx} size={18} className="text-slate-200 dark:text-slate-850" />
+                          <Star key={idx} size={18} className="text-slate-200 dark:text-slate-800" />
                         ))}
                       </div>
                       <span className="text-xs font-extrabold text-brand-600 dark:text-brand-400 uppercase tracking-wider bg-brand-50 dark:bg-brand-950/45 border border-brand-100 dark:border-brand-900/60 px-2.5 py-1 rounded-lg truncate max-w-[150px]">
                         {r.foodName || "General"}
                       </span>
                     </div>
-                    <p className="text-slate-600 dark:text-slate-350 leading-relaxed font-medium mb-8 text-base">"{r.reviewText}"</p>
+                    <p className="text-slate-600 dark:text-slate-300 leading-relaxed font-medium mb-8 text-base">"{r.reviewText}"</p>
                   </div>
                   
                   <div className="flex items-center justify-between border-t border-slate-100/60 dark:border-slate-800/60 pt-6">
@@ -240,7 +240,7 @@ export default function Home() {
                         </span>
                       </div>
                     </div>
-                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-550">
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">
                       {new Date(r.createdAt).toLocaleDateString()}
                     </span>
                   </div>

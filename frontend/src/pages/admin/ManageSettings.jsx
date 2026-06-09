@@ -126,21 +126,9 @@ export default function ManageSettings() {
                   <input type="number" min="0" step="0.1" value={form.maxDeliveryDistance} 
                     onChange={(e) => setForm({ ...form, maxDeliveryDistance: Number(e.target.value) })}
                     className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-slate-800 dark:text-white font-medium" />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Store Latitude</label>
-                    <input type="number" step="0.0001" value={form.storeLatitude} 
-                      onChange={(e) => setForm({ ...form, storeLatitude: Number(e.target.value) })}
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-slate-800 dark:text-white font-medium" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Store Longitude</label>
-                    <input type="number" step="0.0001" value={form.storeLongitude} 
-                      onChange={(e) => setForm({ ...form, storeLongitude: Number(e.target.value) })}
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-slate-800 dark:text-white font-medium" />
-                  </div>
+                  <p className="mt-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                    Delivery range 10 km rakhein. Store location system ke saved/default location se calculate hogi.
+                  </p>
                 </div>
               </div>
             </div>

@@ -155,23 +155,23 @@ export default function Orders() {
   return (
     <div className="max-w-5xl mx-auto w-full pb-10">
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6 md:mb-10">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 tracking-tight flex items-center gap-3">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-brand-50 rounded-xl sm:rounded-2xl flex items-center justify-center text-brand-600 shrink-0">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-brand-50 dark:bg-brand-950/35 rounded-xl sm:rounded-2xl flex items-center justify-center text-brand-600 dark:text-brand-300 shrink-0">
             <Package size={22} />
           </div>
           My Orders
         </h1>
-        <p className="text-slate-500 mt-1 text-sm sm:text-base md:text-lg font-medium">Track your delicious food journey.</p>
+        <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm sm:text-base md:text-lg font-medium">Track your delicious food journey.</p>
       </motion.div>
 
       {orders.length === 0 ? (
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
           <Card className="text-center py-12 md:py-20 border-slate-100 rounded-3xl">
-            <div className="w-16 h-16 sm:w-24 sm:h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 md:mb-6 text-slate-300">
+            <div className="w-16 h-16 sm:w-24 sm:h-24 bg-slate-50 dark:bg-slate-900 rounded-full flex items-center justify-center mx-auto mb-4 md:mb-6 text-slate-300 dark:text-slate-600">
               <ShoppingBag className="w-8 h-8 sm:w-12 sm:h-12" />
             </div>
-            <h3 className="text-lg sm:text-xl md:text-2xl font-black text-slate-900 mb-1.5 md:mb-2">No orders yet</h3>
-            <p className="text-slate-500 text-xs sm:text-sm font-medium">Time to order some tasty food!</p>
+            <h3 className="text-lg sm:text-xl md:text-2xl font-black text-slate-900 dark:text-white mb-1.5 md:mb-2">No orders yet</h3>
+            <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm font-medium">Time to order some tasty food!</p>
           </Card>
         </motion.div>
       ) : (
@@ -187,10 +187,10 @@ export default function Orders() {
                 
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 md:mb-8">
                   <div>
-                    <h3 className="text-base sm:text-lg font-bold text-slate-900">
+                    <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
                       Order
                     </h3>
-                    <p className="text-slate-405 dark:text-slate-500 text-xs mt-0.5 font-medium">{new Date(o.createdAt).toLocaleString()}</p>
+                    <p className="text-slate-400 dark:text-slate-500 text-xs mt-0.5 font-medium">{new Date(o.createdAt).toLocaleString()}</p>
                   </div>
                   <Badge variant={o.status === "Delivered" ? "success" : "brand"} className="px-3 py-1.5 text-xs gap-1.5 uppercase tracking-wide w-fit">
                     {getStatusIcon(o.status)}
@@ -221,7 +221,7 @@ export default function Orders() {
                     <div key={iIdx} className="flex items-center gap-3 p-2.5 border-b border-slate-100 dark:border-slate-800/40 last:border-0 hover:bg-white dark:hover:bg-slate-900 rounded-xl transition-colors">
                       <img 
                         src={getImageUrl(i.image)}
-                        className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl object-contain bg-slate-100 dark:bg-slate-850 p-1 shrink-0" 
+                        className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl object-contain bg-slate-100 dark:bg-slate-800 p-1 shrink-0" 
                         onError={(e) => { e.target.src = 'https://placehold.co/400x300?text=Food'; }}
                         alt={i.name}
                       />
@@ -258,7 +258,7 @@ export default function Orders() {
                               return (
                                 <button
                                   onClick={() => handleOpenWriteReview(o, i)}
-                                  className="text-brand-600 hover:text-brand-700 hover:underline text-[10px] font-black uppercase tracking-wider flex items-center gap-0.5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-850 px-2 py-0.5 rounded-lg shadow-sm transition-colors cursor-pointer"
+                                  className="text-brand-600 hover:text-brand-700 hover:underline text-[10px] font-black uppercase tracking-wider flex items-center gap-0.5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 px-2 py-0.5 rounded-lg shadow-sm transition-colors cursor-pointer"
                                 >
                                   Write Review
                                 </button>
@@ -284,7 +284,7 @@ export default function Orders() {
                     )}
                   </div>
                   <div className="text-right space-y-2">
-                    <p className="text-slate-550 dark:text-slate-400 text-xs font-medium mb-0.5">Total Amount</p>
+                    <p className="text-slate-500 dark:text-slate-400 text-xs font-medium mb-0.5">Total Amount</p>
                     <h3 className="text-xl sm:text-2xl md:text-3xl font-black text-brand-600">₹{o.total}</h3>
                     {o.status !== "Delivered" && (
                       <Link to={`/user/orders/${o._id}/tracking`} className="inline-flex">
@@ -360,7 +360,7 @@ export default function Orders() {
                     value={reviewText}
                     onChange={(e) => setReviewText(e.target.value)}
                     rows={3}
-                    className="w-full resize-none rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3 py-2.5 text-xs sm:text-sm font-medium outline-none transition focus:border-brand-400 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-brand-100/10 text-slate-900 dark:text-white placeholder-slate-405"
+                    className="w-full resize-none rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3 py-2.5 text-xs sm:text-sm font-medium outline-none transition focus:border-brand-400 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-brand-100/10 text-slate-900 dark:text-white placeholder:text-slate-400"
                   />
                 </div>
               </div>

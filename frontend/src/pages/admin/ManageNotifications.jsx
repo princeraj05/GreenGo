@@ -151,7 +151,7 @@ export default function ManageNotifications() {
                 <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Title *</label>
                 <input 
                   type="text"
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all placeholder:text-slate-450 dark:placeholder:text-slate-500 font-medium text-sm"
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500 font-medium text-sm"
                   placeholder="Notification Title" 
                   required 
                   value={form.title} 
@@ -277,7 +277,7 @@ export default function ManageNotifications() {
                       </div>
                     )}
 
-                    <div className="flex flex-wrap items-center gap-2 mt-2 pt-3 border-t border-slate-150 dark:border-slate-800/40">
+                    <div className="flex flex-wrap items-center gap-2 mt-2 pt-3 border-t border-slate-200 dark:border-slate-800/40">
                       {isUnread && (
                         <span className="text-xs font-black text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/40 px-3 py-1.5 rounded-lg">
                           New

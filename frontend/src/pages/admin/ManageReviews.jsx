@@ -148,7 +148,7 @@ export default function ManageReviews() {
         </div>
       ) : reviews.length === 0 ? (
         <div className="bg-white dark:bg-slate-950 rounded-3xl border border-slate-100 dark:border-slate-800/60 p-12 text-center shadow-sm">
-          <p className="text-slate-400 dark:text-slate-550 font-medium">No reviews found matching the search/filter criteria.</p>
+          <p className="text-slate-400 dark:text-slate-500 font-medium">No reviews found matching the search/filter criteria.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -177,7 +177,7 @@ export default function ManageReviews() {
                   ))}
                 </div>
 
-                <p className="text-slate-600 dark:text-slate-350 text-sm leading-relaxed font-medium mb-6">"{r.reviewText}"</p>
+                <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed font-medium mb-6">"{r.reviewText}"</p>
               </div>
 
               {/* Actions */}

@@ -46,18 +46,18 @@
   --brand-900: #14532d;
   --brand-950: #052e16;
 
-  /* Slate colors for general UI in Dark Mode (GreenGo style) */
-  --slate-50: #ffffff;
-  --slate-100: #121a14;
-  --slate-200: #374151;
-  --slate-300: #4b5563;
+  /* Keep slate tokens stable; dark: utilities choose the dark surfaces. */
+  --slate-50: #FFFFFF;
+  --slate-100: #F2FAF3;
+  --slate-200: #E5E7EB;
+  --slate-300: #D1D5DB;
   --slate-400: #9ca3af;
   --slate-500: #6b7280;
-  --slate-600: #9ca3af;
+  --slate-600: #4b5563;
   --slate-700: #374151;
-  --slate-800: #1c271e;
-  --slate-900: #121a14; /* Cards background */
-  --slate-950: #0b0f0c; /* Background */
+  --slate-800: #1f2937;
+  --slate-900: #111827;
+  --slate-950: #030712;
 }
 
 

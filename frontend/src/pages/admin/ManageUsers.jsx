@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { NavLink } from "react-router-dom";
 import { Users, Search, ShieldBan, ShieldCheck, Bike, MapPin, Phone } from "lucide-react";
 import API from "../../api/axios";
 import { getToken } from "../../utils/getToken";
@@ -7,7 +8,11 @@ import Input from "../../components/ui/Input";
 import Badge from "../../components/ui/Badge";
 import Button from "../../components/ui/Button";
 
-export default function ManageUsers() {
+export default function ManageUsers({
+  roleFilter = "all",
+  title = "Manage Users",
+  subtitle = "View and manage all registered users"
+}) {
   const PAGE_SIZE = 30;
   const [users, setUsers] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -41,12 +46,18 @@ export default function ManageUsers() {
 
   const filteredUsers = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
-    if (!query) return users;
-    return users.filter(u =>
+    const roleFiltered = users.filter((user) => {
+      const role = user.role === "user" || !user.role ? "customer" : user.role;
+      if (roleFilter === "customers") return role === "customer";
+      if (roleFilter === "deliveryBoys") return role === "deliveryBoy";
+      return true;
+    });
+    if (!query) return roleFiltered;
+    return roleFiltered.filter(u =>
       (u.name || "").toLowerCase().includes(query) ||
       (u.email || u.phone || "").toLowerCase().includes(query)
     );
-  }, [searchQuery, users]);
+  }, [roleFilter, searchQuery, users]);
   const visibleUsers = useMemo(() => filteredUsers.slice(0, visibleCount), [filteredUsers, visibleCount]);
   const hasMoreUsers = visibleUsers.length < filteredUsers.length;
 
@@ -60,8 +71,8 @@ export default function ManageUsers() {
             <Users size={22} className="text-blue-600 dark:text-blue-400 sm:w-7 sm:h-7" />
           </div>
           <div className="min-w-0">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">Manage Users</h1>
-            <p className="text-slate-500 dark:text-slate-400 mt-1 font-medium text-sm sm:text-base md:text-lg leading-snug">View and manage all registered users</p>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">{title}</h1>
+            <p className="text-slate-500 dark:text-slate-400 mt-1 font-medium text-sm sm:text-base md:text-lg leading-snug">{subtitle}</p>
           </div>
         </div>
         
@@ -80,6 +91,29 @@ export default function ManageUsers() {
             className="pl-11 sm:pl-12 bg-white dark:bg-slate-900 shadow-sm border-slate-200 dark:border-slate-800 py-3 sm:py-3.5 text-sm sm:text-base"
           />
         </div>
+      </div>
+
+      <div className="mb-5 flex flex-wrap gap-2">
+        <NavLink
+          to="/admin/users/customers"
+          className={({ isActive }) => `rounded-2xl border px-4 py-2 text-sm font-black transition-all ${
+            isActive
+              ? "border-brand-500 bg-brand-50 text-brand-700 dark:bg-brand-950/30 dark:text-brand-300"
+              : "border-slate-200 bg-white text-slate-600 hover:border-brand-200 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300"
+          }`}
+        >
+          Customers
+        </NavLink>
+        <NavLink
+          to="/admin/users/delivery-boys"
+          className={({ isActive }) => `rounded-2xl border px-4 py-2 text-sm font-black transition-all ${
+            isActive
+              ? "border-brand-500 bg-brand-50 text-brand-700 dark:bg-brand-950/30 dark:text-brand-300"
+              : "border-slate-200 bg-white text-slate-600 hover:border-brand-200 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300"
+          }`}
+        >
+          Delivery Boys
+        </NavLink>
       </div>
 
       {/* Table Card */}

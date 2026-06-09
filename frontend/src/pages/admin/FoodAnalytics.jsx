@@ -98,7 +98,7 @@ export default function FoodAnalytics() {
                 {visibleFoods.map((food) => (
                   <tr key={food._id} className="border-b border-slate-50 dark:border-slate-800/40 hover:bg-slate-50/50 dark:hover:bg-slate-900/30">
                     <td className="py-4 px-6 font-bold text-slate-800 dark:text-white">{food.name}</td>
-                    <td className="py-4 px-6 text-right font-medium text-slate-600 dark:text-slate-350">{food.totalOrders || 0}</td>
+                    <td className="py-4 px-6 text-right font-medium text-slate-600 dark:text-slate-300">{food.totalOrders || 0}</td>
                     <td className="py-4 px-6 text-right font-black text-emerald-600 dark:text-emerald-450">₹{food.revenueGenerated || 0}</td>
                     <td className="py-4 px-6 text-center">
                       <span className="bg-orange-100 dark:bg-orange-950/40 text-orange-700 dark:text-orange-400 px-3 py-1 rounded-full text-xs font-bold">
