@@ -26,6 +26,7 @@ export default function ManageFoods() {
     servingSize: "1",
     packingCharge: "",
     variants: ["Regular"],
+    variantPrices: { Regular: "" },
     comboItemsText: "",
     categoryImage: "",
     image: null,
@@ -73,7 +74,20 @@ export default function ManageFoods() {
       ...current,
       variants: current.variants.includes(variant)
         ? current.variants.filter((item) => item !== variant)
-        : [...current.variants, variant]
+        : [...current.variants, variant],
+      variantPrices: {
+        ...current.variantPrices,
+        [variant]: current.variantPrices?.[variant] || current.price || "",
+      }
+    }));
+  };
+  const handleVariantPriceChange = (variant, value) => {
+    setForm((current) => ({
+      ...current,
+      variantPrices: {
+        ...current.variantPrices,
+        [variant]: value,
+      }
     }));
   };
 
@@ -103,7 +117,10 @@ export default function ManageFoods() {
       fd.append("mealCategory", form.mealCategory);
       fd.append("servingSize", form.foodType === "combo" ? 1 : form.servingSize);
       fd.append("packingCharge", form.packingCharge || 0);
-      fd.append("variants", JSON.stringify(form.variants));
+      fd.append("variants", JSON.stringify(form.variants.map((variant) => ({
+        name: variant,
+        price: Number(form.variantPrices?.[variant] || form.price || 0)
+      }))));
       fd.append("comboItems", JSON.stringify(form.foodType === "combo" ? parseComboItems() : []));
       fd.append("categoryImageCurrent", form.categoryImage || "");
       if (form.image) fd.append("image", form.image);
@@ -143,7 +160,16 @@ export default function ManageFoods() {
       mealCategory: food.mealCategory || "Anytime",
       servingSize: String(food.servingSize || 1),
       packingCharge: food.packingCharge ? String(food.packingCharge) : "",
-      variants: Array.isArray(food.variants) && food.variants.length ? food.variants : ["Regular"],
+      variants: Array.isArray(food.variants) && food.variants.length
+        ? food.variants.map((variant) => typeof variant === "string" ? variant : variant.name).filter(Boolean)
+        : ["Regular"],
+      variantPrices: Array.isArray(food.variants) && food.variants.length
+        ? food.variants.reduce((acc, variant) => {
+            const name = typeof variant === "string" ? variant : variant.name;
+            if (name) acc[name] = typeof variant === "string" ? String(food.price || "") : String(variant.price || food.price || "");
+            return acc;
+          }, {})
+        : { Regular: String(food.price || "") },
       comboItemsText: Array.isArray(food.comboItems) ? food.comboItems.map((item) => `${item.name}|${item.price || 0}`).join("\n") : "",
       categoryImage: food.categoryImage || "",
       image: null,
@@ -295,6 +321,25 @@ export default function ManageFoods() {
                     </button>
                   ))}
                 </div>
+                {form.variants.length > 0 && (
+                  <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {form.variants.map((variant) => (
+                      <div key={variant}>
+                        <label className="block text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">
+                          {variant} Price
+                        </label>
+                        <Input
+                          type="number"
+                          min="0"
+                          placeholder="Enter price"
+                          value={form.variantPrices?.[variant] || ""}
+                          onChange={(event) => handleVariantPriceChange(variant, event.target.value)}
+                          className="bg-white dark:bg-slate-950"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {form.foodType === "combo" && (

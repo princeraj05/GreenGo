@@ -20,6 +20,17 @@ const parseJsonArray = (value, fallback = []) => {
     return fallback;
   }
 };
+const normalizeVariants = (value, basePrice = 0) => parseJsonArray(value)
+  .map((variant) => {
+    if (typeof variant === "string") {
+      return { name: variant, price: toNumber(basePrice, 0) };
+    }
+    return {
+      name: String(variant?.name || "").trim(),
+      price: toNumber(variant?.price, basePrice),
+    };
+  })
+  .filter((variant) => variant.name);
 
 export const getFoods = async (req, res) => {
   const foods = await Food.find().sort({ createdAt: -1 }).lean();
@@ -57,7 +68,7 @@ export const addFood = async (req, res) => {
       mealCategory: mealCategory || "Anytime",
       servingSize: Math.max(1, Math.ceil(toNumber(servingSize, 1))),
       packingCharge: Math.max(0, toNumber(packingCharge, 0)),
-      variants: parseJsonArray(variants),
+      variants: normalizeVariants(variants, price),
       comboItems: parseJsonArray(comboItems),
       image: foodImage, // Save the full Cloudinary URL
     });
@@ -104,7 +115,7 @@ export const updateFood = async (req, res) => {
     if (mealCategory !== undefined) updateData.mealCategory = mealCategory || "Anytime";
     if (servingSize !== undefined) updateData.servingSize = Math.max(1, Math.ceil(toNumber(servingSize, 1)));
     if (packingCharge !== undefined) updateData.packingCharge = Math.max(0, toNumber(packingCharge, 0));
-    if (variants !== undefined) updateData.variants = parseJsonArray(variants);
+    if (variants !== undefined) updateData.variants = normalizeVariants(variants, price ?? req.body.price);
     if (comboItems !== undefined) updateData.comboItems = parseJsonArray(comboItems);
     
     const foodImage = getUploadedPath(req.files, "image");

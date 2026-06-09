@@ -31,6 +31,8 @@ export default function Menu() {
   const [showAllFoods, setShowAllFoods] = useState(false);
   const [loading, setLoading] = useState(true);
   const [selectedFood, setSelectedFood] = useState(null);
+  const [selectedVariant, setSelectedVariant] = useState(null);
+  const [selectedFoodQty, setSelectedFoodQty] = useState(1);
   const [activeFoodCollection, setActiveFoodCollection] = useState(null);
   const [foodReviews, setFoodReviews] = useState([]);
   const [favorites, setFavorites] = useState([]);
@@ -273,9 +275,39 @@ export default function Menu() {
     }
   };
 
+  const getVariantOptions = useCallback((food) => {
+    const variants = Array.isArray(food?.variants) ? food.variants : [];
+    return variants
+      .map((variant) => {
+        if (typeof variant === "string") {
+          return { name: variant, price: Number(food.price || 0) };
+        }
+        return {
+          name: String(variant?.name || "").trim(),
+          price: Number(variant?.price || food.price || 0),
+        };
+      })
+      .filter((variant) => variant.name);
+  }, []);
+
+  const hasVariantChoices = useCallback((food) => getVariantOptions(food).length > 0, [getVariantOptions]);
+
+  const withSelectedVariant = (food, variant = null) => {
+    const selected = variant || getVariantOptions(food)[0] || null;
+    if (!selected) return food;
+    return {
+      ...food,
+      _cartId: `${food._id}:${selected.name}`,
+      foodId: food._id,
+      price: selected.price,
+      variantName: selected.name,
+    };
+  };
+
   const updateQuantity = (food, newQty) => {
     let currentCart = JSON.parse(localStorage.getItem("cart")) || [];
-    const existingIndex = currentCart.findIndex(i => i._id === food._id);
+    const cartId = food._cartId || food._id;
+    const existingIndex = currentCart.findIndex(i => i._id === cartId);
 
     if (newQty <= 0) {
       if (existingIndex > -1) {
@@ -286,8 +318,11 @@ export default function Menu() {
         currentCart[existingIndex].qty = newQty;
       } else {
         currentCart.push({
-          _id: food._id,
-          name: food.name,
+          _id: cartId,
+          foodId: food.foodId || food._id,
+          name: food.variantName ? `${food.name} (${food.variantName})` : food.name,
+          baseName: food.name,
+          variantName: food.variantName || "",
           price: food.price,
           packingCharge: food.packingCharge || 0,
           servingSize: food.servingSize || 1,
@@ -305,6 +340,8 @@ export default function Menu() {
 
   const selectFoodDetails = async (food) => {
     setSelectedFood(food);
+    setSelectedVariant(getVariantOptions(food)[0] || null);
+    setSelectedFoodQty(1);
     setFoodReviews([]);
     try {
       const res = await fetch(`${API}/api/reviews/food/${food._id}`);
@@ -404,6 +441,13 @@ export default function Menu() {
 
   const activeBannersList = banners.length > 0 ? banners : defaultBanners;
   const currentBanner = activeBannersList[currentBannerIdx];
+  const selectedFoodVariantOptions = selectedFood ? getVariantOptions(selectedFood) : [];
+  const selectedFoodCartItem = selectedFood && selectedVariant
+    ? cart.find((item) => item._id === `${selectedFood._id}:${selectedVariant.name}`)
+    : selectedFood
+      ? cart.find((item) => item._id === selectedFood._id || item.foodId === selectedFood._id)
+      : null;
+  const selectedFoodPrice = selectedVariant?.price || Number(selectedFood?.price || 0);
   const cleanAddressPart = (value = "") => String(value)
     .replace(/\b(?:Jaipur|Rajasthan)\b/gi, "")
     .replace(/\s*,\s*,/g, ",")
@@ -433,7 +477,7 @@ export default function Menu() {
     return image.startsWith("http") || image.startsWith("/") ? image : getImageUrl(image);
   };
 
-  const getCartItem = (food) => cart.find((item) => item._id === food._id);
+  const getCartItem = (food) => cart.find((item) => item._id === food._id || item.foodId === food._id);
 
   const clearCart = () => {
     localStorage.removeItem("cart");
@@ -454,7 +498,7 @@ export default function Menu() {
     if (!cartItem) {
       return (
         <button
-          onClick={() => updateQuantity(food, 1)}
+          onClick={() => hasVariantChoices(food) ? selectFoodDetails(food) : updateQuantity(food, 1)}
           className="px-3.5 py-2 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs shadow-md shadow-brand-500/20 active:scale-95 transition-all"
         >
           + Add
@@ -473,7 +517,7 @@ export default function Menu() {
         </button>
         <div className="flex items-center bg-brand-50 dark:bg-brand-950/40 border border-brand-100 dark:border-brand-800 rounded-xl p-0.5">
           <button
-            onClick={() => updateQuantity(food, cartItem.qty - 1)}
+            onClick={() => hasVariantChoices(food) ? selectFoodDetails(food) : updateQuantity(food, cartItem.qty - 1)}
             className="w-8 h-8 rounded-lg bg-white dark:bg-slate-900 text-brand-600 dark:text-brand-300 font-extrabold flex items-center justify-center border border-slate-100 dark:border-slate-800"
           >
             -
@@ -482,7 +526,7 @@ export default function Menu() {
             {cartItem.qty}
           </span>
           <button
-            onClick={() => updateQuantity(food, cartItem.qty + 1)}
+            onClick={() => hasVariantChoices(food) ? selectFoodDetails(food) : updateQuantity(food, cartItem.qty + 1)}
             className="w-8 h-8 rounded-lg bg-brand-500 text-white font-extrabold flex items-center justify-center shadow-md shadow-brand-500/20"
           >
             +
@@ -1157,7 +1201,7 @@ export default function Menu() {
                 <div>
                   <div className="flex justify-between items-start gap-4 mb-3">
                     <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">{selectedFood.name}</h2>
-                    <span className="text-2xl font-black text-brand-600 shrink-0">₹{selectedFood.price}</span>
+                    <span className="text-2xl font-black text-brand-600 shrink-0">₹{selectedFoodPrice}</span>
                   </div>
                   
                   <div className="flex items-center gap-2 text-sm font-extrabold text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-900 px-3.5 py-2 rounded-xl w-fit border border-slate-100 dark:border-slate-800/60">
@@ -1170,6 +1214,41 @@ export default function Menu() {
                   <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Description</h4>
                   <p className="text-slate-600 dark:text-slate-300 leading-relaxed font-medium">{selectedFood.description || "No description available."}</p>
                 </div>
+
+                {selectedFoodVariantOptions.length > 0 && (
+                  <div>
+                    <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">Customisation</h3>
+                    <p className="mt-1 text-sm font-bold text-slate-500 dark:text-slate-400">Select any 1</p>
+                    <div className="mt-4 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/50">
+                      {selectedFoodVariantOptions.map((variant) => {
+                        const active = selectedVariant?.name === variant.name;
+                        return (
+                          <button
+                            key={variant.name}
+                            type="button"
+                            onClick={() => setSelectedVariant(variant)}
+                            className={`flex w-full items-center justify-between gap-4 border-b border-slate-100 px-4 py-4 text-left last:border-b-0 dark:border-slate-800 ${
+                              active ? "bg-brand-50/70 dark:bg-brand-950/20" : "bg-white dark:bg-slate-950"
+                            }`}
+                          >
+                            <span className="flex min-w-0 items-center gap-3">
+                              <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 ${selectedFood.veg === false ? "border-red-500" : "border-emerald-500"}`}>
+                                <span className={`h-2.5 w-2.5 rounded-full ${selectedFood.veg === false ? "bg-red-500" : "bg-emerald-500"}`} />
+                              </span>
+                              <span className="truncate text-base font-black text-slate-900 dark:text-white">{variant.name}</span>
+                            </span>
+                            <span className="flex shrink-0 items-center gap-3">
+                              <span className="text-base font-black text-slate-700 dark:text-slate-200">₹{variant.price}</span>
+                              <span className={`h-6 w-6 rounded-full border-2 ${active ? "border-brand-500 bg-brand-500 shadow-inner" : "border-slate-300 dark:border-slate-600"}`}>
+                                {active && <span className="block h-full w-full rounded-full border-4 border-white dark:border-slate-950" />}
+                              </span>
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
 
                 <hr className="border-slate-100 dark:border-slate-800/60" />
 
@@ -1213,8 +1292,40 @@ export default function Menu() {
                 </div>
               </div>
 
-              {/* Add to Cart button */}
               <div className="p-6 border-t border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-950">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-14 shrink-0 items-center rounded-2xl border border-slate-200 bg-white p-1 dark:border-slate-800 dark:bg-slate-900">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedFoodQty((qty) => Math.max(1, qty - 1))}
+                      className="flex h-12 w-12 items-center justify-center rounded-xl text-2xl font-black text-brand-600 hover:bg-brand-50 dark:text-brand-300 dark:hover:bg-brand-950/30"
+                    >
+                      -
+                    </button>
+                    <span className="w-10 text-center text-lg font-black text-slate-900 dark:text-white">{selectedFoodQty}</span>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedFoodQty((qty) => qty + 1)}
+                      className="flex h-12 w-12 items-center justify-center rounded-xl text-2xl font-black text-brand-600 hover:bg-brand-50 dark:text-brand-300 dark:hover:bg-brand-950/30"
+                    >
+                      +
+                    </button>
+                  </div>
+                  <Button
+                    onClick={() => {
+                      updateQuantity(withSelectedVariant(selectedFood, selectedVariant), selectedFoodQty);
+                      setSelectedFood(null);
+                    }}
+                    className="flex-1 gap-2 py-4 text-base rounded-2xl"
+                  >
+                    <ShoppingCart size={20} />
+                    {selectedFoodCartItem ? "Update Item" : "Add Item"} | ₹{selectedFoodPrice * selectedFoodQty}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Add to Cart button */}
+              <div className="hidden p-6 border-t border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-950">
                 {cart.find(i => i._id === selectedFood._id) ? (
                   <div className="flex items-center justify-between w-full bg-brand-50 dark:bg-brand-950/30 border border-brand-100 dark:border-brand-900 rounded-2xl p-2 shadow-sm">
                     <button

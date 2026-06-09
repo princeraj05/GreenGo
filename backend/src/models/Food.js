@@ -15,7 +15,10 @@ const foodSchema = new mongoose.Schema({
   },
   mealCategory: { type: String, default: "Anytime" },
   servingSize: { type: Number, default: 1, min: 1 },
-  variants: [{ type: String }],
+  variants: [{
+    name: { type: String, default: "" },
+    price: { type: Number, default: 0 }
+  }],
   packingCharge: { type: Number, default: 0, min: 0 },
   comboItems: [{
     name: { type: String, default: "" },

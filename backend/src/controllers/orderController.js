@@ -164,7 +164,7 @@ export const createOrder = async (req, res) => {
       userId: req.user.id,
 
       items: items.map(i => ({
-        foodId: i._id,
+        foodId: i.foodId || i._id,
         name: i.name,
         price: i.price,
         packingCharge: Number(i.packingCharge || 0),
