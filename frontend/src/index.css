@@ -46,7 +46,7 @@
   --brand-900: #14532d;
   --brand-950: #052e16;
 
-  /* Slate colors for general UI in Dark Mode (GreenGO style) */
+  /* Slate colors for general UI in Dark Mode (GreenGo style) */
   --slate-50: #ffffff;
   --slate-100: #121a14;
   --slate-200: #374151;
@@ -105,3 +105,4 @@
     scrollbar-width: none;
   }
 }
+

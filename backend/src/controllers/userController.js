@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs";
 import admin from "../config/firebase.js";
 import crypto from "crypto";
 import { sendEmail } from "../services/emailService.js";
+import { createAdminNotification } from "../services/adminNotificationService.js";
 
 const maskToken = (token) => {
   if (!token) return "none";
@@ -73,6 +74,58 @@ const budgetDummyFoods = [
   { _id: "dummy-gulab-jamun", name: "Gulab Jamun", price: 79, category: "Desserts", veg: true, description: "Classic sweet dessert", rating: 4.7, ratingCount: 22, totalOrders: 55, image: "" },
 ];
 
+const userDetailLine = (user) =>
+  `Name: ${user.name || "N/A"} | Email: ${user.email || "N/A"} | Phone: ${user.phone || "N/A"}`;
+
+const notifyAdminUserEvent = async (title, user, type = "info") => {
+  if (!user || user.role === "admin") return;
+  await createAdminNotification({
+    title,
+    message: userDetailLine(user),
+    type,
+    actionPath: "/admin/users",
+    data: {
+      event: title.toLowerCase().replace(/\s+/g, "_"),
+      userId: String(user._id),
+      name: user.name || "",
+      email: user.email || "",
+      phone: user.phone || "",
+      role: user.role || "customer",
+    },
+  });
+};
+
+const normalizeDeliveryDetails = (user) => {
+  if (user.role !== "deliveryBoy") return;
+  const details = user.deliveryDetails || {};
+  const address = String(details.address || user.address || "").trim();
+  const hasProfile = Boolean(String(user.name || "").trim() && String(user.phone || "").trim() && address);
+  user.deliveryDetails = {
+    ...details,
+    address,
+    profileCompleted: hasProfile,
+    completedAt: hasProfile ? details.completedAt || new Date() : null,
+    updatedAt: details.updatedAt || new Date(),
+    changeLog: details.changeLog || [],
+  };
+};
+
+const logDeliveryChange = (user, field, oldValue, newValue) => {
+  if (user.role !== "deliveryBoy") return;
+  const before = oldValue == null ? "" : String(oldValue);
+  const after = newValue == null ? "" : String(newValue);
+  if (before === after) return;
+  if (!user.deliveryDetails) user.deliveryDetails = {};
+  if (!Array.isArray(user.deliveryDetails.changeLog)) user.deliveryDetails.changeLog = [];
+  user.deliveryDetails.changeLog.push({
+    field,
+    oldValue: before,
+    newValue: after,
+    changedAt: new Date(),
+  });
+  user.deliveryDetails.changeLog = user.deliveryDetails.changeLog.slice(-20);
+};
+
 /* ================= REGISTER ================= */
 
 export const registerUser = async (req, res) => {
@@ -90,13 +143,15 @@ export const registerUser = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    await User.create({
+    const user = await User.create({
       name,
       email,
       password: hashedPassword,
       phone,
       address
     });
+
+    await notifyAdminUserEvent("New User Registered", user, "success");
 
     res.json({
       success: true,
@@ -160,6 +215,7 @@ export const loginUser = async (req, res) => {
 
     user.lastLogin = new Date();
     await user.save();
+    await notifyAdminUserEvent("User Logged In", user, "info");
 
     const jwtPayload = {
       id: user._id,
@@ -207,6 +263,10 @@ export const getMe = async (req, res) => {
       user.primaryAddressId = primary?._id || null;
       await user.save();
     }
+    if (user?.role === "deliveryBoy") {
+      normalizeDeliveryDetails(user);
+      await user.save();
+    }
 
     res.json(user);
 
@@ -225,12 +285,31 @@ export const getMe = async (req, res) => {
 
 export const updateProfile = async (req, res) => {
   try {
-    const { name, phone, address, addresses, primaryAddressId, foodPreference, deliveryTime, notifications } = req.body;
+    const {
+      name,
+      phone,
+      address,
+      addresses,
+      primaryAddressId,
+      foodPreference,
+      deliveryTime,
+      notifications,
+      birthDate,
+      deliveryAddress,
+      deliveryLatitude,
+      deliveryLongitude
+    } = req.body;
     
     const user = await User.findById(req.user.id);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
+
+    const previousName = user.name || "";
+    const previousPhone = user.phone || "";
+    const previousDeliveryAddress = user.deliveryDetails?.address || user.address || "";
+    const previousLatitude = user.deliveryDetails?.latitude;
+    const previousLongitude = user.deliveryDetails?.longitude;
 
     user.name = name || user.name;
     user.phone = phone !== undefined ? phone : user.phone;
@@ -263,6 +342,29 @@ export const updateProfile = async (req, res) => {
     user.foodPreference = foodPreference !== undefined ? foodPreference : user.foodPreference;
     user.deliveryTime = deliveryTime !== undefined ? deliveryTime : user.deliveryTime;
     user.notifications = notifications !== undefined ? notifications : user.notifications;
+    user.birthDate = birthDate !== undefined && birthDate !== "" ? new Date(birthDate) : user.birthDate;
+
+    if (user.role === "deliveryBoy") {
+      const nextDeliveryAddress = deliveryAddress !== undefined ? deliveryAddress : address;
+      if (!user.deliveryDetails) user.deliveryDetails = {};
+      if (nextDeliveryAddress !== undefined) {
+        user.deliveryDetails.address = String(nextDeliveryAddress || "").trim();
+        user.address = user.deliveryDetails.address;
+      }
+      if (deliveryLatitude !== undefined && deliveryLatitude !== "") {
+        user.deliveryDetails.latitude = Number(deliveryLatitude);
+      }
+      if (deliveryLongitude !== undefined && deliveryLongitude !== "") {
+        user.deliveryDetails.longitude = Number(deliveryLongitude);
+      }
+      logDeliveryChange(user, "name", previousName, user.name);
+      logDeliveryChange(user, "phone", previousPhone, user.phone);
+      logDeliveryChange(user, "address", previousDeliveryAddress, user.deliveryDetails.address || "");
+      logDeliveryChange(user, "latitude", previousLatitude, user.deliveryDetails.latitude);
+      logDeliveryChange(user, "longitude", previousLongitude, user.deliveryDetails.longitude);
+      user.deliveryDetails.updatedAt = new Date();
+      normalizeDeliveryDetails(user);
+    }
 
     await user.save();
 
@@ -423,6 +525,7 @@ export const googleLogin = async (req, res) => {
         role: "customer",
         lastLogin: new Date()
       });
+      await notifyAdminUserEvent("New Google User", user, "success");
     } else {
       let updated = false;
       if (!user.uid) {
@@ -439,6 +542,7 @@ export const googleLogin = async (req, res) => {
       if (updated) {
         await user.save();
       }
+      await notifyAdminUserEvent("User Logged In", user, "info");
     }
 
     const jwtPayload = {
@@ -504,7 +608,7 @@ export const forgotPassword = async (req, res) => {
       <div style="font-family: Arial, sans-serif; color: #111827; line-height: 1.6; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 16px; padding: 24px;">
         <h2 style="color: #f97316; margin-top: 0;">Password Reset Request</h2>
         <p>Hello ${user.name},</p>
-        <p>You requested to reset your password for your ByteBite account. Please click the button below to set a new password. This link will expire in 1 hour.</p>
+        <p>You requested to reset your password for your GreenGo account. Please click the button below to set a new password. This link will expire in 1 hour.</p>
         <div style="text-align: center; margin: 32px 0;">
           <a href="${resetUrl}" style="background-color: #f97316; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Reset Password</a>
         </div>
@@ -518,7 +622,7 @@ export const forgotPassword = async (req, res) => {
     try {
       await sendEmail({
         to: user.email,
-        subject: "ByteBite Password Reset Request",
+        subject: "GreenGo Password Reset Request",
         text: `You requested a password reset. Please use the following link to reset your password: ${resetUrl}`,
         html: message
       });
@@ -596,19 +700,19 @@ export const sendOtpEmail = async (req, res) => {
     console.log(`[OTP DEBUG] Generated Email OTP ${otp} for ${email}`);
 
     // Send email
-    const subject = "ByteBite Verification Code";
-    const text = `Your ByteBite verification code is: ${otp}`;
+    const subject = "GreenGo Verification Code";
+    const text = `Your GreenGo verification code is: ${otp}`;
     const html = `
       <div style="font-family: Arial, sans-serif; color: #111827; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 16px; padding: 24px;">
-        <h2 style="color: #f97316; margin-top: 0; text-align: center;">ByteBite</h2>
+        <h2 style="color: #f97316; margin-top: 0; text-align: center;">GreenGo</h2>
         <p>Dear Customer,</p>
-        <p>Your one-time password (OTP) to log in or create your ByteBite account is:</p>
+        <p>Your one-time password (OTP) to log in or create your GreenGo account is:</p>
         <div style="text-align: center; margin: 32px 0;">
           <span style="font-size: 32px; font-weight: bold; letter-spacing: 6px; color: #f97316; background-color: #fef3c7; padding: 12px 24px; border-radius: 8px;">${otp}</span>
         </div>
         <p>This code is valid for 5 minutes. Please do not share this OTP with anyone.</p>
         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
-        <p style="color: #6b7280; font-size: 12px; text-align: center;">ByteBite - Delivering Happiness</p>
+        <p style="color: #6b7280; font-size: 12px; text-align: center;">GreenGo - Delivering Happiness</p>
       </div>
     `;
 
@@ -658,9 +762,11 @@ export const verifyOtpEmail = async (req, res) => {
         provider: "email",
         lastLogin: new Date()
       });
+      await notifyAdminUserEvent("New Email OTP User", user, "success");
     } else {
       user.lastLogin = new Date();
       await user.save();
+      await notifyAdminUserEvent("User Logged In", user, "info");
     }
 
     // Generate JWT
@@ -745,9 +851,11 @@ export const verifyOtpPhone = async (req, res) => {
         provider: "phone",
         lastLogin: new Date()
       });
+      await notifyAdminUserEvent("New Phone OTP User", user, "success");
     } else {
       user.lastLogin = new Date();
       await user.save();
+      await notifyAdminUserEvent("User Logged In", user, "info");
     }
 
     // Generate JWT
@@ -771,3 +879,4 @@ export const verifyOtpPhone = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+

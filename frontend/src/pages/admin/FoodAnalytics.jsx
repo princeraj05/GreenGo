@@ -52,7 +52,34 @@ export default function FoodAnalytics() {
         {loading ? (
           <div className="p-8 text-center text-slate-500 dark:text-slate-400">Loading metrics...</div>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          <div className="grid gap-3 p-4 md:hidden">
+            {foods.map((food) => (
+              <div key={food._id} className="rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <h3 className="font-black text-slate-950 dark:text-white">{food.name}</h3>
+                  <span className="bg-orange-100 dark:bg-orange-950/40 text-orange-700 dark:text-orange-400 px-3 py-1 rounded-full text-xs font-bold">
+                    {(food.popularityScore || 0).toFixed(1)}
+                  </span>
+                </div>
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <Metric label="Orders" value={food.totalOrders || 0} />
+                  <Metric label="Revenue" value={`₹${food.revenueGenerated || 0}`} />
+                </div>
+                <button
+                  onClick={() => toggleFeatured(food)}
+                  className={`mt-3 min-h-11 w-full rounded-xl text-sm font-black transition-colors ${
+                    food.featured
+                      ? "bg-purple-100 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300"
+                      : "bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-300 border border-slate-100 dark:border-slate-800"
+                  }`}
+                >
+                  {food.featured ? "Featured" : "Set Featured"}
+                </button>
+              </div>
+            ))}
+          </div>
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800/60">
@@ -91,8 +118,18 @@ export default function FoodAnalytics() {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </div>
+    </div>
+  );
+}
+
+function Metric({ label, value }) {
+  return (
+    <div className="rounded-xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 p-3">
+      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{label}</p>
+      <p className="mt-1 font-black text-slate-950 dark:text-white">{value}</p>
     </div>
   );
 }

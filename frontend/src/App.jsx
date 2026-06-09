@@ -145,7 +145,7 @@ export default function App() {
           <div className="absolute -inset-1 bg-gradient-to-br from-brand-500 to-brand-300 rounded-3xl blur opacity-30 animate-pulse -z-10"></div>
         </div>
         <h1 className="text-3xl font-black tracking-tight mb-2 bg-gradient-to-r from-brand-500 to-brand-300 bg-clip-text text-transparent">
-          ByteBite
+          GreenGo
         </h1>
         <p className="text-slate-500 text-xs font-bold tracking-widest uppercase mb-8">
           Delivering Happiness
@@ -170,10 +170,11 @@ export default function App() {
           </div>
           <h2 className="text-2xl font-black tracking-tight mb-2">No Internet Connection</h2>
           <p className="text-slate-400 max-w-xs text-sm font-medium leading-relaxed">
-            ByteBite requires an active internet connection. Please verify your Wi-Fi or cellular data settings.
+            GreenGo requires an active internet connection. Please verify your Wi-Fi or cellular data settings.
           </p>
         </div>
       )}
     </>
   );
 }
+

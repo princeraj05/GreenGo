@@ -6,6 +6,9 @@ const notificationSchema = new mongoose.Schema(
     title: { type: String, default: "Notification" },
     message: { type: String, required: true },
     type: { type: String, default: "info" },
+    audience: { type: String, enum: ["user", "admin"], default: "user" },
+    actionPath: { type: String, default: "" },
+    data: { type: mongoose.Schema.Types.Mixed, default: {} },
     read: { type: Boolean, default: false },
     readBy: [{ type: String }],
     expiresAt: { type: Date }

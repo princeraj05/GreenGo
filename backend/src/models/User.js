@@ -80,6 +80,25 @@ const userSchema = new mongoose.Schema(
     default: ""
   },
 
+  birthDate: {
+    type: Date
+  },
+
+  deliveryDetails: {
+    address: { type: String, default: "" },
+    latitude: { type: Number },
+    longitude: { type: Number },
+    profileCompleted: { type: Boolean, default: false },
+    completedAt: { type: Date },
+    updatedAt: { type: Date },
+    changeLog: [{
+      field: { type: String, default: "" },
+      oldValue: { type: String, default: "" },
+      newValue: { type: String, default: "" },
+      changedAt: { type: Date, default: Date.now }
+    }]
+  },
+
   rewardPoints: { type: Number, default: 0 },
   totalSpent: { type: Number, default: 0 },
   totalOrders: { type: Number, default: 0 },

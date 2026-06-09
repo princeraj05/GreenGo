@@ -50,7 +50,7 @@ export default function About() {
   const milestones = [
     { year: "2021", title: "Founded", desc: "Started in a small kitchen with big dreams and 5 restaurant partners." },
     { year: "2022", title: "500 Orders/Day", desc: "Expanded to multiple cities and launched our first app." },
-    { year: "2023", title: "10K Customers", desc: "Hit 10,000 active users and completely rebranded to ByteBite." },
+    { year: "2023", title: "10K Customers", desc: "Hit 10,000 active users and completely rebranded to GreenGo." },
     { year: "2024", title: "Nationwide", desc: "Now serving 20+ cities and growing faster than ever." },
   ];
 
@@ -68,7 +68,7 @@ export default function About() {
               🍔 Our Story
             </span>
             <h1 className="text-4xl md:text-6xl font-black text-gray-900 dark:text-white tracking-tight leading-tight mb-6">
-              About <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-600">ByteBite</span>
+              About <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-600">GreenGo</span>
             </h1>
             <p className="text-lg text-gray-500 dark:text-slate-400 mb-10 leading-relaxed font-medium">
               Born with passion. Built with precision. Delivering happiness one premium meal at a time.
@@ -163,7 +163,7 @@ export default function About() {
         <div className="max-w-7xl mx-auto">
           <Section className="text-center max-w-2xl mx-auto mb-16">
             <h2 className="text-sm font-bold text-orange-600 dark:text-orange-500 uppercase tracking-widest mb-3">Meet the Team</h2>
-            <h3 className="text-4xl font-black text-gray-900 dark:text-white tracking-tight">The People Behind ByteBite</h3>
+            <h3 className="text-4xl font-black text-gray-900 dark:text-white tracking-tight">The People Behind GreenGo</h3>
           </Section>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">

@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getToken } from "../../utils/getToken";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { Users, Package, UtensilsCrossed, IndianRupee } from "lucide-react";
 import { motion } from "framer-motion";
 import Card from "../../components/ui/Card";
+
+const MotionDiv = motion.div;
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -18,11 +20,7 @@ export default function AdminDashboard() {
     topFoods: []
   });
 
-  useEffect(() => {
-    loadStats();
-  }, []);
-
-  const loadStats = async () => {
+  const loadStats = useCallback(async () => {
     try {
       const token = await getToken();
       if (window.diagnostics) {
@@ -90,7 +88,11 @@ export default function AdminDashboard() {
         window.diagnostics.addError(`AdminDashboard load error: ${err.message}\nStack: ${err.stack}`);
       }
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    Promise.resolve().then(loadStats);
+  }, [loadStats]);
 
   const cards = [
     {
@@ -126,16 +128,16 @@ export default function AdminDashboard() {
   return (
     <div className="w-full pb-10">
       {/* Header section */}
-      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6 md:mb-10">
+      <MotionDiv initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6 md:mb-10">
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight">Overview</h1>
         <p className="text-slate-500 dark:text-slate-400 mt-1.5 md:mt-2 text-sm sm:text-base md:text-lg font-medium max-w-xl">Here is the latest snapshot of your business today.</p>
-      </motion.div>
+      </MotionDiv>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 lg:gap-6">
         {cards.map((card, i) => (
-          <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
-            <Card className="relative overflow-hidden group border-slate-100 p-4 sm:p-5 md:p-6 min-h-[132px] sm:min-h-[150px]">
+          <MotionDiv key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
+            <Card className="relative overflow-hidden group border-slate-100 p-3.5 sm:p-5 md:p-6 min-h-[124px] sm:min-h-[150px] h-full">
               <div className="flex items-center justify-between mb-3 md:mb-4">
                 <div className={`w-11 h-11 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-2xl ${card.bg} flex items-center justify-center transition-transform duration-300 group-hover:scale-110 [&>svg]:w-5 [&>svg]:h-5 sm:[&>svg]:w-6 sm:[&>svg]:h-6 md:[&>svg]:w-7 md:[&>svg]:h-7`}>
                   {card.icon}
@@ -143,19 +145,19 @@ export default function AdminDashboard() {
                 <div className={`w-2 h-2 rounded-full bg-gradient-to-br ${card.accent} animate-pulse`}></div>
               </div>
               <div>
-                <p className="text-[10px] sm:text-xs md:text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider md:tracking-widest mb-1 leading-tight">{card.label}</p>
-                <p className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight break-words">{card.value}</p>
+                <p className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide md:tracking-widest mb-1 leading-tight">{card.label}</p>
+                <p className="text-xl sm:text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight break-words leading-tight">{card.value}</p>
               </div>
               <div className={`absolute bottom-0 left-0 h-1 w-0 bg-gradient-to-r ${card.accent} group-hover:w-full transition-all duration-500`}></div>
             </Card>
-          </motion.div>
+          </MotionDiv>
         ))}
       </div>
 
       {/* Charts Section */}
       <div className="mt-8 md:mt-10 grid grid-cols-1 lg:grid-cols-2 gap-5 md:gap-8">
         {/* Revenue Chart */}
-        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
+        <MotionDiv initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
           <Card className="p-5 md:p-8 border-slate-100 h-full">
             <h2 className="text-base md:text-xl font-bold text-slate-900 dark:text-white mb-4 md:mb-6 flex items-center gap-2">
               <IndianRupee size={20} className="text-purple-500" /> Monthly Revenue
@@ -188,10 +190,10 @@ export default function AdminDashboard() {
               )}
             </div>
           </Card>
-        </motion.div>
+        </MotionDiv>
 
         {/* Orders Chart */}
-        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }}>
+        <MotionDiv initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }}>
           <Card className="p-5 md:p-8 border-slate-100 h-full">
             <h2 className="text-base md:text-xl font-bold text-slate-900 dark:text-white mb-4 md:mb-6 flex items-center gap-2">
               <Package size={20} className="text-emerald-500" /> Orders Per Day
@@ -218,7 +220,7 @@ export default function AdminDashboard() {
               )}
             </div>
           </Card>
-        </motion.div>
+        </MotionDiv>
       </div>
       
     </div>

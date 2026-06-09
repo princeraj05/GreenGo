@@ -156,7 +156,7 @@ export default function Contact() {
                         <div className="w-4.5 h-4.5 rounded-full bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white text-[8px] font-black shadow-sm shrink-0">
                           B
                         </div>
-                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">GreenGO Support</span>
+                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">GreenGo Support</span>
                       </div>
                       <p className="text-xs sm:text-sm leading-relaxed mt-1 font-medium">{contact.reply}</p>
                     </div>
@@ -180,3 +180,4 @@ export default function Contact() {
     </div>
   );
 }
+

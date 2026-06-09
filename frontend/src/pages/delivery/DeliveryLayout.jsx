@@ -1,25 +1,37 @@
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { useCallback, useEffect, useState } from "react";
 import { Bell, ClipboardList, Home, LogOut, Moon, Sun, User, Wallet } from "lucide-react";
 import { clearSession } from "../../utils/authStorage";
 import { useTheme } from "../../context/ThemeContext";
 import { cn } from "../../utils/cn";
 import API from "../../api/axios";
 
+const isDeliveryProfileComplete = (user = {}) => Boolean(
+  user?.deliveryDetails?.profileCompleted &&
+  String(user?.name || "").trim() &&
+  String(user?.phone || "").trim() &&
+  String(user?.deliveryDetails?.address || user?.address || "").trim()
+);
+
 export default function DeliveryLayout() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { theme, toggleTheme } = useTheme();
   const [profile, setProfile] = useState({});
   const [unreadCount, setUnreadCount] = useState(0);
 
-  async function loadProfile() {
+  const loadProfile = useCallback(async () => {
     try {
       const res = await API.get("/api/users/me");
-      setProfile(res.data || {});
+      const user = res.data || {};
+      setProfile(user);
+      if (!isDeliveryProfileComplete(user) && location.pathname !== "/delivery/profile") {
+        navigate("/delivery/profile", { replace: true });
+      }
     } catch (err) {
       console.error("Failed to load delivery profile:", err);
     }
-  }
+  }, [location.pathname, navigate]);
 
   async function loadNotifications() {
     try {
@@ -37,8 +49,18 @@ export default function DeliveryLayout() {
       loadNotifications();
     });
     const timer = setInterval(loadNotifications, 15000);
-    return () => clearInterval(timer);
-  }, []);
+    window.addEventListener("delivery-profile-updated", loadProfile);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener("delivery-profile-updated", loadProfile);
+    };
+  }, [loadProfile]);
+
+  useEffect(() => {
+    if (profile?._id && !isDeliveryProfileComplete(profile) && location.pathname !== "/delivery/profile") {
+      navigate("/delivery/profile", { replace: true });
+    }
+  }, [profile, location.pathname, navigate]);
 
   const logout = async () => {
     await clearSession();
@@ -52,6 +74,8 @@ export default function DeliveryLayout() {
     { to: "/delivery/profile", label: "Profile", icon: <User size={20} /> },
   ];
 
+  const profileComplete = isDeliveryProfileComplete(profile);
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-950 dark:text-white transition-colors">
       <header className="sticky top-0 z-40 bg-white/85 dark:bg-slate-950/85 backdrop-blur-xl border-b border-slate-100 dark:border-slate-800 md:pl-64">
@@ -59,6 +83,9 @@ export default function DeliveryLayout() {
           <div className="min-w-0">
             <p className="text-[10px] font-black uppercase tracking-widest text-brand-600 dark:text-brand-400">Delivery Panel</p>
             <h1 className="text-lg font-black truncate">Hi, {profile.name || "Delivery Partner"}</h1>
+            {!profileComplete && (
+              <p className="text-[10px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-300">Complete profile first</p>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <button type="button" onClick={toggleTheme} className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center">
@@ -80,10 +107,12 @@ export default function DeliveryLayout() {
       </main>
 
       <nav className="fixed bottom-4 left-4 right-4 z-50 md:hidden bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border border-white/30 dark:border-slate-800/70 shadow-xl rounded-2xl flex items-center justify-around px-2 py-2">
-        {links.map(({ to, end, label, icon }) => (
+        {links.map(({ to, end, label, icon }) => {
+          const locked = !profileComplete && to !== "/delivery/profile";
+          return (
           <NavLink
             key={to}
-            to={to}
+            to={locked ? "/delivery/profile" : to}
             end={end}
             className={({ isActive }) =>
               cn(
@@ -95,14 +124,17 @@ export default function DeliveryLayout() {
             {icon}
             <span className="mt-1">{label}</span>
           </NavLink>
-        ))}
+          );
+        })}
       </nav>
 
       <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-64 bg-slate-950 text-white border-r border-slate-800 pt-24 px-4 flex-col gap-2">
-        {links.map(({ to, end, label, icon }) => (
+        {links.map(({ to, end, label, icon }) => {
+          const locked = !profileComplete && to !== "/delivery/profile";
+          return (
           <NavLink
             key={to}
-            to={to}
+            to={locked ? "/delivery/profile" : to}
             end={end}
             className={({ isActive }) =>
               cn(
@@ -113,7 +145,8 @@ export default function DeliveryLayout() {
           >
             {icon} {label}
           </NavLink>
-        ))}
+          );
+        })}
       </aside>
     </div>
   );

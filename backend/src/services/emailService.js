@@ -94,11 +94,11 @@ export const sendContactReplyEmail = async ({
   originalMessage,
 }) => {
   const sender = process.env.SMTP_USER || process.env.EMAIL_USER || process.env.MAIL_USER;
-  const from = process.env.MAIL_FROM || `"ByteBite Support" <${sender || "support@bytebite.com"}>`;
-  const replyTo = process.env.ADMIN_REPLY_TO || sender || "support@bytebite.com";
+  const from = process.env.MAIL_FROM || `"GreenGo Support" <${sender || "support@greengo.app"}>`;
+  const replyTo = process.env.ADMIN_REPLY_TO || sender || "support@greengo.app";
   const safeName = name || "there";
 
-  const emailSubject = subject ? `ByteBite: ${subject}` : "ByteBite Support Reply";
+  const emailSubject = subject ? `GreenGo: ${subject}` : "GreenGo Support Reply";
   const emailText = [
     `Hi ${safeName},`,
     "",
@@ -108,18 +108,18 @@ export const sendContactReplyEmail = async ({
     originalMessage,
     "",
     "Regards,",
-    "ByteBite Support",
+    "GreenGo Support",
   ].join("\n");
 
   const emailHtml = `
     <div style="font-family: Arial, sans-serif; color: #111827; line-height: 1.6;">
-      <h2 style="color:#f97316;">ByteBite Support</h2>
+      <h2 style="color:#f97316;">GreenGo Support</h2>
       <p>Hi ${escapeHtml(safeName)},</p>
       <p>${escapeHtml(reply).replace(/\n/g, "<br />")}</p>
       <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;" />
       <p style="color:#6b7280;font-size:13px;">Your message:</p>
       <p style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:12px;">${escapeHtml(originalMessage).replace(/\n/g, "<br />")}</p>
-      <p>Regards,<br />ByteBite Support</p>
+      <p>Regards,<br />GreenGo Support</p>
     </div>
   `;
 
@@ -134,7 +134,7 @@ export const sendContactReplyEmail = async ({
       const senderEmail = sender || "";
       if (isPublicEmailDomain(senderEmail)) {
         console.log(`Sender "${senderEmail}" is on a public domain. Using Resend onboarding@resend.dev fallback.`);
-        cleanFrom = `"ByteBite Support" <onboarding@resend.dev>`;
+        cleanFrom = `"GreenGo Support" <onboarding@resend.dev>`;
       }
 
       const response = await fetch("https://api.resend.com/emails", {
@@ -178,8 +178,8 @@ export const sendContactReplyEmail = async ({
         },
         body: JSON.stringify({
           sender: {
-            email: sender || "support@bytebite.com",
-            name: "ByteBite Support",
+            email: sender || "support@greengo.app",
+            name: "GreenGo Support",
           },
           to: [{ email: to, name: safeName }],
           replyTo: { email: replyTo },
@@ -229,8 +229,8 @@ export const sendContactReplyEmail = async ({
 
 export const sendEmail = async ({ to, subject, text, html }) => {
   const sender = process.env.SMTP_USER || process.env.EMAIL_USER || process.env.MAIL_USER;
-  const from = process.env.MAIL_FROM || `"ByteBite Support" <${sender || "support@bytebite.com"}>`;
-  const replyTo = process.env.ADMIN_REPLY_TO || sender || "support@bytebite.com";
+  const from = process.env.MAIL_FROM || `"GreenGo Support" <${sender || "support@greengo.app"}>`;
+  const replyTo = process.env.ADMIN_REPLY_TO || sender || "support@greengo.app";
 
   const resendKey = process.env.RESEND_API_KEY || process.env.RESEND_API || process.env.resend_api;
   const brevoKey = process.env.BREVO_API_KEY || process.env.BREVO_API || process.env.brevo_api;
@@ -242,7 +242,7 @@ export const sendEmail = async ({ to, subject, text, html }) => {
       let cleanFrom = from;
       const senderEmail = sender || "";
       if (isPublicEmailDomain(senderEmail)) {
-        cleanFrom = `"ByteBite Support" <onboarding@resend.dev>`;
+        cleanFrom = `"GreenGo Support" <onboarding@resend.dev>`;
       }
       const response = await fetch("https://api.resend.com/emails", {
         method: "POST",
@@ -283,7 +283,7 @@ export const sendEmail = async ({ to, subject, text, html }) => {
           "api-key": brevoKey,
         },
         body: JSON.stringify({
-          sender: { email: sender || "support@bytebite.com", name: "ByteBite Support" },
+          sender: { email: sender || "support@greengo.app", name: "GreenGo Support" },
           to: [{ email: to }],
           replyTo: { email: replyTo },
           subject,
@@ -315,3 +315,4 @@ export const sendEmail = async ({ to, subject, text, html }) => {
     html,
   });
 };
+

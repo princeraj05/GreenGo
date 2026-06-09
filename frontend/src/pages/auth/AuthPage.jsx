@@ -327,7 +327,7 @@ export default function AuthPage() {
             <MotionImg
               key={currentHeroSlide}
               src={loginSlides[currentHeroSlide]}
-              alt="GreenGO food delivery"
+              alt="GreenGo food delivery"
               initial={{ opacity: 0, scale: 1.04 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.98 }}
@@ -352,7 +352,7 @@ export default function AuthPage() {
             <span className="text-3.5xl text-white">🍔</span>
           </div>
           <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight flex items-center gap-1.5">
-            ByteBite
+            GreenGo
           </h1>
           <p className="text-xs font-semibold text-orange-500 tracking-widest uppercase mt-1 flex items-center gap-1">
             <Sparkles className="w-3.5 h-3.5 animate-pulse" /> Delivering Happiness
@@ -625,3 +625,5 @@ export default function AuthPage() {
     </div>
   );
 }
+
+

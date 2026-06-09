@@ -1,12 +1,16 @@
 import { createElement, useEffect, useState } from "react";
-import { CheckCircle, Clock, CreditCard, Package, Wallet } from "lucide-react";
+import { CheckCircle, Clock, CreditCard, Package, User, Wallet } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import API from "../../api/axios";
+import Button from "../../components/ui/Button";
 
 const cardClass = "rounded-3xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 p-5 shadow-sm";
 
 export default function DeliveryDashboard() {
+  const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [profileRequired, setProfileRequired] = useState(false);
 
   useEffect(() => {
     loadStats();
@@ -16,8 +20,12 @@ export default function DeliveryDashboard() {
     try {
       const res = await API.get("/api/orders/delivery/dashboard");
       setStats(res.data);
+      setProfileRequired(false);
     } catch (err) {
       console.error("Failed to load delivery dashboard:", err);
+      if (err.response?.data?.code === "DELIVERY_PROFILE_INCOMPLETE") {
+        setProfileRequired(true);
+      }
     } finally {
       setLoading(false);
     }
@@ -38,19 +46,26 @@ export default function DeliveryDashboard() {
         <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 mt-1">Track assignments, delivery progress, COD credit, and online paid deliveries.</p>
       </div>
 
-      {loading ? (
+      {profileRequired ? (
+        <div className="rounded-3xl bg-white dark:bg-slate-950 border border-amber-100 dark:border-amber-900/40 p-8 text-center shadow-sm">
+          <User className="mx-auto text-amber-500" size={38} />
+          <h3 className="mt-4 text-xl font-black">Complete delivery profile first</h3>
+          <p className="mt-1 text-sm font-semibold text-slate-500 dark:text-slate-400">Name, phone number aur address save karne ke baad orders dashboard unlock hoga.</p>
+          <Button onClick={() => navigate("/delivery/profile")} className="mt-5 rounded-2xl">Complete Profile</Button>
+        </div>
+      ) : loading ? (
         <div className="grid grid-cols-2 xl:grid-cols-5 gap-3 sm:gap-5">
           {[1, 2, 3, 4, 5].map((item) => <div key={item} className={`${cardClass} h-32 animate-pulse bg-slate-100 dark:bg-slate-900`} />)}
         </div>
       ) : (
         <div className="grid grid-cols-2 xl:grid-cols-5 gap-3 sm:gap-5">
           {cards.map(({ label, value, icon, color }) => (
-            <div key={label} className={cardClass}>
+            <div key={label} className={`${cardClass} min-h-[142px]`}>
               <span className={`w-12 h-12 rounded-2xl flex items-center justify-center ${color}`}>
                 {createElement(icon, { size: 23 })}
               </span>
-              <p className="mt-5 text-2xl font-black text-slate-950 dark:text-white">{value}</p>
-              <p className="mt-1 text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">{label}</p>
+              <p className="mt-4 text-xl sm:text-2xl font-black text-slate-950 dark:text-white break-words leading-tight">{value}</p>
+              <p className="mt-1 text-[10px] sm:text-xs font-black uppercase tracking-wide text-slate-500 dark:text-slate-400 leading-tight">{label}</p>
             </div>
           ))}
         </div>

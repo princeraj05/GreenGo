@@ -63,6 +63,14 @@ export const updateUserRole = async (req, res) => {
     const update = { role };
     if (role === "deliveryBoy") {
       update.deliveryCredit = 0;
+      update.deliveryDetails = {
+        profileCompleted: false,
+        address: "",
+        updatedAt: new Date(),
+        changeLog: [],
+      };
+    } else {
+      update["deliveryDetails.profileCompleted"] = false;
     }
 
     const user = await User.findByIdAndUpdate(req.params.id, update, { new: true }).select("-password");

@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-import { CheckCircle, Clock, MapPin, Navigation, Package, Phone, RefreshCw, XCircle } from "lucide-react";
+import { CheckCircle, Clock, MapPin, Navigation, Package, Phone, RefreshCw, User, XCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import API from "../../api/axios";
 import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
 
 export default function DeliveryOrders() {
+  const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [profileRequired, setProfileRequired] = useState(false);
   const [actionLoading, setActionLoading] = useState("");
   const [sharingOrders, setSharingOrders] = useState({});
   const shareTimers = useRef({});
@@ -24,8 +27,12 @@ export default function DeliveryOrders() {
     try {
       const res = await API.get("/api/orders/delivery/assigned");
       setOrders(res.data || []);
+      setProfileRequired(false);
     } catch (err) {
       console.error("Failed to load assigned orders:", err);
+      if (err.response?.data?.code === "DELIVERY_PROFILE_INCOMPLETE") {
+        setProfileRequired(true);
+      }
     } finally {
       setLoading(false);
     }
@@ -145,7 +152,14 @@ export default function DeliveryOrders() {
         </button>
       </div>
 
-      {loading ? (
+      {profileRequired ? (
+        <div className="rounded-3xl bg-white dark:bg-slate-950 border border-amber-100 dark:border-amber-900/40 p-10 text-center">
+          <User className="mx-auto text-amber-500" size={36} />
+          <h3 className="mt-4 text-xl font-black">Complete delivery profile first</h3>
+          <p className="mt-1 text-sm font-semibold text-slate-500 dark:text-slate-400">Assigned orders dekhne ke liye name, phone aur address save karo.</p>
+          <Button onClick={() => navigate("/delivery/profile")} className="mt-5 rounded-2xl">Complete Profile</Button>
+        </div>
+      ) : loading ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {[1, 2].map((item) => <div key={item} className="h-72 rounded-3xl bg-slate-100 dark:bg-slate-900 animate-pulse" />)}
         </div>
@@ -167,7 +181,7 @@ export default function DeliveryOrders() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm font-semibold text-slate-600 dark:text-slate-300">
-                <InfoLine label="Customer" value={order.customerName || "GreenGO Customer"} />
+                <InfoLine label="Customer" value={order.customerName || "GreenGo Customer"} />
                 <InfoLine label="Amount" value={`₹${order.total || 0}`} />
                 <InfoLine label="Payment" value={order.paymentMethod || "COD"} />
                 <InfoLine label="Order Time" value={new Date(order.createdAt).toLocaleString()} />
@@ -200,10 +214,10 @@ export default function DeliveryOrders() {
               <div className="flex flex-wrap gap-2 pt-2">
                 {order.assignmentStatus === "Assigned" && (
                   <>
-                    <Button disabled={actionLoading === `${order._id}-accept`} onClick={() => acceptAndShare(order)} className="rounded-xl gap-2">
+                    <Button disabled={actionLoading === `${order._id}-accept`} onClick={() => acceptAndShare(order)} className="min-h-11 rounded-xl gap-2">
                       <CheckCircle size={16} /> Accept & Start Delivery
                     </Button>
-                    <button type="button" onClick={() => runAction(order._id, "reject", { reason: prompt("Reject reason (optional)") || "" })} className="px-4 py-2.5 rounded-xl bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 font-black text-sm flex items-center gap-2">
+                    <button type="button" onClick={() => runAction(order._id, "reject", { reason: prompt("Reject reason (optional)") || "" })} className="min-h-11 px-4 py-2.5 rounded-xl bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 font-black text-sm flex items-center gap-2">
                       <XCircle size={16} /> Reject
                     </button>
                   </>
@@ -211,18 +225,18 @@ export default function DeliveryOrders() {
                 {order.status === "AcceptedByDeliveryBoy" && (
                   <>
                     {!sharingOrders[order._id] ? (
-                      <Button onClick={() => startSharing(order._id)} className="rounded-xl gap-2">
+                      <Button onClick={() => startSharing(order._id)} className="min-h-11 rounded-xl gap-2">
                         <Navigation size={16} /> Start Delivery
                       </Button>
                     ) : (
-                      <button type="button" onClick={() => stopSharing(order._id)} className="px-4 py-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-300 font-black text-sm flex items-center gap-2">
+                      <button type="button" onClick={() => stopSharing(order._id)} className="min-h-11 px-4 py-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-300 font-black text-sm flex items-center gap-2">
                         <Navigation size={16} /> Stop Sharing
                       </button>
                     )}
-                    <button type="button" onClick={() => openMaps(order)} className="px-4 py-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-300 font-black text-sm flex items-center gap-2">
+                    <button type="button" onClick={() => openMaps(order)} className="min-h-11 px-4 py-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-300 font-black text-sm flex items-center gap-2">
                       <MapPin size={16} /> Open Map
                     </button>
-                    <Button disabled={actionLoading === `${order._id}-delivered`} onClick={() => markDelivered(order._id)} className="rounded-xl gap-2 bg-emerald-600 hover:bg-emerald-700">
+                    <Button disabled={actionLoading === `${order._id}-delivered`} onClick={() => markDelivered(order._id)} className="min-h-11 rounded-xl gap-2 bg-emerald-600 hover:bg-emerald-700">
                       <Clock size={16} /> Mark As Delivered
                     </Button>
                   </>
@@ -244,3 +258,4 @@ function InfoLine({ label, value }) {
     </div>
   );
 }
+

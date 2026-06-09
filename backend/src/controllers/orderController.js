@@ -3,11 +3,39 @@ import Settings from "../models/Settings.js";
 import Notification from "../models/Notification.js";
 import User from "../models/User.js";
 import Food from "../models/Food.js";
+import { createAdminNotification, formatPaymentMethod, orderCode } from "../services/adminNotificationService.js";
 
 const isAdmin = (user) => user?.role === "admin";
 const isDeliveryBoy = (user) => user?.role === "deliveryBoy";
 const isCodPayment = (method = "") => String(method).toLowerCase() === "cod";
 const toObjectIdString = (value) => value ? String(value._id || value) : "";
+const isDeliveryProfileComplete = (user) => Boolean(
+  user?.deliveryDetails?.profileCompleted &&
+  String(user?.name || "").trim() &&
+  String(user?.phone || "").trim() &&
+  String(user?.deliveryDetails?.address || user?.address || "").trim()
+);
+
+const requireDeliveryProfile = async (req, res) => {
+  if (!isDeliveryBoy(req.user)) {
+    res.status(403).json({ message: "Not delivery boy" });
+    return null;
+  }
+  const user = await User.findById(req.user.id).select("name phone address role deliveryDetails deliveryCredit");
+  if (!user) {
+    res.status(404).json({ message: "Delivery boy not found" });
+    return null;
+  }
+  if (!isDeliveryProfileComplete(user)) {
+    res.status(403).json({
+      code: "DELIVERY_PROFILE_INCOMPLETE",
+      message: "Complete your delivery profile before viewing assigned orders.",
+      requiredFields: ["name", "phone", "address"],
+    });
+    return null;
+  }
+  return user;
+};
 
 const canViewTracking = (order, user) => {
   if (isAdmin(user)) return true;
@@ -73,7 +101,7 @@ const geocodeAddress = async (addrStr) => {
   try {
     const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addrStr)}&limit=1`;
     const res = await fetch(url, {
-      headers: { "User-Agent": "ByteBite-FoodDelivery-App/1.0" }
+      headers: { "User-Agent": "GreenGo-FoodDelivery-App/1.0" }
     });
     const data = await res.json();
     if (data && data.length > 0) {
@@ -158,8 +186,23 @@ export const createOrder = async (req, res) => {
     await Notification.create({
       userId: req.user.id,
       title: "Order placed",
-      message: `Your order #${String(order._id).slice(-6).toUpperCase()} has been placed successfully.`,
+      message: `Your order #${orderCode(order._id)} has been placed successfully.`,
       type: "success",
+    });
+
+    const customer = await User.findById(req.user.id).select("name email phone");
+    await createAdminNotification({
+      title: "New Order Placed",
+      message: `Order #${orderCode(order._id)} | ${formatPaymentMethod(paymentMethod)} | Total ₹${Number(total || 0)} | ${customer?.name || "Customer"} | ${customer?.email || "N/A"} | ${phone || customer?.phone || "N/A"}`,
+      type: isCodPayment(paymentMethod) ? "warning" : "success",
+      actionPath: "/admin/orders",
+      data: {
+        event: "new_order",
+        orderId: String(order._id),
+        userId: String(req.user.id),
+        paymentMethod: formatPaymentMethod(paymentMethod),
+        total,
+      },
     });
 
     res.json({
@@ -297,9 +340,25 @@ export const updateOrderStatus = async (req,res)=>{
       await Notification.create({
         userId: order.userId,
         title: `Order ${status}`,
-        message: `Order #${String(order._id).slice(-6).toUpperCase()}: ${statusMessages[status] || `Status changed to ${status}.`}`,
+        message: `Order #${orderCode(order._id)}: ${statusMessages[status] || `Status changed to ${status}.`}`,
         type: status === "Delivered" ? "success" : "info",
       });
+
+      if (status === "Delivered") {
+        await createAdminNotification({
+          title: "Order Delivered",
+          message: `Order #${orderCode(order._id)} delivered by admin update | ${formatPaymentMethod(order.paymentMethod)} | Total ₹${Number(order.total || 0)}`,
+          type: "success",
+          actionPath: "/admin/orders",
+          data: {
+            event: "order_delivered",
+            orderId: String(order._id),
+            userId: String(order.userId),
+            paymentMethod: formatPaymentMethod(order.paymentMethod),
+            total: order.total,
+          },
+        });
+      }
     }
     res.json({success:true});
   } catch (err) {
@@ -341,7 +400,7 @@ export const assignDeliveryBoy = async (req, res) => {
     await Notification.create({
       userId: String(deliveryBoyId),
       title: wasReassigned ? "Order Reassigned" : "New Order Assigned",
-      message: `Order #${String(order._id).slice(-6).toUpperCase()} has been assigned to you.`,
+      message: `Order #${orderCode(order._id)} has been assigned to you.`,
       type: "info",
     });
 
@@ -354,11 +413,11 @@ export const assignDeliveryBoy = async (req, res) => {
 
 export const getDeliveryDashboard = async (req, res) => {
   try {
-    if (!isDeliveryBoy(req.user)) return res.status(403).json({ message: "Not delivery boy" });
+    const user = await requireDeliveryProfile(req, res);
+    if (!user) return;
     const assignedQuery = { assignedDeliveryBoy: req.user.id };
-    const [orders, user] = await Promise.all([
+    const [orders] = await Promise.all([
       Order.find(assignedQuery).sort({ createdAt: -1 }),
-      User.findById(req.user.id).select("deliveryCredit"),
     ]);
 
     const deliveredOrders = orders.filter((order) => order.status === "Delivered");
@@ -379,7 +438,8 @@ export const getDeliveryDashboard = async (req, res) => {
 
 export const getAssignedOrders = async (req, res) => {
   try {
-    if (!isDeliveryBoy(req.user)) return res.status(403).json({ message: "Not delivery boy" });
+    const user = await requireDeliveryProfile(req, res);
+    if (!user) return;
     const orders = await Order.find({ assignedDeliveryBoy: req.user.id }).sort({ createdAt: -1 });
     res.json(orders);
   } catch (err) {
@@ -389,7 +449,8 @@ export const getAssignedOrders = async (req, res) => {
 
 export const acceptAssignedOrder = async (req, res) => {
   try {
-    if (!isDeliveryBoy(req.user)) return res.status(403).json({ message: "Not delivery boy" });
+    const deliveryUser = await requireDeliveryProfile(req, res);
+    if (!deliveryUser) return;
     const order = await Order.findOne({ _id: req.params.id, assignedDeliveryBoy: req.user.id });
     if (!order) return res.status(404).json({ message: "Order not found" });
     if (order.status === "Delivered") return res.status(400).json({ message: "Order already delivered" });
@@ -402,8 +463,22 @@ export const acceptAssignedOrder = async (req, res) => {
     await Notification.create({
       userId: order.userId,
       title: "Delivery partner accepted",
-      message: `Order #${String(order._id).slice(-6).toUpperCase()} has been accepted by your delivery partner.`,
+      message: `Order #${orderCode(order._id)} has been accepted by your delivery partner.`,
       type: "info",
+    });
+
+    const deliveryBoy = await User.findById(req.user.id).select("name email phone");
+    await createAdminNotification({
+      title: "Delivery Boy Accepted Order",
+      message: `${deliveryBoy?.name || "Delivery boy"} accepted order #${orderCode(order._id)} | ${formatPaymentMethod(order.paymentMethod)} | Phone: ${deliveryBoy?.phone || "N/A"}`,
+      type: "info",
+      actionPath: "/admin/orders",
+      data: {
+        event: "delivery_accept",
+        orderId: String(order._id),
+        deliveryBoyId: String(req.user.id),
+        paymentMethod: formatPaymentMethod(order.paymentMethod),
+      },
     });
 
     res.json({ success: true, order });
@@ -414,7 +489,8 @@ export const acceptAssignedOrder = async (req, res) => {
 
 export const rejectAssignedOrder = async (req, res) => {
   try {
-    if (!isDeliveryBoy(req.user)) return res.status(403).json({ message: "Not delivery boy" });
+    const deliveryUser = await requireDeliveryProfile(req, res);
+    if (!deliveryUser) return;
     const order = await Order.findOne({ _id: req.params.id, assignedDeliveryBoy: req.user.id });
     if (!order) return res.status(404).json({ message: "Order not found" });
 
@@ -427,7 +503,7 @@ export const rejectAssignedOrder = async (req, res) => {
 
     await Notification.create({
       title: "Order rejected by delivery boy",
-      message: `Order #${String(order._id).slice(-6).toUpperCase()} was rejected${reason ? `: ${reason}` : "."}`,
+      message: `Order #${orderCode(order._id)} was rejected${reason ? `: ${reason}` : "."}`,
       type: "warning",
     });
 
@@ -439,7 +515,8 @@ export const rejectAssignedOrder = async (req, res) => {
 
 export const markAssignedOrderDelivered = async (req, res) => {
   try {
-    if (!isDeliveryBoy(req.user)) return res.status(403).json({ message: "Not delivery boy" });
+    const deliveryUser = await requireDeliveryProfile(req, res);
+    if (!deliveryUser) return;
     const order = await Order.findOne({ _id: req.params.id, assignedDeliveryBoy: req.user.id });
     if (!order) return res.status(404).json({ message: "Order not found" });
     if (order.status === "Delivered") return res.json({ success: true, order });
@@ -457,8 +534,23 @@ export const markAssignedOrderDelivered = async (req, res) => {
     await Notification.create({
       userId: order.userId,
       title: "Order Delivered",
-      message: `Order #${String(order._id).slice(-6).toUpperCase()} has been delivered.`,
+      message: `Order #${orderCode(order._id)} has been delivered.`,
       type: "success",
+    });
+
+    const deliveryBoy = await User.findById(req.user.id).select("name email phone");
+    await createAdminNotification({
+      title: "Order Delivered",
+      message: `${deliveryBoy?.name || "Delivery boy"} delivered order #${orderCode(order._id)} | ${formatPaymentMethod(order.paymentMethod)} | Total ₹${Number(order.total || 0)}`,
+      type: "success",
+      actionPath: "/admin/orders",
+      data: {
+        event: "order_delivered",
+        orderId: String(order._id),
+        deliveryBoyId: String(req.user.id),
+        paymentMethod: formatPaymentMethod(order.paymentMethod),
+        total: order.total,
+      },
     });
 
     res.json({ success: true, order });
@@ -469,7 +561,8 @@ export const markAssignedOrderDelivered = async (req, res) => {
 
 export const getDeliveryEarnings = async (req, res) => {
   try {
-    if (!isDeliveryBoy(req.user)) return res.status(403).json({ message: "Not delivery boy" });
+    const deliveryUser = await requireDeliveryProfile(req, res);
+    if (!deliveryUser) return;
     const [orders, user] = await Promise.all([
       Order.find({ assignedDeliveryBoy: req.user.id, paymentMethod: { $regex: /^cod$/i } }).sort({ createdAt: -1 }),
       User.findById(req.user.id).select("deliveryCredit"),

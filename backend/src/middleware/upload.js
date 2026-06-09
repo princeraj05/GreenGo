@@ -16,7 +16,7 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: "bytebite_foods",
+    folder: "greengo_foods",
     allowed_formats: ["jpg", "jpeg", "png", "webp"],
   },
 });

@@ -1,5 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Mail, MessageSquare, Send } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowLeft,
+  CheckCircle2,
+  Clock3,
+  Inbox,
+  Mail,
+  MailCheck,
+  MessageSquare,
+  Search,
+  Send,
+} from "lucide-react";
 import API from "../../api/axios";
 import { getToken } from "../../utils/getToken";
 
@@ -10,32 +21,43 @@ function getEmailStatusText(message) {
 }
 
 const avatarColors = [
-  "bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400 border-red-200/60 dark:border-red-900/30",
-  "bg-orange-100 text-orange-700 dark:bg-orange-950/40 dark:text-orange-400 border-orange-200/60 dark:border-orange-900/30",
-  "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border-amber-200/60 dark:border-amber-900/30",
-  "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-900/30",
-  "bg-teal-100 text-teal-700 dark:bg-teal-950/40 dark:text-teal-400 border-teal-200/60 dark:border-teal-900/30",
-  "bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 border-blue-200/60 dark:border-blue-900/30",
-  "bg-indigo-100 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-400 border-indigo-200/60 dark:border-indigo-900/30",
-  "bg-purple-100 text-purple-700 dark:bg-purple-950/40 dark:text-purple-400 border-purple-200/60 dark:border-purple-900/30",
-  "bg-pink-100 text-pink-700 dark:bg-pink-950/40 dark:text-pink-400 border-pink-200/60 dark:border-pink-900/30",
+  "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-900/50",
+  "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-900/50",
+  "bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-950/50 dark:text-violet-300 dark:border-violet-900/50",
+  "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-900/50",
+  "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-900/50",
 ];
 
 function getAvatarStyle(name) {
   if (!name) return avatarColors[0];
   let hash = 0;
-  for (let i = 0; i < name.length; i++) {
+  for (let i = 0; i < name.length; i += 1) {
     hash = name.charCodeAt(i) + ((hash << 5) - hash);
   }
-  const index = Math.abs(hash) % avatarColors.length;
-  return avatarColors[index];
+  return avatarColors[Math.abs(hash) % avatarColors.length];
+}
+
+function initialsFor(name = "User") {
+  return name.trim().substring(0, 2).toUpperCase() || "U";
+}
+
+function formatTime(date) {
+  if (!date) return "";
+  return new Date(date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+function formatDateTime(date) {
+  if (!date) return "";
+  return new Date(date).toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
 }
 
 export default function Contacts() {
   const [contacts, setContacts] = useState([]);
   const [selectedKey, setSelectedKey] = useState("");
   const [replyText, setReplyText] = useState({});
+  const [search, setSearch] = useState("");
   const [error, setError] = useState("");
+  const [sending, setSending] = useState(false);
 
   async function loadContacts() {
     try {
@@ -43,23 +65,19 @@ export default function Contacts() {
       const res = await API.get("/api/admin/contacts", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setContacts(res.data);
+      setContacts(res.data || []);
     } catch (err) {
       console.log(err);
     }
   }
 
   useEffect(() => {
-    // Initial fetch populates the admin inbox from the API.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadContacts();
   }, []);
 
   const conversations = useMemo(() => {
     const grouped = contacts.reduce((acc, contact) => {
-      // Group by lowercase email address to combine guest and user chats for the same person
-      const emailKey = String(contact.email || "").toLowerCase();
-
+      const emailKey = String(contact.email || "unknown").toLowerCase();
       if (!acc[emailKey]) {
         acc[emailKey] = {
           key: emailKey,
@@ -68,27 +86,22 @@ export default function Contacts() {
           messages: [],
         };
       }
-
       acc[emailKey].messages.push(contact);
       return acc;
     }, {});
 
     return Object.values(grouped)
       .map((conversation) => {
-        const messages = [...conversation.messages].sort(
-          (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
-        );
+        const messages = [...conversation.messages].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
         const latest = messages[messages.length - 1];
         const unreadCount = messages.filter((message) => !message.reply).length;
-
-        // Determine isUserChat based on the latest message in the conversation
-        const isUserChat = latest ? (latest.source === "user" || Boolean(latest.uid)) : false;
+        const isUserChat = latest ? latest.source === "user" || Boolean(latest.uid) : false;
 
         return {
           ...conversation,
           isUserChat,
-          name: latest?.name || conversation.name,
-          email: latest?.email || conversation.email,
+          name: latest?.name || conversation.name || "User",
+          email: latest?.email || conversation.email || "No email",
           messages,
           latest,
           unreadCount,
@@ -97,16 +110,22 @@ export default function Contacts() {
       .sort((a, b) => new Date(b.latest?.createdAt || 0) - new Date(a.latest?.createdAt || 0));
   }, [contacts]);
 
-  const selectedConversation =
-    conversations.find((conversation) => conversation.key === selectedKey) || conversations[0];
+  const filteredConversations = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return conversations;
+    return conversations.filter((conversation) => {
+      const latestText = conversation.latest?.message || conversation.latest?.reply || "";
+      return `${conversation.name} ${conversation.email} ${latestText}`.toLowerCase().includes(q);
+    });
+  }, [conversations, search]);
 
-  const { initials, avatarStyle } = useMemo(() => {
-    if (!selectedConversation) return { initials: "U", avatarStyle: avatarColors[0] };
-    return {
-      initials: (selectedConversation.name || "U").trim().substring(0, 2).toUpperCase(),
-      avatarStyle: getAvatarStyle(selectedConversation.name),
-    };
-  }, [selectedConversation]);
+  const selectedConversation =
+    filteredConversations.find((conversation) => conversation.key === selectedKey) ||
+    conversations.find((conversation) => conversation.key === selectedKey) ||
+    filteredConversations[0] ||
+    conversations[0];
+
+  const unreadTotal = conversations.reduce((sum, conversation) => sum + conversation.unreadCount, 0);
 
   const sendReply = async () => {
     if (!selectedConversation) return;
@@ -118,6 +137,7 @@ export default function Contacts() {
     if (!target || !reply) return;
 
     try {
+      setSending(true);
       setError("");
       const token = await getToken();
       await API.post(
@@ -126,262 +146,290 @@ export default function Contacts() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setReplyText((prev) => ({ ...prev, [selectedConversation.key]: "" }));
-      loadContacts();
+      await loadContacts();
     } catch (err) {
       console.log(err);
       setError(err.response?.data?.message || "Failed to send reply");
+    } finally {
+      setSending(false);
     }
   };
 
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
+  const handleKeyDown = (event) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
       sendReply();
     }
   };
 
   return (
-    <div className="min-h-screen w-full bg-slate-50 dark:bg-transparent px-4 py-8 transition-colors duration-300">
-      <div className="relative max-w-7xl mx-auto">
-        {/* Header section */}
-        <div className="flex items-center gap-4 mb-6">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center shadow-lg shadow-brand-500/25">
-            <Mail className="w-6 h-6 text-white" />
+    <div className="min-h-[calc(100vh-8rem)] w-full">
+      <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <div className="inline-flex items-center gap-2 rounded-full border border-brand-100 bg-brand-50 px-3 py-1 text-xs font-black uppercase tracking-wider text-brand-700 dark:border-brand-900/50 dark:bg-brand-950/30 dark:text-brand-300">
+            <MessageSquare size={14} />
+            Admin Messages
           </div>
-          <div>
-            <h1 className="text-2xl font-extrabold text-gray-800 dark:text-white tracking-tight">User Contacts</h1>
-            <p className="text-sm text-gray-500 dark:text-slate-400 mt-0.5">Manage user inbox chats and email replies in real-time</p>
-          </div>
+          <h1 className="mt-3 text-2xl font-black tracking-tight text-slate-950 dark:text-white sm:text-3xl">
+            Support Inbox
+          </h1>
+          <p className="mt-1 text-sm font-semibold text-slate-500 dark:text-slate-400">
+            Manage customer chats and email replies from one responsive inbox.
+          </p>
         </div>
 
-        {error && (
-          <div className="mb-5 rounded-2xl border border-red-150 dark:border-red-900/30 bg-red-50 dark:bg-red-950/20 px-4 py-3 text-sm font-semibold text-red-650 dark:text-red-400">
-            {error}
-          </div>
-        )}
+        <div className="grid grid-cols-3 gap-2 sm:min-w-[360px]">
+          <StatCard label="Chats" value={conversations.length} icon={Inbox} />
+          <StatCard label="Pending" value={unreadTotal} icon={Clock3} />
+          <StatCard label="Replied" value={Math.max(contacts.length - unreadTotal, 0)} icon={MailCheck} />
+        </div>
+      </div>
 
-        {conversations.length === 0 ? (
-          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800/80 px-8 py-16 text-center shadow-premium transition-all">
-            <div className="w-16 h-16 mx-auto rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4 text-slate-400 dark:text-slate-500">
-              <Mail className="w-8 h-8" />
-            </div>
-            <h3 className="text-lg font-bold text-slate-800 dark:text-white">Inbox is empty</h3>
-            <p className="text-sm text-slate-400 dark:text-slate-500 max-w-xs mx-auto mt-2">
-              All caught up! No contact messages or customer tickets found.
-            </p>
+      {error && (
+        <div className="mb-4 flex items-center gap-2 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-bold text-red-700 dark:border-red-900/40 dark:bg-red-950/20 dark:text-red-300">
+          <AlertCircle size={17} />
+          {error}
+        </div>
+      )}
+
+      {conversations.length === 0 ? (
+        <div className="flex min-h-[420px] flex-col items-center justify-center rounded-[2rem] border border-slate-100 bg-white p-8 text-center shadow-sm dark:border-slate-800 dark:bg-slate-950">
+          <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-slate-50 text-slate-400 dark:bg-slate-900 dark:text-slate-500">
+            <Mail size={34} />
           </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-6 lg:h-[calc(100vh-220px)] lg:min-h-[620px]">
-            {/* Conversations List Panel */}
-            <div
-              className={`bg-white dark:bg-slate-950 rounded-3xl border border-slate-100 dark:border-slate-800/60 shadow-premium overflow-hidden flex-col lg:flex transition-all duration-300 ${
-                selectedKey ? "hidden" : "flex"
-              }`}
-            >
-              <div className="bg-slate-50 dark:bg-slate-900/80 border-b border-slate-100 dark:border-slate-800/60 p-5 flex flex-col transition-colors">
-                <p className="font-extrabold text-slate-900 dark:text-white text-sm uppercase tracking-wider">Conversations</p>
-                <p className="text-xs text-slate-500 dark:text-slate-455 mt-1 font-medium">{conversations.length} active chats</p>
+          <h3 className="mt-5 text-xl font-black text-slate-950 dark:text-white">Inbox is empty</h3>
+          <p className="mt-2 max-w-sm text-sm font-semibold text-slate-500 dark:text-slate-400">
+            All caught up. New user chats and contact messages will appear here.
+          </p>
+        </div>
+      ) : (
+        <div className="grid min-h-[680px] grid-cols-1 gap-4 lg:grid-cols-[380px_minmax(0,1fr)]">
+          <section
+            className={`overflow-hidden rounded-[2rem] border border-slate-100 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950 ${
+              selectedKey ? "hidden lg:flex" : "flex"
+            } flex-col`}
+          >
+            <div className="border-b border-slate-100 p-4 dark:border-slate-800">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Search conversations..."
+                  className="w-full rounded-2xl border border-slate-100 bg-slate-50 py-3 pl-10 pr-4 text-sm font-bold text-slate-900 outline-none transition focus:border-brand-400 focus:bg-white focus:ring-2 focus:ring-brand-500/10 dark:border-slate-800 dark:bg-slate-900 dark:text-white dark:focus:bg-slate-950"
+                />
               </div>
+            </div>
 
-              <div className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/55 scrollbar-thin">
-                {conversations.map((conversation) => {
+            <div className="flex-1 overflow-y-auto">
+              {filteredConversations.length === 0 ? (
+                <div className="p-8 text-center">
+                  <p className="text-sm font-bold text-slate-500 dark:text-slate-400">No conversations found.</p>
+                </div>
+              ) : (
+                filteredConversations.map((conversation) => {
                   const active = selectedConversation?.key === conversation.key;
                   const latestText = conversation.latest?.message || conversation.latest?.reply || "";
-                  const initials = (conversation.name || "U").trim().substring(0, 2).toUpperCase();
                   const avatarStyle = getAvatarStyle(conversation.name);
 
                   return (
                     <button
                       key={conversation.key}
+                      type="button"
                       onClick={() => setSelectedKey(conversation.key)}
-                      className={`w-full text-left px-5 py-4 transition-all duration-200 flex items-start gap-3 relative ${
+                      className={`flex w-full items-start gap-3 border-b border-slate-100 p-4 text-left transition-all dark:border-slate-800/70 ${
                         active
-                          ? "bg-brand-500/10 dark:bg-brand-500/15 border-l-4 border-brand-500 pl-4"
-                          : "hover:bg-slate-50 dark:hover:bg-slate-800/30"
+                          ? "bg-brand-50/80 dark:bg-brand-950/20"
+                          : "hover:bg-slate-50 dark:hover:bg-slate-900/60"
                       }`}
                     >
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border shrink-0 ${avatarStyle}`}>
-                        {initials}
+                      <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border text-sm font-black ${avatarStyle}`}>
+                        {initialsFor(conversation.name)}
                       </div>
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-1">
-                          <p className={`font-bold truncate text-sm ${active ? "text-brand-600 dark:text-brand-400" : "text-slate-800 dark:text-slate-200"}`}>
-                            {conversation.name}
-                          </p>
-                          <span className="text-[10px] text-slate-455 dark:text-slate-500 shrink-0 font-medium">
-                            {conversation.latest?.createdAt ? new Date(conversation.latest.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-black text-slate-950 dark:text-white">{conversation.name}</p>
+                            <p className="truncate text-xs font-semibold text-slate-500 dark:text-slate-400">{conversation.email}</p>
+                          </div>
+                          <span className="shrink-0 text-[10px] font-black text-slate-400">
+                            {formatTime(conversation.latest?.createdAt)}
                           </span>
                         </div>
-                        
-                        <p className="text-xs text-slate-400 dark:text-slate-455 truncate mt-0.5">{conversation.email}</p>
-                        
-                        <div className="flex items-center justify-between gap-2 mt-2">
-                          <p className="text-xs text-slate-400 dark:text-slate-500 truncate flex-1 font-medium">{latestText}</p>
+                        <p className="mt-2 line-clamp-1 text-xs font-semibold text-slate-500 dark:text-slate-400">{latestText}</p>
+                        <div className="mt-3 flex items-center justify-between gap-2">
+                          <TypeBadge isUserChat={conversation.isUserChat} />
                           {conversation.unreadCount > 0 && (
-                            <span className="shrink-0 rounded-full bg-brand-500 text-white font-extrabold text-[9px] px-1.5 py-0.5 flex items-center justify-center animate-pulse">
+                            <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-500 px-1.5 text-[10px] font-black text-white">
                               {conversation.unreadCount}
                             </span>
                           )}
                         </div>
-
-                        <div className="flex items-center gap-1.5 mt-2">
-                          <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border ${
-                            conversation.isUserChat 
-                              ? "bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-900/30" 
-                              : "bg-purple-50 dark:bg-purple-950/20 text-purple-600 dark:text-purple-400 border-purple-100 dark:border-purple-900/30"
-                          }`}>
-                            {conversation.isUserChat ? "User Chat" : "Email Inbox"}
-                          </span>
-                        </div>
                       </div>
                     </button>
                   );
-                })}
-              </div>
+                })
+              )}
             </div>
+          </section>
 
-            {/* Conversation Messages Panel */}
-            <div
-              className={`bg-white dark:bg-slate-950 rounded-3xl border border-slate-100 dark:border-slate-800/60 shadow-premium overflow-hidden flex-col min-h-[620px] lg:flex transition-all duration-300 ${
-                selectedKey ? "flex" : "hidden"
-              }`}
-            >
-              <div className="bg-slate-50 dark:bg-slate-900/80 border-b border-slate-100 dark:border-slate-800/60 p-5 flex items-center justify-between gap-4 transition-colors">
-                <div className="min-w-0 flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedKey("")}
-                    className="lg:hidden shrink-0 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-2 text-slate-600 dark:text-slate-400 shadow-sm hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-all"
-                    aria-label="Back to conversations"
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                  </button>
-                  
-                  <div className="min-w-0">
-                    <p className="font-extrabold text-slate-900 dark:text-white truncate text-sm uppercase tracking-wider leading-tight">{selectedConversation.name}</p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-1 font-medium">{selectedConversation.email}</p>
+          <section
+            className={`overflow-hidden rounded-[2rem] border border-slate-100 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950 ${
+              selectedKey ? "flex" : "hidden lg:flex"
+            } min-h-[680px] flex-col`}
+          >
+            {selectedConversation && (
+              <>
+                <div className="flex items-center justify-between gap-3 border-b border-slate-100 bg-white p-4 dark:border-slate-800 dark:bg-slate-950 sm:p-5">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedKey("")}
+                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-slate-100 bg-slate-50 text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 lg:hidden"
+                      aria-label="Back to conversations"
+                    >
+                      <ArrowLeft size={18} />
+                    </button>
+                    <div className={`hidden h-11 w-11 shrink-0 items-center justify-center rounded-2xl border text-sm font-black sm:flex ${getAvatarStyle(selectedConversation.name)}`}>
+                      {initialsFor(selectedConversation.name)}
+                    </div>
+                    <div className="min-w-0">
+                      <h2 className="truncate text-base font-black uppercase tracking-tight text-slate-950 dark:text-white sm:text-lg">
+                        {selectedConversation.name}
+                      </h2>
+                      <p className="truncate text-xs font-semibold text-slate-500 dark:text-slate-400">{selectedConversation.email}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex shrink-0 items-center gap-2">
+                    <TypeBadge isUserChat={selectedConversation.isUserChat} />
+                    <StatusBadge replied={Boolean(selectedConversation.latest?.reply)} />
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
-                  <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider border ${
-                    selectedConversation.isUserChat
-                      ? "bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-900/30"
-                      : "bg-purple-50 dark:bg-purple-950/20 text-purple-600 dark:text-purple-400 border-purple-100 dark:border-purple-900/30"
-                  }`}>
-                    {selectedConversation.isUserChat ? "Chat" : "Email"}
-                  </span>
-                  
-                  <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider border ${
-                    selectedConversation.latest?.reply
-                      ? "bg-brand-50 dark:bg-brand-950/20 text-brand-650 dark:text-brand-400 border-brand-100 dark:border-brand-900/30"
-                      : "bg-amber-55 dark:bg-amber-950/20 text-amber-650 dark:text-amber-455 border-amber-100 dark:border-amber-900/30"
-                  }`}>
-                    {selectedConversation.latest?.reply ? "Replied" : "Pending"}
-                  </span>
-                </div>
-              </div>
-
-              {/* Message History area */}
-              <div className="flex-1 overflow-y-auto bg-slate-50/50 dark:bg-slate-950/25 transition-colors scrollbar-thin">
-                <div className="p-4 sm:p-6 space-y-6">
-                  {selectedConversation.messages.map((message) => (
-                    <div key={message._id} className="space-y-4">
-                      {/* User Message Bubble */}
-                      <div className="flex justify-start">
-                        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 text-slate-800 dark:text-slate-200 p-4 rounded-2xl rounded-tl-sm max-w-[80%] shadow-sm transition-colors">
-                          <div className="flex items-center gap-2 mb-1">
-                            <div className={`w-5 h-5 rounded-full flex items-center justify-center font-bold text-[9px] border shrink-0 ${avatarStyle}`}>
-                              {initials}
-                            </div>
-                            <span className="text-xs font-bold text-slate-500 dark:text-slate-455">{selectedConversation.name}</span>
-                            <span className={`text-[8px] px-1.5 py-0.5 rounded border uppercase tracking-wider font-extrabold ${
-                              message.source === "user"
-                                ? "bg-blue-50 dark:bg-blue-950/20 text-blue-500 border-blue-100 dark:border-blue-900/20"
-                                : "bg-purple-50 dark:bg-purple-950/20 text-purple-500 border-purple-100 dark:border-purple-900/20"
-                            }`}>
-                              {message.source === "user" ? "Chat" : "Email"}
-                            </span>
-                          </div>
-                          
-                          {message.subject && (
-                            <p className="text-[11px] font-extrabold text-brand-600 dark:text-brand-400 mb-2 uppercase tracking-wider mt-2.5">{message.subject}</p>
-                          )}
-                          <p className="text-sm leading-relaxed mt-2.5 font-medium">{message.message}</p>
-                          <p className="text-[9px] text-slate-400 dark:text-slate-500 font-semibold mt-2.5 flex items-center gap-1">
-                            <span>📅</span>
-                            {new Date(message.createdAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Admin Reply Bubble */}
-                      {message.reply && (
-                        <div className="flex justify-end animate-fade-in">
-                          <div className="bg-brand-500 text-white p-4 rounded-2xl rounded-tr-sm max-w-[80%] shadow-md shadow-brand-500/10">
-                            <p className="text-sm leading-relaxed font-medium">{message.reply}</p>
-                            
-                            {/* Email Status Indicator */}
-                            {message.replyDelivery === "email" && (
-                              <div className="flex items-center gap-1.5 mt-2.5 justify-end bg-black/15 px-2 py-0.5 rounded-lg w-fit ml-auto border border-white/5">
-                                <span className={`w-1.5 h-1.5 rounded-full ${
-                                  message.emailReplyStatus === "sent" 
-                                    ? "bg-emerald-300" 
-                                    : message.emailReplyStatus === "failed" 
-                                    ? "bg-red-400 animate-pulse" 
-                                    : "bg-amber-300 animate-pulse"
-                                }`} />
-                                <span className="text-[9px] font-black uppercase tracking-wider text-white/90">
-                                  Email: {getEmailStatusText(message)}
-                                </span>
+                <div className="flex-1 overflow-y-auto bg-slate-50/70 p-4 dark:bg-slate-900/30 sm:p-6">
+                  <div className="mx-auto flex max-w-4xl flex-col gap-5">
+                    {selectedConversation.messages.map((message) => (
+                      <div key={message._id} className="space-y-3">
+                        <div className="flex justify-start">
+                          <div className="max-w-[88%] rounded-3xl rounded-tl-md border border-slate-100 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950 sm:max-w-[72%]">
+                            <div className="mb-3 flex items-center gap-2">
+                              <div className={`flex h-7 w-7 items-center justify-center rounded-full border text-[10px] font-black ${getAvatarStyle(selectedConversation.name)}`}>
+                                {initialsFor(selectedConversation.name)}
                               </div>
+                              <div className="min-w-0">
+                                <p className="truncate text-xs font-black text-slate-700 dark:text-slate-200">{selectedConversation.name}</p>
+                                <p className="text-[10px] font-semibold text-slate-400">{formatDateTime(message.createdAt)}</p>
+                              </div>
+                            </div>
+                            {message.subject && (
+                              <p className="mb-2 text-xs font-black uppercase tracking-wider text-brand-600 dark:text-brand-300">
+                                {message.subject}
+                              </p>
                             )}
-                            
-                            <p className="text-[10px] text-brand-100 text-right mt-1.5 font-semibold">
-                              {new Date(message.repliedAt || message.createdAt).toLocaleTimeString([], {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
+                            <p className="whitespace-pre-wrap text-sm font-semibold leading-relaxed text-slate-800 dark:text-slate-200">
+                              {message.message}
                             </p>
                           </div>
                         </div>
-                      )}
-                    </div>
-                  ))}
+
+                        {message.reply && (
+                          <div className="flex justify-end">
+                            <div className="max-w-[88%] rounded-3xl rounded-tr-md bg-brand-500 p-4 text-white shadow-lg shadow-brand-500/20 sm:max-w-[72%]">
+                              <div className="mb-2 flex items-center justify-end gap-2 text-[10px] font-black uppercase tracking-wider text-brand-50">
+                                <CheckCircle2 size={13} />
+                                Admin reply
+                              </div>
+                              <p className="whitespace-pre-wrap text-sm font-semibold leading-relaxed">{message.reply}</p>
+                              <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
+                                {message.replyDelivery === "email" && (
+                                  <span className="rounded-full bg-white/15 px-2 py-1 text-[10px] font-black uppercase">
+                                    Email: {getEmailStatusText(message)}
+                                  </span>
+                                )}
+                                <span className="text-[10px] font-bold text-brand-50">
+                                  {formatTime(message.repliedAt || message.createdAt)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-              {/* Chat Input Footer */}
-              <div className="border-t border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-950 p-4 transition-colors">
-                <div className="relative flex items-end gap-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-850 rounded-2xl p-2 focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/10 transition-all">
-                  <textarea
-                    placeholder={
-                      selectedConversation.isUserChat
-                        ? "Type reply in user chat..."
-                        : "Type reply to user's email..."
-                    }
-                    value={replyText[selectedConversation.key] || ""}
-                    onChange={(event) =>
-                      setReplyText({ ...replyText, [selectedConversation.key]: event.target.value })
-                    }
-                    onKeyDown={handleKeyDown}
-                    rows={2}
-                    className="flex-grow resize-none bg-transparent px-3 py-2 text-sm outline-none text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 min-h-[44px] max-h-[120px] scrollbar-thin"
-                  />
-                  <button
-                    disabled={!replyText[selectedConversation.key]?.trim()}
-                    onClick={sendReply}
-                    className="shrink-0 w-11 h-11 rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-650 hover:to-brand-700 text-white shadow-md hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-40 flex items-center justify-center transition-all duration-200 active:scale-95"
-                    title="Send Reply"
-                  >
-                    <Send className="w-4 h-4" />
-                  </button>
+
+                <div className="border-t border-slate-100 bg-white p-3 dark:border-slate-800 dark:bg-slate-950 sm:p-4">
+                  <div className="flex items-end gap-2 rounded-3xl border border-slate-200 bg-slate-50 p-2 transition focus-within:border-brand-400 focus-within:bg-white focus-within:ring-2 focus-within:ring-brand-500/10 dark:border-slate-800 dark:bg-slate-900 dark:focus:bg-slate-950">
+                    <textarea
+                      placeholder={selectedConversation.isUserChat ? "Type reply in user chat..." : "Type reply to user's email..."}
+                      value={replyText[selectedConversation.key] || ""}
+                      onChange={(event) => setReplyText({ ...replyText, [selectedConversation.key]: event.target.value })}
+                      onKeyDown={handleKeyDown}
+                      rows={2}
+                      className="max-h-32 min-h-11 flex-1 resize-none bg-transparent px-3 py-2 text-sm font-semibold text-slate-900 outline-none placeholder:text-slate-400 dark:text-white"
+                    />
+                    <button
+                      type="button"
+                      disabled={sending || !replyText[selectedConversation.key]?.trim()}
+                      onClick={sendReply}
+                      className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand-500 text-white shadow-lg shadow-brand-500/20 transition hover:bg-brand-600 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+                      title="Send Reply"
+                    >
+                      <Send size={19} />
+                    </button>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </div>
-        )}
+              </>
+            )}
+          </section>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function StatCard({ label, value, icon }) {
+  return (
+    <div className="rounded-2xl border border-slate-100 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+      <div className="flex items-center gap-2">
+        <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-950/30 dark:text-brand-300">
+          {icon && (() => {
+            const Icon = icon;
+            return <Icon size={16} />;
+          })()}
+        </span>
+        <div>
+          <p className="text-base font-black text-slate-950 dark:text-white">{value}</p>
+          <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">{label}</p>
+        </div>
       </div>
     </div>
+  );
+}
+
+function TypeBadge({ isUserChat }) {
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-wide ${
+      isUserChat
+        ? "border-blue-100 bg-blue-50 text-blue-700 dark:border-blue-900/40 dark:bg-blue-950/30 dark:text-blue-300"
+        : "border-violet-100 bg-violet-50 text-violet-700 dark:border-violet-900/40 dark:bg-violet-950/30 dark:text-violet-300"
+    }`}>
+      {isUserChat ? <MessageSquare size={12} /> : <Mail size={12} />}
+      {isUserChat ? "Chat" : "Email"}
+    </span>
+  );
+}
+
+function StatusBadge({ replied }) {
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-wide ${
+      replied
+        ? "border-emerald-100 bg-emerald-50 text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-950/30 dark:text-emerald-300"
+        : "border-amber-100 bg-amber-50 text-amber-700 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-300"
+    }`}>
+      {replied ? <CheckCircle2 size={12} /> : <Clock3 size={12} />}
+      {replied ? "Replied" : "Pending"}
+    </span>
   );
 }

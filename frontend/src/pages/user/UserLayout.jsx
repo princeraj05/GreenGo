@@ -2,7 +2,7 @@ import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { 
   LayoutDashboard, UtensilsCrossed, ShoppingCart, 
-  Clock, User, Phone, LogOut, Menu, X, Home, Sun, Moon, Heart, MessageCircle, Bell
+  Clock, User, Phone, LogOut, X, Home, Sun, Moon, Heart, MessageCircle, Bell, MoreHorizontal
 } from "lucide-react";
 import { getToken } from "../../utils/getToken";
 import { clearSession } from "../../utils/authStorage";
@@ -145,29 +145,26 @@ export default function UserLayout() {
 
   const bottomNavLinks = [
     { to: "/user/menu", label: "Home", icon: <Home size={20} /> },
-    { to: "/user/cart", label: "Cart", icon: <ShoppingCart size={20} />, badge: cartCount },
     { to: "/user/orders", label: "Orders", icon: <Clock size={20} />, badge: pendingCount },
+    { to: "/user/cart", label: "Cart", icon: <ShoppingCart size={20} />, badge: cartCount },
+    { to: "/user/profile", label: "Profile", icon: <User size={20} /> },
+  ];
+
+  const moreLinks = [
     { to: "/user/wishlist", label: "Wishlist", icon: <Heart size={20} /> },
-    { to: "/user/contact", label: "Message", icon: <MessageCircle size={20} /> },
+    { to: "/user/notifications", label: "Notifications", icon: <Bell size={20} /> },
+    { to: "/user/contact", label: "Messages", icon: <MessageCircle size={20} /> },
   ];
 
   return (
     <div className="flex min-h-screen bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
-      {/* Mobile Overlay (Only for desktop-fallback drawer click, but not used by main mobile flow anymore) */}
-      {open && (
-        <div
-          className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[900] md:hidden transition-all duration-300"
-          onClick={() => setOpen(false)}
-        />
-      )}
-
       {/* Desktop Sidebar (Hidden on mobile) */}
       <div className="fixed top-0 left-0 bottom-0 w-72 z-[1000] hidden md:flex flex-col bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 shadow-sm transition-colors duration-300">
         {/* Brand */}
         <div className="px-6 h-20 flex items-center justify-between border-b border-slate-100 dark:border-slate-800/50">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-md shadow-brand-500/20 overflow-hidden bg-white border border-brand-100 dark:border-brand-900 [&>span]:hidden">
-              <img src="/greengo-logo.svg" alt="GreenGO" className="w-full h-full object-cover" />
+              <img src="/greengo-logo.svg" alt="GreenGo" className="w-full h-full object-cover" />
               <span className="text-white text-xl">🍔</span>
             </div>
             <span className="text-slate-900 dark:text-white font-extrabold text-xl tracking-tight"><span className="text-brand-500">Green</span>GO</span>
@@ -278,14 +275,14 @@ export default function UserLayout() {
         "fixed bottom-4 left-4 right-4 z-50 transition-all duration-300 transform md:hidden",
         showBottomNav ? "translate-y-0 opacity-100" : "translate-y-28 opacity-0 pointer-events-none"
       )}>
-        <nav className="bg-white/70 dark:bg-slate-950/70 backdrop-blur-xl border border-white/20 dark:border-slate-800/50 shadow-[0_8px_32px_rgba(0,0,0,0.08)] rounded-2xl flex items-center justify-around py-2.5 px-3">
+        <nav className="bg-white/80 dark:bg-slate-950/85 backdrop-blur-xl border border-white/20 dark:border-slate-800/50 shadow-[0_8px_32px_rgba(0,0,0,0.08)] rounded-2xl flex items-center justify-around py-2.5 px-2">
           {bottomNavLinks.map(({ to, end, label, icon, badge }) => (
             <NavLink
               key={to}
               to={to}
               end={end}
               className={({ isActive }) => cn(
-                "flex flex-col items-center justify-center relative py-1.5 px-4 rounded-xl transition-all duration-300 active:scale-90",
+                "flex min-w-[58px] flex-col items-center justify-center relative py-1.5 px-2 rounded-xl transition-all duration-300 active:scale-90",
                 isActive 
                   ? "text-brand-500 scale-105 bg-brand-500/10 dark:bg-brand-500/20 font-black" 
                   : "text-slate-500 dark:text-slate-300 hover:text-slate-700 dark:hover:text-white font-bold"
@@ -302,8 +299,49 @@ export default function UserLayout() {
               <span className="text-[10px] mt-1 tracking-tight select-none">{label}</span>
             </NavLink>
           ))}
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            className="flex min-w-[58px] flex-col items-center justify-center relative py-1.5 px-2 rounded-xl text-slate-500 dark:text-slate-300 font-bold transition-all active:scale-90"
+          >
+            <MoreHorizontal size={20} />
+            <span className="text-[10px] mt-1 tracking-tight select-none">More</span>
+          </button>
         </nav>
       </div>
+
+      {open && (
+        <div className="fixed inset-0 z-[900] md:hidden">
+          <button
+            type="button"
+            aria-label="Close more menu"
+            className="absolute inset-0 bg-slate-950/55 backdrop-blur-sm"
+            onClick={() => setOpen(false)}
+          />
+          <div className="absolute inset-x-0 bottom-0 rounded-t-[2rem] bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800 p-5 pb-8 shadow-2xl">
+            <div className="mx-auto mb-5 h-1 w-12 rounded-full bg-slate-200 dark:bg-slate-800" />
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-lg font-black text-slate-950 dark:text-white">More</h3>
+              <button type="button" onClick={() => setOpen(false)} className="w-11 h-11 rounded-2xl bg-slate-100 dark:bg-slate-900 flex items-center justify-center">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              {moreLinks.map(({ to, label, icon }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  onClick={() => setOpen(false)}
+                  className="min-h-[92px] rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex flex-col items-center justify-center gap-2 text-center text-xs font-black text-slate-700 dark:text-slate-200"
+                >
+                  {icon}
+                  {label}
+                </NavLink>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Confirmation Dialog Modal */}
       {showLogoutConfirm && (
@@ -344,3 +382,4 @@ export default function UserLayout() {
     </div>
   );
 }
+

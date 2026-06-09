@@ -41,7 +41,7 @@ export const seedInitialReviews = async () => {
     const initialTestimonials = [
       {
         userName: "Priya S.",
-        reviewText: "ByteBite changed my life! The food is always piping hot and the delivery is incredibly fast.",
+        reviewText: "GreenGo changed my life! The food is always piping hot and the delivery is incredibly fast.",
         rating: 5,
       },
       {
@@ -81,3 +81,4 @@ export const seedInitialReviews = async () => {
     console.error("❌ Failed to seed initial reviews:", error);
   }
 };
+

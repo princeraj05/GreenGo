@@ -1,7 +1,7 @@
 <div align="center">
-  <img src="https://img.shields.io/badge/Byte-Bite-FF5A00?style=for-the-badge&logo=doordash&logoColor=white" alt="ByteBite Logo" />
+  <img src="https://img.shields.io/badge/Byte-Bite-FF5A00?style=for-the-badge&logo=doordash&logoColor=white" alt="GreenGo Logo" />
   
-  <h1>🍔 ByteBite - Premium SaaS Food Delivery Platform</h1>
+  <h1>🍔 GreenGo - Premium SaaS Food Delivery Platform</h1>
   <p>A production-ready full-stack MERN application for seamless food ordering with an ultra-premium, mobile-responsive user interface.</p>
 
   <p>
@@ -21,7 +21,7 @@
 <br />
 
 ## 🌟 Overview
-ByteBite is a highly-polished, full-stack food delivery application built using the MERN stack. Designed with a **Stripe/Apple-inspired premium aesthetic**, it features a seamless, modern, and engaging user interface powered by Tailwind CSS, Lucide Icons, and Framer Motion for buttery-smooth animations. 
+GreenGo is a highly-polished, full-stack food delivery application built using the MERN stack. Designed with a **Stripe/Apple-inspired premium aesthetic**, it features a seamless, modern, and engaging user interface powered by Tailwind CSS, Lucide Icons, and Framer Motion for buttery-smooth animations. 
 
 The platform is designed to provide a premium experience for both customers ordering food and administrators managing the restaurant. It is completely **mobile-responsive**, performant (with React lazy loading), and highly accessible.
 
@@ -73,7 +73,7 @@ The platform is designed to provide a premium experience for both customers orde
 
 ## 🚀 Installation & Setup
 
-Follow these steps to run ByteBite locally on your machine.
+Follow these steps to run GreenGo locally on your machine.
 
 ### Prerequisites
 - Node.js (v18 or higher recommended)
@@ -82,8 +82,8 @@ Follow these steps to run ByteBite locally on your machine.
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/princeraj05/ByteBite.git
-cd ByteBite
+git clone https://github.com/princeraj05/GreenGo.git
+cd GreenGo
 ```
 
 ### 2. Backend Setup
@@ -101,7 +101,7 @@ RAZORPAY_KEY_SECRET=your_razorpay_secret
 EMAIL_SERVICE=gmail
 EMAIL_USER=your_email@gmail.com
 EMAIL_PASS=your_app_password
-MAIL_FROM="ByteBite Support <your_email@gmail.com>"
+MAIL_FROM="GreenGo Support <your_email@gmail.com>"
 ```
 Start the backend server:
 ```bash
@@ -130,3 +130,4 @@ The application will now be running at `http://localhost:5173` and communicate w
 ## 👨‍💻 Developer
 Developed with ❤️ by **Prince Raj**
 - GitHub: [@princeraj05](https://github.com/princeraj05)
+

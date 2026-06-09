@@ -36,7 +36,7 @@ export default function ForgotPassword() {
           <Link to="/" className="w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-300 flex items-center justify-center shadow-xl shadow-brand-500/30 mb-4 hover:scale-105 transition-transform">
             <span className="text-3xl text-white">🍔</span>
           </Link>
-          <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">ByteBite</h1>
+          <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">GreenGo</h1>
           <p className="text-sm font-medium text-gray-500 dark:text-slate-400 mt-2">Reset your account password</p>
         </div>
 
@@ -90,3 +90,4 @@ export default function ForgotPassword() {
     </div>
   );
 }
+

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Users, Search, ShieldBan, ShieldCheck, Bike } from "lucide-react";
+import { Users, Search, ShieldBan, ShieldCheck, Bike, MapPin, Phone } from "lucide-react";
 import API from "../../api/axios";
 import { getToken } from "../../utils/getToken";
 import Card from "../../components/ui/Card";
@@ -73,8 +73,87 @@ export default function ManageUsers() {
 
       {/* Table Card */}
       <div>
+        <div className="grid gap-3 md:hidden">
+          {filteredUsers.map((u) => {
+            const isBlocked = u.blocked || u.status === "Blocked";
+            const deliveryDetails = u.deliveryDetails || {};
+            const deliveryComplete = Boolean(deliveryDetails.profileCompleted);
+            return (
+              <Card key={u._id} className="p-4 border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-950">
+                <div className="flex items-start gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-brand-50 dark:bg-brand-950/30 text-brand-600 dark:text-brand-400 flex items-center justify-center font-black shrink-0">
+                    {(u.name || u.email || u.phone || "U").charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-black text-slate-950 dark:text-white truncate">{u.name || "GreenGo User"}</h3>
+                    <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 break-all">{u.email || u.phone || "No contact"}</p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <Badge variant={u.role === "admin" ? "danger" : u.role === "deliveryBoy" ? "blue" : "gray"} className="uppercase">
+                        {u.role === "user" ? "customer" : u.role || "customer"}
+                      </Badge>
+                      <Badge variant={!isBlocked ? "success" : "danger"} className="uppercase">
+                        {!isBlocked ? "Active" : "Blocked"}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  <InfoPill label="Spent" value={`₹${u.totalSpent || 0}`} />
+                  <InfoPill label="Orders" value={u.totalOrders || 0} />
+                </div>
+
+                {u.role === "deliveryBoy" && (
+                  <div className="mt-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-3">
+                    <Badge variant={deliveryComplete ? "success" : "warning"} className="uppercase">
+                      {deliveryComplete ? "Profile Complete" : "Profile Pending"}
+                    </Badge>
+                    <p className="mt-2 flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-300">
+                      <Phone size={13} className="text-brand-500" /> {u.phone || "Phone missing"}
+                    </p>
+                    <p className="mt-1 flex items-start gap-2 text-xs font-bold text-slate-600 dark:text-slate-300">
+                      <MapPin size={13} className="text-brand-500 mt-0.5 shrink-0" />
+                      <span>{deliveryDetails.address || u.address || "Address missing"}</span>
+                    </p>
+                  </div>
+                )}
+
+                <div className="mt-4 grid grid-cols-1 gap-2">
+                  {u.role !== "admin" && (
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => setUserRole(u._id, u.role === "deliveryBoy" ? "customer" : "deliveryBoy")}
+                      className="min-h-11 gap-2 rounded-xl"
+                    >
+                      <Bike size={16} />
+                      {u.role === "deliveryBoy" ? "Remove Delivery Boy" : "Make Delivery Boy"}
+                    </Button>
+                  )}
+                  <Button
+                    size="sm"
+                    variant={!isBlocked ? "secondary" : "primary"}
+                    onClick={() => toggleBlock(u._id, isBlocked)}
+                    className={`min-h-11 gap-2 rounded-xl ${!isBlocked ? "text-red-500 border-red-200 dark:border-red-950/50" : "bg-emerald-500 hover:bg-emerald-600"}`}
+                  >
+                    {!isBlocked ? <ShieldBan size={16} /> : <ShieldCheck size={16} />}
+                    {!isBlocked ? "Block" : "Unblock"}
+                  </Button>
+                </div>
+              </Card>
+            );
+          })}
+          {filteredUsers.length === 0 && (
+            <Card className="p-8 text-center">
+              <Search size={30} className="mx-auto text-slate-300" />
+              <h3 className="mt-3 font-black text-slate-950 dark:text-white">No users found</h3>
+              <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">Try a different search query.</p>
+            </Card>
+          )}
+        </div>
+
         <Card className="border-slate-100 dark:border-slate-800/60 overflow-hidden p-0 bg-white dark:bg-slate-950">
-          <div className="overflow-x-auto">
+          <div className="hidden overflow-x-auto md:block">
             <table className="min-w-[720px] md:min-w-full text-xs sm:text-sm">
               <thead>
                 <tr className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800/60">
@@ -89,6 +168,8 @@ export default function ManageUsers() {
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 bg-white dark:bg-slate-950">
                 {filteredUsers.map(u => {
                   const isBlocked = u.blocked || u.status === "Blocked";
+                  const deliveryDetails = u.deliveryDetails || {};
+                  const deliveryComplete = Boolean(deliveryDetails.profileCompleted);
                   return (
                     <tr key={u._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors group">
                       <td className="px-4 md:px-8 py-4 md:py-5">
@@ -97,8 +178,23 @@ export default function ManageUsers() {
                             {(u.name || u.email || u.phone || "U").charAt(0).toUpperCase()}
                           </div>
                           <div className="min-w-0">
-                            <div className="font-bold text-slate-900 dark:text-white text-sm md:text-base truncate max-w-[210px]">{u.name || "GreenGO User"}</div>
+                            <div className="font-bold text-slate-900 dark:text-white text-sm md:text-base truncate max-w-[210px]">{u.name || "GreenGo User"}</div>
                             <div className="text-slate-500 dark:text-slate-400 font-medium truncate max-w-[230px]">{u.email || u.phone || "No contact"}</div>
+                            {u.role === "deliveryBoy" && (
+                              <div className="mt-2 space-y-1 text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                                <p className="flex items-center gap-1.5">
+                                  <Phone size={12} className="text-brand-500" />
+                                  {u.phone || "Phone missing"}
+                                </p>
+                                <p className="flex items-start gap-1.5 max-w-[300px]">
+                                  <MapPin size={12} className="text-brand-500 mt-0.5 shrink-0" />
+                                  <span className="line-clamp-2">{deliveryDetails.address || u.address || "Address missing"}</span>
+                                </p>
+                                {deliveryDetails.updatedAt && (
+                                  <p>Updated: {new Date(deliveryDetails.updatedAt).toLocaleString()}</p>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </td>
@@ -112,6 +208,13 @@ export default function ManageUsers() {
                         <Badge variant={u.role === "admin" ? "danger" : u.role === "deliveryBoy" ? "blue" : "gray"} className="uppercase tracking-wider">
                           {u.role === "user" ? "customer" : u.role || "customer"}
                         </Badge>
+                        {u.role === "deliveryBoy" && (
+                          <div className="mt-2">
+                            <Badge variant={deliveryComplete ? "success" : "warning"} className="uppercase tracking-wider">
+                              {deliveryComplete ? "Profile Complete" : "Profile Pending"}
+                            </Badge>
+                          </div>
+                        )}
                       </td>
                       <td className="px-4 md:px-8 py-4 md:py-5">
                         <Badge variant={!isBlocked ? "success" : "danger"} className="uppercase tracking-wider">
@@ -163,3 +266,13 @@ export default function ManageUsers() {
     </div>
   );
 }
+
+function InfoPill({ label, value }) {
+  return (
+    <div className="rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-3">
+      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{label}</p>
+      <p className="mt-1 text-sm font-black text-slate-950 dark:text-white">{value}</p>
+    </div>
+  );
+}
+

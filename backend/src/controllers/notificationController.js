@@ -1,15 +1,74 @@
 import Notification from "../models/Notification.js";
+import User from "../models/User.js";
+
+const activeNotificationFilter = () => ({
+  $or: [
+    { expiresAt: { $exists: false } },
+    { expiresAt: null },
+    { expiresAt: { $gt: new Date() } }
+  ]
+});
+
+const isAdmin = (user) => user?.role === "admin";
+
+const todayKey = () => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+};
+
+const ensureTodayBirthdayNotifications = async () => {
+  const now = new Date();
+  const month = now.getMonth();
+  const day = now.getDate();
+  const key = todayKey();
+  const users = await User.find({
+    birthDate: { $exists: true, $ne: null },
+    role: { $nin: ["admin", "deliveryBoy"] }
+  }).select("name email phone birthDate");
+
+  for (const user of users) {
+    const date = new Date(user.birthDate);
+    if (date.getMonth() !== month || date.getDate() !== day) continue;
+
+    const exists = await Notification.exists({
+      audience: "admin",
+      "data.event": "birthday_today",
+      "data.userId": String(user._id),
+      "data.date": key,
+    });
+    if (exists) continue;
+
+    await Notification.create({
+      audience: "admin",
+      title: "User Birthday Today",
+      message: `${user.name || "Customer"} has a birthday today. Email: ${user.email || "N/A"} | Phone: ${user.phone || "N/A"}`,
+      type: "success",
+      actionPath: "/admin/users",
+      data: {
+        event: "birthday_today",
+        userId: String(user._id),
+        name: user.name || "",
+        email: user.email || "",
+        phone: user.phone || "",
+        date: key,
+      },
+    });
+  }
+};
 
 /* ================= CREATE NOTIFICATION ================= */
 export const createNotification = async (req, res) => {
   try {
-    const { userId, title, message, type, expiresAt } = req.body;
+    const { userId, title, message, type, expiresAt, audience, actionPath, data } = req.body;
     
     const notification = await Notification.create({
       userId,
       title,
       message,
       type,
+      audience: audience === "admin" ? "admin" : "user",
+      actionPath: actionPath || "",
+      data: data || {},
       expiresAt: expiresAt ? new Date(expiresAt) : null
     });
 
@@ -22,14 +81,8 @@ export const createNotification = async (req, res) => {
 /* ================= GET ALL NOTIFICATIONS (ADMIN) ================= */
 export const getAllNotifications = async (req, res) => {
   try {
-    // Exclude expired notifications
-    const notifications = await Notification.find({
-      $or: [
-        { expiresAt: { $exists: false } },
-        { expiresAt: null },
-        { expiresAt: { $gt: new Date() } }
-      ]
-    }).sort({ createdAt: -1 });
+    await ensureTodayBirthdayNotifications();
+    const notifications = await Notification.find(activeNotificationFilter()).sort({ createdAt: -1 });
     res.json(notifications.map((notification) => ({
       ...notification.toObject(),
       isRead: Boolean(notification.read || (notification.readBy || []).includes(req.user.id)),
@@ -42,9 +95,9 @@ export const getAllNotifications = async (req, res) => {
 /* ================= GET MY NOTIFICATIONS (USER) ================= */
 export const getMyNotifications = async (req, res) => {
   try {
-    // Fetch notifications that belong to user or are global broadcasts, and are not expired
     const notifications = await Notification.find({
       $and: [
+        { audience: { $ne: "admin" } },
         {
           $or: [
             { userId: req.user.id },
@@ -54,11 +107,7 @@ export const getMyNotifications = async (req, res) => {
           ]
         },
         {
-          $or: [
-            { expiresAt: { $exists: false } },
-            { expiresAt: null },
-            { expiresAt: { $gt: new Date() } }
-          ]
+          ...activeNotificationFilter()
         }
       ]
     }).sort({ createdAt: -1 });
@@ -72,13 +121,16 @@ export const getMyNotifications = async (req, res) => {
 /* ================= UPDATE NOTIFICATION (ADMIN) ================= */
 export const updateNotification = async (req, res) => {
   try {
-    const { title, message, type, expiresAt } = req.body;
+    const { title, message, type, expiresAt, audience, actionPath, data } = req.body;
     const notification = await Notification.findByIdAndUpdate(
       req.params.id,
       {
         title,
         message,
         type,
+        audience: audience === "admin" ? "admin" : "user",
+        actionPath: actionPath || "",
+        data: data || {},
         expiresAt: expiresAt ? new Date(expiresAt) : null
       },
       { new: true }
@@ -111,12 +163,17 @@ export const markAsRead = async (req, res) => {
     const notificationId = req.params.id;
     const notification = await Notification.findOne({
       _id: notificationId,
-      $or: [
-        { userId: req.user.id },
-        { userId: { $exists: false } },
-        { userId: null },
-        { userId: "" }
-      ]
+      ...(isAdmin(req.user)
+        ? {}
+        : {
+            audience: { $ne: "admin" },
+            $or: [
+              { userId: req.user.id },
+              { userId: { $exists: false } },
+              { userId: null },
+              { userId: "" }
+            ]
+          })
     });
 
     if (!notification) {

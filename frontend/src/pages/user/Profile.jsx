@@ -48,6 +48,7 @@ export default function Profile() {
     addresses: [emptyAddress],
     deliveryTime: "",
     notifications: "",
+    birthDate: "",
   });
   const [foods, setFoods] = useState([]);
   const [favorites, setFavorites] = useState([]);
@@ -134,6 +135,7 @@ export default function Profile() {
           addresses: normalizeAddresses(userData),
           deliveryTime: userData.deliveryTime || "",
           notifications: userData.notifications || "",
+          birthDate: userData.birthDate ? new Date(userData.birthDate).toISOString().slice(0, 10) : "",
         };
         setForm(nextForm);
         setFavorites(userData.favorites || []);
@@ -259,6 +261,7 @@ export default function Profile() {
         phone: userData.phone || payload.phone,
         address: userData.address || payload.address,
         addresses: normalizeAddresses(userData),
+        birthDate: userData.birthDate ? new Date(userData.birthDate).toISOString().slice(0, 10) : payload.birthDate,
       };
       setForm(nextForm);
       showMessage("Profile updated successfully");
@@ -300,7 +303,7 @@ export default function Profile() {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({
-          name: form.name || "GreenGO User",
+          name: form.name || "GreenGo User",
           email: form.email,
           subject: suggestion.subject || "User suggestion",
           message: suggestion.message,
@@ -329,7 +332,7 @@ export default function Profile() {
     { id: "coupons", label: "Coupons", icon: TicketPercent },
     { id: "suggestions", label: "Suggestions", icon: MessageSquare },
     { id: "support", label: "Help & Support", icon: LifeBuoy },
-    { id: "about", label: "About GreenGO", icon: Info },
+    { id: "about", label: "About GreenGo", icon: Info },
     { id: "developer", label: "About Developer", icon: User },
   ];
 
@@ -351,6 +354,9 @@ export default function Profile() {
             </Field>
             <Field label="Preferred Delivery Time">
               <Input value={form.deliveryTime} onChange={(e) => setForm({ ...form, deliveryTime: e.target.value })} placeholder="ASAP / 8:00 PM" />
+            </Field>
+            <Field label="Birthday">
+              <Input type="date" value={form.birthDate} onChange={(e) => setForm({ ...form, birthDate: e.target.value })} />
             </Field>
             <Button onClick={() => saveProfile()} disabled={saving} className="w-full rounded-2xl py-3 gap-2">
               <Save size={18} />
@@ -436,7 +442,7 @@ export default function Profile() {
         <Section title="Refer & Earn" onClose={() => setActiveSection(null)}>
           <div className="rounded-3xl bg-brand-50 dark:bg-brand-950/30 border border-brand-100 dark:border-brand-900 p-5 text-center">
             <Gift className="mx-auto text-brand-600 mb-3" size={38} />
-            <h3 className="text-xl font-black text-slate-950 dark:text-white">Share GreenGO</h3>
+            <h3 className="text-xl font-black text-slate-950 dark:text-white">Share GreenGo</h3>
             <p className="text-sm font-semibold text-slate-500 dark:text-slate-300 mt-2">Give your friend a coupon and earn rewards after their first order.</p>
             <div className="mt-5 flex items-center gap-2 rounded-2xl bg-white dark:bg-slate-950 border border-brand-100 dark:border-brand-900 p-2">
               <span className="flex-1 font-black tracking-widest text-brand-700 dark:text-brand-300">{referralCode}</span>
@@ -522,9 +528,9 @@ export default function Profile() {
 
     if (activeSection === "about") {
       return (
-        <Section title="About GreenGO" onClose={() => setActiveSection(null)}>
+        <Section title="About GreenGo" onClose={() => setActiveSection(null)}>
           <div className="space-y-4 text-sm font-semibold text-slate-600 dark:text-slate-300 leading-relaxed">
-            <p>GreenGO is built for quick food discovery, budget recommendations, coupons, saved addresses, and easy re-ordering.</p>
+            <p>GreenGo is built for quick food discovery, budget recommendations, coupons, saved addresses, and easy re-ordering.</p>
             <p>Version 1.0.0</p>
             <p>Account data shown here is loaded from your backend login session using the saved authentication token.</p>
           </div>
@@ -610,14 +616,14 @@ export default function Profile() {
               {form.name ? form.name.charAt(0).toUpperCase() : <User size={38} />}
             </div>
             <div className="min-w-0">
-              <h1 className="text-2xl sm:text-3xl font-black text-slate-950 dark:text-white truncate">{form.name || "GreenGO User"}</h1>
+              <h1 className="text-2xl sm:text-3xl font-black text-slate-950 dark:text-white truncate">{form.name || "GreenGo User"}</h1>
               <div className="mt-1 flex items-center gap-2 text-sm font-bold text-slate-600 dark:text-slate-300">
                 <Phone size={15} />
                 <span>{form.phone || "Phone not added"}</span>
               </div>
               <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-green-100 dark:bg-green-950/40 text-green-700 dark:text-green-300 font-black text-sm">
                 <BadgeCheck size={16} />
-                GreenGO Member
+                GreenGo Member
               </div>
             </div>
           </div>
@@ -748,3 +754,4 @@ function SupportRow({ icon: Icon, title, detail }) {
     </div>
   );
 }
+

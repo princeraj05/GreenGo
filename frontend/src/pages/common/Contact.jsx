@@ -57,7 +57,7 @@ export default function Contact() {
   }
 
   const channels = [
-    { icon: "📧", title: "Email Support", value: "hello@bytebite.com", sub: "Reply within 2 hours" },
+    { icon: "📧", title: "Email Support", value: "hello@greengo.app", sub: "Reply within 2 hours" },
     { icon: "📞", title: "Phone Support", value: "+91 98765 43210", sub: "Mon–Sat, 9 AM – 9 PM" },
     { icon: "📍", title: "Office", value: "Punjab, India", sub: "Serving Nationwide" },
     { icon: "💬", title: "Live Chat", value: "Chat with us", sub: "Available in the app 24/7" },

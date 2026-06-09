@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { MapPin, Phone, CreditCard, Banknote, Smartphone, CheckCircle, Navigation, Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 import { getToken } from "../../utils/getToken";
 import Button from "../../components/ui/Button";
@@ -146,7 +145,7 @@ export default function Checkout() {
         // Fallback geocoding on frontend if coordinates not loaded yet
         try {
           const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`, {
-            headers: { "User-Agent": "ByteBite-FoodDelivery-App/1.0" }
+            headers: { "User-Agent": "GreenGo-FoodDelivery-App/1.0" }
           });
           const geoData = await geoRes.json();
           if (geoData && geoData.length > 0) {
@@ -202,7 +201,7 @@ export default function Checkout() {
           key: key,
           amount: orderData.order.amount,
           currency: orderData.order.currency,
-          name: "ByteBite",
+          name: "GreenGo",
           description: "Premium Food Delivery Payment",
           order_id: orderData.order.id,
           handler: async function (response) {
@@ -298,7 +297,7 @@ export default function Checkout() {
         } else {
           setAddress(`Lat: ${latitude}, Lng: ${longitude}`);
         }
-      } catch (err) {
+      } catch {
         setAddress(`Lat: ${position.coords.latitude}, Lng: ${position.coords.longitude}`);
         setUserCoords({ latitude: position.coords.latitude, longitude: position.coords.longitude });
       } finally {

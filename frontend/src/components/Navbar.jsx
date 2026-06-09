@@ -30,7 +30,7 @@ export default function Navbar() {
           <div className="w-10 h-10 rounded-xl bg-brand-500 flex items-center justify-center shadow-lg shadow-brand-500/30 group-hover:scale-105 transition-transform">
             <span className="text-white text-lg">🍔</span>
           </div>
-          <span className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">ByteBite</span>
+          <span className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">GreenGo</span>
         </NavLink>
 
         {/* Desktop Nav */}

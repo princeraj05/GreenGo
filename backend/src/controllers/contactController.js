@@ -1,11 +1,12 @@
 import Contact from "../models/Contact.js";
+import { createAdminNotification } from "../services/adminNotificationService.js";
 
 export const createContact = async (req, res) => {
   try {
     const { name, email, subject, message } = req.body;
     const uid = req.user?.id || req.user?._id || req.user?.uid || null;
 
-    await Contact.create({
+    const contact = await Contact.create({
       uid,
       source: uid ? "user" : "public",
       name,
@@ -13,6 +14,21 @@ export const createContact = async (req, res) => {
       subject: subject || "",
       message,
       emailReplyStatus: uid ? "not_required" : "pending",
+    });
+
+    await createAdminNotification({
+      title: uid ? "New User Message" : "New Public Message",
+      message: `${name || "Guest"} (${email || "No email"}): ${subject || "Message"} - ${String(message || "").slice(0, 120)}`,
+      type: "info",
+      actionPath: "/admin/contacts",
+      data: {
+        event: "user_message",
+        contactId: String(contact._id),
+        userId: uid ? String(uid) : "",
+        name: name || "",
+        email: email || "",
+        subject: subject || "",
+      },
     });
 
     res.json({

@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   LayoutDashboard, UtensilsCrossed, Package, Users, 
@@ -10,6 +10,8 @@ import { getToken } from "../../utils/getToken";
 import { clearSession } from "../../utils/authStorage";
 import { cn } from "../../utils/cn";
 import { useTheme } from "../../context/ThemeContext";
+
+const MotionDiv = motion.div;
 
 export default function AdminLayout() {
   const navigate = useNavigate();
@@ -30,16 +32,6 @@ export default function AdminLayout() {
   const [lastScrollY, setLastScrollY] = useState(0);
   const [moreOpen, setMoreOpen] = useState(false);
 
-  useEffect(() => { 
-    if (window.diagnostics) {
-      window.diagnostics.adminLayoutMounted = "YES";
-      window.diagnostics.loadingState = "AdminLayout Mounting";
-      window.diagnostics.addLog("AdminLayout: mounted successfully");
-    }
-    loadAdmin(); 
-    loadAlerts();
-  }, []);
-
   useEffect(() => {
     const handleScroll = () => {
       if (typeof window !== "undefined") {
@@ -56,7 +48,7 @@ export default function AdminLayout() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
 
-  const loadAdmin = async () => {
+  const loadAdmin = useCallback(async () => {
     const token = await getToken();
     if (window.diagnostics) {
       window.diagnostics.addLog(`AdminLayout loadAdmin: Token found = ${!!token}`);
@@ -92,23 +84,40 @@ export default function AdminLayout() {
         window.diagnostics.addError(`AdminLayout loadAdmin exception: ${e.message}`);
       }
     }
-  };
+  }, []);
 
-  const loadAlerts = async () => {
+  const loadAlerts = useCallback(async () => {
     const token = await getToken();
     if (!token) return;
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/unread-alerts`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/notifications/all`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if(res.ok) {
         const data = await res.json();
-        setUnreadCount(data.unreadContacts || 0);
+        const unreadNotifications = Array.isArray(data)
+          ? data.filter((item) => item.audience === "admin" && !(item.isRead || item.read)).length
+          : 0;
+        setUnreadCount(unreadNotifications);
       }
     } catch(e) {
       console.error("Failed to load admin unread count:", e);
     }
-  };
+  }, []);
+
+  useEffect(() => { 
+    if (window.diagnostics) {
+      window.diagnostics.adminLayoutMounted = "YES";
+      window.diagnostics.loadingState = "AdminLayout Mounting";
+      window.diagnostics.addLog("AdminLayout: mounted successfully");
+    }
+    Promise.resolve().then(() => {
+      loadAdmin(); 
+      loadAlerts();
+    });
+    const timer = setInterval(loadAlerts, 15000);
+    return () => clearInterval(timer);
+  }, [loadAdmin, loadAlerts]);
 
   const desktopNavLinks = [
     { to: "/admin", end: true, label: "Dashboard", icon: <LayoutDashboard size={20} /> },
@@ -127,9 +136,9 @@ export default function AdminLayout() {
   // Mobile navigation bottom bar buttons (max 5 buttons, with last one being 'More')
   const mobileNavLinks = [
     { to: "/admin", end: true, label: "Dashboard", icon: <LayoutDashboard size={20} /> },
-    { to: "/admin/users", label: "Users", icon: <Users size={20} /> },
-    { to: "/admin/foods", label: "Foods", icon: <UtensilsCrossed size={20} /> },
     { to: "/admin/orders", label: "Orders", icon: <Package size={20} /> },
+    { to: "/admin/analytics", label: "Analytics", icon: <LineChart size={20} /> },
+    { to: "/admin/users", label: "Users", icon: <Users size={20} /> },
   ];
 
   const handleLogout = () => {
@@ -140,11 +149,11 @@ export default function AdminLayout() {
   // List of links in the Mobile Bottom Sheet
   const moreSheetLinks = [
     { to: "/admin/contacts", label: "Messages", icon: <MessageSquare size={20} />, badge: unreadCount },
+    { to: "/admin/notifications", label: "Notifications", icon: <Bell size={20} />, badge: unreadCount },
+    { to: "/admin/foods", label: "Products", icon: <UtensilsCrossed size={20} /> },
     { to: "/admin/coupons", label: "Coupons", icon: <Ticket size={20} /> },
     { to: "/admin/banners", label: "Banners", icon: <Image size={20} /> },
     { to: "/admin/reviews", label: "Reviews", icon: <Star size={20} /> },
-    { to: "/admin/notifications", label: "Alerts", icon: <Bell size={20} /> },
-    { to: "/admin/analytics", label: "Analytics", icon: <LineChart size={20} /> },
     { to: "/admin/settings", label: "Settings", icon: <Settings size={20} /> },
     { label: "Sign Out", icon: <LogOut size={20} />, action: handleLogout, danger: true },
   ];
@@ -166,9 +175,9 @@ export default function AdminLayout() {
         <div className="px-8 pt-8 pb-6 border-b border-slate-800/50">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center shadow-lg shadow-brand-500/20">
-              <span className="text-white text-xl font-black">B</span>
+              <span className="text-white text-xl font-black">G</span>
             </div>
-            <span className="text-white font-black text-2xl tracking-tight">ByteBite</span>
+            <span className="text-white font-black text-2xl tracking-tight">GreenGo</span>
           </div>
         </div>
 
@@ -227,9 +236,9 @@ export default function AdminLayout() {
         <div className="sticky top-0 z-40 h-16 flex items-center justify-between px-4 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 md:hidden transition-colors duration-300">
           <div className="flex items-center gap-2 min-w-0">
             <div className="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center shadow-md shrink-0">
-              <span className="text-white text-sm font-black">B</span>
+              <span className="text-white text-sm font-black">G</span>
             </div>
-            <span className="font-extrabold text-slate-900 dark:text-white text-base sm:text-lg truncate">ByteBite Admin</span>
+            <span className="font-extrabold text-slate-900 dark:text-white text-base sm:text-lg truncate">GreenGo Admin</span>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -240,10 +249,10 @@ export default function AdminLayout() {
               {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
             </button>
             <button 
-              onClick={() => navigate("/admin/contacts")}
+              onClick={() => navigate("/admin/notifications")}
               className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors border border-slate-100 dark:border-slate-800 shadow-sm relative"
             >
-              <MessageSquare size={18} />
+              <Bell size={18} />
               {unreadCount > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-brand-500 rounded-full border-2 border-white animate-pulse" />
               )}
@@ -267,9 +276,9 @@ export default function AdminLayout() {
              
              {/* Notification Bell */}
              <button 
-               onClick={() => navigate("/admin/contacts")}
+               onClick={() => navigate("/admin/notifications")}
                className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-900 flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-brand-50 dark:hover:bg-slate-800 hover:text-brand-600 dark:hover:text-brand-400 transition-colors relative"
-               title={unreadCount > 0 ? `${unreadCount} unread messages` : "No new messages"}
+               title={unreadCount > 0 ? `${unreadCount} unread notifications` : "No new notifications"}
              >
                 <Bell size={18} />
                 {unreadCount > 0 && (
@@ -339,7 +348,7 @@ export default function AdminLayout() {
         {moreOpen && (
           <>
             {/* Backdrop */}
-            <motion.div
+            <MotionDiv
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -348,7 +357,7 @@ export default function AdminLayout() {
             />
 
             {/* Bottom Sheet Drawer */}
-            <motion.div
+            <MotionDiv
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
@@ -413,7 +422,7 @@ export default function AdminLayout() {
                   );
                 })}
               </div>
-            </motion.div>
+            </MotionDiv>
           </>
         )}
       </AnimatePresence>
@@ -461,3 +470,4 @@ export default function AdminLayout() {
 function UserAvatar({name}) {
   return <span className="text-brand-400 font-bold">{name ? name.charAt(0).toUpperCase() : 'A'}</span>;
 }
+

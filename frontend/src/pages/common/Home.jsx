@@ -34,7 +34,7 @@ export default function Home() {
   ];
 
   const testimonials = [
-    { name: "Priya S.", city: "Ludhiana", text: "ByteBite changed my life! The food is always piping hot and the delivery is incredibly fast.", stars: 5 },
+    { name: "Priya S.", city: "Ludhiana", text: "GreenGo changed my life! The food is always piping hot and the delivery is incredibly fast.", stars: 5 },
     { name: "Rahul M.", city: "Chandigarh", text: "The cleanest UI and the best restaurant selection. I order from here almost every single day.", stars: 5 },
     { name: "Anjali K.", city: "Amritsar", text: "Highly recommend! The UI is gorgeous and the customer support is top-notch if you ever need it.", stars: 5 },
   ];
@@ -122,7 +122,7 @@ export default function Home() {
             className="text-center max-w-2xl mx-auto mb-20"
           >
             <h2 className="text-sm font-bold text-brand-600 uppercase tracking-widest mb-4">Simple Process</h2>
-            <h3 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight">How ByteBite Works</h3>
+            <h3 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight">How GreenGo Works</h3>
             <p className="mt-6 text-xl text-slate-500 dark:text-slate-400 font-medium">From browsing to your first bite, it takes just a few taps.</p>
           </motion.div>
 
@@ -196,7 +196,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeIn} className="text-center max-w-2xl mx-auto mb-20">
             <h2 className="text-sm font-bold text-brand-600 uppercase tracking-widest mb-4">Customer Reviews</h2>
-            <h3 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight">People Love ByteBite</h3>
+            <h3 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight">People Love GreenGo</h3>
           </motion.div>
 
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="grid grid-cols-1 md:grid-cols-3 gap-8">

@@ -1,6 +1,6 @@
 {
   "appId": "com.bytebite.fooddelivery",
-  "appName": "ByteBite",
+  "appName": "GreenGo",
   "webDir": "dist",
   "bundledWebRuntime": false,
   "server": {
@@ -33,3 +33,4 @@
     }
   }
 }
+
