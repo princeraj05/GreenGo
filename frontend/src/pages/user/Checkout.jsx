@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import { MapPin, Phone, CreditCard, Banknote, Smartphone, CheckCircle, Navigation, Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 import { getToken } from "../../utils/getToken";
 import Button from "../../components/ui/Button";
