@@ -65,7 +65,7 @@ export default function Profile() {
   const [msgType, setMsgType] = useState("");
 
   const developerPhotoCandidates = useMemo(() => {
-    const extensions = [".jpg", ".jpeg", ".png", ".webp", ""];
+    const extensions = [".jpg", ".JPG", ".jpeg", ".JPEG", ".png", ".webp", ""];
     const numberedPhotos = Array.from({ length: 5 }, (_, index) => index + 1).flatMap((number) =>
       extensions.map((ext) => `/developerPhoto/activeDeveloperPhoto${number}${ext}`)
     );
