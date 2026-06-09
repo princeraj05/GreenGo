@@ -411,6 +411,7 @@ export const toggleFavorite = async (req, res) => {
 export const getBudgetRecommendations = async (req, res) => {
   try {
     const {
+      people = 1,
       budgetMin = 0,
       budgetMax = 500,
       preference = "Both",
@@ -418,6 +419,7 @@ export const getBudgetRecommendations = async (req, res) => {
     } = req.body;
 
     const maxBudget = Math.max(Number(budgetMax) || 500, Number(budgetMin) || 0);
+    const customerPeople = Math.max(1, Math.ceil(Number(people) || 1));
     const types = Array.isArray(selectedTypes) ? selectedTypes.map((type) => String(type).toLowerCase()) : [];
 
     let foods = await Food.find().lean();
@@ -449,15 +451,29 @@ export const getBudgetRecommendations = async (req, res) => {
       return bScore - aScore || a.price - b.price;
     });
 
-    const individualDishes = rankedFoods
-      .filter((food) => Number(food.price || 0) <= maxBudget)
+    const withBudgetMath = rankedFoods.map((food) => {
+      const servingSize = Math.max(1, Math.ceil(Number(food.servingSize || 1)));
+      const requiredQuantity = Math.ceil(customerPeople / servingSize);
+      const unitPrice = Number(food.price || 0) + Number(food.packingCharge || 0);
+      const finalPrice = requiredQuantity * unitPrice;
+      return {
+        ...food,
+        servingSize,
+        requiredQuantity,
+        finalPrice,
+        budgetShortfall: Math.max(0, finalPrice - maxBudget),
+      };
+    });
+
+    const individualDishes = withBudgetMath
+      .filter((food) => food.finalPrice <= maxBudget)
       .slice(0, 6);
 
-    const mains = rankedFoods.filter((food) => {
+    const mains = withBudgetMath.filter((food) => {
       const category = String(food.category || "").toLowerCase();
       return !category.includes("drink") && !category.includes("water") && !category.includes("sweet") && !category.includes("dessert");
     });
-    const sides = rankedFoods.filter((food) => {
+    const sides = withBudgetMath.filter((food) => {
       const category = String(food.category || "").toLowerCase();
       const name = String(food.name || "").toLowerCase();
       return category.includes("drink") || category.includes("water") || category.includes("sweet") || category.includes("dessert") || name.includes("drink");
@@ -468,7 +484,7 @@ export const getBudgetRecommendations = async (req, res) => {
     for (const main of mains.slice(0, 8)) {
       for (const side of sidePool.slice(0, 8)) {
         if (String(main._id) === String(side._id)) continue;
-        const total = Number(main.price || 0) + Number(side.price || 0);
+        const total = Number(main.finalPrice || 0) + Number(side.finalPrice || 0);
         if (total <= maxBudget) {
           combos.push({
             name: `${main.name} + ${side.name}`,
@@ -483,7 +499,11 @@ export const getBudgetRecommendations = async (req, res) => {
       success: true,
       individualDishes,
       combos: combos.sort((a, b) => b.price - a.price).slice(0, 4),
-      estimatedCost: individualDishes[0] ? Number(individualDishes[0].price || 0) : 0,
+      estimatedCost: individualDishes[0] ? Number(individualDishes[0].finalPrice || 0) : 0,
+      budgetExceeded: withBudgetMath
+        .filter((food) => food.finalPrice > maxBudget)
+        .sort((a, b) => a.budgetShortfall - b.budgetShortfall)
+        .slice(0, 1),
     });
   } catch (err) {
     console.error("Budget assistant error:", err);

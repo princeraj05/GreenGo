@@ -8,6 +8,19 @@ const foodSchema = new mongoose.Schema({
   categoryImage: String,
   veg: { type: Boolean, default: true },
   image: String,
+  foodType: {
+    type: String,
+    enum: ["single", "combo"],
+    default: "single"
+  },
+  mealCategory: { type: String, default: "Anytime" },
+  servingSize: { type: Number, default: 1, min: 1 },
+  variants: [{ type: String }],
+  packingCharge: { type: Number, default: 0, min: 0 },
+  comboItems: [{
+    name: { type: String, default: "" },
+    price: { type: Number, default: 0 }
+  }],
   featured: { type: Boolean, default: false },
   totalOrders: { type: Number, default: 0 },
   revenueGenerated: { type: Number, default: 0 },

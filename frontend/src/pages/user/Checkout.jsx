@@ -89,8 +89,9 @@ export default function Checkout() {
   }, [userCoords]);
 
   const subtotal = cart.reduce((s, i) => s + Number(i.price || 0) * Number(i.qty || 0), 0);
+  const packingCharges = cart.reduce((s, i) => s + Number(i.packingCharge || 0) * Number(i.qty || 0), 0);
   const taxes = 0;
-  const total = subtotal + deliveryCharge + taxes;
+  const total = subtotal + packingCharges + deliveryCharge + taxes;
   const totalItems = cart.reduce((s, i) => s + Number(i.qty || 0), 0);
 
   const syncCart = (nextCart) => {
@@ -411,6 +412,12 @@ export default function Checkout() {
                     <span>Subtotal</span>
                     <span className="font-black text-slate-900 dark:text-white">₹{subtotal}</span>
                   </div>
+                  {packingCharges > 0 && (
+                    <div className="flex items-center justify-between">
+                      <span>Packing Charges</span>
+                      <span className="font-black text-slate-900 dark:text-white">₹{packingCharges}</span>
+                    </div>
+                  )}
                   <div className="flex items-center justify-between">
                     <span>Delivery Fee</span>
                     <span className="font-black text-slate-900 dark:text-white">₹{deliveryCharge}</span>
@@ -560,6 +567,13 @@ export default function Checkout() {
                   <span>Delivery Charge</span>
                   <span className="font-bold text-slate-900 dark:text-white">₹{deliveryCharge}</span>
                 </div>
+
+                {packingCharges > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span>Packing Charges</span>
+                    <span className="font-bold text-slate-900 dark:text-white">₹{packingCharges}</span>
+                  </div>
+                )}
 
                 <div className="flex justify-between items-center">
                   <span>Taxes</span>

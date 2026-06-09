@@ -65,6 +65,20 @@ const foodTypeIcon = {
 };
 
 const normalize = (value = "") => String(value).toLowerCase();
+const getServingSize = (food) => Math.max(1, Math.ceil(Number(food.servingSize || 1)));
+const getPackingCharge = (food) => Math.max(0, Number(food.packingCharge || 0));
+const addBudgetMath = (food, people, maxBudget) => {
+  const servingSize = getServingSize(food);
+  const requiredQuantity = Math.ceil(Math.max(1, Number(people) || 1) / servingSize);
+  const finalPrice = requiredQuantity * (Number(food.price || 0) + getPackingCharge(food));
+  return {
+    ...food,
+    servingSize,
+    requiredQuantity,
+    finalPrice,
+    budgetShortfall: Math.max(0, finalPrice - maxBudget),
+  };
+};
 
 const isNonVegFood = (food) => {
   const name = normalize(food.name);
@@ -114,10 +128,10 @@ const buildLocalRecommendations = ({ foods = [], people, budgetObj, preference, 
     const aScore = (Number(a.rating) || 0) * 10 + (Number(a.ratingCount) || 0) + (Number(a.totalOrders) || 0);
     const bScore = (Number(b.rating) || 0) * 10 + (Number(b.ratingCount) || 0) + (Number(b.totalOrders) || 0);
     return bScore - aScore || Number(a.price || 0) - Number(b.price || 0);
-  });
+  }).map((food) => addBudgetMath(food, people, maxBudget));
 
   const individualDishes = rankedFoods
-    .filter((food) => Number(food.price || 0) <= maxBudget)
+    .filter((food) => Number(food.finalPrice || 0) <= maxBudget)
     .slice(0, 6);
 
   const mains = rankedFoods.filter((food) => !matchesType(food, "Drinks") && !matchesType(food, "Desserts"));
@@ -128,7 +142,7 @@ const buildLocalRecommendations = ({ foods = [], people, budgetObj, preference, 
   for (const main of mains.slice(0, 10)) {
     for (const side of sidePool.slice(0, 10)) {
       if (String(main._id) === String(side._id)) continue;
-      const price = Number(main.price || 0) + Number(side.price || 0);
+      const price = Number(main.finalPrice || 0) + Number(side.finalPrice || 0);
       if (price <= maxBudget) {
         combos.push({ name: `${main.name} + ${side.name}`, items: [main, side], price });
       }
@@ -138,7 +152,11 @@ const buildLocalRecommendations = ({ foods = [], people, budgetObj, preference, 
   return {
     individualDishes,
     combos: combos.sort((a, b) => b.price - a.price).slice(0, 4),
-    estimatedCost: individualDishes[0] ? Number(individualDishes[0].price || 0) : 0,
+    estimatedCost: individualDishes[0] ? Number(individualDishes[0].finalPrice || 0) : 0,
+    budgetExceeded: rankedFoods
+      .filter((food) => Number(food.finalPrice || 0) > maxBudget)
+      .sort((a, b) => a.budgetShortfall - b.budgetShortfall)
+      .slice(0, 1),
   };
 };
 
@@ -150,7 +168,7 @@ export default function BudgetAssistant({ isOpen, onClose, foods = [], onAddToCa
   const [selectedTypes, setSelectedTypes] = useState([]);
   const [recommendationLoading, setRecommendationLoading] = useState(false);
   const [recommendationError, setRecommendationError] = useState("");
-  const [results, setResults] = useState({ individualDishes: [], combos: [], estimatedCost: 0 });
+  const [results, setResults] = useState({ individualDishes: [], combos: [], estimatedCost: 0, budgetExceeded: [] });
 
   const budgetObj = useMemo(
     () => budgetOptions.find((option) => option.label === budgetRange) || budgetOptions[3],
@@ -172,7 +190,7 @@ export default function BudgetAssistant({ isOpen, onClose, foods = [], onAddToCa
     setPreference("");
     setSelectedTypes([]);
     setRecommendationError("");
-    setResults({ individualDishes: [], combos: [], estimatedCost: 0 });
+    setResults({ individualDishes: [], combos: [], estimatedCost: 0, budgetExceeded: [] });
   };
 
   const generateRecommendations = async () => {
@@ -210,6 +228,7 @@ export default function BudgetAssistant({ isOpen, onClose, foods = [], onAddToCa
         individualDishes: data.individualDishes || [],
         combos: data.combos || [],
         estimatedCost: data.estimatedCost || 0,
+        budgetExceeded: data.budgetExceeded || [],
       };
 
       const hasApiMatches = apiResults.individualDishes.length > 0 || apiResults.combos.length > 0;
@@ -472,9 +491,21 @@ export default function BudgetAssistant({ isOpen, onClose, foods = [], onAddToCa
                     {recommendationError}
                   </p>
                 ) : results.individualDishes.length === 0 ? (
-                  <p className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-center text-sm font-semibold text-slate-500 dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-400">
-                    No direct dishes fit this budget. Check the combo suggestions or try a higher budget.
-                  </p>
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-center text-sm font-semibold text-slate-500 dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-400">
+                    {results.budgetExceeded?.[0] ? (
+                      <>
+                        <p>Sorry, your budget is Rs.{budgetObj.max}.</p>
+                        <p className="mt-1">
+                          {results.budgetExceeded[0].name} requires Rs.{results.budgetExceeded[0].finalPrice}.
+                        </p>
+                        <p className="mt-1 text-brand-600 dark:text-brand-300">
+                          Increase your budget by Rs.{results.budgetExceeded[0].budgetShortfall}.
+                        </p>
+                      </>
+                    ) : (
+                      "No direct dishes fit this budget. Check the combo suggestions or try a higher budget."
+                    )}
+                  </div>
                 ) : (
                   <div className="flex flex-col gap-3">
                     {results.individualDishes.map((food) => (
@@ -490,13 +521,19 @@ export default function BudgetAssistant({ isOpen, onClose, foods = [], onAddToCa
                         <div className="min-w-0 flex-1">
                           <h5 className="truncate text-sm font-black text-slate-900 dark:text-white">{food.name}</h5>
                           <p className="mt-1 truncate text-xs font-semibold text-slate-500 dark:text-slate-400">{food.category || "Menu item"}</p>
-                          <p className="mt-2 text-sm font-black text-brand-600 dark:text-brand-400">Rs.{food.price}</p>
+                          <p className="mt-2 text-sm font-black text-brand-600 dark:text-brand-400">
+                            Rs.{food.finalPrice || food.price}
+                          </p>
+                          <p className="mt-1 text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                            {food.requiredQuantity || 1} plate x Rs.{Number(food.price || 0) + Number(food.packingCharge || 0)}
+                            {Number(food.packingCharge || 0) > 0 ? " incl. packing" : ""}
+                          </p>
                         </div>
                         <button
                           type="button"
                           onClick={() => {
-                            onAddToCart(food, 1);
-                            alert(`${food.name} added to cart!`);
+                            onAddToCart(food, food.requiredQuantity || 1);
+                            alert(`${food.name} x ${food.requiredQuantity || 1} added to cart!`);
                           }}
                           className="self-center rounded-xl bg-brand-500 p-2.5 text-white transition-colors hover:bg-brand-600"
                           aria-label={`Add ${food.name} to cart`}
@@ -527,7 +564,7 @@ export default function BudgetAssistant({ isOpen, onClose, foods = [], onAddToCa
                         <button
                           type="button"
                           onClick={() => {
-                            combo.items.forEach((item) => onAddToCart(item, 1));
+                            combo.items.forEach((item) => onAddToCart(item, item.requiredQuantity || 1));
                             alert("Combo items added to cart!");
                           }}
                           className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-brand-500 py-2.5 text-xs font-black text-white transition-colors hover:bg-brand-600"

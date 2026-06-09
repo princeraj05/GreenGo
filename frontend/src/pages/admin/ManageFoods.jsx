@@ -9,17 +9,29 @@ import Card from "../../components/ui/Card";
 
 export default function ManageFoods() {
   const categoryOptions = [
-    "Pizza", "Burger", "Biryani", "Rolls", "Fries", "North Indian", "Desserts", "Bowl",
-    "Veg Meal", "Paneer", "Paratha", "Sandwich", "Rice", "Cake", "Dal", "Thali",
-    "Aloo Paratha", "Italian", "Shawarma", "Noodles", "Shake", "Pasta", "Dal Makhani",
-    "Patty", "Rajma Rice", "Mousse", "Milkshake", "Sweets", "Ice Cream", "Cold Coffee",
-    "Cheesecake", "Brownie", "Tea", "Gulab Jamun", "Pastry", "Chaap", "Rajma", "Kulche",
-    "Kebabs", "Maggi", "Bhurji", "Juice", "Pakoda", "Falafel", "Kulfi", "Starter",
-    "Combo", "Roti", "Chicken", "Drinks", "Water", "Cold Drink", "Fast Food", "Main Course",
-    "Veg", "Non-Veg"
+    "All", "Party Chakhna", "Pizza", "Momo", "Fast Food", "Chinese", "Starter",
+    "Main Course", "Biryani", "Roti & Breads", "Drinks", "Cake", "Dessert",
+    "Snacks", "Thali", "Roll & Wraps", "Sandwich", "Soup", "Tea & Coffee"
   ];
+  const variantOptions = ["Full Plate", "Half Plate", "Regular", "Large", "Small"];
   const [foods, setFoods] = useState([]);
-  const [form, setForm] = useState({ name: "", price: "", description: "", category: "Pizza", veg: "true", categoryImage: "", image: null, categoryImageFile: null });
+  const initialForm = {
+    name: "",
+    price: "",
+    description: "",
+    category: "Fast Food",
+    veg: "true",
+    foodType: "single",
+    mealCategory: "Anytime",
+    servingSize: "1",
+    packingCharge: "",
+    variants: ["Regular"],
+    comboItemsText: "",
+    categoryImage: "",
+    image: null,
+    categoryImageFile: null
+  };
+  const [form, setForm] = useState(initialForm);
   const [preview, setPreview] = useState(null);
   const [categoryPreview, setCategoryPreview] = useState(null);
   const [editingId, setEditingId] = useState(null);
@@ -56,6 +68,22 @@ export default function ManageFoods() {
       setForm({ ...form, [name]: value });
     }
   };
+  const toggleVariant = (variant) => {
+    setForm((current) => ({
+      ...current,
+      variants: current.variants.includes(variant)
+        ? current.variants.filter((item) => item !== variant)
+        : [...current.variants, variant]
+    }));
+  };
+
+  const parseComboItems = () => form.comboItemsText
+    .split("\n")
+    .map((line) => {
+      const [name, price] = line.split("|").map((part) => String(part || "").trim());
+      return { name, price: Number(price || 0) };
+    })
+    .filter((item) => item.name);
 
   const addFood = async (e) => {
     e.preventDefault();
@@ -71,6 +99,12 @@ export default function ManageFoods() {
       fd.append("description", form.description);
       fd.append("category", form.category || "Pizza");
       fd.append("veg", form.veg);
+      fd.append("foodType", form.foodType);
+      fd.append("mealCategory", form.mealCategory);
+      fd.append("servingSize", form.foodType === "combo" ? 1 : form.servingSize);
+      fd.append("packingCharge", form.packingCharge || 0);
+      fd.append("variants", JSON.stringify(form.variants));
+      fd.append("comboItems", JSON.stringify(form.foodType === "combo" ? parseComboItems() : []));
       fd.append("categoryImageCurrent", form.categoryImage || "");
       if (form.image) fd.append("image", form.image);
       if (form.categoryImageFile) fd.append("categoryImage", form.categoryImageFile);
@@ -87,7 +121,7 @@ export default function ManageFoods() {
   };
 
   const resetForm = () => {
-    setForm({ name: "", price: "", description: "", category: "Pizza", veg: "true", categoryImage: "", image: null, categoryImageFile: null });
+    setForm(initialForm);
     setPreview(null);
     setCategoryPreview(null);
     setEditingId(null);
@@ -98,7 +132,23 @@ export default function ManageFoods() {
   };
 
   const startEdit = (food) => {
-    setForm({ name: food.name, price: food.price, description: food.description, category: food.category || "Pizza", veg: food.veg === false ? "false" : "true", categoryImage: food.categoryImage || "", image: null, categoryImageFile: null });
+    setForm({
+      ...initialForm,
+      name: food.name,
+      price: food.price,
+      description: food.description,
+      category: food.category || "Fast Food",
+      veg: food.veg === false ? "false" : "true",
+      foodType: food.foodType || "single",
+      mealCategory: food.mealCategory || "Anytime",
+      servingSize: String(food.servingSize || 1),
+      packingCharge: food.packingCharge ? String(food.packingCharge) : "",
+      variants: Array.isArray(food.variants) && food.variants.length ? food.variants : ["Regular"],
+      comboItemsText: Array.isArray(food.comboItems) ? food.comboItems.map((item) => `${item.name}|${item.price || 0}`).join("\n") : "",
+      categoryImage: food.categoryImage || "",
+      image: null,
+      categoryImageFile: null
+    });
     setPreview(food.image?.startsWith('http') ? food.image : `${import.meta.env.VITE_API_URL}/uploads/${food.image}`);
     setCategoryPreview(food.categoryImage || null);
     setEditingId(food._id);
@@ -165,7 +215,7 @@ export default function ManageFoods() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Food Type</label>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Veg / Non-Veg</label>
                   <select
                     name="veg"
                     value={form.veg}
@@ -177,6 +227,92 @@ export default function ManageFoods() {
                   </select>
                 </div>
               </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 rounded-3xl border border-slate-100 dark:border-slate-800/60 bg-slate-50/70 dark:bg-slate-900/40 p-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Item Type</label>
+                  <select
+                    name="foodType"
+                    value={form.foodType}
+                    onChange={handleChange}
+                    className="w-full px-5 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 transition-all outline-none text-slate-900 dark:text-white font-medium"
+                  >
+                    <option value="single" className="bg-white dark:bg-slate-900">Single Item</option>
+                    <option value="combo" className="bg-white dark:bg-slate-900">Combo</option>
+                  </select>
+                </div>
+                {form.foodType !== "combo" && (
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Serving For</label>
+                    <select
+                      name="servingSize"
+                      value={form.servingSize}
+                      onChange={handleChange}
+                      className="w-full px-5 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 transition-all outline-none text-slate-900 dark:text-white font-medium"
+                    >
+                      <option value="1" className="bg-white dark:bg-slate-900">1 Person</option>
+                      <option value="2" className="bg-white dark:bg-slate-900">2 Person</option>
+                      <option value="3" className="bg-white dark:bg-slate-900">3 Person</option>
+                      <option value="4" className="bg-white dark:bg-slate-900">4+ Person</option>
+                    </select>
+                  </div>
+                )}
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Meal Category</label>
+                  <select
+                    name="mealCategory"
+                    value={form.mealCategory}
+                    onChange={handleChange}
+                    className="w-full px-5 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 transition-all outline-none text-slate-900 dark:text-white font-medium"
+                  >
+                    <option className="bg-white dark:bg-slate-900">Breakfast</option>
+                    <option className="bg-white dark:bg-slate-900">Lunch</option>
+                    <option className="bg-white dark:bg-slate-900">Dinner</option>
+                    <option className="bg-white dark:bg-slate-900">Anytime</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Packing Charge (Rs.)</label>
+                  <Input name="packingCharge" type="number" min="0" placeholder="0 for no charge" value={form.packingCharge} onChange={handleChange} className="bg-white dark:bg-slate-950" />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Quantity / Variant</label>
+                <div className="flex flex-wrap gap-2">
+                  {variantOptions.map((variant) => (
+                    <button
+                      key={variant}
+                      type="button"
+                      onClick={() => toggleVariant(variant)}
+                      className={`rounded-xl border px-3 py-2 text-xs font-black transition-all ${
+                        form.variants.includes(variant)
+                          ? "border-brand-500 bg-brand-50 text-brand-700 dark:bg-brand-950/30 dark:text-brand-300"
+                          : "border-slate-200 bg-white text-slate-600 hover:border-brand-200 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300"
+                      }`}
+                    >
+                      {variant}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {form.foodType === "combo" && (
+                <div className="rounded-3xl border border-brand-100 bg-brand-50/60 p-4 dark:border-brand-900/40 dark:bg-brand-950/20">
+                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">Combo Items</label>
+                  <textarea
+                    name="comboItemsText"
+                    placeholder={"Chicken Roll|120\nFrench Fries|90\nCold Drink|40"}
+                    value={form.comboItemsText}
+                    onChange={handleChange}
+                    rows={4}
+                    className="w-full px-5 py-4 rounded-2xl border border-brand-100 dark:border-brand-900/50 bg-white dark:bg-slate-950 focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 transition-all outline-none resize-y text-slate-900 dark:text-white font-medium placeholder-slate-400 dark:placeholder:text-slate-500"
+                  />
+                  <p className="mt-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                    Combo me person option nahi dikhega. Har line me item name aur price ko pipe se likhein.
+                  </p>
+                </div>
+              )}
               
               <div>
                 <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Description</label>
@@ -297,6 +433,9 @@ export default function ManageFoods() {
                   <div className="flex gap-2 mb-2">
                     <span className="px-2.5 py-0.5 text-xs font-bold bg-brand-50 dark:bg-brand-950/30 text-brand-600 dark:text-brand-400 rounded-md">
                       {f.category || "Pizza"}
+                    </span>
+                    <span className="px-2.5 py-0.5 text-xs font-bold bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 rounded-md">
+                      {f.foodType === "combo" ? "Combo" : `${f.servingSize || 1} Person`}
                     </span>
                     <span className={`px-2.5 py-0.5 text-xs font-bold rounded-md ${
                       f.veg === false

@@ -167,6 +167,7 @@ export const createOrder = async (req, res) => {
         foodId: i._id,
         name: i.name,
         price: i.price,
+        packingCharge: Number(i.packingCharge || 0),
         qty: i.qty,
         image: i.image
       })),

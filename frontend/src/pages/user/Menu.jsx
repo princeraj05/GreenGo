@@ -289,6 +289,8 @@ export default function Menu() {
           _id: food._id,
           name: food.name,
           price: food.price,
+          packingCharge: food.packingCharge || 0,
+          servingSize: food.servingSize || 1,
           image: food.image,
           category: food.category,
           qty: newQty
@@ -382,7 +384,7 @@ export default function Menu() {
       name: item.name || foodDetails?.name,
     };
   }), [cart, foodById]);
-  const cartTotal = useMemo(() => cart.reduce((sum, item) => sum + (item.price * item.qty), 0), [cart]);
+  const cartTotal = useMemo(() => cart.reduce((sum, item) => sum + ((Number(item.price || 0) + Number(item.packingCharge || 0)) * item.qty), 0), [cart]);
   const cartCount = useMemo(() => cart.reduce((sum, item) => sum + item.qty, 0), [cart]);
   const cartPreviewItem = cartItemsWithDetails[0];
   const orderedCategories = useMemo(() => [...new Set(cartItemsWithDetails.map((item) => item.category).filter(Boolean))], [cartItemsWithDetails]);

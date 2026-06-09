@@ -10,6 +10,7 @@ const orderItemSchema = new mongoose.Schema(
 
   name:String,
   price:Number,
+  packingCharge:{ type: Number, default: 0 },
   qty:Number,
   image:String
 

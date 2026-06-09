@@ -43,7 +43,7 @@ export default function Cart() {
     setPromoLoading(true);
     try {
       const token = await getToken();
-      const subtotalNow = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+      const subtotalNow = cart.reduce((sum, item) => sum + (Number(item.price || 0) + Number(item.packingCharge || 0)) * item.qty, 0);
       const res = await fetch(`${getApiUrl()}/api/coupons/validate`, {
         method: "POST",
         headers: {
@@ -73,10 +73,11 @@ export default function Cart() {
     }
   };
 
-  const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+  const subtotal = cart.reduce((sum, item) => sum + Number(item.price || 0) * item.qty, 0);
+  const packingCharges = cart.reduce((sum, item) => sum + Number(item.packingCharge || 0) * item.qty, 0);
   const discountAmount = subtotal * discount;
   const delivery = 40; 
-  const total = subtotal - discountAmount + delivery;
+  const total = subtotal + packingCharges - discountAmount + delivery;
 
   return (
     <div className="max-w-6xl mx-auto w-full pb-24 md:pb-10 px-1 sm:px-0">
@@ -191,6 +192,12 @@ export default function Cart() {
                     <div className="flex justify-between items-center text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/20 p-2.5 rounded-xl -mx-2 px-2.5 border border-emerald-100/50 dark:border-emerald-950/30">
                       <span className="flex items-center gap-1.5"><Ticket size={14} /> Discount Applied</span>
                       <span className="font-bold">-₹{discountAmount.toFixed(2)}</span>
+                    </div>
+                  )}
+                  {packingCharges > 0 && (
+                    <div className="flex justify-between items-center">
+                      <span>Packing Charges</span>
+                      <span className="text-slate-900 dark:text-white font-bold">â‚¹{packingCharges.toFixed(2)}</span>
                     </div>
                   )}
                   <div className="flex justify-between items-center">
