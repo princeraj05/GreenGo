@@ -362,11 +362,15 @@ export const getDeliveryDashboard = async (req, res) => {
     ]);
 
     const deliveredOrders = orders.filter((order) => order.status === "Delivered");
+    const onlinePaidOrders = deliveredOrders.filter((order) => !isCodPayment(order.paymentMethod));
+    const onlinePaymentAmount = onlinePaidOrders.reduce((sum, order) => sum + Number(order.total || 0), 0);
     res.json({
       totalAssignedOrders: orders.length,
       pendingOrders: orders.filter((order) => order.status !== "Delivered" && order.status !== "RejectedByDeliveryBoy").length,
       deliveredOrders: deliveredOrders.length,
       codEarnings: user?.deliveryCredit || 0,
+      onlinePaidOrders: onlinePaidOrders.length,
+      onlinePaymentAmount,
     });
   } catch (err) {
     res.status(500).json({ message: "Server error" });
