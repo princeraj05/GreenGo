@@ -229,7 +229,8 @@ export const getAllOrders = async (req,res)=>{
   const orders = await Order
   .find()
   .populate("assignedDeliveryBoy", "name phone email role deliveryCredit")
-  .sort({createdAt:-1});
+  .sort({createdAt:-1})
+  .lean();
 
   res.json(orders);
 };
@@ -241,7 +242,8 @@ export const getMyOrders = async (req,res)=>{
 
   const orders = await Order
   .find({userId:req.user.id})  // ✅ FIX
-  .sort({createdAt:-1});
+  .sort({createdAt:-1})
+  .lean();
 
   res.json(orders);
 
@@ -253,7 +255,7 @@ export const getOrderTracking = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id).select(
       "userId status address latitude longitude assignedDeliveryBoy tracking updatedAt"
-    );
+    ).lean();
     if (!order) return res.status(404).json({ message: "Order not found" });
     if (!canViewTracking(order, req.user)) return res.status(403).json({ message: "Not authorized to view tracking" });
 
@@ -372,7 +374,8 @@ export const getDeliveryBoys = async (req, res) => {
     if (!isAdmin(req.user)) return res.status(403).json({ message: "Not admin" });
     const users = await User.find({ role: "deliveryBoy", blocked: { $ne: true } })
       .select("name phone email role deliveryCredit createdAt")
-      .sort({ name: 1, createdAt: -1 });
+      .sort({ name: 1, createdAt: -1 })
+      .lean();
     res.json(users);
   } catch (err) {
     res.status(500).json({ message: "Server error" });
@@ -417,7 +420,7 @@ export const getDeliveryDashboard = async (req, res) => {
     if (!user) return;
     const assignedQuery = { assignedDeliveryBoy: req.user.id };
     const [orders] = await Promise.all([
-      Order.find(assignedQuery).sort({ createdAt: -1 }),
+      Order.find(assignedQuery).sort({ createdAt: -1 }).lean(),
     ]);
 
     const deliveredOrders = orders.filter((order) => order.status === "Delivered");
@@ -440,7 +443,7 @@ export const getAssignedOrders = async (req, res) => {
   try {
     const user = await requireDeliveryProfile(req, res);
     if (!user) return;
-    const orders = await Order.find({ assignedDeliveryBoy: req.user.id }).sort({ createdAt: -1 });
+    const orders = await Order.find({ assignedDeliveryBoy: req.user.id }).sort({ createdAt: -1 }).lean();
     res.json(orders);
   } catch (err) {
     res.status(500).json({ message: "Server error" });
@@ -564,8 +567,8 @@ export const getDeliveryEarnings = async (req, res) => {
     const deliveryUser = await requireDeliveryProfile(req, res);
     if (!deliveryUser) return;
     const [orders, user] = await Promise.all([
-      Order.find({ assignedDeliveryBoy: req.user.id, paymentMethod: { $regex: /^cod$/i } }).sort({ createdAt: -1 }),
-      User.findById(req.user.id).select("deliveryCredit"),
+      Order.find({ assignedDeliveryBoy: req.user.id, paymentMethod: { $regex: /^cod$/i } }).sort({ createdAt: -1 }).lean(),
+      User.findById(req.user.id).select("deliveryCredit").lean(),
     ]);
     const deliveredCodOrders = orders.filter((order) => order.status === "Delivered");
     const totalCodAmount = deliveredCodOrders.reduce((sum, order) => sum + Number(order.total || 0), 0);

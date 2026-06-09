@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -256,9 +256,9 @@ export default function Menu() {
     }
   };
 
-  const isFavorite = (foodId) => {
+  const isFavorite = useCallback((foodId) => {
     return favorites.includes(foodId);
-  };
+  }, [favorites]);
 
   const loadFoods = async () => {
     try {
@@ -314,74 +314,79 @@ export default function Menu() {
     }
   };
 
-  const isNonVegFood = (food) => {
+  const isNonVegFood = useCallback((food) => {
     const cat = String(food.category || "").toLowerCase();
     const name = String(food.name || "").toLowerCase();
     return food.veg === false || cat.includes("non-veg") || cat.includes("chicken") || name.includes("chicken") || name.includes("mutton") || name.includes("egg");
-  };
+  }, []);
 
-  const isVegFood = (food) => !isNonVegFood(food);
+  const isVegFood = useCallback((food) => !isNonVegFood(food), [isNonVegFood]);
 
   // RECOMMENDATION & FILTER LOGIC
-  const matchesVegMode = (food) => !vegMode || isVegFood(food);
+  const matchesVegMode = useCallback((food) => !vegMode || isVegFood(food), [isVegFood, vegMode]);
 
-  const filteredFoods = foods.filter(food => {
-    const matchesSearch = food.name.toLowerCase().includes(search.toLowerCase()) || 
-                          (food.description || "").toLowerCase().includes(search.toLowerCase());
-    
-    let matchesCategory = false;
-    if (category === "All") {
-      matchesCategory = true;
-    } else if (category === "Favorites") {
-      matchesCategory = isFavorite(food._id);
-    } else {
-      const cat = food.category?.toLowerCase() || "";
-      const selected = category.toLowerCase();
-      
-      if (selected === "veg") {
-        matchesCategory = food.veg === true || cat === "veg" || food.name.toLowerCase().includes("veg") || food.name.toLowerCase().includes("paneer");
-      } else if (selected === "non-veg") {
-        matchesCategory = food.veg === false || cat === "non-veg" || cat === "chicken" || food.name.toLowerCase().includes("chicken") || food.name.toLowerCase().includes("egg");
-      } else if (selected === "drinks") {
-        matchesCategory = cat === "drinks" || cat === "water" || cat === "cold drink";
-      } else if (selected === "desserts") {
-        matchesCategory = cat === "desserts" || cat === "sweet";
+  const filteredFoods = useMemo(() => {
+    const searchText = search.trim().toLowerCase();
+    const selectedCategory = category.toLowerCase();
+    return foods.filter(food => {
+      const foodName = (food.name || "").toLowerCase();
+      const matchesSearch = foodName.includes(searchText) ||
+                            (food.description || "").toLowerCase().includes(searchText);
+
+      let matchesCategory = false;
+      if (category === "All") {
+        matchesCategory = true;
+      } else if (category === "Favorites") {
+        matchesCategory = isFavorite(food._id);
       } else {
-        matchesCategory = cat === selected || food.name.toLowerCase().includes(selected);
+        const cat = food.category?.toLowerCase() || "";
+
+        if (selectedCategory === "veg") {
+          matchesCategory = food.veg === true || cat === "veg" || foodName.includes("veg") || foodName.includes("paneer");
+        } else if (selectedCategory === "non-veg") {
+          matchesCategory = food.veg === false || cat === "non-veg" || cat === "chicken" || foodName.includes("chicken") || foodName.includes("egg");
+        } else if (selectedCategory === "drinks") {
+          matchesCategory = cat === "drinks" || cat === "water" || cat === "cold drink";
+        } else if (selectedCategory === "desserts") {
+          matchesCategory = cat === "desserts" || cat === "sweet";
+        } else {
+          matchesCategory = cat === selectedCategory || foodName.includes(selectedCategory);
+        }
       }
-    }
-    
-    return matchesSearch && matchesCategory && matchesVegMode(food);
-  });
+
+      return matchesSearch && matchesCategory && matchesVegMode(food);
+    });
+  }, [category, foods, isFavorite, matchesVegMode, search]);
 
   // POPULAR DISHES (Ranked by highest rating)
-  const popularDishes = foods
+  const popularDishes = useMemo(() => foods
     .filter(matchesVegMode)
     .filter(f => Number(f.rating || 0) >= 2.5)
-    .sort((a, b) => b.rating - a.rating);
+    .sort((a, b) => b.rating - a.rating), [foods, matchesVegMode]);
 
   // RECOMMENDED FOR YOU (Ranked by popularity or recent updates)
-  const recommendedFoods = foods
+  const recommendedFoods = useMemo(() => foods
     .filter(matchesVegMode)
     .filter(f => f.ratingCount >= 0)
-    .sort((a, b) => b.ratingCount - a.ratingCount || new Date(b.updatedAt) - new Date(a.updatedAt));
-  const allProductFoods = foods.filter(matchesVegMode);
+    .sort((a, b) => b.ratingCount - a.ratingCount || new Date(b.updatedAt) - new Date(a.updatedAt)), [foods, matchesVegMode]);
+  const allProductFoods = useMemo(() => foods.filter(matchesVegMode), [foods, matchesVegMode]);
   const visibleCategories = categoriesList.slice(0, 8);
 
-  const cartItemsWithDetails = cart.map((item) => {
-    const foodDetails = foods.find((food) => food._id === item._id);
+  const foodById = useMemo(() => new Map(foods.map((food) => [food._id, food])), [foods]);
+  const cartItemsWithDetails = useMemo(() => cart.map((item) => {
+    const foodDetails = foodById.get(item._id);
     return {
       ...item,
       category: item.category || foodDetails?.category,
       image: item.image || foodDetails?.image,
       name: item.name || foodDetails?.name,
     };
-  });
-  const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-  const cartCount = cart.reduce((sum, item) => sum + item.qty, 0);
+  }), [cart, foodById]);
+  const cartTotal = useMemo(() => cart.reduce((sum, item) => sum + (item.price * item.qty), 0), [cart]);
+  const cartCount = useMemo(() => cart.reduce((sum, item) => sum + item.qty, 0), [cart]);
   const cartPreviewItem = cartItemsWithDetails[0];
-  const orderedCategories = [...new Set(cartItemsWithDetails.map((item) => item.category).filter(Boolean))];
-  const unreadNotificationCount = notifications.filter((item) => !(item.isRead || item.read)).length;
+  const orderedCategories = useMemo(() => [...new Set(cartItemsWithDetails.map((item) => item.category).filter(Boolean))], [cartItemsWithDetails]);
+  const unreadNotificationCount = useMemo(() => notifications.filter((item) => !(item.isRead || item.read)).length, [notifications]);
   const isLoggedIn = Boolean(localStorage.getItem("token") && localStorage.getItem("auth_state") === "logged_in");
 
   const requireLogin = (from = "/user/menu") => {

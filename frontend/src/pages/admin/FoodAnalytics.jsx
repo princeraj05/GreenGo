@@ -1,15 +1,13 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { getToken } from "../../utils/getToken";
 
 export default function FoodAnalytics() {
+  const PAGE_SIZE = 30;
   const [foods, setFoods] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
-  useEffect(() => {
-    loadFoodAnalytics();
-  }, []);
-
-  const loadFoodAnalytics = async () => {
+  const loadFoodAnalytics = useCallback(async () => {
     try {
       const token = await getToken();
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/analytics/food-analytics`, {
@@ -22,7 +20,11 @@ export default function FoodAnalytics() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadFoodAnalytics();
+  }, [loadFoodAnalytics]);
 
   const toggleFeatured = async (food) => {
     try {
@@ -40,6 +42,8 @@ export default function FoodAnalytics() {
       console.error(err);
     }
   };
+  const visibleFoods = useMemo(() => foods.slice(0, visibleCount), [foods, visibleCount]);
+  const hasMoreFoods = visibleFoods.length < foods.length;
 
   return (
     <div className="animate-fade-in">
@@ -54,7 +58,7 @@ export default function FoodAnalytics() {
         ) : (
           <>
           <div className="grid gap-3 p-4 md:hidden">
-            {foods.map((food) => (
+            {visibleFoods.map((food) => (
               <div key={food._id} className="rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4">
                 <div className="flex items-start justify-between gap-3">
                   <h3 className="font-black text-slate-950 dark:text-white">{food.name}</h3>
@@ -91,7 +95,7 @@ export default function FoodAnalytics() {
                 </tr>
               </thead>
               <tbody>
-                {foods.map((food) => (
+                {visibleFoods.map((food) => (
                   <tr key={food._id} className="border-b border-slate-50 dark:border-slate-800/40 hover:bg-slate-50/50 dark:hover:bg-slate-900/30">
                     <td className="py-4 px-6 font-bold text-slate-800 dark:text-white">{food.name}</td>
                     <td className="py-4 px-6 text-right font-medium text-slate-600 dark:text-slate-350">{food.totalOrders || 0}</td>
@@ -118,6 +122,17 @@ export default function FoodAnalytics() {
               </tbody>
             </table>
           </div>
+          {hasMoreFoods && (
+            <div className="border-t border-slate-100 dark:border-slate-800/60 p-4 text-center">
+              <button
+                type="button"
+                onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}
+                className="min-h-11 rounded-2xl border border-slate-200 dark:border-slate-800 px-6 text-sm font-black text-slate-700 dark:text-slate-200"
+              >
+                Show More Foods ({foods.length - visibleFoods.length})
+              </button>
+            </div>
+          )}
           </>
         )}
       </div>

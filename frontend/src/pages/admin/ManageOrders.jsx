@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { AnimatePresence } from "framer-motion";
 import { Package, Clock, CheckCircle, MapPin, Navigation } from "lucide-react";
 import API from "../../api/axios";
 import { getToken } from "../../utils/getToken";
@@ -9,27 +8,29 @@ import Badge from "../../components/ui/Badge";
 import Button from "../../components/ui/Button";
 
 export default function ManageOrders() {
+  const PAGE_SIZE = 24;
   const [orders, setOrders] = useState([]);
   const [deliveryBoys, setDeliveryBoys] = useState([]);
   const [etaInput, setEtaInput] = useState({});
   const [assignInput, setAssignInput] = useState({});
   const [now, setNow] = useState(0);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
-  async function loadOrders() {
+  const loadOrders = useCallback(async () => {
     try {
       const token = await getToken();
       const res = await API.get("/api/orders", { headers: { Authorization: `Bearer ${token}` } });
       setOrders(res.data);
     } catch (err) { console.log(err); }
-  }
+  }, []);
 
-  async function loadDeliveryBoys() {
+  const loadDeliveryBoys = useCallback(async () => {
     try {
       const token = await getToken();
       const res = await API.get("/api/orders/delivery-boys", { headers: { Authorization: `Bearer ${token}` } });
       setDeliveryBoys(res.data || []);
     } catch (err) { console.log(err); }
-  }
+  }, []);
 
   useEffect(() => {
     Promise.resolve().then(() => {
@@ -38,7 +39,7 @@ export default function ManageOrders() {
     });
     const timer = setInterval(() => setNow(() => Date.now()), 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [loadDeliveryBoys, loadOrders]);
 
   const assignDeliveryBoy = async (orderId) => {
     const deliveryBoyId = assignInput[orderId];
@@ -72,6 +73,8 @@ export default function ManageOrders() {
     const s = Math.floor((diff % 60000) / 1000);
     return `${m}m ${s}s`;
   };
+  const visibleOrders = useMemo(() => orders.slice(0, visibleCount), [orders, visibleCount]);
+  const hasMoreOrders = visibleOrders.length < orders.length;
 
   return (
     <div className="w-full pb-10">
@@ -89,8 +92,7 @@ export default function ManageOrders() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
-        <AnimatePresence>
-          {orders.map((o, i) => (
+          {visibleOrders.map((o, i) => (
             <div
               key={o._id}
               style={{ animationDelay: `${i * 50}ms` }}
@@ -218,8 +220,18 @@ export default function ManageOrders() {
               </Card>
             </div>
           ))}
-        </AnimatePresence>
       </div>
+      {hasMoreOrders && (
+        <div className="mt-6 flex justify-center">
+          <Button
+            variant="secondary"
+            onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}
+            className="rounded-2xl px-6"
+          >
+            Show More Orders ({orders.length - visibleOrders.length})
+          </Button>
+        </div>
+      )}
 
     </div>
   );

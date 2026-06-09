@@ -26,7 +26,7 @@ const getSafeEmailError = (error) => {
 
 export const getAllContacts = async (req, res) => {
   try {
-    const contacts = await Contact.find().sort({ createdAt: -1 });
+    const contacts = await Contact.find().sort({ createdAt: -1 }).lean();
     res.json(contacts);
   } catch (err) {
     res.status(500).json({ message: "Failed to fetch contacts" });

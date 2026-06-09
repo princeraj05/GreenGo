@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { CheckCircle, Clock, MapPin, Navigation, Package, Phone, RefreshCw, User, XCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import API from "../../api/axios";
@@ -14,15 +14,7 @@ export default function DeliveryOrders() {
   const [sharingOrders, setSharingOrders] = useState({});
   const shareTimers = useRef({});
 
-  useEffect(() => {
-    loadOrders();
-    return () => {
-      Object.values(shareTimers.current).forEach((timer) => clearInterval(timer));
-      shareTimers.current = {};
-    };
-  }, []);
-
-  const loadOrders = async () => {
+  const loadOrders = useCallback(async () => {
     setLoading(true);
     try {
       const res = await API.get("/api/orders/delivery/assigned");
@@ -36,9 +28,17 @@ export default function DeliveryOrders() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const runAction = async (orderId, action, body = {}) => {
+  useEffect(() => {
+    loadOrders();
+    return () => {
+      Object.values(shareTimers.current).forEach((timer) => clearInterval(timer));
+      shareTimers.current = {};
+    };
+  }, [loadOrders]);
+
+  const runAction = useCallback(async (orderId, action, body = {}) => {
     setActionLoading(`${orderId}-${action}`);
     try {
       const res = await API.put(`/api/orders/delivery/${orderId}/${action}`, body);
@@ -50,9 +50,9 @@ export default function DeliveryOrders() {
     } finally {
       setActionLoading("");
     }
-  };
+  }, [loadOrders]);
 
-  const updateLocalRiderLocation = (orderId, coords) => {
+  const updateLocalRiderLocation = useCallback((orderId, coords) => {
     setOrders((current) => current.map((order) => (
       order._id === orderId
         ? {
@@ -68,9 +68,17 @@ export default function DeliveryOrders() {
           }
         : order
     )));
-  };
+  }, []);
 
-  const sendLocation = (orderId) => {
+  const stopSharing = useCallback((orderId) => {
+    if (shareTimers.current[orderId]) {
+      clearInterval(shareTimers.current[orderId]);
+      delete shareTimers.current[orderId];
+    }
+    setSharingOrders((current) => ({ ...current, [orderId]: false }));
+  }, []);
+
+  const sendLocation = useCallback((orderId) => {
     if (!navigator.geolocation) {
       alert("Geolocation is not supported by this browser.");
       stopSharing(orderId);
@@ -93,22 +101,14 @@ export default function DeliveryOrders() {
       () => alert("Unable to access your GPS location. Please allow location permission."),
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 5000 }
     );
-  };
+  }, [stopSharing, updateLocalRiderLocation]);
 
-  const startSharing = (orderId) => {
+  const startSharing = useCallback((orderId) => {
     if (shareTimers.current[orderId]) return;
     setSharingOrders((current) => ({ ...current, [orderId]: true }));
     sendLocation(orderId);
     shareTimers.current[orderId] = setInterval(() => sendLocation(orderId), 10000);
-  };
-
-  const stopSharing = (orderId) => {
-    if (shareTimers.current[orderId]) {
-      clearInterval(shareTimers.current[orderId]);
-      delete shareTimers.current[orderId];
-    }
-    setSharingOrders((current) => ({ ...current, [orderId]: false }));
-  };
+  }, [sendLocation]);
 
   const acceptAndShare = async (order) => {
     const updated = await runAction(order._id, "accept");
@@ -128,7 +128,7 @@ export default function DeliveryOrders() {
     window.open(`https://www.openstreetmap.org/search?query=${encodeURIComponent(order.address || "")}`, "_blank", "noopener,noreferrer");
   };
 
-  const distanceToCustomer = (order) => {
+  const distanceToCustomer = useCallback((order) => {
     const rider = order.tracking?.riderLocation;
     if (!rider || order.latitude == null || order.longitude == null) return null;
     const R = 6371;
@@ -138,7 +138,7 @@ export default function DeliveryOrders() {
     const lat2 = Number(order.latitude) * Math.PI / 180;
     const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
     return R * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
-  };
+  }, []);
 
   return (
     <div className="space-y-5">
@@ -171,7 +171,9 @@ export default function DeliveryOrders() {
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {orders.map((order) => (
+          {orders.map((order) => {
+            const distance = distanceToCustomer(order);
+            return (
             <div key={order._id} className="rounded-3xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 p-5 shadow-sm space-y-4">
               <div className="flex items-center justify-between gap-3">
                 <h3 className="text-lg font-black">#{String(order._id).slice(-6).toUpperCase()}</h3>
@@ -198,7 +200,7 @@ export default function DeliveryOrders() {
                 </p>
                 <p className="text-sm font-bold flex items-center gap-2">
                   <Navigation size={15} className="text-brand-500" />
-                  Distance to customer: {distanceToCustomer(order) == null ? "Start sharing to calculate" : `${distanceToCustomer(order).toFixed(2)} km`}
+                  Distance to customer: {distance == null ? "Start sharing to calculate" : `${distance.toFixed(2)} km`}
                 </p>
               </div>
 
@@ -243,19 +245,20 @@ export default function DeliveryOrders() {
                 )}
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
   );
 }
 
-function InfoLine({ label, value }) {
+const InfoLine = memo(function InfoLine({ label, value }) {
   return (
     <div>
       <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{label}</p>
       <p className="mt-1 font-black text-slate-900 dark:text-white break-words">{value}</p>
     </div>
   );
-}
+});
 

@@ -36,7 +36,7 @@ export const getDashboardStats = async (req, res) => {
       { $sort: { "_id": 1 } }
     ]);
 
-    const topFoods = await Food.find().sort({ totalOrders: -1 }).limit(5).select("name totalOrders");
+    const topFoods = await Food.find().sort({ totalOrders: -1 }).limit(5).select("name totalOrders").lean();
 
     res.json({
       totalRevenue,
@@ -59,7 +59,7 @@ export const getDashboardStats = async (req, res) => {
 /* ================= FOOD ANALYTICS ================= */
 export const getFoodAnalytics = async (req, res) => {
   try {
-    const foods = await Food.find().select("name totalOrders revenueGenerated ratingCount popularityScore featured").sort({ revenueGenerated: -1 });
+    const foods = await Food.find().select("name totalOrders revenueGenerated ratingCount popularityScore featured").sort({ revenueGenerated: -1 }).lean();
     res.json(foods);
   } catch (err) {
     res.status(500).json({ message: "Server error" });

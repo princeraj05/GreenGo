@@ -7,12 +7,12 @@ import AdminRoute from "./AdminRoute";
 import DeliveryRoute from "./DeliveryRoute";
 
 /* AUTH */
-import AuthPage from "../pages/auth/AuthPage";
-import ForgotPassword from "../pages/auth/ForgotPassword";
-import ResetPassword from "../pages/auth/ResetPassword";
+const AuthPage = lazy(() => import("../pages/auth/AuthPage"));
+const ForgotPassword = lazy(() => import("../pages/auth/ForgotPassword"));
+const ResetPassword = lazy(() => import("../pages/auth/ResetPassword"));
 
 /* USER */
-import UserLayout from "../pages/user/UserLayout";
+const UserLayout = lazy(() => import("../pages/user/UserLayout"));
 const UserDashboard = lazy(() => import("../pages/user/UserDashboard"));
 const Menu = lazy(() => import("../pages/user/Menu"));
 const FoodSearch = lazy(() => import("../pages/user/FoodSearch"));
@@ -27,14 +27,14 @@ const Notifications = lazy(() => import("../pages/user/Notifications"));
 const OrderTrackingPage = lazy(() => import("../pages/common/OrderTrackingPage"));
 
 /* DELIVERY */
-import DeliveryLayout from "../pages/delivery/DeliveryLayout";
+const DeliveryLayout = lazy(() => import("../pages/delivery/DeliveryLayout"));
 const DeliveryDashboard = lazy(() => import("../pages/delivery/DeliveryDashboard"));
 const DeliveryOrders = lazy(() => import("../pages/delivery/DeliveryOrders"));
 const DeliveryEarnings = lazy(() => import("../pages/delivery/DeliveryEarnings"));
 const DeliveryProfile = lazy(() => import("../pages/delivery/DeliveryProfile"));
 
 /* ADMIN */
-import AdminLayout from "../pages/admin/AdminLayout";
+const AdminLayout = lazy(() => import("../pages/admin/AdminLayout"));
 const AdminDashboard = lazy(() => import("../pages/admin/AdminDashboard"));
 const ManageFoods = lazy(() => import("../pages/admin/ManageFoods"));
 const ManageOrders = lazy(() => import("../pages/admin/ManageOrders"));
@@ -48,8 +48,16 @@ const ManageReviews = lazy(() => import("../pages/admin/ManageReviews"));
 const ManageBanners = lazy(() => import("../pages/admin/ManageBanners"));
 
 const SuspenseLoader = () => (
-  <div className="flex justify-center items-center h-[60vh]">
-    <div className="w-12 h-12 border-4 border-brand-100 border-t-brand-500 rounded-full animate-spin"></div>
+  <div className="min-h-[60vh] px-4 py-6 sm:px-8">
+    <div className="mx-auto max-w-6xl space-y-5">
+      <div className="h-12 w-48 rounded-2xl bg-slate-100 dark:bg-slate-900 animate-pulse" />
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="h-32 rounded-3xl bg-slate-100 dark:bg-slate-900 animate-pulse" />
+        <div className="h-32 rounded-3xl bg-slate-100 dark:bg-slate-900 animate-pulse" />
+        <div className="h-32 rounded-3xl bg-slate-100 dark:bg-slate-900 animate-pulse" />
+      </div>
+      <div className="h-64 rounded-3xl bg-slate-100 dark:bg-slate-900 animate-pulse" />
+    </div>
   </div>
 );
 

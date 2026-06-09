@@ -120,4 +120,9 @@ const userSchema = new mongoose.Schema(
 { timestamps: true }
 );
 
+userSchema.index({ role: 1, blocked: 1, createdAt: -1 });
+userSchema.index({ uid: 1 }, { sparse: true });
+userSchema.index({ birthDate: 1 });
+userSchema.index({ "deliveryDetails.profileCompleted": 1, role: 1 });
+
 export default mongoose.model("User", userSchema);

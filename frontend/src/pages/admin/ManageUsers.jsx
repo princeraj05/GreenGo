@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Users, Search, ShieldBan, ShieldCheck, Bike, MapPin, Phone } from "lucide-react";
 import API from "../../api/axios";
 import { getToken } from "../../utils/getToken";
@@ -8,18 +8,20 @@ import Badge from "../../components/ui/Badge";
 import Button from "../../components/ui/Button";
 
 export default function ManageUsers() {
+  const PAGE_SIZE = 30;
   const [users, setUsers] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
-  async function loadUsers() {
+  const loadUsers = useCallback(async () => {
     try {
       const token = await getToken();
       const res = await API.get("/api/admin/users", { headers: { Authorization: `Bearer ${token}` } });
       setUsers(res.data);
     } catch (err) { console.log(err); }
-  }
+  }, []);
 
-  useEffect(() => { Promise.resolve().then(loadUsers); }, []);
+  useEffect(() => { Promise.resolve().then(loadUsers); }, [loadUsers]);
 
   const toggleBlock = async (id, currentBlocked) => {
     try {
@@ -37,10 +39,16 @@ export default function ManageUsers() {
     } catch (err) { console.log(err); }
   };
 
-  const filteredUsers = users.filter(u => 
-    (u.name || "").toLowerCase().includes(searchQuery.toLowerCase()) || 
-    (u.email || u.phone || "").toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredUsers = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return users;
+    return users.filter(u =>
+      (u.name || "").toLowerCase().includes(query) ||
+      (u.email || u.phone || "").toLowerCase().includes(query)
+    );
+  }, [searchQuery, users]);
+  const visibleUsers = useMemo(() => filteredUsers.slice(0, visibleCount), [filteredUsers, visibleCount]);
+  const hasMoreUsers = visibleUsers.length < filteredUsers.length;
 
   return (
     <div className="w-full pb-10">
@@ -65,7 +73,10 @@ export default function ManageUsers() {
             type="text" 
             placeholder="Search by name or email..." 
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setVisibleCount(PAGE_SIZE);
+            }}
             className="pl-11 sm:pl-12 bg-white dark:bg-slate-900 shadow-sm border-slate-200 dark:border-slate-800 py-3 sm:py-3.5 text-sm sm:text-base"
           />
         </div>
@@ -74,7 +85,7 @@ export default function ManageUsers() {
       {/* Table Card */}
       <div>
         <div className="grid gap-3 md:hidden">
-          {filteredUsers.map((u) => {
+          {visibleUsers.map((u) => {
             const isBlocked = u.blocked || u.status === "Blocked";
             const deliveryDetails = u.deliveryDetails || {};
             const deliveryComplete = Boolean(deliveryDetails.profileCompleted);
@@ -166,7 +177,7 @@ export default function ManageUsers() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 bg-white dark:bg-slate-950">
-                {filteredUsers.map(u => {
+                {visibleUsers.map(u => {
                   const isBlocked = u.blocked || u.status === "Blocked";
                   const deliveryDetails = u.deliveryDetails || {};
                   const deliveryComplete = Boolean(deliveryDetails.profileCompleted);
@@ -261,6 +272,17 @@ export default function ManageUsers() {
             )}
           </div>
         </Card>
+        {hasMoreUsers && (
+          <div className="mt-5 flex justify-center">
+            <Button
+              variant="secondary"
+              onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}
+              className="rounded-2xl px-6"
+            >
+              Show More Users ({filteredUsers.length - visibleUsers.length})
+            </Button>
+          </div>
+        )}
       </div>
 
     </div>

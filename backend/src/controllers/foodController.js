@@ -8,7 +8,7 @@ const toBoolean = (value, fallback = true) => {
 };
 
 export const getFoods = async (req, res) => {
-  const foods = await Food.find().sort({ createdAt: -1 });
+  const foods = await Food.find().sort({ createdAt: -1 }).lean();
   res.json(foods);
 };
 

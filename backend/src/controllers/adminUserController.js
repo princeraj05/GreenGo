@@ -8,7 +8,8 @@ try{
 
 const users = await User.find({})
 .select("-password -resetPasswordToken")
-.sort({createdAt:-1});
+.sort({createdAt:-1})
+.lean();
 
 res.json(users);
 

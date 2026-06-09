@@ -16,4 +16,10 @@ const foodSchema = new mongoose.Schema({
   popularityScore: { type: Number, default: 0 },
 }, { timestamps: true });
 
+foodSchema.index({ category: 1, veg: 1, createdAt: -1 });
+foodSchema.index({ featured: 1, updatedAt: -1 });
+foodSchema.index({ totalOrders: -1, popularityScore: -1 });
+foodSchema.index({ revenueGenerated: -1 });
+foodSchema.index({ rating: -1, ratingCount: -1 });
+
 export default mongoose.model("Food", foodSchema);
