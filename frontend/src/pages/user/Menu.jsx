@@ -29,6 +29,7 @@ export default function Menu() {
   const [showAllFoods, setShowAllFoods] = useState(false);
   const [loading, setLoading] = useState(true);
   const [selectedFood, setSelectedFood] = useState(null);
+  const [activeFoodCollection, setActiveFoodCollection] = useState(null);
   const [foodReviews, setFoodReviews] = useState([]);
   const [favorites, setFavorites] = useState([]);
   const [cart, setCart] = useState([]);
@@ -348,16 +349,14 @@ export default function Menu() {
   const popularDishes = foods
     .filter(matchesVegMode)
     .filter(f => f.rating > 0)
-    .sort((a, b) => b.rating - a.rating)
-    .slice(0, 3);
+    .sort((a, b) => b.rating - a.rating);
 
   // RECOMMENDED FOR YOU (Ranked by popularity or recent updates)
   const recommendedFoods = foods
     .filter(matchesVegMode)
     .filter(f => f.ratingCount >= 0)
     .sort((a, b) => b.ratingCount - a.ratingCount || new Date(b.updatedAt) - new Date(a.updatedAt));
-  const visibleRecommendedFoods = recommendedFoods.slice(0, 4);
-  const horizontalFoods = foods.filter(matchesVegMode).slice(0, 10);
+  const allProductFoods = foods.filter(matchesVegMode);
   const visibleCategories = categoriesList.slice(0, 8);
 
   const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
@@ -435,6 +434,81 @@ export default function Menu() {
           >
             +
           </button>
+        </div>
+      </div>
+    );
+  };
+
+  const openFoodCollection = (title, items) => {
+    setActiveFoodCollection({ title, items });
+  };
+
+  const renderFoodCard = (food, options = {}) => {
+    const {
+      className = "",
+      deliveryTime = "20-25 min",
+      oldPriceFactor = 1.2,
+      categoryPrefix = "In Category:",
+    } = options;
+
+    return (
+      <div
+        key={food._id}
+        className={`min-w-[240px] sm:min-w-[260px] lg:min-w-[280px] snap-start bg-white dark:bg-slate-900 rounded-3xl p-4.5 pb-5 border border-slate-100 dark:border-slate-800/60 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col group relative overflow-hidden min-h-[390px] ${className}`}
+      >
+        <div
+          onClick={() => selectFoodDetails(food)}
+          className="relative h-40 w-full rounded-2xl overflow-hidden mb-4 bg-slate-50 dark:bg-slate-950 p-2 cursor-pointer flex items-center justify-center"
+        >
+          <img
+            src={getImageUrl(food.image)}
+            alt={food.name}
+            className="max-w-full max-h-full object-contain rounded-xl transition-transform duration-500 group-hover:scale-105"
+            onError={(e) => { e.target.src = 'https://placehold.co/400x300?text=Food'; }}
+          />
+          <div className="absolute bottom-2 left-2 bg-slate-950/95 dark:bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-black text-white dark:text-slate-950 flex items-center gap-1 shadow-sm">
+            <Clock size={10} className="text-brand-400" />
+            <span>{deliveryTime}</span>
+          </div>
+          <div className="absolute top-2 right-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm px-2 py-0.5 rounded-lg text-[10px] font-black text-slate-800 dark:text-slate-100 flex items-center gap-1 shadow-sm">
+            <Star size={10} className="text-amber-500 fill-amber-500 shrink-0" />
+            <span>{food.rating ? food.rating.toFixed(1) : "4.2"}</span>
+          </div>
+        </div>
+
+        <h4
+          onClick={() => selectFoodDetails(food)}
+          className="font-bold text-slate-900 dark:text-white text-base group-hover:text-brand-500 transition-colors line-clamp-1 mb-1 cursor-pointer"
+        >
+          {food.name}
+        </h4>
+        <p className="text-[11px] text-slate-500 dark:text-slate-300 font-bold uppercase tracking-wider mb-2.5">
+          {categoryPrefix} {food.category}
+        </p>
+        <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed mb-4.5 font-medium flex-1">
+          {food.description}
+        </p>
+
+        <div className="flex items-center justify-between gap-3 mt-auto pt-3 border-t border-slate-100 dark:border-slate-800/50">
+          <div className="flex flex-col">
+            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-300 line-through leading-none">
+              ₹{Math.round(food.price * oldPriceFactor)}
+            </span>
+            <span className="text-lg font-black text-slate-950 dark:text-white leading-none pt-1 tabular-nums">
+              ₹{food.price}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => toggleFavoriteFood(food._id)}
+              className="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 text-slate-500 dark:text-slate-400 hover:text-red-500 transition-colors"
+            >
+              <Heart size={14} className={isFavorite(food._id) ? "fill-red-500 text-red-500" : ""} />
+            </button>
+
+            {renderCartAction(food)}
+          </div>
         </div>
       </div>
     );
@@ -774,68 +848,10 @@ export default function Menu() {
         <div className="mb-10">
           <div className="flex items-center justify-between mb-4.5">
             <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Popular Dishes</h3>
-            <button type="button" onClick={() => { setCategory("All"); setSearch(""); setShowAllFoods(true); }} className="text-xs font-black text-brand-600 dark:text-brand-300">See All</button>
+            <button type="button" onClick={() => openFoodCollection("Popular Dishes", popularDishes)} className="text-xs font-black text-brand-600 dark:text-brand-300">See All</button>
           </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-5">
-            {popularDishes.map((food) => (
-              <div 
-                key={food._id} 
-                className="bg-white dark:bg-slate-900 rounded-3xl p-4.5 pb-5 border border-slate-100 dark:border-slate-800/60 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col group relative overflow-hidden min-h-[390px]"
-              >
-                {/* Image & Buttons */}
-                <div 
-                  onClick={() => selectFoodDetails(food)}
-                  className="relative h-40 w-full rounded-2xl overflow-hidden mb-4 bg-slate-50 dark:bg-slate-950 p-2 cursor-pointer flex items-center justify-center"
-                >
-                  <img
-                    src={getImageUrl(food.image)}
-                    alt={food.name}
-                    className="max-w-full max-h-full object-contain rounded-xl transition-transform duration-500 group-hover:scale-105"
-                    onError={(e) => { e.target.src = 'https://placehold.co/400x300?text=Food'; }}
-                  />
-                  {/* Delivery time indicator */}
-                  <div className="absolute bottom-2 left-2 bg-slate-950/95 dark:bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-black text-white dark:text-slate-950 flex items-center gap-1 shadow-sm">
-                    <Clock size={10} className="text-brand-400" />
-                    <span>25-30 min</span>
-                  </div>
-                  {/* Rating badge */}
-                  <div className="absolute top-2 right-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm px-2 py-0.5 rounded-lg text-[10px] font-black text-slate-800 dark:text-slate-100 flex items-center gap-1 shadow-sm">
-                    <Star size={10} className="text-amber-500 fill-amber-500 shrink-0" />
-                    <span>{food.rating ? food.rating.toFixed(1) : "4.0"}</span>
-                  </div>
-                </div>
-
-                {/* Content */}
-                <h4 
-                  onClick={() => selectFoodDetails(food)}
-                  className="font-bold text-slate-900 dark:text-white text-base group-hover:text-brand-500 transition-colors line-clamp-1 mb-1 cursor-pointer"
-                >
-                  {food.name}
-                </h4>
-                <p className="text-[11px] text-slate-500 dark:text-slate-300 font-bold uppercase tracking-wider mb-2.5">In Category: {food.category}</p>
-                <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed mb-4.5 font-medium flex-1">{food.description}</p>
-                
-                {/* Actions */}
-                <div className="flex items-center justify-between gap-3 mt-auto pt-3 border-t border-slate-100 dark:border-slate-800/50">
-                  <div className="flex flex-col">
-                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-300 line-through leading-none">₹{Math.round(food.price * 1.25)}</span>
-                    <span className="text-lg font-black text-slate-950 dark:text-white leading-none pt-1 tabular-nums">₹{food.price}</span>
-                  </div>
-                  
-                  <div className="flex items-center gap-1.5">
-                    {/* Wishlist */}
-                    <button
-                      onClick={() => toggleFavoriteFood(food._id)}
-                      className="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 text-slate-500 dark:text-slate-400 hover:text-red-500 transition-colors"
-                    >
-                      <Heart size={14} className={isFavorite(food._id) ? "fill-red-500 text-red-500" : ""} />
-                    </button>
-
-                    {renderCartAction(food)}
-                  </div>
-                </div>
-              </div>
-            ))}
+          <div className="flex gap-4 sm:gap-5 overflow-x-auto no-scrollbar snap-x pb-2">
+            {popularDishes.map((food) => renderFoodCard(food, { deliveryTime: "25-30 min", oldPriceFactor: 1.25 }))}
           </div>
         </div>
       )}
@@ -845,74 +861,39 @@ export default function Menu() {
         <div className="mb-10">
           <div className="flex items-center justify-between mb-4.5">
             <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Recommended For You</h3>
-            <button type="button" onClick={() => { setCategory("All"); setSearch(""); setShowAllFoods(true); }} className="text-xs font-black text-brand-600 dark:text-brand-300">See All</button>
+            <button type="button" onClick={() => openFoodCollection("Recommended For You", recommendedFoods)} className="text-xs font-black text-brand-600 dark:text-brand-300">See All</button>
           </div>
           <div className="flex gap-4 sm:gap-5 overflow-x-auto no-scrollbar snap-x pb-2">
-            {visibleRecommendedFoods.map((food) => (
-              <div 
-                key={food._id} 
-                className="min-w-[240px] sm:min-w-[260px] lg:min-w-[280px] snap-start bg-white dark:bg-slate-900 rounded-3xl p-4.5 pb-5 border border-slate-100 dark:border-slate-800/60 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col group relative overflow-hidden min-h-[390px]"
-              >
-                {/* Image & Buttons */}
-                <div 
-                  onClick={() => selectFoodDetails(food)}
-                  className="relative h-40 w-full rounded-2xl overflow-hidden mb-4 bg-slate-50 dark:bg-slate-950 p-2 cursor-pointer flex items-center justify-center"
-                >
-                  <img
-                    src={getImageUrl(food.image)}
-                    alt={food.name}
-                    className="max-w-full max-h-full object-contain rounded-xl transition-transform duration-500 group-hover:scale-105"
-                    onError={(e) => { e.target.src = 'https://placehold.co/400x300?text=Food'; }}
-                  />
-                  {/* Delivery time indicator */}
-                  <div className="absolute bottom-2 left-2 bg-slate-950/95 dark:bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-black text-white dark:text-slate-950 flex items-center gap-1 shadow-sm">
-                    <Clock size={10} className="text-brand-400" />
-                    <span>20-25 min</span>
-                  </div>
-                  {/* Rating badge */}
-                  <div className="absolute top-2 right-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm px-2 py-0.5 rounded-lg text-[10px] font-black text-slate-800 dark:text-slate-100 flex items-center gap-1 shadow-sm">
-                    <Star size={10} className="text-amber-500 fill-amber-500 shrink-0" />
-                    <span>{food.rating ? food.rating.toFixed(1) : "4.3"}</span>
-                  </div>
-                </div>
-
-                {/* Content */}
-                <h4 
-                  onClick={() => selectFoodDetails(food)}
-                  className="font-bold text-slate-900 dark:text-white text-base group-hover:text-brand-500 transition-colors line-clamp-1 mb-1 cursor-pointer"
-                >
-                  {food.name}
-                </h4>
-                <p className="text-[11px] text-slate-500 dark:text-slate-300 font-bold uppercase tracking-wider mb-2.5">In Category: {food.category}</p>
-                <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed mb-4.5 font-medium flex-1">{food.description}</p>
-                
-                {/* Actions */}
-                <div className="flex items-center justify-between gap-3 mt-auto pt-3 border-t border-slate-100 dark:border-slate-800/50">
-                  <div className="flex flex-col">
-                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-300 line-through leading-none">₹{Math.round(food.price * 1.2)}</span>
-                    <span className="text-lg font-black text-slate-950 dark:text-white leading-none pt-1 tabular-nums">₹{food.price}</span>
-                  </div>
-                  
-                  <div className="flex items-center gap-1.5">
-                    {/* Wishlist */}
-                    <button
-                      onClick={() => toggleFavoriteFood(food._id)}
-                      className="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 text-slate-500 dark:text-slate-400 hover:text-red-500 transition-colors"
-                    >
-                      <Heart size={14} className={isFavorite(food._id) ? "fill-red-500 text-red-500" : ""} />
-                    </button>
-
-                    {renderCartAction(food)}
-                  </div>
-                </div>
-              </div>
-            ))}
+            {recommendedFoods.map((food) => renderFoodCard(food, { deliveryTime: "20-25 min", oldPriceFactor: 1.2 }))}
           </div>
         </div>
       )}
 
+      {/* 8. ALL PRODUCTS HORIZONTAL SLIDER */}
+      {category === "All" && search === "" && (
+        <div className="mb-10">
+          <div className="flex items-center justify-between mb-4.5">
+            <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">All Products</h3>
+            <button type="button" onClick={() => openFoodCollection("All Products", allProductFoods)} className="text-xs font-black text-brand-600 dark:text-brand-300">View All Products</button>
+          </div>
+          {loading ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="w-10 h-10 border-4 border-brand-100 border-t-brand-500 rounded-full animate-spin" />
+            </div>
+          ) : allProductFoods.length === 0 ? (
+            <div className="rounded-3xl border border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-950 p-8 text-center">
+              <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">No products available right now.</p>
+            </div>
+          ) : (
+            <div className="flex gap-4 sm:gap-5 overflow-x-auto no-scrollbar snap-x pb-2">
+              {allProductFoods.map((food) => renderFoodCard(food, { deliveryTime: "20-30 min", oldPriceFactor: 1.15, categoryPrefix: "Category:" }))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* DYNAMIC PRODUCTS BY SELECTED CATEGORY OR SEARCH */}
-      {(category !== "All" || search !== "" || showAllFoods) && (
+      {(category !== "All" || search !== "") && (
         <div className="mb-10">
           <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight mb-4.5">
             {showAllFoods ? "All Products" : category !== "All" ? `${category} Products` : "Search Results"}
@@ -987,6 +968,59 @@ export default function Menu() {
           )}
         </div>
       )}
+
+      <AnimatePresence>
+        {activeFoodCollection && (
+          <div className="fixed inset-0 z-[1900] flex items-end justify-center bg-slate-950/60 backdrop-blur-sm sm:items-center sm:p-4">
+            <motion.div
+              initial={{ opacity: 0, y: 80, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 80, scale: 0.98 }}
+              className="flex max-h-[88vh] w-full max-w-6xl flex-col overflow-hidden rounded-t-[2rem] border border-slate-100 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-950 sm:rounded-[2rem]"
+            >
+              <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-100 px-5 py-4 dark:border-slate-800">
+                <div className="min-w-0">
+                  <h3 className="truncate text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+                    {activeFoodCollection.title}
+                  </h3>
+                  <p className="mt-1 text-xs font-bold text-slate-500 dark:text-slate-400">
+                    {activeFoodCollection.items.length} products available
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveFoodCollection(null)}
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-700 transition-colors hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                  aria-label="Close product list"
+                >
+                  <X size={22} />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+                {activeFoodCollection.items.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center rounded-[2rem] border border-slate-100 bg-slate-50 py-16 text-center dark:border-slate-800 dark:bg-slate-900/50">
+                    <UtensilsCrossed size={34} className="mb-3 text-brand-500" />
+                    <h4 className="text-lg font-black text-slate-900 dark:text-white">No products found</h4>
+                    <p className="mt-1 text-sm font-semibold text-slate-500 dark:text-slate-400">Try another section or clear filters.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    {activeFoodCollection.items.map((food) =>
+                      renderFoodCard(food, {
+                        className: "min-w-0",
+                        deliveryTime: activeFoodCollection.title === "Popular Dishes" ? "25-30 min" : "20-30 min",
+                        oldPriceFactor: activeFoodCollection.title === "Popular Dishes" ? 1.25 : 1.2,
+                        categoryPrefix: activeFoodCollection.title === "All Products" ? "Category:" : "In Category:",
+                      })
+                    )}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* ── FOOD DETAILS MODAL ── */}
       <AnimatePresence>

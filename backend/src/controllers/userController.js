@@ -307,14 +307,12 @@ export const toggleFavorite = async (req, res) => {
 export const getBudgetRecommendations = async (req, res) => {
   try {
     const {
-      people = 1,
       budgetMin = 0,
       budgetMax = 500,
       preference = "Both",
       selectedTypes = []
     } = req.body;
 
-    const numPeople = Math.max(Number(people) || 1, 1);
     const maxBudget = Math.max(Number(budgetMax) || 500, Number(budgetMin) || 0);
     const types = Array.isArray(selectedTypes) ? selectedTypes.map((type) => String(type).toLowerCase()) : [];
 
@@ -341,7 +339,6 @@ export const getBudgetRecommendations = async (req, res) => {
       });
     });
 
-    const budgetPerPerson = maxBudget / numPeople;
     const rankedFoods = foods.sort((a, b) => {
       const aScore = (a.rating || 0) * 10 + (a.ratingCount || 0) + (a.totalOrders || 0);
       const bScore = (b.rating || 0) * 10 + (b.ratingCount || 0) + (b.totalOrders || 0);
@@ -349,7 +346,7 @@ export const getBudgetRecommendations = async (req, res) => {
     });
 
     const individualDishes = rankedFoods
-      .filter((food) => Number(food.price || 0) <= budgetPerPerson)
+      .filter((food) => Number(food.price || 0) <= maxBudget)
       .slice(0, 6);
 
     const mains = rankedFoods.filter((food) => {
@@ -382,7 +379,7 @@ export const getBudgetRecommendations = async (req, res) => {
       success: true,
       individualDishes,
       combos: combos.sort((a, b) => b.price - a.price).slice(0, 4),
-      estimatedCost: individualDishes[0] ? Number(individualDishes[0].price || 0) * numPeople : 0,
+      estimatedCost: individualDishes[0] ? Number(individualDishes[0].price || 0) : 0,
     });
   } catch (err) {
     console.error("Budget assistant error:", err);

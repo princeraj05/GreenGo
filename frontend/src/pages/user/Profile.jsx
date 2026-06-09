@@ -7,6 +7,7 @@ import {
   ChevronRight,
   CircleHelp,
   Copy,
+  ExternalLink,
   Gift,
   Heart,
   Info,
@@ -58,12 +59,39 @@ export default function Profile() {
   const [saving, setSaving] = useState(false);
   const [locationLoading, setLocationLoading] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [developerPhotoIndex, setDeveloperPhotoIndex] = useState(0);
+  const [developerFailedPhotos, setDeveloperFailedPhotos] = useState(() => new Set());
   const [message, setMessage] = useState("");
   const [msgType, setMsgType] = useState("");
+
+  const developerPhotoCandidates = useMemo(() => {
+    const extensions = [".jpg", ".jpeg", ".png", ".webp", ""];
+    const spellings = ["deploperPhoto", "developerPhoto"];
+    return Array.from({ length: 5 }, (_, index) => index + 1).flatMap((number) =>
+      spellings.flatMap((name) => extensions.map((ext) => `/${name}${number}${ext}`))
+    );
+  }, []);
+
+  const activeDeveloperPhoto = useMemo(() => {
+    if (developerFailedPhotos.size >= developerPhotoCandidates.length) return "";
+    for (let offset = 0; offset < developerPhotoCandidates.length; offset += 1) {
+      const index = (developerPhotoIndex + offset) % developerPhotoCandidates.length;
+      const candidate = developerPhotoCandidates[index];
+      if (!developerFailedPhotos.has(candidate)) return candidate;
+    }
+    return "";
+  }, [developerFailedPhotos, developerPhotoCandidates, developerPhotoIndex]);
 
   useEffect(() => {
     loadProfileData();
   }, []);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setDeveloperPhotoIndex((current) => (current + 1) % developerPhotoCandidates.length);
+    }, 2000);
+    return () => clearInterval(timer);
+  }, [developerPhotoCandidates.length]);
 
   const showMessage = (text, type = "success") => {
     setMessage(text);
@@ -309,6 +337,7 @@ export default function Profile() {
     { id: "suggestions", label: "Suggestions", icon: MessageSquare },
     { id: "support", label: "Help & Support", icon: LifeBuoy },
     { id: "about", label: "About GreenGO", icon: Info },
+    { id: "developer", label: "About Developer", icon: User },
   ];
 
   const renderSection = () => {
@@ -510,6 +539,55 @@ export default function Profile() {
       );
     }
 
+    if (activeSection === "developer") {
+      return (
+        <Section title="About Developer" onClose={() => setActiveSection(null)}>
+          <div className="space-y-5">
+            <div className="relative overflow-hidden rounded-3xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 aspect-[1.35] flex items-center justify-center">
+              {activeDeveloperPhoto ? (
+                <img
+                  src={activeDeveloperPhoto}
+                  alt="Prince Raj"
+                  className="w-full h-full object-cover"
+                  onError={() => {
+                    setDeveloperFailedPhotos((current) => new Set(current).add(activeDeveloperPhoto));
+                    setDeveloperPhotoIndex((current) => (current + 1) % developerPhotoCandidates.length);
+                  }}
+                />
+              ) : (
+                <div className="w-28 h-28 rounded-full bg-green-500 text-white flex items-center justify-center text-4xl font-black shadow-lg shadow-green-500/20">
+                  PR
+                </div>
+              )}
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/75 to-transparent p-4 text-white">
+                <p className="text-xs font-black uppercase tracking-widest text-green-300">Developer</p>
+                <h3 className="text-2xl font-black tracking-tight">Prince Raj</h3>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <DeveloperInfo label="Mobile Number" value="7479845306" />
+              <DeveloperInfo label="Country" value="India" />
+              <DeveloperInfo label="From" value="Khagaria, Bihar" />
+              <DeveloperInfo label="Current City" value="Jalandhar, Punjab" />
+              <DeveloperInfo label="College" value="Lovely Professional University (LPU)" />
+              <DeveloperInfo label="Status" value="4th Year Student" />
+            </div>
+
+            <a
+              href="https://portfolio-eight-ecru-dzw18cjkva.vercel.app/"
+              target="_blank"
+              rel="noreferrer"
+              className="w-full rounded-2xl bg-brand-500 hover:bg-brand-600 text-white font-black py-3 flex items-center justify-center gap-2 transition-colors"
+            >
+              View Portfolio
+              <ExternalLink size={17} />
+            </a>
+          </div>
+        </Section>
+      );
+    }
+
     return null;
   };
 
@@ -650,6 +728,15 @@ function EmptyText({ text }) {
   return (
     <div className="rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 p-8 text-center">
       <p className="text-sm font-semibold text-slate-500 dark:text-slate-300">{text}</p>
+    </div>
+  );
+}
+
+function DeveloperInfo({ label, value }) {
+  return (
+    <div className="rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 p-4">
+      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">{label}</p>
+      <p className="mt-1 text-sm font-black text-slate-950 dark:text-white">{value}</p>
     </div>
   );
 }
