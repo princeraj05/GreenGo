@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Search, ShoppingCart, UtensilsCrossed, Star, X, Heart, 
-  MapPin, Bell, Sun, Moon, Sparkles, Navigation, Clock, ChevronDown, Plus, Mic, Grid3X3, Wallet, ChevronRight
+  MapPin, Bell, Sun, Moon, Sparkles, Navigation, Clock, ChevronDown, Plus, Mic, Grid3X3, Wallet, ChevronRight, Trash2
 } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
 import Button from "../../components/ui/Button";
@@ -283,6 +283,7 @@ export default function Menu() {
           name: food.name,
           price: food.price,
           image: food.image,
+          category: food.category,
           qty: newQty
         });
       }
@@ -360,8 +361,19 @@ export default function Menu() {
   const allProductFoods = foods.filter(matchesVegMode);
   const visibleCategories = categoriesList.slice(0, 8);
 
+  const cartItemsWithDetails = cart.map((item) => {
+    const foodDetails = foods.find((food) => food._id === item._id);
+    return {
+      ...item,
+      category: item.category || foodDetails?.category,
+      image: item.image || foodDetails?.image,
+      name: item.name || foodDetails?.name,
+    };
+  });
   const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
   const cartCount = cart.reduce((sum, item) => sum + item.qty, 0);
+  const cartPreviewItem = cartItemsWithDetails[0];
+  const orderedCategories = [...new Set(cartItemsWithDetails.map((item) => item.category).filter(Boolean))];
   const unreadNotificationCount = notifications.filter((item) => !(item.isRead || item.read)).length;
   const isLoggedIn = Boolean(localStorage.getItem("token") && localStorage.getItem("auth_state") === "logged_in");
 
@@ -408,6 +420,20 @@ export default function Menu() {
   };
 
   const getCartItem = (food) => cart.find((item) => item._id === food._id);
+
+  const clearCart = () => {
+    localStorage.removeItem("cart");
+    setCart([]);
+    window.dispatchEvent(new Event("cart-updated"));
+  };
+
+  const selectOrderedCategory = (categoryName) => {
+    setCategory(categoryName);
+    setShowAllFoods(false);
+    setActiveFoodCollection(null);
+    setShowAllCategories(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const renderCartAction = (food) => {
     const cartItem = getCartItem(food);
@@ -767,6 +793,7 @@ export default function Menu() {
         <div className="flex gap-3 overflow-x-auto no-scrollbar py-2">
           {visibleCategories.filter(cat => !(vegMode && ["Non-Veg", "Chicken", "Kebabs"].includes(cat.id))).map(cat => {
             const isSelected = category.toLowerCase() === cat.id.toLowerCase();
+            const hasOrderedItems = orderedCategories.some((itemCategory) => itemCategory.toLowerCase() === cat.id.toLowerCase());
             const categoryImage = getCategoryImage(cat);
             return (
               <button
@@ -778,18 +805,27 @@ export default function Menu() {
                 className={`flex min-w-[76px] sm:min-w-[88px] flex-col items-center gap-2 transition-all select-none duration-300 ${
                   isSelected
                     ? "text-brand-600 dark:text-brand-300 scale-105 font-black"
-                    : "text-slate-700 dark:text-slate-200"
+                    : hasOrderedItems
+                      ? "text-emerald-600 dark:text-emerald-300"
+                      : "text-slate-700 dark:text-slate-200"
                 }`}
               >
-                <span className={`w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-full border flex items-center justify-center overflow-hidden shadow-sm transition-all ${
+                <span className={`relative w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-full border flex items-center justify-center overflow-hidden shadow-sm transition-all ${
                   isSelected
                     ? "bg-brand-500 border-brand-500 shadow-brand-500/25"
-                    : "bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-700"
+                    : hasOrderedItems
+                      ? "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-400 ring-2 ring-emerald-400/25"
+                      : "bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-700"
                 }`}>
                   {categoryImage ? (
                     <img src={categoryImage} alt={cat.name} className="w-full h-full object-cover" />
                   ) : (
                     <span className={`text-base font-black ${isSelected ? "text-white" : "text-slate-700 dark:text-slate-100"}`}>{cat.icon}</span>
+                  )}
+                  {hasOrderedItems && (
+                    <span className="absolute bottom-0 left-1/2 -translate-x-1/2 rounded-t-lg bg-emerald-500 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-white">
+                      Cart
+                    </span>
                   )}
                 </span>
                 <span className="text-[11px] sm:text-xs font-extrabold tracking-wide text-center leading-tight">{cat.name}</span>
@@ -823,6 +859,7 @@ export default function Menu() {
                 <div className="grid grid-cols-4 gap-x-3 gap-y-6">
                   {categoriesList.filter(cat => !(vegMode && ["Non-Veg", "Chicken", "Kebabs"].includes(cat.id))).map((cat) => {
                     const isSelected = category.toLowerCase() === cat.id.toLowerCase();
+                    const hasOrderedItems = orderedCategories.some((itemCategory) => itemCategory.toLowerCase() === cat.id.toLowerCase());
                     const categoryImage = getCategoryImage(cat);
                     return (
                       <button
@@ -836,14 +873,21 @@ export default function Menu() {
                         className={`min-w-0 rounded-2xl p-2 flex flex-col items-center gap-2 transition-all ${
                           isSelected
                             ? "bg-rose-50 dark:bg-rose-950/20 ring-1 ring-rose-300"
+                            : hasOrderedItems
+                              ? "bg-emerald-50 dark:bg-emerald-950/20 ring-1 ring-emerald-300"
                             : "hover:bg-slate-50 dark:hover:bg-slate-900"
                         }`}
                       >
-                        <span className="w-full aspect-[1.35] rounded-xl flex items-center justify-center overflow-hidden bg-slate-50 dark:bg-slate-900">
+                        <span className="relative w-full aspect-[1.35] rounded-xl flex items-center justify-center overflow-hidden bg-slate-50 dark:bg-slate-900">
                           {categoryImage ? (
                             <img src={categoryImage} alt={cat.name} className="w-full h-full object-contain" />
                           ) : (
                             <Grid3X3 size={22} className="text-slate-400" />
+                          )}
+                          {hasOrderedItems && (
+                            <span className="absolute right-1 top-1 rounded-full bg-emerald-500 px-1.5 py-0.5 text-[8px] font-black uppercase text-white">
+                              Cart
+                            </span>
                           )}
                         </span>
                         <span className={`w-full text-center text-[11px] sm:text-sm font-bold leading-tight break-words ${isSelected ? "text-slate-950 dark:text-white" : "text-slate-500 dark:text-slate-300"}`}>
@@ -1166,19 +1210,65 @@ export default function Menu() {
 
       {/* Floating Cart Strip */}
       {cartCount > 0 && (
-        <div className="fixed bottom-22 sm:bottom-20 md:bottom-6 left-1/2 transform -translate-x-1/2 w-[90%] max-w-lg bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-md border border-slate-800/80 text-white px-6 py-4 rounded-2xl shadow-xl flex items-center justify-between z-[999] animate-fade-in">
-          <div className="flex flex-col">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-              {cartCount} {cartCount === 1 ? "Item" : "Items"} Added
-            </span>
-            <span className="text-lg font-black text-brand-400">
-              ₹{cartTotal} <span className="text-xs text-slate-400 font-normal">plus taxes</span>
-            </span>
+        <div className="fixed bottom-[5.5rem] left-1/2 z-[999] w-[94%] max-w-4xl -translate-x-1/2 animate-fade-in overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-2xl shadow-slate-950/15 dark:border-slate-800 dark:bg-slate-950 sm:bottom-20 md:bottom-6">
+          <div className="flex items-center gap-3 p-3 sm:gap-4 sm:p-4">
+            <button
+              type="button"
+              onClick={() => cartPreviewItem?.category && selectOrderedCategory(cartPreviewItem.category)}
+              className="flex min-w-0 flex-1 items-center gap-3 text-left"
+            >
+              <img
+                src={getImageUrl(cartPreviewItem?.image)}
+                alt={cartPreviewItem?.name || "Selected food"}
+                className="h-14 w-14 shrink-0 rounded-full border border-slate-100 bg-slate-50 object-contain p-1 dark:border-slate-800 dark:bg-slate-900 sm:h-16 sm:w-16"
+                onError={(e) => { e.target.src = "https://placehold.co/120x120?text=Food"; }}
+              />
+              <div className="min-w-0">
+                <p className="truncate text-base font-black text-slate-900 dark:text-white sm:text-lg">
+                  {cartPreviewItem?.name}
+                  {cart.length > 1 ? ` +${cart.length - 1} more` : ""}
+                </p>
+                <p className="truncate text-xs font-bold text-slate-500 dark:text-slate-400 sm:text-sm">
+                  {cartItemsWithDetails.map((item) => item.name).join(", ")}
+                </p>
+                <div className="mt-1 flex max-w-full gap-1.5 overflow-x-auto no-scrollbar">
+                  {orderedCategories.map((categoryName) => (
+                    <span
+                      key={categoryName}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        selectOrderedCategory(categoryName);
+                      }}
+                      className="shrink-0 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-300 dark:ring-emerald-800"
+                    >
+                      {categoryName}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => requireLogin("/user/checkout") && navigate("/user/checkout")}
+              className="shrink-0 rounded-2xl bg-emerald-500 px-4 py-3 text-center font-black text-white shadow-lg shadow-emerald-500/25 transition-all hover:bg-emerald-600 active:scale-95 sm:min-w-[170px] sm:px-6"
+            >
+              <span className="block text-xs sm:text-sm">
+                {cartCount} {cartCount === 1 ? "item" : "items"} | ₹{cartTotal}
+              </span>
+              <span className="block text-lg leading-tight sm:text-2xl">Checkout</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={clearCart}
+              className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-rose-50 text-rose-500 transition-all hover:bg-rose-100 active:scale-95 dark:bg-rose-950/30 dark:text-rose-300 sm:h-16 sm:w-16"
+              aria-label="Clear cart"
+              title="Clear cart"
+            >
+              <Trash2 size={24} />
+            </button>
           </div>
-          <Button onClick={() => requireLogin("/user/cart") && navigate("/user/cart")} className="gap-2 px-6 py-3 bg-brand-500 hover:bg-brand-600 text-white rounded-xl font-bold shadow-lg shadow-brand-500/25">
-            View Cart
-            <ShoppingCart size={18} />
-          </Button>
         </div>
       )}
 

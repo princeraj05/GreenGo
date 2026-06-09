@@ -34,6 +34,7 @@ import Card from "../../components/ui/Card";
 import { getApiUrl, getImageUrl } from "../../utils/getApiUrl";
 
 const API = getApiUrl();
+const MotionDiv = motion.div;
 
 const emptyAddress = { label: "Home", details: "", city: "", state: "", isPrimary: true };
 
@@ -48,7 +49,6 @@ export default function Profile() {
     deliveryTime: "",
     notifications: "",
   });
-  const [originalForm, setOriginalForm] = useState(null);
   const [foods, setFoods] = useState([]);
   const [favorites, setFavorites] = useState([]);
   const [coupons, setCoupons] = useState([]);
@@ -66,10 +66,10 @@ export default function Profile() {
 
   const developerPhotoCandidates = useMemo(() => {
     const extensions = [".jpg", ".jpeg", ".png", ".webp", ""];
-    const spellings = ["deploperPhoto", "developerPhoto"];
-    return Array.from({ length: 5 }, (_, index) => index + 1).flatMap((number) =>
-      spellings.flatMap((name) => extensions.map((ext) => `/${name}${number}${ext}`))
+    const numberedPhotos = Array.from({ length: 5 }, (_, index) => index + 1).flatMap((number) =>
+      extensions.map((ext) => `/developerPhoto/activeDeveloperPhoto${number}${ext}`)
     );
+    return [...numberedPhotos, "/activeDeveloperPhoto.jpg"];
   }, []);
 
   const activeDeveloperPhoto = useMemo(() => {
@@ -89,7 +89,7 @@ export default function Profile() {
   useEffect(() => {
     const timer = setInterval(() => {
       setDeveloperPhotoIndex((current) => (current + 1) % developerPhotoCandidates.length);
-    }, 2000);
+    }, 2500);
     return () => clearInterval(timer);
   }, [developerPhotoCandidates.length]);
 
@@ -136,7 +136,6 @@ export default function Profile() {
           notifications: userData.notifications || "",
         };
         setForm(nextForm);
-        setOriginalForm(nextForm);
         setFavorites(userData.favorites || []);
       }
 
@@ -162,11 +161,6 @@ export default function Profile() {
     if (!addr) return "";
     return [addr.details, addr.city, addr.state].map(cleanAddressPart).filter(Boolean).join(", ");
   };
-
-  const primaryAddress = useMemo(
-    () => (form.addresses || []).find((addr) => addr.isPrimary) || (form.addresses || [])[0],
-    [form.addresses]
-  );
 
   const favoriteFoods = useMemo(
     () => foods.filter((food) => favorites.includes(food._id)),
@@ -267,7 +261,6 @@ export default function Profile() {
         addresses: normalizeAddresses(userData),
       };
       setForm(nextForm);
-      setOriginalForm(nextForm);
       showMessage("Profile updated successfully");
     } catch (err) {
       console.error(err);
@@ -697,7 +690,7 @@ export default function Profile() {
 function Section({ title, children, onClose }) {
   return (
     <div className="fixed inset-0 z-[2100] flex items-end sm:items-center justify-center bg-slate-950/55 backdrop-blur-sm p-0 sm:p-4">
-      <motion.div
+      <MotionDiv
         initial={{ opacity: 0, y: 70, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 70, scale: 0.98 }}
@@ -710,7 +703,7 @@ function Section({ title, children, onClose }) {
           </button>
         </div>
         <div className="p-5 overflow-y-auto max-h-[76vh]">{children}</div>
-      </motion.div>
+      </MotionDiv>
     </div>
   );
 }
@@ -742,10 +735,11 @@ function DeveloperInfo({ label, value }) {
 }
 
 function SupportRow({ icon: Icon, title, detail }) {
+  const RowIcon = Icon;
   return (
     <div className="flex gap-3 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 p-4">
       <span className="w-11 h-11 rounded-xl bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-300 flex items-center justify-center shrink-0">
-        <Icon size={20} />
+        <RowIcon size={20} />
       </span>
       <div>
         <h4 className="font-black text-slate-950 dark:text-white">{title}</h4>
