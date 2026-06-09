@@ -57,7 +57,7 @@ export default function AppRoutes() {
       <Routes>
         {/* PUBLIC AUTHENTICATION & REDIRECTS */}
         <Route path="/" element={<AuthPage />} />
-        <Route path="/login" element={<Navigate to="/" replace />} />
+        <Route path="/login" element={<AuthPage />} />
         <Route path="/register" element={<Navigate to="/" replace />} />
         <Route path="/about" element={<Navigate to="/" replace />} />
         <Route path="/contact" element={<Navigate to="/" replace />} />
@@ -65,25 +65,18 @@ export default function AppRoutes() {
         <Route path="/reset-password/:token" element={<ResetPassword />} />
 
         {/* USER PANEL */}
-        <Route
-          path="/user"
-          element={
-            <PrivateRoute>
-              <UserLayout />
-            </PrivateRoute>
-          }
-        >
+        <Route path="/user" element={<UserLayout />}>
           <Route index element={<Navigate to="/user/menu" replace />} />
-          <Route path="dashboard" element={<UserDashboard />} />
           <Route path="menu" element={<Menu />} />
-          <Route path="cart" element={<Cart />} />
-          <Route path="checkout" element={<Checkout />} />
-          <Route path="orders" element={<Orders />} />
-          <Route path="profile" element={<Profile />} />
-          <Route path="wishlist" element={<Wishlist />} />
-          <Route path="contact" element={<UserContact />} />
-          <Route path="budget-assistant" element={<BudgetAssistantPage />} />
-          <Route path="notifications" element={<Notifications />} />
+          <Route path="dashboard" element={<PrivateRoute><UserDashboard /></PrivateRoute>} />
+          <Route path="cart" element={<PrivateRoute><Cart /></PrivateRoute>} />
+          <Route path="checkout" element={<PrivateRoute><Checkout /></PrivateRoute>} />
+          <Route path="orders" element={<PrivateRoute><Orders /></PrivateRoute>} />
+          <Route path="profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
+          <Route path="wishlist" element={<PrivateRoute><Wishlist /></PrivateRoute>} />
+          <Route path="contact" element={<PrivateRoute><UserContact /></PrivateRoute>} />
+          <Route path="budget-assistant" element={<PrivateRoute><BudgetAssistantPage /></PrivateRoute>} />
+          <Route path="notifications" element={<PrivateRoute><Notifications /></PrivateRoute>} />
         </Route>
 
         {/* DELIVERY BOY PANEL */}

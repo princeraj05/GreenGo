@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useCallback, useState, useEffect, useRef } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Phone, ArrowLeft, ArrowRight, Loader2, Sparkles } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
@@ -34,7 +34,15 @@ export default function AuthPage() {
   const [devOtpMsg, setDevOtpMsg] = useState(""); // Holds phone OTP for testing environment visibility
 
   const navigate = useNavigate();
+  const location = useLocation();
   const otpRefs = useRef([]);
+  const loginRedirectPath = location.state?.from?.pathname || "/user/menu";
+  const loginRedirectSearch = location.state?.from?.search || "";
+  const loginRequired = Boolean(location.state?.loginRequired);
+  const getPostLoginPath = useCallback((role) => {
+    if (role === "admin" || role === "deliveryBoy") return getRoleHomePath(role);
+    return `${loginRedirectPath}${loginRedirectSearch}`;
+  }, [loginRedirectPath, loginRedirectSearch]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -80,7 +88,7 @@ export default function AuthPage() {
         } catch {
           await saveSession(data.token, { email: user.email, role: data.role });
         }
-        navigate(getRoleHomePath(data.role));
+        navigate(getPostLoginPath(data.role), { replace: true });
       } catch (err) {
         console.error("[GOOGLE AUTH] Google session handler failed:", err);
         setError("Google authentication backend sync failed.");
@@ -120,7 +128,7 @@ export default function AuthPage() {
 
     checkRedirect();
     return () => unsubscribe();
-  }, [navigate]);
+  }, [navigate, getPostLoginPath]);
 
   const handleGoogleSignIn = async () => {
     console.log("[GOOGLE DEBUG] Button clicked");
@@ -154,7 +162,7 @@ export default function AuthPage() {
           await saveSession(data.token, { email: user.email, role: data.role });
         }
         
-        navigate(getRoleHomePath(data.role));
+        navigate(getPostLoginPath(data.role), { replace: true });
       }
     } catch (err) {
       console.error("Google sign in failed:", err);
@@ -219,7 +227,7 @@ export default function AuthPage() {
         } catch {
           await saveSession(data.token, { email, role: data.role });
         }
-        navigate(getRoleHomePath(data.role));
+        navigate(getPostLoginPath(data.role), { replace: true });
       } else {
         const res = await API.post("/api/users/verify-otp-phone", { phone, otp });
         const data = res.data;
@@ -230,7 +238,7 @@ export default function AuthPage() {
         } catch {
           await saveSession(data.token, { phone, role: data.role });
         }
-        navigate(getRoleHomePath(data.role));
+        navigate(getPostLoginPath(data.role), { replace: true });
       }
     } catch (err) {
       setError(err.response?.data?.message || "Invalid or expired OTP. Please try again.");
@@ -300,6 +308,13 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-slate-50 dark:bg-slate-950 px-4 py-8 md:py-12 overflow-hidden relative transition-colors duration-300">
+      <button
+        type="button"
+        onClick={() => navigate("/user/menu", { replace: true })}
+        className="fixed right-4 top-4 z-20 rounded-full bg-orange-600 px-5 py-2.5 text-sm font-black text-white shadow-lg shadow-orange-500/25 transition-all hover:bg-orange-700 active:scale-95 sm:right-8 sm:top-8"
+      >
+        Skip
+      </button>
       
       {/* Decorative Glow Backgrounds */}
       <div className="absolute top-0 left-0 w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-orange-500/10 dark:bg-orange-500/5 rounded-full blur-[80px] md:blur-[120px] -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
@@ -343,6 +358,20 @@ export default function AuthPage() {
             <Sparkles className="w-3.5 h-3.5 animate-pulse" /> Delivering Happiness
           </p>
         </div>
+
+        {/* Global Error Banner */}
+        <AnimatePresence>
+          {loginRequired && step === 1 && (
+            <MotionDiv
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="mb-5 rounded-2xl border border-orange-200 bg-orange-50 p-4 text-sm font-bold leading-relaxed text-orange-700 dark:border-orange-900/50 dark:bg-orange-950/20 dark:text-orange-300"
+            >
+              Please login to continue with orders and personal details.
+            </MotionDiv>
+          )}
+        </AnimatePresence>
 
         {/* Global Error Banner */}
         <AnimatePresence>

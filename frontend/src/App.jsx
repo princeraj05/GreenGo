@@ -14,6 +14,7 @@ export default function App() {
   const location = useLocation();
   const [isConnected, setIsConnected] = useState(true);
   const [checkingAuth, setCheckingAuth] = useState(true);
+  const isGuestUserPath = (path) => path === "/user" || path === "/user/menu";
 
   // Check auth and restore session on mount
   useEffect(() => {
@@ -52,8 +53,8 @@ export default function App() {
           // If server explicitly returns 401 or 403, clear the session
           if (err.response && (err.response.status === 401 || err.response.status === 403)) {
             await clearSession();
-            if (location.pathname.startsWith("/user") || location.pathname.startsWith("/admin")) {
-              navigate("/login", { replace: true });
+            if ((location.pathname.startsWith("/user") && !isGuestUserPath(location.pathname)) || location.pathname.startsWith("/admin")) {
+              navigate("/", { replace: true, state: { from: location, loginRequired: true } });
             }
           } else {
             // Network error/offline: allow offline session restoration using decoded JWT role
@@ -73,10 +74,10 @@ export default function App() {
                   navigate("/user/menu", { replace: true });
                 }
               }
-            } catch (decodeErr) {
+            } catch {
               await clearSession();
-              if (location.pathname.startsWith("/user") || location.pathname.startsWith("/admin")) {
-                navigate("/login", { replace: true });
+              if ((location.pathname.startsWith("/user") && !isGuestUserPath(location.pathname)) || location.pathname.startsWith("/admin")) {
+                navigate("/", { replace: true, state: { from: location, loginRequired: true } });
               }
             }
           }
@@ -85,8 +86,8 @@ export default function App() {
         if (window.diagnostics) {
           window.diagnostics.addLog("App: No session token found");
         }
-        if (location.pathname.startsWith("/user") || location.pathname.startsWith("/admin")) {
-          navigate("/login", { replace: true });
+        if ((location.pathname.startsWith("/user") && !isGuestUserPath(location.pathname)) || location.pathname.startsWith("/admin")) {
+          navigate("/", { replace: true, state: { from: location, loginRequired: true } });
         }
       }
 
@@ -97,7 +98,7 @@ export default function App() {
     };
 
     initAuth();
-  }, [navigate]);
+  }, [navigate, location]);
 
   useEffect(() => {
     if (window.diagnostics) {
@@ -108,7 +109,7 @@ export default function App() {
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
       // Handle Android back button
-      const backButtonListener = CapApp.addListener("backButton", (event) => {
+      const backButtonListener = CapApp.addListener("backButton", () => {
         const currentPath = location.pathname;
         // Exit app if the user is on the main entry/dashboard screens
         if (currentPath === "/" || currentPath === "/user" || currentPath === "/admin" || currentPath === "/login") {

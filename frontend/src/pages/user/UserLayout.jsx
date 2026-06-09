@@ -15,6 +15,7 @@ export default function UserLayout() {
   const [open, setOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const isLoggedIn = Boolean(localStorage.getItem("token") && localStorage.getItem("auth_state") === "logged_in");
 
   const confirmLogout = async () => {
     setShowLogoutConfirm(false);
@@ -28,30 +29,7 @@ export default function UserLayout() {
   const [cartCount, setCartCount] = useState(0);
   const [pendingCount, setPendingCount] = useState(0);
 
-  // 1. Initial mounts and updates (non-scrolling triggers)
-  useEffect(() => {
-    if (window.diagnostics) {
-      window.diagnostics.userLayoutMounted = "YES";
-      window.diagnostics.loadingState = "UserLayout Mounting";
-      window.diagnostics.addLog("UserLayout: mounted successfully");
-    }
-    loadUser();
-    updateCartCount();
-    loadPendingOrdersCount();
-
-    // Listen to custom cart updates
-    window.addEventListener("cart-updated", updateCartCount);
-
-    // Poll pending orders count
-    const interval = setInterval(loadPendingOrdersCount, 15000);
-
-    return () => {
-      window.removeEventListener("cart-updated", updateCartCount);
-      clearInterval(interval);
-    };
-  }, []);
-
-  // 2. Scroll listener (depends on lastScrollY)
+  // Scroll listener (depends on lastScrollY)
   useEffect(() => {
     const handleScroll = () => {
       if (typeof window !== "undefined") {
@@ -131,6 +109,31 @@ export default function UserLayout() {
     }
   };
 
+  // Initial mounts and updates (non-scrolling triggers)
+  useEffect(() => {
+    if (window.diagnostics) {
+      window.diagnostics.userLayoutMounted = "YES";
+      window.diagnostics.loadingState = "UserLayout Mounting";
+      window.diagnostics.addLog("UserLayout: mounted successfully");
+    }
+    queueMicrotask(() => {
+      loadUser();
+      updateCartCount();
+      loadPendingOrdersCount();
+    });
+
+    // Listen to custom cart updates
+    window.addEventListener("cart-updated", updateCartCount);
+
+    // Poll pending orders count
+    const interval = setInterval(loadPendingOrdersCount, 15000);
+
+    return () => {
+      window.removeEventListener("cart-updated", updateCartCount);
+      clearInterval(interval);
+    };
+  }, []);
+
   const desktopNavLinks = [
     { to: "/user/menu", label: "Home", icon: <Home size={20} /> },
     { to: "/user/wishlist", label: "Wishlist", icon: <Heart size={20} /> },
@@ -185,8 +188,8 @@ export default function UserLayout() {
               <User size={24} className="text-slate-500 dark:text-slate-400" />
             </div>
             <div>
-              <p className="text-slate-900 dark:text-white font-bold">{name || "User"}</p>
-              <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Food Lover</p>
+              <p className="text-slate-900 dark:text-white font-bold">{name || (isLoggedIn ? "User" : "Guest")}</p>
+              <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{isLoggedIn ? "Food Lover" : "Browse freely"}</p>
             </div>
           </div>
         </div>
@@ -213,13 +216,23 @@ export default function UserLayout() {
 
         {/* Logout */}
         <div className="p-4 border-t border-slate-100 dark:border-slate-800/50">
-          <button
-            onClick={() => setShowLogoutConfirm(true)}
-            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-950/30 text-red-600 dark:text-red-400 font-bold transition-colors"
-          >
-            <LogOut size={18} />
-            Logout
-          </button>
+          {isLoggedIn ? (
+            <button
+              onClick={() => setShowLogoutConfirm(true)}
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-950/30 text-red-600 dark:text-red-400 font-bold transition-colors"
+            >
+              <LogOut size={18} />
+              Logout
+            </button>
+          ) : (
+            <button
+              onClick={() => navigate("/", { state: { loginRequired: true, from: { pathname: "/user/menu" } } })}
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-brand-500 hover:bg-brand-600 text-white font-bold transition-colors shadow-md shadow-brand-500/20"
+            >
+              <User size={18} />
+              Login
+            </button>
+          )}
         </div>
       </div>
 

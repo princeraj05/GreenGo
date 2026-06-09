@@ -14,6 +14,7 @@ import { getToken } from "../../utils/getToken";
 import BudgetAssistant from "../../components/dashboard/BudgetAssistant";
 
 const API = getApiUrl();
+const MotionDiv = motion.div;
 
 export default function Menu() {
   const navigate = useNavigate();
@@ -156,7 +157,7 @@ export default function Menu() {
       setCurrentBannerIdx((prevIdx) => (prevIdx + 1) % bannerCount);
     }, 3000);
     return () => clearInterval(timer);
-  }, [banners]);
+  }, [banners, defaultBanners.length]);
 
   const loadUser = async () => {
     try {
@@ -228,9 +229,9 @@ export default function Menu() {
   };
 
   const toggleFavoriteFood = async (foodId) => {
+    if (!requireLogin("/user/wishlist")) return;
     try {
       const token = await getToken();
-      if (!token) return;
       const res = await fetch(`${API}/api/users/favorites/toggle`, {
         method: "POST",
         headers: {
@@ -362,6 +363,18 @@ export default function Menu() {
   const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
   const cartCount = cart.reduce((sum, item) => sum + item.qty, 0);
   const unreadNotificationCount = notifications.filter((item) => !(item.isRead || item.read)).length;
+  const isLoggedIn = Boolean(localStorage.getItem("token") && localStorage.getItem("auth_state") === "logged_in");
+
+  const requireLogin = (from = "/user/menu") => {
+    if (isLoggedIn) return true;
+    navigate("/", {
+      state: {
+        from: { pathname: from },
+        loginRequired: true,
+      },
+    });
+    return false;
+  };
 
   const activeBannersList = banners.length > 0 ? banners : defaultBanners;
   const currentBanner = activeBannersList[currentBannerIdx];
@@ -413,7 +426,7 @@ export default function Menu() {
       <div className="flex items-center justify-end gap-1.5">
         <button
           type="button"
-          onClick={() => navigate("/user/cart")}
+          onClick={() => requireLogin("/user/cart") && navigate("/user/cart")}
           className="px-2.5 py-2 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-950 text-[10px] font-black shadow-sm"
         >
           Cart
@@ -558,7 +571,10 @@ export default function Menu() {
             </div>
             <button
               type="button"
-              onClick={() => setShowAddressPicker(!showAddressPicker)}
+              onClick={() => {
+                if (!requireLogin("/user/profile")) return;
+                setShowAddressPicker(!showAddressPicker);
+              }}
               className="flex items-center gap-1 text-[10px] sm:text-xs text-slate-600 dark:text-slate-300 font-bold max-w-[150px] sm:max-w-[260px]"
             >
               <MapPin size={11} className="text-brand-500 shrink-0" />
@@ -606,7 +622,7 @@ export default function Menu() {
 
           {/* Notifications Icon with unread badge */}
           <button
-            onClick={() => navigate("/user/notifications")}
+            onClick={() => requireLogin("/user/notifications") && navigate("/user/notifications")}
             className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800 relative"
           >
             <Bell size={16} />
@@ -619,7 +635,7 @@ export default function Menu() {
 
           {/* User Avatar */}
           <div 
-            onClick={() => navigate("/user/profile")}
+            onClick={() => requireLogin("/user/profile") && navigate("/user/profile")}
             className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-brand-500 text-white flex items-center justify-center text-sm font-extrabold cursor-pointer hover:scale-105 transition-transform"
           >
             {user.name ? user.name.charAt(0).toUpperCase() : "U"}
@@ -728,7 +744,7 @@ export default function Menu() {
         </div>
         <button
           type="button"
-          onClick={() => navigate("/user/budget-assistant")}
+          onClick={() => requireLogin("/user/budget-assistant") && navigate("/user/budget-assistant")}
           className="shrink-0 min-w-[96px] sm:min-w-[150px] px-3 sm:px-6 py-3 sm:py-4 rounded-2xl bg-green-700 hover:bg-green-800 text-white font-black text-sm sm:text-lg flex items-center justify-center gap-1 sm:gap-2 shadow-lg shadow-green-700/20 active:scale-95 transition-all"
         >
           Start Now
@@ -786,7 +802,7 @@ export default function Menu() {
       <AnimatePresence>
         {showAllCategories && (
           <div className="fixed inset-0 z-[1800] flex items-end justify-center bg-slate-950/55 backdrop-blur-sm">
-            <motion.div
+            <MotionDiv
               initial={{ opacity: 0, y: 80 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 80 }}
@@ -838,7 +854,7 @@ export default function Menu() {
                   })}
                 </div>
               </div>
-            </motion.div>
+            </MotionDiv>
           </div>
         )}
       </AnimatePresence>
@@ -972,7 +988,7 @@ export default function Menu() {
       <AnimatePresence>
         {activeFoodCollection && (
           <div className="fixed inset-0 z-[1900] flex items-end justify-center bg-slate-950/60 backdrop-blur-sm sm:items-center sm:p-4">
-            <motion.div
+            <MotionDiv
               initial={{ opacity: 0, y: 80, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 80, scale: 0.98 }}
@@ -1017,7 +1033,7 @@ export default function Menu() {
                   </div>
                 )}
               </div>
-            </motion.div>
+            </MotionDiv>
           </div>
         )}
       </AnimatePresence>
@@ -1026,7 +1042,7 @@ export default function Menu() {
       <AnimatePresence>
         {selectedFood && (
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[2000] flex items-center justify-center p-4">
-            <motion.div 
+            <MotionDiv 
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -1143,7 +1159,7 @@ export default function Menu() {
                   </Button>
                 )}
               </div>
-            </motion.div>
+            </MotionDiv>
           </div>
         )}
       </AnimatePresence>
@@ -1159,7 +1175,7 @@ export default function Menu() {
               ₹{cartTotal} <span className="text-xs text-slate-400 font-normal">plus taxes</span>
             </span>
           </div>
-          <Button onClick={() => navigate("/user/cart")} className="gap-2 px-6 py-3 bg-brand-500 hover:bg-brand-600 text-white rounded-xl font-bold shadow-lg shadow-brand-500/25">
+          <Button onClick={() => requireLogin("/user/cart") && navigate("/user/cart")} className="gap-2 px-6 py-3 bg-brand-500 hover:bg-brand-600 text-white rounded-xl font-bold shadow-lg shadow-brand-500/25">
             View Cart
             <ShoppingCart size={18} />
           </Button>
