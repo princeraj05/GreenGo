@@ -89,7 +89,7 @@ export default function Profile() {
   useEffect(() => {
     const timer = setInterval(() => {
       setDeveloperPhotoIndex((current) => (current + 1) % developerPhotoCandidates.length);
-    }, 2500);
+    }, 3500);
     return () => clearInterval(timer);
   }, [developerPhotoCandidates.length]);
 
@@ -536,25 +536,25 @@ export default function Profile() {
       return (
         <Section title="About Developer" onClose={() => setActiveSection(null)}>
           <div className="space-y-5">
-            <div className="relative overflow-hidden rounded-3xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 aspect-[1.35] flex items-center justify-center">
+            <div className="relative mx-auto aspect-[9/16] w-36 overflow-hidden rounded-3xl border border-slate-100 bg-slate-50 shadow-xl shadow-slate-950/10 dark:border-slate-800 dark:bg-slate-900 sm:w-44">
               {activeDeveloperPhoto ? (
                 <img
                   src={activeDeveloperPhoto}
                   alt="Prince Raj"
-                  className="w-full h-full object-cover"
+                  className="h-full w-full object-cover transition-opacity duration-500"
                   onError={() => {
                     setDeveloperFailedPhotos((current) => new Set(current).add(activeDeveloperPhoto));
                     setDeveloperPhotoIndex((current) => (current + 1) % developerPhotoCandidates.length);
                   }}
                 />
               ) : (
-                <div className="w-28 h-28 rounded-full bg-green-500 text-white flex items-center justify-center text-4xl font-black shadow-lg shadow-green-500/20">
+                <div className="flex h-full w-full items-center justify-center bg-green-500 text-4xl font-black text-white shadow-lg shadow-green-500/20">
                   PR
                 </div>
               )}
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/75 to-transparent p-4 text-white">
-                <p className="text-xs font-black uppercase tracking-widest text-green-300">Developer</p>
-                <h3 className="text-2xl font-black tracking-tight">Prince Raj</h3>
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/80 to-transparent p-3 text-white">
+                <p className="text-[10px] font-black uppercase tracking-widest text-green-300">Developer</p>
+                <h3 className="text-lg font-black tracking-tight">Prince Raj</h3>
               </div>
             </div>
 

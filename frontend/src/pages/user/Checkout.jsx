@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { MapPin, Phone, CreditCard, Banknote, Smartphone, CheckCircle, Navigation } from "lucide-react";
+import { MapPin, Phone, CreditCard, Banknote, Smartphone, CheckCircle, Navigation, Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 import { getToken } from "../../utils/getToken";
 import Button from "../../components/ui/Button";
 import Card from "../../components/ui/Card";
 import Input from "../../components/ui/Input";
 import { cn } from "../../utils/cn";
+import { getImageUrl } from "../../utils/getApiUrl";
 
 
 function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
@@ -46,7 +47,6 @@ export default function Checkout() {
 
   useEffect(() => {
     const data = JSON.parse(localStorage.getItem("cart")) || [];
-    if (data.length === 0) navigate("/user/cart");
     setCart(data);
 
     fetch(`${import.meta.env.VITE_API_URL}/api/settings`)
@@ -74,10 +74,52 @@ export default function Checkout() {
     }
   }, [navigate]);
 
-  const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
-  const total = subtotal + deliveryCharge;
+  useEffect(() => {
+    if (!navigator.geolocation || userCoords) return;
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUserCoords({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude
+        });
+      },
+      () => {},
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
+    );
+  }, [userCoords]);
+
+  const subtotal = cart.reduce((s, i) => s + Number(i.price || 0) * Number(i.qty || 0), 0);
+  const taxes = 0;
+  const total = subtotal + deliveryCharge + taxes;
+  const totalItems = cart.reduce((s, i) => s + Number(i.qty || 0), 0);
+
+  const syncCart = (nextCart) => {
+    if (nextCart.length > 0) {
+      localStorage.setItem("cart", JSON.stringify(nextCart));
+    } else {
+      localStorage.removeItem("cart");
+    }
+    setCart(nextCart);
+    window.dispatchEvent(new Event("cart-updated"));
+  };
+
+  const updateCartQuantity = (itemId, nextQty) => {
+    const nextCart = cart
+      .map((item) => item._id === itemId ? { ...item, qty: nextQty } : item)
+      .filter((item) => Number(item.qty || 0) > 0);
+    syncCart(nextCart);
+  };
+
+  const removeCartItem = (itemId) => {
+    syncCart(cart.filter((item) => item._id !== itemId));
+  };
 
   const placeOrder = async () => {
+    if (cart.length === 0) {
+      alert("Your cart is empty.");
+      return;
+    }
+
     if (!address || !phone) {
       alert("Please fill in your delivery address and phone number.");
       return;
@@ -100,7 +142,7 @@ export default function Checkout() {
       if (match) {
         lat = parseFloat(match[1]);
         lon = parseFloat(match[2]);
-      } else if (!lat || !lon) {
+      } else if (lat == null || lon == null) {
         // Fallback geocoding on frontend if coordinates not loaded yet
         try {
           const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`, {
@@ -281,6 +323,113 @@ export default function Checkout() {
         <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm sm:text-base md:text-lg font-medium">Complete your order details and payment.</p>
       </motion.div>
 
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-6 md:mb-8">
+        <Card className="p-4 sm:p-5 md:p-6 border-slate-100 dark:border-slate-800/60 rounded-3xl overflow-hidden">
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <div>
+              <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+                <ShoppingBag size={20} className="text-brand-500" />
+                Your Order
+              </h2>
+              <p className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
+                Review items before delivery details.
+              </p>
+            </div>
+            <span className="shrink-0 rounded-full bg-brand-50 dark:bg-brand-950/40 px-3 py-1 text-xs font-black text-brand-700 dark:text-brand-300 border border-brand-100 dark:border-brand-900/60">
+              {totalItems} {totalItems === 1 ? "item" : "items"}
+            </span>
+          </div>
+
+          {cart.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 p-8 text-center">
+              <ShoppingBag className="mx-auto text-slate-300 dark:text-slate-700" size={34} />
+              <h3 className="mt-3 text-base font-black text-slate-900 dark:text-white">Your cart is empty</h3>
+              <p className="mt-1 text-xs font-semibold text-slate-500 dark:text-slate-400">Add food from the menu to continue checkout.</p>
+              <Button type="button" onClick={() => navigate("/user/menu")} variant="secondary" size="sm" className="mt-4 rounded-xl">
+                Browse Menu
+              </Button>
+            </div>
+          ) : (
+            <>
+              <div className="-mx-4 sm:-mx-5 md:-mx-6 overflow-x-auto scroll-smooth no-scrollbar px-4 sm:px-5 md:px-6 pb-3">
+                <div className="flex gap-3 md:gap-4 snap-x snap-mandatory">
+                  {cart.map((item) => (
+                    <div
+                      key={item._id}
+                      className="snap-start min-w-[154px] max-w-[154px] sm:min-w-[190px] sm:max-w-[190px] rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950 p-3 shadow-sm"
+                    >
+                      <div className="relative h-24 sm:h-28 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-center justify-center p-2 overflow-hidden">
+                        <img
+                          src={getImageUrl(item.image)}
+                          alt={item.name}
+                          className="h-full w-full object-contain"
+                          onError={(e) => { e.target.src = "https://placehold.co/180x140?text=Food"; }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeCartItem(item._id)}
+                          className="absolute right-1.5 top-1.5 h-8 w-8 rounded-full bg-white/95 dark:bg-slate-950/95 text-rose-500 shadow-sm border border-rose-100 dark:border-rose-900/40 flex items-center justify-center active:scale-95 transition"
+                          aria-label={`Remove ${item.name}`}
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                      <div className="pt-3">
+                        <h3 className="line-clamp-1 text-sm sm:text-base font-black text-slate-900 dark:text-white">{item.name}</h3>
+                        <div className="mt-1 flex items-center justify-between gap-2">
+                          <span className="text-sm font-black text-brand-600 dark:text-brand-400">₹{item.price}</span>
+                          <span className="text-[10px] font-bold text-slate-400">Qty {item.qty}</span>
+                        </div>
+                        <div className="mt-3 flex items-center justify-between rounded-xl border border-brand-100 dark:border-brand-900/60 bg-white dark:bg-slate-900 p-1">
+                          <button
+                            type="button"
+                            onClick={() => updateCartQuantity(item._id, Number(item.qty || 0) - 1)}
+                            className="h-8 w-8 rounded-lg bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-200 flex items-center justify-center active:scale-95"
+                            aria-label={`Decrease ${item.name}`}
+                          >
+                            <Minus size={15} />
+                          </button>
+                          <span className="min-w-8 text-center text-sm font-black text-slate-900 dark:text-white">{item.qty}</span>
+                          <button
+                            type="button"
+                            onClick={() => updateCartQuantity(item._id, Number(item.qty || 0) + 1)}
+                            className="h-8 w-8 rounded-lg bg-brand-500 text-white flex items-center justify-center shadow-sm shadow-brand-500/20 active:scale-95"
+                            aria-label={`Increase ${item.name}`}
+                          >
+                            <Plus size={15} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-2 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 p-3 sm:p-4">
+                <div className="space-y-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
+                  <div className="flex items-center justify-between">
+                    <span>Subtotal</span>
+                    <span className="font-black text-slate-900 dark:text-white">₹{subtotal}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Delivery Fee</span>
+                    <span className="font-black text-slate-900 dark:text-white">₹{deliveryCharge}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Taxes</span>
+                    <span className="font-black text-slate-900 dark:text-white">₹{taxes}</span>
+                  </div>
+                </div>
+                <div className="mt-3 flex items-center justify-between border-t border-dashed border-slate-200 dark:border-slate-800 pt-3">
+                  <span className="text-base font-black text-slate-900 dark:text-white">Total Amount</span>
+                  <span className="text-xl sm:text-2xl font-black text-brand-600 dark:text-brand-400">₹{total}</span>
+                </div>
+              </div>
+            </>
+          )}
+        </Card>
+      </motion.div>
+
       <div className="flex flex-col lg:flex-row gap-6 md:gap-8">
         <div className="flex-1 space-y-4 md:space-y-6">
           {/* Delivery Details Section */}
@@ -403,13 +552,18 @@ export default function Checkout() {
               
               <div className="space-y-3 mb-4 md:mb-6 text-sm text-slate-550 dark:text-slate-400 font-medium">
                 <div className="flex justify-between items-center">
-                  <span>Subtotal ({cart.length} items)</span>
+                  <span>Subtotal ({totalItems} items)</span>
                   <span className="font-bold text-slate-900 dark:text-white">₹{subtotal}</span>
                 </div>
                 
                 <div className="flex justify-between items-center">
                   <span>Delivery Charge</span>
                   <span className="font-bold text-slate-900 dark:text-white">₹{deliveryCharge}</span>
+                </div>
+
+                <div className="flex justify-between items-center">
+                  <span>Taxes</span>
+                  <span className="font-bold text-slate-900 dark:text-white">₹{taxes}</span>
                 </div>
               </div>
               

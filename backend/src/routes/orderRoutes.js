@@ -11,8 +11,10 @@ import {
   getDeliveryDashboard,
   getDeliveryEarnings,
   getMyOrders,
+  getOrderTracking,
   markAssignedOrderDelivered,
   rejectAssignedOrder,
+  updateRiderLocation,
   updateOrderStatus
 } from "../controllers/orderController.js";
 
@@ -35,5 +37,9 @@ router.get("/delivery/earnings",protect,getDeliveryEarnings);
 router.put("/delivery/:id/accept",protect,acceptAssignedOrder);
 router.put("/delivery/:id/reject",protect,rejectAssignedOrder);
 router.put("/delivery/:id/delivered",protect,markAssignedOrderDelivered);
+
+/* TRACKING */
+router.get("/:id/tracking",protect,getOrderTracking);
+router.post("/:id/location",protect,updateRiderLocation);
 
 export default router;

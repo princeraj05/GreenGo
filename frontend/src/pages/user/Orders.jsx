@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Package, Clock, CheckCircle, ChefHat, Truck, ShoppingBag, Star, Edit3, Trash2, X } from "lucide-react";
+import { Package, Clock, CheckCircle, ChefHat, Truck, ShoppingBag, Star, Edit3, Trash2, X, Navigation } from "lucide-react";
 import { getToken } from "../../utils/getToken";
 import Card from "../../components/ui/Card";
 import Badge from "../../components/ui/Badge";
@@ -282,9 +283,16 @@ export default function Orders() {
                       </p>
                     )}
                   </div>
-                  <div className="text-right">
+                  <div className="text-right space-y-2">
                     <p className="text-slate-550 dark:text-slate-400 text-xs font-medium mb-0.5">Total Amount</p>
                     <h3 className="text-xl sm:text-2xl md:text-3xl font-black text-brand-600">₹{o.total}</h3>
+                    {o.status !== "Delivered" && (
+                      <Link to={`/user/orders/${o._id}/tracking`} className="inline-flex">
+                        <Button size="sm" variant="secondary" className="rounded-xl gap-1.5">
+                          <Navigation size={14} /> Track Delivery
+                        </Button>
+                      </Link>
+                    )}
                   </div>
                 </div>
               </Card>

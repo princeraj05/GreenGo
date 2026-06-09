@@ -15,6 +15,7 @@ import ResetPassword from "../pages/auth/ResetPassword";
 import UserLayout from "../pages/user/UserLayout";
 const UserDashboard = lazy(() => import("../pages/user/UserDashboard"));
 const Menu = lazy(() => import("../pages/user/Menu"));
+const FoodSearch = lazy(() => import("../pages/user/FoodSearch"));
 const Cart = lazy(() => import("../pages/user/Cart"));
 const Checkout = lazy(() => import("../pages/user/Checkout"));
 const Orders = lazy(() => import("../pages/user/Orders"));
@@ -23,6 +24,7 @@ const UserContact = lazy(() => import("../pages/user/Contact"));
 const Wishlist = lazy(() => import("../pages/user/Wishlist"));
 const BudgetAssistantPage = lazy(() => import("../pages/user/BudgetAssistantPage"));
 const Notifications = lazy(() => import("../pages/user/Notifications"));
+const OrderTrackingPage = lazy(() => import("../pages/common/OrderTrackingPage"));
 
 /* DELIVERY */
 import DeliveryLayout from "../pages/delivery/DeliveryLayout";
@@ -68,10 +70,12 @@ export default function AppRoutes() {
         <Route path="/user" element={<UserLayout />}>
           <Route index element={<Navigate to="/user/menu" replace />} />
           <Route path="menu" element={<Menu />} />
+          <Route path="search" element={<PrivateRoute><FoodSearch /></PrivateRoute>} />
           <Route path="dashboard" element={<PrivateRoute><UserDashboard /></PrivateRoute>} />
           <Route path="cart" element={<PrivateRoute><Cart /></PrivateRoute>} />
           <Route path="checkout" element={<PrivateRoute><Checkout /></PrivateRoute>} />
           <Route path="orders" element={<PrivateRoute><Orders /></PrivateRoute>} />
+          <Route path="orders/:id/tracking" element={<PrivateRoute><OrderTrackingPage role="user" /></PrivateRoute>} />
           <Route path="profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
           <Route path="wishlist" element={<PrivateRoute><Wishlist /></PrivateRoute>} />
           <Route path="contact" element={<PrivateRoute><UserContact /></PrivateRoute>} />
@@ -110,6 +114,7 @@ export default function AppRoutes() {
           <Route index element={<AdminDashboard />} />
           <Route path="foods" element={<ManageFoods />} />
           <Route path="orders" element={<ManageOrders />} />
+          <Route path="orders/:id/tracking" element={<OrderTrackingPage role="admin" />} />
           <Route path="users" element={<ManageUsers />} />
           <Route path="contacts" element={<Contacts />} />
           <Route path="settings" element={<ManageSettings />} />

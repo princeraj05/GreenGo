@@ -7,6 +7,32 @@ import Food from "../models/Food.js";
 const isAdmin = (user) => user?.role === "admin";
 const isDeliveryBoy = (user) => user?.role === "deliveryBoy";
 const isCodPayment = (method = "") => String(method).toLowerCase() === "cod";
+const toObjectIdString = (value) => value ? String(value._id || value) : "";
+
+const canViewTracking = (order, user) => {
+  if (isAdmin(user)) return true;
+  if (String(order.userId) === String(user?.id)) return true;
+  if (isDeliveryBoy(user) && toObjectIdString(order.assignedDeliveryBoy) === String(user?.id)) return true;
+  return false;
+};
+
+const buildTrackingResponse = (order) => ({
+  orderId: order._id,
+  status: order.status,
+  customerLocation: {
+    address: order.address || "",
+    lat: order.latitude ?? null,
+    lng: order.longitude ?? null
+  },
+  riderLocation: order.tracking?.riderLocation?.lat !== undefined && order.tracking?.riderLocation?.lng !== undefined
+    ? {
+        lat: order.tracking.riderLocation.lat,
+        lng: order.tracking.riderLocation.lng,
+        updatedAt: order.tracking.riderLocation.updatedAt
+      }
+    : null,
+  updatedAt: order.tracking?.riderLocation?.updatedAt || order.updatedAt
+});
 
 const addDeliveredStats = async (order) => {
   const user = await User.findById(order.userId);
@@ -176,6 +202,54 @@ export const getMyOrders = async (req,res)=>{
 
   res.json(orders);
 
+};
+
+/* ================= TRACKING ================= */
+
+export const getOrderTracking = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id).select(
+      "userId status address latitude longitude assignedDeliveryBoy tracking updatedAt"
+    );
+    if (!order) return res.status(404).json({ message: "Order not found" });
+    if (!canViewTracking(order, req.user)) return res.status(403).json({ message: "Not authorized to view tracking" });
+
+    res.json(buildTrackingResponse(order));
+  } catch (err) {
+    console.error("Get tracking error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const updateRiderLocation = async (req, res) => {
+  try {
+    if (!isDeliveryBoy(req.user)) return res.status(403).json({ message: "Not delivery boy" });
+
+    const lat = Number(req.body.lat);
+    const lng = Number(req.body.lng);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+      return res.status(400).json({ message: "Valid lat and lng are required" });
+    }
+
+    const order = await Order.findOne({ _id: req.params.id, assignedDeliveryBoy: req.user.id });
+    if (!order) return res.status(404).json({ message: "Order not found" });
+    if (order.status === "Delivered") return res.status(400).json({ message: "Order already delivered" });
+
+    order.tracking = {
+      ...(order.tracking || {}),
+      riderLocation: {
+        lat,
+        lng,
+        updatedAt: new Date()
+      }
+    };
+    await order.save();
+
+    res.json({ success: true, tracking: order.tracking });
+  } catch (err) {
+    console.error("Update rider location error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
 };
 
 

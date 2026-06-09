@@ -26,6 +26,7 @@ export default function Menu() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [vegMode, setVegMode] = useState(false);
+  const [vegModeNotice, setVegModeNotice] = useState("");
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [showAllFoods, setShowAllFoods] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -140,6 +141,12 @@ export default function Menu() {
       setCategory(catParam);
     }
   }, [location.search]);
+
+  useEffect(() => {
+    if (!vegModeNotice) return;
+    const timer = setTimeout(() => setVegModeNotice(""), 2800);
+    return () => clearTimeout(timer);
+  }, [vegModeNotice]);
 
   useEffect(() => {
     loadFoods();
@@ -350,7 +357,7 @@ export default function Menu() {
   // POPULAR DISHES (Ranked by highest rating)
   const popularDishes = foods
     .filter(matchesVegMode)
-    .filter(f => f.rating > 0)
+    .filter(f => Number(f.rating || 0) >= 2.5)
     .sort((a, b) => b.rating - a.rating);
 
   // RECOMMENDED FOR YOU (Ranked by popularity or recent updates)
@@ -583,7 +590,7 @@ export default function Menu() {
     <div className="max-w-7xl mx-auto w-full pb-10 px-2 sm:px-4 relative animate-fade-in transition-colors">
       
       {/* 1. HEADER SECTION */}
-      <div className="flex items-center justify-between gap-3 py-4 mb-4 border-b border-slate-100 dark:border-slate-800/60">
+      <div className="sticky top-0 z-[9999] flex items-center justify-between gap-3 py-4 mb-4 border-b border-slate-100 dark:border-slate-800/60 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-xl shadow-[0_2px_12px_rgba(0,0,0,0.08)]">
         {/* Left: Branding & Location */}
         <div className="flex flex-1 items-center gap-3 min-w-0">
           <div className="w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center shadow-lg shadow-brand-500/20 overflow-hidden border border-brand-100 dark:border-brand-900 bg-white [&>span]:hidden">
@@ -679,6 +686,9 @@ export default function Menu() {
             type="text"
             placeholder={'Search "bread"'}
             value={search}
+            readOnly
+            onFocus={() => navigate("/user/search")}
+            onClick={() => navigate("/user/search")}
             onChange={(e) => {
               setSearch(e.target.value);
               setShowAllFoods(false);
@@ -696,19 +706,38 @@ export default function Menu() {
         <button
           type="button"
           onClick={() => {
-            setVegMode((value) => !value);
-            if (!vegMode && ["Non-Veg", "Chicken", "Kebabs"].includes(category)) setCategory("All");
+            const nextVegMode = !vegMode;
+            setVegMode(nextVegMode);
+            setVegModeNotice(nextVegMode ? "Veg mode is ON" : "Veg mode is OFF");
+            if (nextVegMode && ["Non-Veg", "Chicken", "Kebabs"].includes(category)) setCategory("All");
           }}
-          className="w-[74px] sm:w-24 rounded-2xl bg-amber-50 dark:bg-slate-900 border border-amber-100 dark:border-slate-800 shadow-sm flex flex-col items-center justify-center gap-1 px-1"
+          className={`w-[68px] sm:w-[82px] rounded-2xl border shadow-sm flex flex-col items-center justify-center gap-1 px-1 py-2 transition-all duration-300 ${
+            vegMode
+              ? "border-emerald-200 bg-emerald-50 text-emerald-700 shadow-emerald-500/10 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300"
+              : "border-slate-200 bg-white text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+          }`}
           aria-pressed={vegMode}
         >
-          <span className={`text-[10px] sm:text-xs font-black leading-none ${vegMode ? "text-emerald-600" : "text-slate-500 dark:text-slate-300"}`}>VEG</span>
-          <span className="text-[9px] sm:text-[10px] font-black text-slate-500 dark:text-slate-400 leading-none">MODE</span>
-          <span className={`relative w-10 h-6 rounded-full transition-colors ${vegMode ? "bg-emerald-400" : "bg-slate-300 dark:bg-slate-700"}`}>
-            <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${vegMode ? "translate-x-[18px]" : "translate-x-0.5"}`} />
+          <span className="text-[10px] sm:text-[11px] font-black leading-none">VEG</span>
+          <span className="text-[8px] sm:text-[9px] font-black leading-none opacity-80">MODE</span>
+          <span className={`relative h-5 w-10 rounded-full transition-colors duration-300 ${vegMode ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-700"}`}>
+            <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-md transition-transform duration-300 ${vegMode ? "translate-x-[21px]" : "translate-x-0.5"}`} />
           </span>
         </button>
       </div>
+
+      <AnimatePresence>
+        {vegModeNotice && (
+          <MotionDiv
+            initial={{ opacity: 0, y: -10, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.96 }}
+            className="fixed left-1/2 top-20 z-[1200] -translate-x-1/2 rounded-2xl border border-emerald-100 bg-white px-4 py-2.5 text-sm font-black text-emerald-700 shadow-xl shadow-emerald-950/10 dark:border-emerald-900/60 dark:bg-slate-950 dark:text-emerald-300"
+          >
+            {vegModeNotice}
+          </MotionDiv>
+        )}
+      </AnimatePresence>
 
       {/* 3. AUTO SLIDING OFFER BANNER */}
       {currentBanner && (
@@ -755,26 +784,27 @@ export default function Menu() {
       )}
 
       {/* 4. BUDGET ASSISTANT CARD */}
-      <div className="mb-8 rounded-3xl border border-brand-100 dark:border-brand-900/60 bg-white dark:bg-slate-900 shadow-sm px-4 py-4 sm:px-6 sm:py-5 flex items-center gap-3 sm:gap-5">
-        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-green-600 text-white flex items-center justify-center shrink-0 shadow-lg shadow-green-600/20">
-          <Wallet size={30} className="sm:w-9 sm:h-9" />
+      <div className="mb-6 rounded-2xl sm:rounded-3xl border border-brand-100 dark:border-brand-900/60 bg-white dark:bg-slate-900 shadow-sm px-3 py-3 sm:px-5 sm:py-4 flex items-center gap-3 sm:gap-5">
+        <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full bg-green-600 text-white flex items-center justify-center shrink-0 shadow-lg shadow-green-600/20">
+          <Wallet size={23} className="sm:w-8 sm:h-8" />
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-black text-slate-950 dark:text-white text-lg sm:text-2xl tracking-tight flex items-center gap-1.5 leading-tight">
+          <h3 className="font-black text-slate-950 dark:text-white text-base sm:text-xl md:text-2xl tracking-tight flex items-center gap-1.5 leading-tight">
             Budget Assistant
-            <Sparkles size={20} className="text-green-600 fill-green-600 shrink-0" />
+            <Sparkles size={17} className="text-green-600 fill-green-600 shrink-0 sm:w-5 sm:h-5" />
           </h3>
-          <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-base font-semibold leading-snug mt-1 max-w-xl">
+          <p className="text-slate-600 dark:text-slate-300 text-[11px] sm:text-sm md:text-base font-semibold leading-snug mt-1 max-w-xl line-clamp-2">
             Tell us your budget and we'll suggest the best combos & dishes for you!
           </p>
         </div>
         <button
           type="button"
           onClick={() => requireLogin("/user/budget-assistant") && navigate("/user/budget-assistant")}
-          className="shrink-0 min-w-[96px] sm:min-w-[150px] px-3 sm:px-6 py-3 sm:py-4 rounded-2xl bg-green-700 hover:bg-green-800 text-white font-black text-sm sm:text-lg flex items-center justify-center gap-1 sm:gap-2 shadow-lg shadow-green-700/20 active:scale-95 transition-all"
+          className="shrink-0 min-w-[76px] sm:min-w-[128px] px-3 sm:px-5 py-2.5 sm:py-3.5 rounded-2xl bg-green-700 hover:bg-green-800 text-white font-black text-xs sm:text-base flex items-center justify-center gap-1 sm:gap-2 shadow-lg shadow-green-700/20 active:scale-95 transition-all"
         >
-          Start Now
-          <ChevronRight size={18} className="sm:w-6 sm:h-6" />
+          Start
+          <span className="hidden sm:inline">Now</span>
+          <ChevronRight size={16} className="sm:w-5 sm:h-5" />
         </button>
       </div>
 
@@ -1210,8 +1240,8 @@ export default function Menu() {
 
       {/* Floating Cart Strip */}
       {cartCount > 0 && (
-        <div className="fixed bottom-[5.5rem] left-1/2 z-[999] w-[94%] max-w-4xl -translate-x-1/2 animate-fade-in overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-2xl shadow-slate-950/15 dark:border-slate-800 dark:bg-slate-950 sm:bottom-20 md:bottom-6">
-          <div className="flex items-center gap-3 p-3 sm:gap-4 sm:p-4">
+        <div className="fixed bottom-[5.25rem] left-1/2 z-[999] w-[94%] max-w-3xl -translate-x-1/2 animate-fade-in overflow-hidden rounded-2xl sm:rounded-3xl border border-slate-100 bg-white shadow-2xl shadow-slate-950/15 dark:border-slate-800 dark:bg-slate-950 sm:bottom-20 md:bottom-6">
+          <div className="flex items-center gap-2 p-2.5 sm:gap-4 sm:p-4">
             <button
               type="button"
               onClick={() => cartPreviewItem?.category && selectOrderedCategory(cartPreviewItem.category)}
@@ -1220,7 +1250,7 @@ export default function Menu() {
               <img
                 src={getImageUrl(cartPreviewItem?.image)}
                 alt={cartPreviewItem?.name || "Selected food"}
-                className="h-14 w-14 shrink-0 rounded-full border border-slate-100 bg-slate-50 object-contain p-1 dark:border-slate-800 dark:bg-slate-900 sm:h-16 sm:w-16"
+                className="h-11 w-11 shrink-0 rounded-full border border-slate-100 bg-slate-50 object-contain p-1 dark:border-slate-800 dark:bg-slate-900 sm:h-16 sm:w-16"
                 onError={(e) => { e.target.src = "https://placehold.co/120x120?text=Food"; }}
               />
               <div className="min-w-0">
@@ -1228,10 +1258,10 @@ export default function Menu() {
                   {cartPreviewItem?.name}
                   {cart.length > 1 ? ` +${cart.length - 1} more` : ""}
                 </p>
-                <p className="truncate text-xs font-bold text-slate-500 dark:text-slate-400 sm:text-sm">
+                <p className="hidden truncate text-xs font-bold text-slate-500 dark:text-slate-400 sm:block sm:text-sm">
                   {cartItemsWithDetails.map((item) => item.name).join(", ")}
                 </p>
-                <div className="mt-1 flex max-w-full gap-1.5 overflow-x-auto no-scrollbar">
+                <div className="mt-1 hidden max-w-full gap-1.5 overflow-x-auto no-scrollbar sm:flex">
                   {orderedCategories.map((categoryName) => (
                     <span
                       key={categoryName}
@@ -1251,22 +1281,22 @@ export default function Menu() {
             <button
               type="button"
               onClick={() => requireLogin("/user/checkout") && navigate("/user/checkout")}
-              className="shrink-0 rounded-2xl bg-emerald-500 px-4 py-3 text-center font-black text-white shadow-lg shadow-emerald-500/25 transition-all hover:bg-emerald-600 active:scale-95 sm:min-w-[170px] sm:px-6"
+              className="shrink-0 rounded-2xl bg-emerald-500 px-3 py-2.5 text-center font-black text-white shadow-lg shadow-emerald-500/25 transition-all hover:bg-emerald-600 active:scale-95 sm:min-w-[170px] sm:px-6 sm:py-3"
             >
-              <span className="block text-xs sm:text-sm">
+              <span className="block text-[10px] sm:text-sm">
                 {cartCount} {cartCount === 1 ? "item" : "items"} | ₹{cartTotal}
               </span>
-              <span className="block text-lg leading-tight sm:text-2xl">Checkout</span>
+              <span className="block text-sm leading-tight sm:text-2xl">Checkout</span>
             </button>
 
             <button
               type="button"
               onClick={clearCart}
-              className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-rose-50 text-rose-500 transition-all hover:bg-rose-100 active:scale-95 dark:bg-rose-950/30 dark:text-rose-300 sm:h-16 sm:w-16"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-rose-50 text-rose-500 transition-all hover:bg-rose-100 active:scale-95 dark:bg-rose-950/30 dark:text-rose-300 sm:h-16 sm:w-16"
               aria-label="Clear cart"
               title="Clear cart"
             >
-              <Trash2 size={24} />
+              <Trash2 size={20} className="sm:w-6 sm:h-6" />
             </button>
           </div>
         </div>

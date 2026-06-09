@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
-import { Package, Clock, CheckCircle, MapPin } from "lucide-react";
+import { Package, Clock, CheckCircle, MapPin, Navigation } from "lucide-react";
 import API from "../../api/axios";
 import { getToken } from "../../utils/getToken";
 import Card from "../../components/ui/Card";
@@ -189,6 +190,12 @@ export default function ManageOrders() {
                     </Button>
                   </div>
                 )}
+
+                <Link to={`/admin/orders/${o._id}/tracking`} className="mb-4 md:mb-6 inline-flex">
+                  <Button variant="secondary" className="rounded-xl gap-2 text-sm">
+                    <Navigation size={16} /> Track Delivery
+                  </Button>
+                </Link>
 
                 {/* Items */}
                 <div className="space-y-2 mb-4 md:mb-6 flex-1">

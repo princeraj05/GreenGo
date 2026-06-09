@@ -61,6 +61,13 @@ const orderSchema = new mongoose.Schema(
   distance:Number,
   latitude:Number,
   longitude:Number,
+  tracking: {
+    riderLocation: {
+      lat: Number,
+      lng: Number,
+      updatedAt: Date
+    }
+  },
   customMessage:{ type: String, default: "" }
 
 },
