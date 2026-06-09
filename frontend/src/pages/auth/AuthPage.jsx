@@ -7,6 +7,10 @@ import API from "../../api/axios";
 import { signInWithPopup, signInWithRedirect, getRedirectResult } from "firebase/auth";
 import { auth, googleProvider } from "../../config/firebase";
 import { saveSession } from "../../utils/authStorage";
+import { getRoleHomePath } from "../../utils/roleRedirect";
+
+const MotionImg = motion.img;
+const MotionDiv = motion.div;
 
 export default function AuthPage() {
   const loginSlides = [
@@ -73,11 +77,10 @@ export default function AuthPage() {
         try {
           const meRes = await API.get("/api/users/me");
           await saveSession(data.token, meRes.data);
-        } catch (meErr) {
+        } catch {
           await saveSession(data.token, { email: user.email, role: data.role });
         }
-        if (data.role === "admin") navigate("/admin");
-        else navigate("/user/menu");
+        navigate(getRoleHomePath(data.role));
       } catch (err) {
         console.error("[GOOGLE AUTH] Google session handler failed:", err);
         setError("Google authentication backend sync failed.");
@@ -147,12 +150,11 @@ export default function AuthPage() {
         try {
           const meRes = await API.get("/api/users/me");
           await saveSession(data.token, meRes.data);
-        } catch (meErr) {
+        } catch {
           await saveSession(data.token, { email: user.email, role: data.role });
         }
         
-        if (data.role === "admin") navigate("/admin");
-        else navigate("/user/menu");
+        navigate(getRoleHomePath(data.role));
       }
     } catch (err) {
       console.error("Google sign in failed:", err);
@@ -214,11 +216,10 @@ export default function AuthPage() {
         try {
           const meRes = await API.get("/api/users/me");
           await saveSession(data.token, meRes.data);
-        } catch (meErr) {
+        } catch {
           await saveSession(data.token, { email, role: data.role });
         }
-        if (data.role === "admin") navigate("/admin");
-        else navigate("/user/menu");
+        navigate(getRoleHomePath(data.role));
       } else {
         const res = await API.post("/api/users/verify-otp-phone", { phone, otp });
         const data = res.data;
@@ -226,11 +227,10 @@ export default function AuthPage() {
         try {
           const meRes = await API.get("/api/users/me");
           await saveSession(data.token, meRes.data);
-        } catch (meErr) {
+        } catch {
           await saveSession(data.token, { phone, role: data.role });
         }
-        if (data.role === "admin") navigate("/admin");
-        else navigate("/user/menu");
+        navigate(getRoleHomePath(data.role));
       }
     } catch (err) {
       setError(err.response?.data?.message || "Invalid or expired OTP. Please try again.");
@@ -291,7 +291,7 @@ export default function AuthPage() {
       setCountdown(30);
       setCanResend(false);
       setOtpValues(Array(6).fill(""));
-    } catch (err) {
+    } catch {
       setError("Failed to resend OTP. Please try again.");
     } finally {
       setLoading(false);
@@ -309,7 +309,7 @@ export default function AuthPage() {
       <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-[0_12px_40px_rgba(0,0,0,0.06)] border border-gray-100 dark:border-slate-800/80 px-6 py-10 md:px-8 transition-all duration-300 z-10">
         <div className="-mx-2 -mt-4 mb-7 overflow-hidden rounded-3xl h-40 relative bg-slate-100 dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
           <AnimatePresence mode="wait">
-            <motion.img
+            <MotionImg
               key={currentHeroSlide}
               src={loginSlides[currentHeroSlide]}
               alt="GreenGO food delivery"
@@ -347,14 +347,14 @@ export default function AuthPage() {
         {/* Global Error Banner */}
         <AnimatePresence>
           {error && (
-            <motion.div
+            <MotionDiv
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               className="mb-5 p-4 rounded-2xl bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/40 text-red-600 dark:text-red-400 text-sm font-medium leading-relaxed"
             >
               {error}
-            </motion.div>
+            </MotionDiv>
           )}
         </AnimatePresence>
 

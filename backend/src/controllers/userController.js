@@ -12,6 +12,8 @@ const maskToken = (token) => {
   return `${token.slice(0, 12)}...${token.slice(-8)}`;
 };
 
+const normalizeRole = (role) => (role === "user" || !role ? "customer" : role);
+
 const sanitizeBody = (body = {}) => ({
   ...body,
   password: body.password ? "***" : body.password,
@@ -162,7 +164,7 @@ export const loginUser = async (req, res) => {
     const jwtPayload = {
       id: user._id,
       email: user.email,
-      role: user.role
+      role: normalizeRole(user.role)
     };
     console.log("[AUTH DEBUG] JWT payload:", jwtPayload);
 
@@ -178,7 +180,7 @@ export const loginUser = async (req, res) => {
     res.json({
       success: true,
       token,
-      role: user.role
+      role: normalizeRole(user.role)
     });
 
   } catch (err) {
@@ -418,6 +420,7 @@ export const googleLogin = async (req, res) => {
         uid,
         provider: "google",
         avatar: picture || "",
+        role: "customer",
         lastLogin: new Date()
       });
     } else {
@@ -441,7 +444,7 @@ export const googleLogin = async (req, res) => {
     const jwtPayload = {
       id: user._id,
       email: user.email,
-      role: user.role
+      role: normalizeRole(user.role)
     };
     console.log("[AUTH DEBUG] Google JWT payload:", jwtPayload);
 
@@ -456,7 +459,7 @@ export const googleLogin = async (req, res) => {
     res.json({
       success: true,
       token,
-      role: user.role
+      role: normalizeRole(user.role)
     });
 
   } catch (err) {
@@ -651,7 +654,7 @@ export const verifyOtpEmail = async (req, res) => {
       user = await User.create({
         name: email.split("@")[0],
         email,
-        role: "user",
+        role: "customer",
         provider: "email",
         lastLogin: new Date()
       });
@@ -665,7 +668,7 @@ export const verifyOtpEmail = async (req, res) => {
       {
         id: user._id,
         email: user.email,
-        role: user.role
+        role: normalizeRole(user.role)
       },
       process.env.JWT_SECRET || "SECRET123",
       { expiresIn: "7d" }
@@ -674,7 +677,7 @@ export const verifyOtpEmail = async (req, res) => {
     res.json({
       success: true,
       token,
-      role: user.role
+      role: normalizeRole(user.role)
     });
 
   } catch (err) {
@@ -738,7 +741,7 @@ export const verifyOtpPhone = async (req, res) => {
       user = await User.create({
         name: `User_${phone.slice(-4)}`,
         phone,
-        role: "user",
+        role: "customer",
         provider: "phone",
         lastLogin: new Date()
       });
@@ -751,7 +754,7 @@ export const verifyOtpPhone = async (req, res) => {
     const token = jwt.sign(
       {
         id: user._id,
-        role: user.role
+        role: normalizeRole(user.role)
       },
       process.env.JWT_SECRET || "SECRET123",
       { expiresIn: "7d" }
@@ -760,7 +763,7 @@ export const verifyOtpPhone = async (req, res) => {
     res.json({
       success: true,
       token,
-      role: user.role
+      role: normalizeRole(user.role)
     });
 
   } catch (err) {

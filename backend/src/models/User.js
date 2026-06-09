@@ -83,6 +83,7 @@ const userSchema = new mongoose.Schema(
   rewardPoints: { type: Number, default: 0 },
   totalSpent: { type: Number, default: 0 },
   totalOrders: { type: Number, default: 0 },
+  deliveryCredit: { type: Number, default: 0 },
   favoriteCategory: { type: String, default: "" },
   favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: "Food" }],
   blocked: { type: Boolean, default: false },
@@ -93,7 +94,8 @@ const userSchema = new mongoose.Schema(
 
   role: {
     type: String,
-    default: "user"
+    enum: ["customer", "user", "deliveryBoy", "admin"],
+    default: "customer"
   }
 },
 { timestamps: true }

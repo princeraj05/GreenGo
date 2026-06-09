@@ -4,6 +4,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 /* ROUTE GUARDS */
 import PrivateRoute from "./PrivateRoute";
 import AdminRoute from "./AdminRoute";
+import DeliveryRoute from "./DeliveryRoute";
 
 /* AUTH */
 import AuthPage from "../pages/auth/AuthPage";
@@ -22,6 +23,13 @@ const UserContact = lazy(() => import("../pages/user/Contact"));
 const Wishlist = lazy(() => import("../pages/user/Wishlist"));
 const BudgetAssistantPage = lazy(() => import("../pages/user/BudgetAssistantPage"));
 const Notifications = lazy(() => import("../pages/user/Notifications"));
+
+/* DELIVERY */
+import DeliveryLayout from "../pages/delivery/DeliveryLayout";
+const DeliveryDashboard = lazy(() => import("../pages/delivery/DeliveryDashboard"));
+const DeliveryOrders = lazy(() => import("../pages/delivery/DeliveryOrders"));
+const DeliveryEarnings = lazy(() => import("../pages/delivery/DeliveryEarnings"));
+const DeliveryProfile = lazy(() => import("../pages/delivery/DeliveryProfile"));
 
 /* ADMIN */
 import AdminLayout from "../pages/admin/AdminLayout";
@@ -76,6 +84,23 @@ export default function AppRoutes() {
           <Route path="contact" element={<UserContact />} />
           <Route path="budget-assistant" element={<BudgetAssistantPage />} />
           <Route path="notifications" element={<Notifications />} />
+        </Route>
+
+        {/* DELIVERY BOY PANEL */}
+        <Route
+          path="/delivery"
+          element={
+            <PrivateRoute>
+              <DeliveryRoute>
+                <DeliveryLayout />
+              </DeliveryRoute>
+            </PrivateRoute>
+          }
+        >
+          <Route index element={<DeliveryDashboard />} />
+          <Route path="orders" element={<DeliveryOrders />} />
+          <Route path="earnings" element={<DeliveryEarnings />} />
+          <Route path="profile" element={<DeliveryProfile />} />
         </Route>
 
         {/* ADMIN PANEL */}

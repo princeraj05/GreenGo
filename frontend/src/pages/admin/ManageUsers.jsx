@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import { Users, Search, ShieldBan, ShieldCheck } from "lucide-react";
+import { Users, Search, ShieldBan, ShieldCheck, Bike } from "lucide-react";
 import API from "../../api/axios";
 import { getToken } from "../../utils/getToken";
 import Card from "../../components/ui/Card";
@@ -12,15 +11,15 @@ export default function ManageUsers() {
   const [users, setUsers] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
 
-  useEffect(() => { loadUsers(); }, []);
-
-  const loadUsers = async () => {
+  async function loadUsers() {
     try {
       const token = await getToken();
       const res = await API.get("/api/admin/users", { headers: { Authorization: `Bearer ${token}` } });
       setUsers(res.data);
     } catch (err) { console.log(err); }
-  };
+  }
+
+  useEffect(() => { Promise.resolve().then(loadUsers); }, []);
 
   const toggleBlock = async (id, currentBlocked) => {
     try {
@@ -30,16 +29,24 @@ export default function ManageUsers() {
     } catch (err) { console.log(err); }
   };
 
+  const setUserRole = async (id, role) => {
+    try {
+      const token = await getToken();
+      await API.put(`/api/admin/users/${id}/role`, { role }, { headers: { Authorization: `Bearer ${token}` } });
+      loadUsers();
+    } catch (err) { console.log(err); }
+  };
+
   const filteredUsers = users.filter(u => 
-    u.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    u.email.toLowerCase().includes(searchQuery.toLowerCase())
+    (u.name || "").toLowerCase().includes(searchQuery.toLowerCase()) || 
+    (u.email || u.phone || "").toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
     <div className="w-full pb-10">
 
       {/* Header */}
-      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6 md:mb-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
+      <div className="mb-6 md:mb-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
         <div className="flex items-center gap-3 sm:gap-4 min-w-0">
           <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center shadow-sm shrink-0">
             <Users size={22} className="text-blue-600 dark:text-blue-400 sm:w-7 sm:h-7" />
@@ -62,10 +69,10 @@ export default function ManageUsers() {
             className="pl-11 sm:pl-12 bg-white dark:bg-slate-900 shadow-sm border-slate-200 dark:border-slate-800 py-3 sm:py-3.5 text-sm sm:text-base"
           />
         </div>
-      </motion.div>
+      </div>
 
       {/* Table Card */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+      <div>
         <Card className="border-slate-100 dark:border-slate-800/60 overflow-hidden p-0 bg-white dark:bg-slate-950">
           <div className="overflow-x-auto">
             <table className="min-w-[720px] md:min-w-full text-xs sm:text-sm">
@@ -74,6 +81,7 @@ export default function ManageUsers() {
                   <th className="text-left px-4 md:px-8 py-4 md:py-5 text-[10px] md:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">User Details</th>
                   <th className="text-left px-4 md:px-8 py-4 md:py-5 text-[10px] md:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Spent</th>
                   <th className="text-left px-4 md:px-8 py-4 md:py-5 text-[10px] md:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Orders</th>
+                  <th className="text-left px-4 md:px-8 py-4 md:py-5 text-[10px] md:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Role</th>
                   <th className="text-left px-4 md:px-8 py-4 md:py-5 text-[10px] md:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
                   <th className="text-right px-4 md:px-8 py-4 md:py-5 text-[10px] md:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Actions</th>
                 </tr>
@@ -86,11 +94,11 @@ export default function ManageUsers() {
                       <td className="px-4 md:px-8 py-4 md:py-5">
                         <div className="flex items-center gap-3 md:gap-4">
                           <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-brand-50 dark:bg-brand-950/30 text-brand-600 dark:text-brand-450 flex items-center justify-center font-bold text-xs md:text-sm shrink-0">
-                            {u.name.charAt(0).toUpperCase()}
+                            {(u.name || u.email || u.phone || "U").charAt(0).toUpperCase()}
                           </div>
                           <div className="min-w-0">
-                            <div className="font-bold text-slate-900 dark:text-white text-sm md:text-base truncate max-w-[210px]">{u.name}</div>
-                            <div className="text-slate-500 dark:text-slate-400 font-medium truncate max-w-[230px]">{u.email}</div>
+                            <div className="font-bold text-slate-900 dark:text-white text-sm md:text-base truncate max-w-[210px]">{u.name || "GreenGO User"}</div>
+                            <div className="text-slate-500 dark:text-slate-400 font-medium truncate max-w-[230px]">{u.email || u.phone || "No contact"}</div>
                           </div>
                         </div>
                       </td>
@@ -101,20 +109,38 @@ export default function ManageUsers() {
                         <span className="font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-900 px-3 py-1 rounded-lg">{u.totalOrders || 0}</span>
                       </td>
                       <td className="px-4 md:px-8 py-4 md:py-5">
+                        <Badge variant={u.role === "admin" ? "danger" : u.role === "deliveryBoy" ? "blue" : "gray"} className="uppercase tracking-wider">
+                          {u.role === "user" ? "customer" : u.role || "customer"}
+                        </Badge>
+                      </td>
+                      <td className="px-4 md:px-8 py-4 md:py-5">
                         <Badge variant={!isBlocked ? "success" : "danger"} className="uppercase tracking-wider">
                           {!isBlocked ? "Active" : "Blocked"}
                         </Badge>
                       </td>
                       <td className="px-4 md:px-8 py-4 md:py-5 text-right">
-                        <Button
-                          size="sm"
-                          variant={!isBlocked ? "outline" : "default"}
-                          onClick={() => toggleBlock(u._id, isBlocked)}
-                          className={`gap-2 rounded-xl transition-all ${!isBlocked ? 'text-red-500 border-red-200 dark:border-red-950/50 hover:bg-red-50 dark:hover:bg-red-950/20 hover:border-red-300 dark:hover:border-red-900' : 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20'}`}
-                        >
-                          {!isBlocked ? <ShieldBan size={16} /> : <ShieldCheck size={16} />}
-                          {!isBlocked ? "Block User" : "Unblock User"}
-                        </Button>
+                        <div className="flex justify-end gap-2">
+                          {u.role !== "admin" && (
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              onClick={() => setUserRole(u._id, u.role === "deliveryBoy" ? "customer" : "deliveryBoy")}
+                              className="gap-2 rounded-xl"
+                            >
+                              <Bike size={16} />
+                              {u.role === "deliveryBoy" ? "Remove Delivery Boy" : "Make Delivery Boy"}
+                            </Button>
+                          )}
+                          <Button
+                            size="sm"
+                            variant={!isBlocked ? "secondary" : "primary"}
+                            onClick={() => toggleBlock(u._id, isBlocked)}
+                            className={`gap-2 rounded-xl transition-all ${!isBlocked ? 'text-red-500 border-red-200 dark:border-red-950/50 hover:bg-red-50 dark:hover:bg-red-950/20 hover:border-red-300 dark:hover:border-red-900' : 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20'}`}
+                          >
+                            {!isBlocked ? <ShieldBan size={16} /> : <ShieldCheck size={16} />}
+                            {!isBlocked ? "Block" : "Unblock"}
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   )
@@ -132,7 +158,7 @@ export default function ManageUsers() {
             )}
           </div>
         </Card>
-      </motion.div>
+      </div>
 
     </div>
   );

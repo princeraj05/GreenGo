@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Package, Clock, CheckCircle, MapPin, Search } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
+import { Package, Clock, CheckCircle, MapPin } from "lucide-react";
 import API from "../../api/axios";
 import { getToken } from "../../utils/getToken";
 import Card from "../../components/ui/Card";
@@ -9,15 +9,44 @@ import Button from "../../components/ui/Button";
 
 export default function ManageOrders() {
   const [orders, setOrders] = useState([]);
+  const [deliveryBoys, setDeliveryBoys] = useState([]);
   const [etaInput, setEtaInput] = useState({});
+  const [assignInput, setAssignInput] = useState({});
+  const [now, setNow] = useState(0);
 
-  useEffect(() => { loadOrders(); }, []);
-
-  const loadOrders = async () => {
+  async function loadOrders() {
     try {
       const token = await getToken();
       const res = await API.get("/api/orders", { headers: { Authorization: `Bearer ${token}` } });
       setOrders(res.data);
+    } catch (err) { console.log(err); }
+  }
+
+  async function loadDeliveryBoys() {
+    try {
+      const token = await getToken();
+      const res = await API.get("/api/orders/delivery-boys", { headers: { Authorization: `Bearer ${token}` } });
+      setDeliveryBoys(res.data || []);
+    } catch (err) { console.log(err); }
+  }
+
+  useEffect(() => {
+    Promise.resolve().then(() => {
+      loadOrders();
+      loadDeliveryBoys();
+    });
+    const timer = setInterval(() => setNow(() => Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const assignDeliveryBoy = async (orderId) => {
+    const deliveryBoyId = assignInput[orderId];
+    if (!deliveryBoyId) return;
+    try {
+      const token = await getToken();
+      await API.put(`/api/orders/${orderId}/assign-delivery`, { deliveryBoyId }, { headers: { Authorization: `Bearer ${token}` } });
+      setAssignInput({});
+      loadOrders();
     } catch (err) { console.log(err); }
   };
 
@@ -36,7 +65,7 @@ export default function ManageOrders() {
   const remaining = (o) => {
     if (o.status === "Delivered") return "Delivered";
     if (!o.etaMinutes || !o.etaSetAt) return "Not Set";
-    const diff = o.etaMinutes * 60000 - (Date.now() - new Date(o.etaSetAt).getTime());
+    const diff = o.etaMinutes * 60000 - (now - new Date(o.etaSetAt).getTime());
     if (diff <= 0) return "Delivered Soon";
     const m = Math.floor(diff / 60000);
     const s = Math.floor((diff % 60000) / 1000);
@@ -46,7 +75,7 @@ export default function ManageOrders() {
   return (
     <div className="w-full pb-10">
 
-      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6 md:mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div className="mb-6 md:mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3 md:gap-4 leading-tight">
             <div className="w-10 h-10 md:w-12 md:h-12 bg-emerald-50 dark:bg-emerald-950/30 rounded-2xl flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
@@ -56,18 +85,14 @@ export default function ManageOrders() {
           </h1>
           <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm sm:text-base md:text-lg font-medium leading-snug">Track and update all customer orders in real-time.</p>
         </div>
-      </motion.div>
+      </div>
 
-      <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
         <AnimatePresence>
           {orders.map((o, i) => (
-            <motion.div 
+            <div
               key={o._id}
-              layout
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ delay: i * 0.05 }}
+              style={{ animationDelay: `${i * 50}ms` }}
             >
               <Card hover className="p-4 sm:p-5 md:p-6 h-full flex flex-col border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-950">
 
@@ -94,6 +119,33 @@ export default function ManageOrders() {
                     <option value="Out for Delivery" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Out for Delivery</option>
                     <option value="Delivered" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Delivered</option>
                   </select>
+                </div>
+
+                {/* Delivery Assignment */}
+                <div className="mb-4 md:mb-6 rounded-2xl border border-emerald-100 dark:border-emerald-900/40 bg-emerald-50/50 dark:bg-emerald-950/20 p-3">
+                  <label className="block text-xs font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider mb-2">Assign Delivery Boy</label>
+                  {o.assignedDeliveryBoy && (
+                    <p className="text-xs font-black text-slate-700 dark:text-slate-200 mb-2">
+                      Assigned: {o.assignedDeliveryBoy.name || o.assignedDeliveryBoy.email || "Delivery Boy"} ({o.assignmentStatus || "Assigned"})
+                    </p>
+                  )}
+                  <div className="flex gap-2">
+                    <select
+                      value={assignInput[o._id] || o.assignedDeliveryBoy?._id || ""}
+                      onChange={(e) => setAssignInput({ ...assignInput, [o._id]: e.target.value })}
+                      className="min-w-0 flex-1 px-3 py-2.5 rounded-xl border border-emerald-100 dark:border-emerald-900/50 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-bold text-sm outline-none"
+                    >
+                      <option value="">Select delivery boy</option>
+                      {deliveryBoys.map((boy) => (
+                        <option key={boy._id} value={boy._id}>
+                          {boy.name || boy.phone || boy.email || "Delivery Boy"}
+                        </option>
+                      ))}
+                    </select>
+                    <Button onClick={() => assignDeliveryBoy(o._id)} className="rounded-xl px-4 bg-emerald-600 hover:bg-emerald-700 text-sm">
+                      Assign
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Address & ETA */}
@@ -157,10 +209,10 @@ export default function ManageOrders() {
                 </div>
 
               </Card>
-            </motion.div>
+            </div>
           ))}
         </AnimatePresence>
-      </motion.div>
+      </div>
 
     </div>
   );

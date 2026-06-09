@@ -1,6 +1,35 @@
 import Order from "../models/Order.js";
 import Settings from "../models/Settings.js";
 import Notification from "../models/Notification.js";
+import User from "../models/User.js";
+import Food from "../models/Food.js";
+
+const isAdmin = (user) => user?.role === "admin";
+const isDeliveryBoy = (user) => user?.role === "deliveryBoy";
+const isCodPayment = (method = "") => String(method).toLowerCase() === "cod";
+
+const addDeliveredStats = async (order) => {
+  const user = await User.findById(order.userId);
+  if (user) {
+    user.totalOrders = (user.totalOrders || 0) + 1;
+    user.totalSpent = (user.totalSpent || 0) + order.total;
+    user.rewardPoints = (user.rewardPoints || 0) + Math.floor(order.total / 10);
+    await user.save();
+  }
+
+  for (const item of order.items) {
+    await Food.findByIdAndUpdate(item.foodId, {
+      $inc: { totalOrders: item.qty, revenueGenerated: item.price * item.qty }
+    });
+  }
+};
+
+const creditDeliveryBoyForCod = async (order) => {
+  if (!order.assignedDeliveryBoy || !isCodPayment(order.paymentMethod)) return;
+  await User.findByIdAndUpdate(order.assignedDeliveryBoy, {
+    $inc: { deliveryCredit: Number(order.total || 0) }
+  });
+};
 
 function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
   const R = 6371; // Earth's radius in km
@@ -127,8 +156,10 @@ export const createOrder = async (req, res) => {
 /* ================= ADMIN – ALL ORDERS ================= */
 
 export const getAllOrders = async (req,res)=>{
+  if (!isAdmin(req.user)) return res.status(403).json({ message: "Not admin" });
   const orders = await Order
   .find()
+  .populate("assignedDeliveryBoy", "name phone email role deliveryCredit")
   .sort({createdAt:-1});
 
   res.json(orders);
@@ -148,9 +179,6 @@ export const getMyOrders = async (req,res)=>{
 };
 
 
-import User from "../models/User.js";
-import Food from "../models/Food.js";
-
 /* ================= UPDATE STATUS ================= */
 
 export const updateOrderStatus = async (req,res)=>{
@@ -159,27 +187,15 @@ export const updateOrderStatus = async (req,res)=>{
   const orderId = req.params.id;
 
   try {
+    if (!isAdmin(req.user)) return res.status(403).json({ message: "Not admin" });
     const order = await Order.findById(orderId);
     if(!order) return res.status(404).json({message:"Order not found"});
     const previousStatus = order.status;
 
     // Only apply stats when transitioning to Delivered
     if (status === "Delivered" && order.status !== "Delivered") {
-      // 1. Update User Stats
-      const user = await User.findById(order.userId);
-      if(user){
-        user.totalOrders = (user.totalOrders || 0) + 1;
-        user.totalSpent = (user.totalSpent || 0) + order.total;
-        user.rewardPoints = (user.rewardPoints || 0) + Math.floor(order.total / 10);
-        await user.save();
-      }
-
-      // 2. Update Food Stats
-      for (const item of order.items) {
-        await Food.findByIdAndUpdate(item.foodId, {
-          $inc: { totalOrders: item.qty, revenueGenerated: item.price * item.qty }
-        });
-      }
+      await addDeliveredStats(order);
+      await creditDeliveryBoyForCod(order);
     }
 
     const update = {status};
@@ -190,6 +206,8 @@ export const updateOrderStatus = async (req,res)=>{
     if(status==="Delivered"){
       update.etaMinutes = null;
       update.etaSetAt = null;
+      update.deliveredAt = new Date();
+      update.assignmentStatus = order.assignedDeliveryBoy ? "Delivered" : order.assignmentStatus;
     }
 
     await Order.findByIdAndUpdate(orderId, update);
@@ -213,5 +231,187 @@ export const updateOrderStatus = async (req,res)=>{
   } catch (err) {
     console.error("Update status error:", err);
     res.status(500).json({message:"Server error"});
+  }
+};
+
+export const getDeliveryBoys = async (req, res) => {
+  try {
+    if (!isAdmin(req.user)) return res.status(403).json({ message: "Not admin" });
+    const users = await User.find({ role: "deliveryBoy", blocked: { $ne: true } })
+      .select("name phone email role deliveryCredit createdAt")
+      .sort({ name: 1, createdAt: -1 });
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const assignDeliveryBoy = async (req, res) => {
+  try {
+    if (!isAdmin(req.user)) return res.status(403).json({ message: "Not admin" });
+    const { deliveryBoyId } = req.body;
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ message: "Order not found" });
+
+    const deliveryBoy = await User.findOne({ _id: deliveryBoyId, role: "deliveryBoy", blocked: { $ne: true } });
+    if (!deliveryBoy) return res.status(404).json({ message: "Delivery boy not found" });
+
+    const wasReassigned = Boolean(order.assignedDeliveryBoy) && String(order.assignedDeliveryBoy) !== String(deliveryBoyId);
+    order.assignedDeliveryBoy = deliveryBoyId;
+    order.assignedAt = new Date();
+    order.assignmentStatus = "Assigned";
+    order.rejectionReason = "";
+    order.rejectedAt = null;
+    await order.save();
+
+    await Notification.create({
+      userId: String(deliveryBoyId),
+      title: wasReassigned ? "Order Reassigned" : "New Order Assigned",
+      message: `Order #${String(order._id).slice(-6).toUpperCase()} has been assigned to you.`,
+      type: "info",
+    });
+
+    res.json({ success: true, order });
+  } catch (err) {
+    console.error("Assign delivery boy error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const getDeliveryDashboard = async (req, res) => {
+  try {
+    if (!isDeliveryBoy(req.user)) return res.status(403).json({ message: "Not delivery boy" });
+    const assignedQuery = { assignedDeliveryBoy: req.user.id };
+    const [orders, user] = await Promise.all([
+      Order.find(assignedQuery).sort({ createdAt: -1 }),
+      User.findById(req.user.id).select("deliveryCredit"),
+    ]);
+
+    const deliveredOrders = orders.filter((order) => order.status === "Delivered");
+    res.json({
+      totalAssignedOrders: orders.length,
+      pendingOrders: orders.filter((order) => order.status !== "Delivered" && order.status !== "RejectedByDeliveryBoy").length,
+      deliveredOrders: deliveredOrders.length,
+      codEarnings: user?.deliveryCredit || 0,
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const getAssignedOrders = async (req, res) => {
+  try {
+    if (!isDeliveryBoy(req.user)) return res.status(403).json({ message: "Not delivery boy" });
+    const orders = await Order.find({ assignedDeliveryBoy: req.user.id }).sort({ createdAt: -1 });
+    res.json(orders);
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const acceptAssignedOrder = async (req, res) => {
+  try {
+    if (!isDeliveryBoy(req.user)) return res.status(403).json({ message: "Not delivery boy" });
+    const order = await Order.findOne({ _id: req.params.id, assignedDeliveryBoy: req.user.id });
+    if (!order) return res.status(404).json({ message: "Order not found" });
+    if (order.status === "Delivered") return res.status(400).json({ message: "Order already delivered" });
+
+    order.status = "AcceptedByDeliveryBoy";
+    order.assignmentStatus = "Accepted";
+    order.acceptedAt = new Date();
+    await order.save();
+
+    await Notification.create({
+      userId: order.userId,
+      title: "Delivery partner accepted",
+      message: `Order #${String(order._id).slice(-6).toUpperCase()} has been accepted by your delivery partner.`,
+      type: "info",
+    });
+
+    res.json({ success: true, order });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const rejectAssignedOrder = async (req, res) => {
+  try {
+    if (!isDeliveryBoy(req.user)) return res.status(403).json({ message: "Not delivery boy" });
+    const order = await Order.findOne({ _id: req.params.id, assignedDeliveryBoy: req.user.id });
+    if (!order) return res.status(404).json({ message: "Order not found" });
+
+    const reason = String(req.body.reason || "").trim();
+    order.status = "RejectedByDeliveryBoy";
+    order.assignmentStatus = "Rejected";
+    order.rejectedAt = new Date();
+    order.rejectionReason = reason;
+    await order.save();
+
+    await Notification.create({
+      title: "Order rejected by delivery boy",
+      message: `Order #${String(order._id).slice(-6).toUpperCase()} was rejected${reason ? `: ${reason}` : "."}`,
+      type: "warning",
+    });
+
+    res.json({ success: true, order });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const markAssignedOrderDelivered = async (req, res) => {
+  try {
+    if (!isDeliveryBoy(req.user)) return res.status(403).json({ message: "Not delivery boy" });
+    const order = await Order.findOne({ _id: req.params.id, assignedDeliveryBoy: req.user.id });
+    if (!order) return res.status(404).json({ message: "Order not found" });
+    if (order.status === "Delivered") return res.json({ success: true, order });
+
+    await addDeliveredStats(order);
+    await creditDeliveryBoyForCod(order);
+
+    order.status = "Delivered";
+    order.assignmentStatus = "Delivered";
+    order.deliveredAt = new Date();
+    order.etaMinutes = null;
+    order.etaSetAt = null;
+    await order.save();
+
+    await Notification.create({
+      userId: order.userId,
+      title: "Order Delivered",
+      message: `Order #${String(order._id).slice(-6).toUpperCase()} has been delivered.`,
+      type: "success",
+    });
+
+    res.json({ success: true, order });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const getDeliveryEarnings = async (req, res) => {
+  try {
+    if (!isDeliveryBoy(req.user)) return res.status(403).json({ message: "Not delivery boy" });
+    const [orders, user] = await Promise.all([
+      Order.find({ assignedDeliveryBoy: req.user.id, paymentMethod: { $regex: /^cod$/i } }).sort({ createdAt: -1 }),
+      User.findById(req.user.id).select("deliveryCredit"),
+    ]);
+    const deliveredCodOrders = orders.filter((order) => order.status === "Delivered");
+    const totalCodAmount = deliveredCodOrders.reduce((sum, order) => sum + Number(order.total || 0), 0);
+    res.json({
+      totalCodOrders: orders.length,
+      totalCodAmount,
+      deliveredCodOrders: deliveredCodOrders.length,
+      currentCredit: user?.deliveryCredit || 0,
+      rows: orders.map((order) => ({
+        date: order.deliveredAt || order.createdAt,
+        orderId: order._id,
+        customer: order.phone || "Customer",
+        amount: order.total || 0,
+        status: order.status,
+      })),
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
   }
 };

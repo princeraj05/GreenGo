@@ -37,12 +37,27 @@ const orderSchema = new mongoose.Schema(
 
   status:{
     type:String,
-    enum:["Pending","Preparing","Out for Delivery","Delivered"],
+    enum:["Pending","Preparing","Out for Delivery","AcceptedByDeliveryBoy","RejectedByDeliveryBoy","Delivered","Cancelled"],
     default:"Pending"
   },
 
   etaMinutes:Number,
   etaSetAt:Date,
+  assignedDeliveryBoy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: null
+  },
+  assignedAt: Date,
+  assignmentStatus: {
+    type: String,
+    enum: ["Unassigned", "Assigned", "Accepted", "Rejected", "Delivered"],
+    default: "Unassigned"
+  },
+  acceptedAt: Date,
+  deliveredAt: Date,
+  rejectedAt: Date,
+  rejectionReason: { type: String, default: "" },
   distance:Number,
   latitude:Number,
   longitude:Number,

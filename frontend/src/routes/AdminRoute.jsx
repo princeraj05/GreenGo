@@ -1,5 +1,6 @@
 import { Navigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
+import { getRoleHomePath, normalizeRole } from "../utils/roleRedirect";
 
 export default function AdminRoute({ children }) {
 
@@ -29,11 +30,12 @@ export default function AdminRoute({ children }) {
     }
 
     // Agar role admin nahi hai → user dashboard
-    if (decoded?.role !== "admin") {
+    const role = normalizeRole(decoded?.role);
+    if (role !== "admin") {
       if (window.diagnostics) {
         window.diagnostics.addLog(`AdminRoute: User role is not admin. Redirecting to /user`);
       }
-      return <Navigate to="/user" replace />;
+      return <Navigate to={getRoleHomePath(role)} replace />;
     }
 
     // Admin hai → page access
