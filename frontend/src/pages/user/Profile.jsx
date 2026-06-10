@@ -113,6 +113,30 @@ export default function Profile() {
     return [emptyAddress];
   };
 
+  const hasAddressDetails = (addr) => Boolean(String(addr?.details || "").trim());
+
+  const getCleanAddresses = (addresses = []) => {
+    const cleaned = (Array.isArray(addresses) ? addresses : [])
+      .map((addr) => ({
+        ...addr,
+        label: String(addr?.label || "Home").trim() || "Home",
+        details: String(addr?.details || "").trim(),
+        city: String(addr?.city || "").trim(),
+        state: String(addr?.state || "").trim(),
+        isPrimary: Boolean(addr?.isPrimary),
+      }))
+      .filter(hasAddressDetails);
+
+    if (cleaned.length && !cleaned.some((addr) => addr.isPrimary)) {
+      cleaned[0].isPrimary = true;
+    }
+
+    return cleaned.map((addr, index) => ({
+      ...addr,
+      isPrimary: index === cleaned.findIndex((item) => item.isPrimary),
+    }));
+  };
+
   const loadProfileData = async () => {
     try {
       const token = await getToken();
@@ -175,10 +199,7 @@ export default function Profile() {
   );
 
   const editProfileCompleted = Boolean(String(form.name || "").trim() && String(form.phone || "").trim() && form.hasPassword);
-  const addressCompleted = Boolean(
-    (form.addresses || []).some((addr) => String(addr.details || "").trim()) ||
-    String(form.address || "").trim()
-  );
+  const addressCompleted = getCleanAddresses(form.addresses).length > 0 || Boolean(String(form.address || "").trim());
   const profileCompletionPercent = (editProfileCompleted ? 50 : 0) + (addressCompleted ? 50 : 0);
 
   const referralCode = useMemo(() => {
@@ -282,10 +303,14 @@ export default function Profile() {
       const token = await getToken();
       if (!token) return;
       const current = { ...form, ...override };
-      const primary = (current.addresses || []).find((addr) => addr.isPrimary) || (current.addresses || [])[0];
+      const cleanedAddresses = getCleanAddresses(current.addresses);
+      const primaryAddress = cleanedAddresses.find((addr) => addr.isPrimary) || cleanedAddresses[0];
       const payload = {
         ...current,
-        address: primary ? [primary.label, formatAddressLine(primary)].filter(Boolean).join(" - ") : current.address,
+        addresses: cleanedAddresses,
+        address: cleanedAddresses.length
+          ? [primaryAddress?.label, formatAddressLine(primaryAddress)].filter(Boolean).join(" - ")
+          : current.address,
       };
 
       const res = await fetch(`${API}/api/users/profile`, {
@@ -309,7 +334,9 @@ export default function Profile() {
       };
       setForm(nextForm);
       showMessage("Profile updated successfully");
-      if (activeSection === "edit") {
+      const nextEditCompleted = Boolean(String(nextForm.name || "").trim() && String(nextForm.phone || "").trim() && nextForm.hasPassword);
+      const nextAddressCompleted = getCleanAddresses(nextForm.addresses).length > 0 || Boolean(String(nextForm.address || "").trim());
+      if (activeSection === "edit" || (activeSection === "addresses" && nextEditCompleted && nextAddressCompleted)) {
         setActiveSection(null);
       }
     } catch (err) {
