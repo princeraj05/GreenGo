@@ -136,6 +136,7 @@ export default function Orders() {
   const getProgress = (status) => {
     if (status === "Delivered") return 100;
     if (status === "Out for Delivery") return 75;
+    if (status === "AcceptedByDeliveryBoy") return 65;
     if (status === "Preparing") return 50;
     return 25; // Pending
   };
@@ -144,6 +145,7 @@ export default function Orders() {
     if (status === "Delivered") return <CheckCircle size={16} />;
     if (status === "Out for Delivery") return <Truck size={16} />;
     if (status === "Preparing") return <ChefHat size={16} />;
+    if (status === "AcceptedByDeliveryBoy") return <CheckCircle size={16} />;
     return <Clock size={16} />;
   };
 
@@ -197,7 +199,7 @@ export default function Orders() {
                   </div>
                   <Badge variant={o.status === "Delivered" ? "success" : "brand"} className="px-3 py-1.5 text-xs gap-1.5 uppercase tracking-wide w-fit">
                     {getStatusIcon(o.status)}
-                    {o.status}
+                    {o.status === "AcceptedByDeliveryBoy" ? "Assigned" : o.status}
                   </Badge>
                 </div>
 
