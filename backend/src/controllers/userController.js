@@ -310,15 +310,15 @@ export const loginWithPhonePassword = async (req, res) => {
 
     const user = await User.findOne({ phone });
     if (!user) {
-      return res.status(400).json({ message: "Phone number or password match nahi ho raha. Please first login with email OTP or Google, then complete profile and set password." });
+      return res.status(400).json({ message: "We couldn't verify your phone number and password. Please sign in with email OTP or Google, complete your profile, and set a password." });
     }
     if (!user.password) {
-      return res.status(400).json({ message: "Password set nahi hai. Please first login with email OTP or Google, then complete profile and set password." });
+      return res.status(400).json({ message: "A password has not been set for this account. Please sign in with email OTP or Google, complete your profile, and set a password." });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({ message: "Phone number or password match nahi ho raha. Please first login with email OTP or Google, then complete profile and set password." });
+      return res.status(400).json({ message: "We couldn't verify your phone number and password. Please sign in with email OTP or Google, complete your profile, and set a password." });
     }
 
     user.lastLogin = new Date();

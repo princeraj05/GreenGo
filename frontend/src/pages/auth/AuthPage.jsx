@@ -352,7 +352,7 @@ export default function AuthPage() {
               exit={{ opacity: 0, y: -10 }}
               className="mb-5 rounded-2xl border border-orange-200 bg-orange-50 p-4 text-sm font-bold leading-relaxed text-orange-700 dark:border-orange-900/50 dark:bg-orange-950/20 dark:text-orange-300"
             >
-              Please login to continue with orders and personal details.
+              Sign in to securely access your orders and personal details.
             </MotionDiv>
           )}
         </AnimatePresence>
