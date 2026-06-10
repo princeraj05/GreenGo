@@ -118,7 +118,10 @@ export default function Orders() {
   const loadOrders = async () => {
     try {
       const token = await getToken();
-      if (!token) return;
+      if (!token) {
+        setOrders([]);
+        return;
+      }
       const res = await fetch(`${getApiUrl()}/api/orders/my`, {
         headers: { Authorization: `Bearer ${token}` }
       });

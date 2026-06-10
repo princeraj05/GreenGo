@@ -14,7 +14,16 @@ export default function App() {
   const location = useLocation();
   const [isConnected, setIsConnected] = useState(true);
   const [checkingAuth, setCheckingAuth] = useState(true);
-  const isGuestUserPath = (path) => path === "/user" || path === "/user/menu";
+  const guestUserPaths = new Set([
+    "/user",
+    "/user/menu",
+    "/user/wishlist",
+    "/user/cart",
+    "/user/orders",
+    "/user/notifications",
+    "/user/contact",
+  ]);
+  const isGuestUserPath = (path) => guestUserPaths.has(path);
 
   // Check auth and restore session on mount
   useEffect(() => {

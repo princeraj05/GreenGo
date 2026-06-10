@@ -26,7 +26,10 @@ export default function Notifications() {
     setLoading(true);
     try {
       const token = await getToken();
-      if (!token) return;
+      if (!token) {
+        setNotifications([]);
+        return;
+      }
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/notifications/my`, {
         headers: { Authorization: `Bearer ${token}` },
       });
