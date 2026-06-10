@@ -392,24 +392,7 @@ export default function AuthPage() {
   return (
     <div className="min-h-screen w-full flex bg-slate-50 dark:bg-slate-950 transition-colors duration-300 relative overflow-hidden">
       
-      {/* Theme Toggle Button */}
-      <button
-        type="button"
-        onClick={toggleTheme}
-        className="fixed left-4 top-4 z-20 w-10 h-10 rounded-full bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-200 transition-all active:scale-95 shadow-lg sm:left-8 sm:top-8"
-        title="Toggle Theme"
-      >
-        {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
-      </button>
 
-      {/* Skip Button */}
-      <button
-        type="button"
-        onClick={() => navigate("/user/menu", { replace: true })}
-        className="fixed right-4 top-4 z-20 rounded-full bg-brand-600 px-5 py-2.5 text-sm font-black text-white shadow-lg shadow-brand-500/25 transition-all hover:bg-brand-700 active:scale-95 sm:right-8 sm:top-8"
-      >
-        Skip
-      </button>
 
       {/* Left Column - Branding & Banner (lg screens only) */}
       <div className="hidden lg:flex lg:w-1/2 xl:w-3/5 bg-slate-950 relative overflow-hidden flex-col justify-between p-12 text-white">
@@ -489,6 +472,28 @@ export default function AuthPage() {
 
       {/* Right Column - Authentication Card */}
       <div className="w-full lg:w-1/2 xl:w-2/5 flex flex-col justify-center items-center p-6 md:p-12 relative overflow-y-auto min-h-screen">
+        {/* Top Action Buttons (Theme & Skip) */}
+        <div className="absolute top-4 right-4 z-20 flex items-center gap-2.5 sm:top-8 sm:right-8">
+          {/* Theme Toggle Button */}
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="w-10 h-10 rounded-full bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-200 transition-all active:scale-95 shadow-md"
+            title="Toggle Theme"
+          >
+            {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+
+          {/* Skip Button */}
+          <button
+            type="button"
+            onClick={() => navigate("/user/menu", { replace: true })}
+            className="rounded-full bg-brand-600 px-5 py-2.5 text-sm font-black text-white shadow-md shadow-brand-500/25 transition-all hover:bg-brand-700 active:scale-95"
+          >
+            Skip
+          </button>
+        </div>
+
         {/* Glow Effects on Right Side */}
         <div className="absolute top-1/4 left-1/4 w-[300px] h-[300px] bg-brand-500/10 dark:bg-brand-500/5 rounded-full blur-[80px] pointer-events-none -z-10 animate-pulse" />
         <div className="absolute bottom-1/4 right-1/4 w-[300px] h-[300px] bg-brand-600/10 dark:bg-brand-600/5 rounded-full blur-[80px] pointer-events-none -z-10 animate-pulse" />
