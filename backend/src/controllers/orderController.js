@@ -633,3 +633,59 @@ export const getDeliveryEarnings = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+export const cancelOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+    
+    // Check if the order belongs to the user
+    if (String(order.userId) !== String(req.user.id)) {
+      return res.status(403).json({ message: "Not authorized to cancel this order" });
+    }
+    
+    // Check if 5 minutes have passed
+    const timeDiff = Date.now() - new Date(order.createdAt).getTime();
+    if (timeDiff > 5 * 60 * 1000) {
+      return res.status(400).json({ message: "Cannot cancel order. 5 minutes have already passed." });
+    }
+    
+    // Check status constraints
+    if (["Delivered", "Out for Delivery", "Cancelled"].includes(order.status)) {
+      return res.status(400).json({ message: `Cannot cancel order with status: ${order.status}` });
+    }
+    
+    order.status = "Cancelled";
+    await order.save();
+    
+    // Create notification for user
+    await Notification.create({
+      userId: req.user.id,
+      title: "Order Cancelled",
+      message: `Your order #${orderCode(order._id)} has been cancelled successfully.`,
+      type: "warning",
+    });
+    
+    // Create admin notification
+    const customer = await User.findById(req.user.id).select("name email");
+    await createAdminNotification({
+      title: "Order Cancelled by User",
+      message: `Order #${orderCode(order._id)} has been cancelled by ${customer?.name || "Customer"}.`,
+      type: "danger",
+      actionPath: "/admin/orders",
+      data: {
+        event: "order_cancelled",
+        orderId: String(order._id),
+        userId: String(req.user.id),
+        total: order.total,
+      },
+    });
+    
+    res.json({ success: true, message: "Order cancelled successfully", order });
+  } catch (err) {
+    console.error("Cancel order error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};

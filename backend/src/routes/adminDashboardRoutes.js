@@ -22,11 +22,14 @@ router.get("/stats", async (req, res) => {
 
     const revenue = revenueAgg[0]?.total || 0;
 
+    const cancelledOrders = await Order.countDocuments({ status: "Cancelled" });
+
     res.json({
       users,
       orders,
       foods,
-      revenue
+      revenue,
+      cancelledOrders
     });
 
   } catch (err) {

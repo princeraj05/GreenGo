@@ -20,6 +20,7 @@ export default function AdminDashboard() {
     todayOutForDeliveryOrders: 0,
     todayDeliveredOrders: 0,
     todayCancelledOrders: 0,
+    totalCancelledOrders: 0,
   });
   const [activeDeliveryBoys, setActiveDeliveryBoys] = useState([]);
   const [showDeliveryBoys, setShowDeliveryBoys] = useState(false);
@@ -90,6 +91,7 @@ export default function AdminDashboard() {
         todayOutForDeliveryOrders: data.today?.outForDeliveryOrders || 0,
         todayDeliveredOrders: data.today?.deliveredOrders || 0,
         todayCancelledOrders: data.today?.cancelledOrders || 0,
+        totalCancelledOrders: data.totalCancelledOrders || 0,
       });
       setActiveDeliveryBoys(data.activeDeliveryBoys || []);
       if(data.chartData) {
@@ -148,7 +150,8 @@ export default function AdminDashboard() {
     { label: "Preparing Orders", value: stats.todayPreparingOrders, icon: <UtensilsCrossed size={28} className="text-purple-600" />, bg: "bg-purple-100", accent: "from-purple-500 to-purple-600" },
     { label: "Out For Delivery", value: stats.todayOutForDeliveryOrders, icon: <Truck size={28} className="text-cyan-600" />, bg: "bg-cyan-100", accent: "from-cyan-500 to-cyan-600" },
     { label: "Delivered Orders", value: stats.todayDeliveredOrders, icon: <CheckCircle2 size={28} className="text-teal-600" />, bg: "bg-teal-100", accent: "from-teal-500 to-teal-600" },
-    { label: "Cancelled Orders", value: stats.todayCancelledOrders, icon: <XCircle size={28} className="text-red-600" />, bg: "bg-red-100", accent: "from-red-500 to-red-600" },
+    { label: "Today's Cancelled", value: stats.todayCancelledOrders, icon: <XCircle size={28} className="text-red-600" />, bg: "bg-red-100", accent: "from-red-500 to-red-600" },
+    { label: "Total Cancelled", value: stats.totalCancelledOrders, icon: <XCircle size={28} className="text-red-600" />, bg: "bg-red-100", accent: "from-red-500 to-red-600" },
     { label: "Active Delivery Boys", value: activeDeliveryBoys.length, icon: <Bike size={28} className="text-slate-700" />, bg: "bg-slate-100", accent: "from-slate-500 to-slate-700", action: () => setShowDeliveryBoys(true) },
   ];
   void cards;

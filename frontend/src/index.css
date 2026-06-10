@@ -104,5 +104,51 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+  
+  /* Fluid typography */
+  .fluid-h1 {
+    font-size: clamp(1.6rem, 4.5vw, 2.5rem);
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+  .fluid-h2 {
+    font-size: clamp(1.3rem, 3.5vw, 1.85rem);
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+  }
+  .fluid-h3 {
+    font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+    line-height: 1.3;
+  }
+  .fluid-body {
+    font-size: clamp(0.85rem, 1.2vw, 0.95rem);
+    line-height: 1.5;
+  }
+  .fluid-sm {
+    font-size: clamp(0.75rem, 1vw, 0.825rem);
+  }
+  
+  /* Prevent word break issue & limit text wrapping */
+  .line-clamp-2-custom {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .line-clamp-1-custom {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  /* Touch Targets for perfect mobile tap area */
+  .touch-target-trigger {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
 }
 

@@ -104,7 +104,7 @@ export default function ManageOrders() {
                   <p className="font-extrabold text-slate-900 dark:text-white text-base md:text-lg">
                     #<span className="text-emerald-600 dark:text-emerald-400">{o._id.slice(-6).toUpperCase()}</span>
                   </p>
-                  <Badge variant={o.status === 'Delivered' ? 'success' : o.status === 'Preparing' ? 'warning' : 'default'} className="uppercase tracking-wider text-[10px] md:text-xs whitespace-nowrap">
+                  <Badge variant={o.status === 'Delivered' ? 'success' : o.status === 'Preparing' ? 'warning' : o.status === 'Cancelled' ? 'danger' : 'brand'} className="uppercase tracking-wider text-[10px] md:text-xs whitespace-nowrap">
                     {o.status}
                   </Badge>
                 </div>

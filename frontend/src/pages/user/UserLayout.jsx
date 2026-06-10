@@ -140,7 +140,7 @@ export default function UserLayout() {
     { to: "/user/cart", label: "Cart", icon: <ShoppingCart size={20} /> },
     { to: "/user/orders", label: "Orders", icon: <Clock size={20} /> },
     { to: "/user/notifications", label: "Notifications", icon: <Bell size={20} /> },
-    { to: "/user/contact", label: "Message", icon: <MessageCircle size={20} /> },
+    { to: "/user/contact", label: "Support", icon: <MessageCircle size={20} /> },
   ];
 
   const bottomNavLinks = [
@@ -153,7 +153,7 @@ export default function UserLayout() {
   const moreLinks = [
     { to: "/user/wishlist", label: "Wishlist", icon: <Heart size={20} /> },
     { to: "/user/notifications", label: "Notifications", icon: <Bell size={20} /> },
-    { to: "/user/contact", label: "Messages", icon: <MessageCircle size={20} /> },
+    { to: "/user/contact", label: "Support", icon: <MessageCircle size={20} /> },
   ];
 
   return (

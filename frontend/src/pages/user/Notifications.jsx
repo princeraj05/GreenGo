@@ -12,6 +12,14 @@ const getTypeIcon = (notification) => {
   return <Bell size={20} />;
 };
 
+const cleanMessage = (msg) => {
+  if (!msg) return "";
+  let cleaned = msg.replace(/your\s+order\s+#\w+/gi, "your order");
+  cleaned = cleaned.replace(/order\s+#\w+/gi, "Order");
+  cleaned = cleaned.replace(/#\w{6,}/gi, "");
+  return cleaned.replace(/\s+/g, " ").trim();
+};
+
 const getAccentClass = (type) => {
   if (type === "success") return "bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-950/25 dark:text-emerald-300 dark:border-emerald-900/40";
   if (type === "warning") return "bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-950/25 dark:text-amber-300 dark:border-amber-900/40";
@@ -141,7 +149,7 @@ export default function Notifications() {
                         {!isRead && <span className="shrink-0 mt-1 w-2.5 h-2.5 rounded-full bg-brand-500" />}
                       </span>
                       <span className="block text-sm text-slate-600 dark:text-slate-300 font-medium leading-relaxed mt-1">
-                        {notification.message}
+                        {cleanMessage(notification.message)}
                       </span>
                       <span className="block text-[11px] text-slate-400 dark:text-slate-500 font-bold mt-3">
                         {new Date(notification.createdAt).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })}

@@ -468,11 +468,28 @@ export default function Menu() {
     .filter(f => Number(f.rating || 0) >= 2.5)
     .sort((a, b) => b.rating - a.rating), [foods, matchesVegMode]);
 
-  // RECOMMENDED FOR YOU (Ranked by popularity or recent updates)
-  const recommendedFoods = useMemo(() => foods
-    .filter(matchesVegMode)
-    .filter(f => f.ratingCount >= 0)
-    .sort((a, b) => b.ratingCount - a.ratingCount || new Date(b.updatedAt) - new Date(a.updatedAt)), [foods, matchesVegMode]);
+  // RECOMMENDED FOR YOU (Ranked by popularity or recent updates, filtered by active meal category time-to-time)
+  const recommendedFoods = useMemo(() => {
+    const hour = new Date().getHours();
+    let activeCategory = "";
+    if (hour >= 6 && hour < 11) {
+      activeCategory = "Breakfast";
+    } else if (hour >= 11 && hour < 16) {
+      activeCategory = "Lunch";
+    } else if (hour >= 16 && hour < 23) {
+      activeCategory = "Dinner";
+    }
+
+    return foods
+      .filter(matchesVegMode)
+      .filter(f => f.ratingCount >= 0)
+      .filter(f => {
+        const cat = f.mealCategory || "Anytime";
+        if (cat === "Anytime") return true;
+        return cat === activeCategory;
+      })
+      .sort((a, b) => b.ratingCount - a.ratingCount || new Date(b.updatedAt) - new Date(a.updatedAt));
+  }, [foods, matchesVegMode]);
   const allProductFoods = useMemo(() => foods.filter(matchesVegMode), [foods, matchesVegMode]);
   const visibleCategories = categoriesList.slice(0, 8);
 
@@ -630,7 +647,7 @@ export default function Menu() {
     return (
       <div
         key={food._id}
-        className={`min-w-[240px] sm:min-w-[260px] lg:min-w-[280px] snap-start bg-white dark:bg-slate-900 rounded-3xl p-4.5 pb-5 border border-slate-100 dark:border-slate-800/60 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col group relative overflow-hidden min-h-[390px] ${className}`}
+        className={`min-w-[240px] sm:min-w-[260px] lg:min-w-[280px] snap-start bg-white dark:bg-slate-900 rounded-3xl p-4.5 pb-5 border border-slate-100 dark:border-slate-800/60 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col group relative overflow-hidden min-h-[410px] h-full ${className}`}
       >
         <div
           onClick={() => selectFoodDetails(food)}
@@ -676,8 +693,8 @@ export default function Menu() {
           <div className="mb-3 space-y-2">
             <ComboItemsTicker items={comboItems} />
             <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2 text-[10px] font-black text-slate-600 dark:bg-slate-950 dark:text-slate-300">
-              <span>{comboItems.length} items total Rs. {comboTotal}</span>
-              {comboSaving > 0 && <span className="text-emerald-600 dark:text-emerald-300">Save Rs. {comboSaving}</span>}
+              <span>{comboItems.length} items total ₹{comboTotal}</span>
+              {comboSaving > 0 && <span className="text-emerald-600 dark:text-emerald-300">Save ₹{comboSaving}</span>}
             </div>
           </div>
         )}
@@ -1158,7 +1175,7 @@ export default function Menu() {
               {filteredFoods.map((food) => (
                 <div 
                   key={food._id} 
-                  className="bg-white dark:bg-slate-900 rounded-3xl p-4.5 pb-5 border border-slate-100 dark:border-slate-800/60 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col group relative overflow-hidden min-h-[390px]"
+                  className="bg-white dark:bg-slate-900 rounded-3xl p-4.5 pb-5 border border-slate-100 dark:border-slate-800/60 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col group relative overflow-hidden min-h-[410px] h-full"
                 >
                   <div 
                     onClick={() => selectFoodDetails(food)}
@@ -1202,9 +1219,9 @@ export default function Menu() {
                     <div className="mb-3 space-y-2">
                       <ComboItemsTicker items={getComboItems(food)} />
                       <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2 text-[10px] font-black text-slate-600 dark:bg-slate-950 dark:text-slate-300">
-                        <span>{getComboItems(food).length} items total Rs. {getComboTotalPrice(food)}</span>
+                        <span>{getComboItems(food).length} items total ₹{getComboTotalPrice(food)}</span>
                         {getComboTotalPrice(food) > Number(food.price || 0) && (
-                          <span className="text-emerald-600 dark:text-emerald-300">Save Rs. {getComboTotalPrice(food) - Number(food.price || 0)}</span>
+                          <span className="text-emerald-600 dark:text-emerald-300">Save ₹{getComboTotalPrice(food) - Number(food.price || 0)}</span>
                         )}
                       </div>
                     </div>

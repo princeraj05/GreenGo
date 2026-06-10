@@ -31,6 +31,31 @@ export default function Orders() {
     return () => clearInterval(t);
   }, []);
 
+  const canCancel = (o) => {
+    if (["Delivered", "Out for Delivery", "Cancelled"].includes(o.status)) return false;
+    const timeDiff = now - new Date(o.createdAt).getTime();
+    return timeDiff <= 5 * 60 * 1000;
+  };
+
+  const handleCancelOrder = async (orderId) => {
+    if (!window.confirm("Are you sure you want to cancel this order?")) return;
+    try {
+      const token = await getToken();
+      const res = await fetch(`${getApiUrl()}/api/orders/${orderId}/cancel`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        loadOrders();
+      } else {
+        const data = await res.json();
+        alert(data.message || "Failed to cancel order");
+      }
+    } catch (err) {
+      console.error("Failed to cancel order:", err);
+    }
+  };
+
   const loadUserReviews = async () => {
     try {
       const token = await getToken();
@@ -291,13 +316,20 @@ export default function Orders() {
                   <div className="text-right space-y-2">
                     <p className="text-slate-500 dark:text-slate-400 text-xs font-medium mb-0.5">Total Amount</p>
                     <h3 className="text-xl sm:text-2xl md:text-3xl font-black text-brand-600">₹{o.total}</h3>
-                    {o.status !== "Delivered" && (
-                      <Link to={`/user/orders/${o._id}/tracking`} className="inline-flex">
-                        <Button size="sm" variant="secondary" className="rounded-xl gap-1.5">
-                          <Navigation size={14} /> Track Delivery
+                    <div className="flex gap-2 justify-end">
+                      {canCancel(o) && (
+                        <Button size="sm" variant="danger" className="rounded-xl" onClick={() => handleCancelOrder(o._id)}>
+                          Cancel Order
                         </Button>
-                      </Link>
-                    )}
+                      )}
+                      {o.status !== "Delivered" && o.status !== "Cancelled" && (
+                        <Link to={`/user/orders/${o._id}/tracking`} className="inline-flex">
+                          <Button size="sm" variant="secondary" className="rounded-xl gap-1.5">
+                            <Navigation size={14} /> Track Delivery
+                          </Button>
+                        </Link>
+                      )}
+                    </div>
                   </div>
                 </div>
               </Card>

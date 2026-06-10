@@ -93,9 +93,15 @@ export default function OrderTrackingPage({ role = "user" }) {
             </div>
             {title}
           </h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm sm:text-base font-medium">
-            Order #{String(id).slice(-6).toUpperCase()}
-          </p>
+          {role !== "user" ? (
+            <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm sm:text-base font-medium">
+              Order #{String(id).slice(-6).toUpperCase()}
+            </p>
+          ) : (
+            <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm sm:text-base font-medium">
+              Real-time Status Tracking
+            </p>
+          )}
         </div>
         <div className="flex gap-2">
           <Button variant="secondary" onClick={loadTracking} className="rounded-xl gap-2">

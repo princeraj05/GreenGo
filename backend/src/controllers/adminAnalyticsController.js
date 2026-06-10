@@ -17,6 +17,7 @@ export const getDashboardStats = async (req, res) => {
       totalFoods,
       pendingOrders,
       deliveredOrders,
+      totalCancelledOrders,
       todayOrders,
       todayPendingOrders,
       todayPreparingOrders,
@@ -29,6 +30,7 @@ export const getDashboardStats = async (req, res) => {
       Food.countDocuments(),
       Order.countDocuments({ status: "Pending" }),
       Order.countDocuments({ status: "Delivered" }),
+      Order.countDocuments({ status: "Cancelled" }),
       Order.countDocuments(todayQuery),
       Order.countDocuments({ ...todayQuery, status: "Pending" }),
       Order.countDocuments({ ...todayQuery, status: "Preparing" }),
@@ -105,6 +107,7 @@ export const getDashboardStats = async (req, res) => {
       totalFoods,
       pendingOrders,
       deliveredOrders,
+      totalCancelledOrders,
       today: {
         orders: todayOrders,
         revenue: todayRevenue,

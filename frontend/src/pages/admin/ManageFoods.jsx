@@ -506,10 +506,6 @@ export default function ManageFoods() {
                 ))}
                 <button type="button" onClick={() => setShowCustomVariant(v => !v)}
                   className="px-4 py-2 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400 text-sm font-bold flex items-center gap-1.5 hover:border-emerald-400 transition-colors">
-                  <Pencil size={13} /> Custom
-                </button>
-                <button type="button" onClick={() => setShowCustomVariant(true)}
-                  className="px-4 py-2 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400 text-sm font-bold flex items-center gap-1.5 hover:border-emerald-400 transition-colors">
                   <Plus size={13} /> Add New Variant
                 </button>
               </div>
