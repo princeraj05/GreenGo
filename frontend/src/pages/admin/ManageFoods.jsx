@@ -6,10 +6,58 @@ import { getToken } from "../../utils/getToken";
 import Button from "../../components/ui/Button";
 import Card from "../../components/ui/Card";
 
+const MotionDiv = motion.div;
+
 const CATEGORY_OPTIONS = [
-  "Fast Food", "Main Course", "Chinese", "Snacks",
-  "Drinks", "Desserts", "Beverages", "Soup",
-  "Salads", "Thali / Meals", "Light Food", "Others",
+  "Starter",
+  "Combo",
+  "Roti",
+  "Pizza",
+  "Burger",
+  "Biryani",
+  "Rolls",
+  "Fries",
+  "North Indian",
+  "Desserts",
+  "Bowl",
+  "Veg Meal",
+  "Paneer",
+  "Paratha",
+  "Sandwich",
+  "Rice",
+  "Cake",
+  "Dal",
+  "Thali",
+  "Aloo Paratha",
+  "Italian",
+  "Shawarma",
+  "Noodles",
+  "Shake",
+  "Pasta",
+  "Dal Makhani",
+  "Patty",
+  "Paneer Biryani",
+  "Rajma Rice",
+  "Mousse",
+  "Milkshake",
+  "Sweets",
+  "Ice Cream",
+  "Cold Coffee",
+  "Cheesecake",
+  "Brownie",
+  "Tea",
+  "Gulab Jamun",
+  "Pastry",
+  "Chaap",
+  "Rajma",
+  "Kulche",
+  "Kebabs",
+  "Maggi",
+  "Bhurji",
+  "Juice",
+  "Chicken",
+  "Non-Veg",
+  "Drinks",
 ];
 
 const VARIANT_OPTIONS = ["Full Plate", "Half Plate", "Regular", "Large", "Small"];
@@ -21,7 +69,7 @@ const INITIAL_FORM = {
   price: "",
   offerPrice: "",
   description: "",
-  categories: ["Fast Food"],
+  categories: ["Starter"],
   veg: "true",
   foodType: "single",
   mealCategory: "Anytime",
@@ -123,7 +171,9 @@ export default function ManageFoods() {
     .filter(item => item.name);
 
   const comboSummary = useMemo(() => {
-    const items = parseComboItems();
+    const items = form.comboItems
+      .map(item => ({ name: String(item.name || "").trim(), price: Number(item.price || 0) }))
+      .filter(item => item.name);
     const totalPrice = items.reduce((sum, item) => sum + item.price, 0);
     const comboPrice = Number(form.price || 0);
     const saving = Math.max(0, totalPrice - comboPrice);
@@ -147,7 +197,7 @@ export default function ManageFoods() {
       fd.append("name", form.name);
       fd.append("price", form.offerPrice || form.price);
       fd.append("description", form.description);
-      fd.append("category", form.categories[0] || "Fast Food");
+      fd.append("category", form.categories[0] || "Starter");
       fd.append("categories", JSON.stringify(form.categories));
       fd.append("veg", form.veg);
       fd.append("foodType", form.foodType);
@@ -191,7 +241,7 @@ export default function ManageFoods() {
       price: food.price,
       offerPrice: "",
       description: food.description,
-      categories: Array.isArray(food.categories) && food.categories.length ? food.categories : [food.category || "Fast Food"],
+      categories: Array.isArray(food.categories) && food.categories.length ? food.categories : [food.category || "Starter"],
       veg: food.veg === false ? "false" : "true",
       foodType: food.foodType || "single",
       mealCategory: food.mealCategory || "Anytime",
@@ -232,7 +282,7 @@ export default function ManageFoods() {
   };
 
   const allCategoryFilters = ["All", ...new Set(foods.flatMap(f =>
-    Array.isArray(f.categories) && f.categories.length ? f.categories : [f.category || "Fast Food"]
+    Array.isArray(f.categories) && f.categories.length ? f.categories : [f.category || "Starter"]
   ))];
 
   const displayedFoods = filterCategory === "All" ? foods : foods.filter(f => {
@@ -244,7 +294,7 @@ export default function ManageFoods() {
     <div className="w-full pb-16">
 
       {/* Page Header */}
-      <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} className="mb-8 flex items-start justify-between flex-wrap gap-4">
+      <MotionDiv initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} className="mb-8 flex items-start justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
             {editingId ? "Edit Food Item" : "Add Food Item"}
@@ -263,7 +313,7 @@ export default function ManageFoods() {
             {editingId ? "Save Food Item" : "Save Food Item"}
           </Button>
         </div>
-      </motion.div>
+      </MotionDiv>
 
       <form id="food-form" onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_300px] gap-6">
@@ -659,10 +709,10 @@ export default function ManageFoods() {
         </div>
       </div>
 
-      <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <MotionDiv layout className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         <AnimatePresence>
           {displayedFoods.map((f, i) => (
-            <motion.div key={f._id} layout
+            <MotionDiv key={f._id} layout
               initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
               transition={{ delay: i * 0.04 }}>
               <Card hover className="overflow-hidden flex flex-col h-full border-slate-100 dark:border-slate-800/60 p-2 bg-white dark:bg-slate-950 group">
@@ -700,7 +750,7 @@ export default function ManageFoods() {
                   </div>
                 </div>
               </Card>
-            </motion.div>
+            </MotionDiv>
           ))}
         </AnimatePresence>
 
@@ -711,7 +761,7 @@ export default function ManageFoods() {
             <p className="text-slate-400 font-medium text-sm">Your menu is empty. Add a new item above.</p>
           </div>
         )}
-      </motion.div>
+      </MotionDiv>
 
     </div>
   );
