@@ -20,6 +20,16 @@ const parseJsonArray = (value, fallback = []) => {
     return fallback;
   }
 };
+const normalizeCategories = (categories, category = "") => {
+  const parsedCategories = parseJsonArray(categories);
+  const fallbackCategories = String(category || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+  return [...new Set([...parsedCategories, ...fallbackCategories]
+    .map((item) => String(item || "").trim())
+    .filter(Boolean))];
+};
 const normalizeVariants = (value, basePrice = 0) => parseJsonArray(value)
   .map((variant) => {
     if (typeof variant === "string") {
@@ -31,6 +41,16 @@ const normalizeVariants = (value, basePrice = 0) => parseJsonArray(value)
     };
   })
   .filter((variant) => variant.name);
+const normalizeComboItems = (value) => parseJsonArray(value)
+  .map((item) => ({
+    name: String(item?.name || "").trim(),
+    price: Math.max(0, toNumber(item?.price, 0)),
+  }))
+  .filter((item) => item.name);
+const normalizeLevel = (value, fallback = "Medium") => {
+  const next = String(value || "").trim();
+  return ["Small", "Medium", "Hard"].includes(next) ? next : fallback;
+};
 
 export const getFoods = async (req, res) => {
   const foods = await Food.find().sort({ createdAt: -1 }).lean();
@@ -44,6 +64,7 @@ export const addFood = async (req, res) => {
       price,
       description,
       category,
+      categories,
       categoryImageCurrent,
       veg,
       foodType,
@@ -51,17 +72,23 @@ export const addFood = async (req, res) => {
       servingSize,
       packingCharge,
       variants,
-      comboItems
+      comboItems,
+      preparationTime,
+      spiceLevel,
+      sizeLevel
     } = req.body;
     const foodImage = getUploadedPath(req.files, "image");
     const categoryImageUpload = getUploadedPath(req.files, "categoryImage");
     const nextCategoryImage = categoryImageUpload || categoryImageCurrent || "";
 
+    const nextCategories = normalizeCategories(categories, category);
+
     const food = await Food.create({
       name,
       price: toNumber(price),
       description,
-      category,
+      category: nextCategories[0] || category || "",
+      categories: nextCategories,
       categoryImage: nextCategoryImage,
       veg: toBoolean(veg, true),
       foodType: foodType === "combo" ? "combo" : "single",
@@ -69,12 +96,18 @@ export const addFood = async (req, res) => {
       servingSize: Math.max(1, Math.ceil(toNumber(servingSize, 1))),
       packingCharge: Math.max(0, toNumber(packingCharge, 0)),
       variants: normalizeVariants(variants, price),
-      comboItems: parseJsonArray(comboItems),
+      comboItems: normalizeComboItems(comboItems),
+      preparationTime: preparationTime || "15 - 20 min",
+      spiceLevel: normalizeLevel(spiceLevel),
+      sizeLevel: normalizeLevel(sizeLevel),
       image: foodImage, // Save the full Cloudinary URL
     });
 
-    if (categoryImageUpload && category) {
-      await Food.updateMany({ category }, { $set: { categoryImage: categoryImageUpload } });
+    if (categoryImageUpload && nextCategories.length) {
+      await Food.updateMany(
+        { $or: [{ category: { $in: nextCategories } }, { categories: { $in: nextCategories } }] },
+        { $set: { categoryImage: categoryImageUpload } }
+      );
     }
 
     res.json(food);
@@ -90,6 +123,7 @@ export const updateFood = async (req, res) => {
       price,
       description,
       category,
+      categories,
       categoryImageCurrent,
       veg,
       featured,
@@ -98,14 +132,23 @@ export const updateFood = async (req, res) => {
       servingSize,
       packingCharge,
       variants,
-      comboItems
+      comboItems,
+      preparationTime,
+      spiceLevel,
+      sizeLevel
     } = req.body;
     const categoryImageUpload = getUploadedPath(req.files, "categoryImage");
     let updateData = {};
     if (name !== undefined) updateData.name = name;
     if (price !== undefined) updateData.price = toNumber(price);
     if (description !== undefined) updateData.description = description;
-    if (category !== undefined) updateData.category = category;
+    const nextCategories = categories !== undefined || category !== undefined
+      ? normalizeCategories(categories, category)
+      : [];
+    if (category !== undefined || categories !== undefined) {
+      updateData.category = nextCategories[0] || category || "";
+      updateData.categories = nextCategories;
+    }
     if (categoryImageUpload || categoryImageCurrent !== undefined) {
       updateData.categoryImage = categoryImageUpload || categoryImageCurrent || "";
     }
@@ -116,7 +159,10 @@ export const updateFood = async (req, res) => {
     if (servingSize !== undefined) updateData.servingSize = Math.max(1, Math.ceil(toNumber(servingSize, 1)));
     if (packingCharge !== undefined) updateData.packingCharge = Math.max(0, toNumber(packingCharge, 0));
     if (variants !== undefined) updateData.variants = normalizeVariants(variants, price ?? req.body.price);
-    if (comboItems !== undefined) updateData.comboItems = parseJsonArray(comboItems);
+    if (comboItems !== undefined) updateData.comboItems = normalizeComboItems(comboItems);
+    if (preparationTime !== undefined) updateData.preparationTime = preparationTime || "15 - 20 min";
+    if (spiceLevel !== undefined) updateData.spiceLevel = normalizeLevel(spiceLevel);
+    if (sizeLevel !== undefined) updateData.sizeLevel = normalizeLevel(sizeLevel);
     
     const foodImage = getUploadedPath(req.files, "image");
     if (foodImage) {
@@ -124,8 +170,11 @@ export const updateFood = async (req, res) => {
     }
 
     const food = await Food.findByIdAndUpdate(req.params.id, updateData, { new: true });
-    if (categoryImageUpload && category) {
-      await Food.updateMany({ category }, { $set: { categoryImage: categoryImageUpload } });
+    if (categoryImageUpload && nextCategories.length) {
+      await Food.updateMany(
+        { $or: [{ category: { $in: nextCategories } }, { categories: { $in: nextCategories } }] },
+        { $set: { categoryImage: categoryImageUpload } }
+      );
     }
     res.json(food);
   } catch (err) {

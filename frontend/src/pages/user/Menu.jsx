@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Search, ShoppingCart, UtensilsCrossed, Star, X, Heart, 
-  MapPin, Bell, Sun, Moon, Sparkles, Navigation, Clock, ChevronDown, Plus, Mic, Grid3X3, Wallet, ChevronRight, Trash2
+  MapPin, Bell, Sun, Moon, Sparkles, Navigation, Clock, ChevronDown, Plus, Mic, Grid3X3, Wallet, ChevronRight, Trash2, Users, Flame
 } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
 import Button from "../../components/ui/Button";
@@ -15,6 +15,45 @@ import BudgetAssistant from "../../components/dashboard/BudgetAssistant";
 
 const API = getApiUrl();
 const MotionDiv = motion.div;
+
+function ComboItemsTicker({ items = [] }) {
+  const comboItems = items.filter((item) => item?.name);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    if (comboItems.length <= 1) return undefined;
+    const timer = setInterval(() => {
+      setActiveIndex((index) => (index + 1) % comboItems.length);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, [comboItems.length]);
+
+  if (comboItems.length === 0) return null;
+
+  const activeItem = comboItems[activeIndex] || comboItems[0];
+
+  return (
+    <div className="overflow-hidden rounded-2xl border border-emerald-100 bg-emerald-50/70 px-3 py-2 dark:border-emerald-900/40 dark:bg-emerald-950/20">
+      <div className="mb-1 flex items-center justify-between gap-2">
+        <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-300">Combo includes</span>
+        <span className="text-[10px] font-black text-slate-500 dark:text-slate-400">{activeIndex + 1}/{comboItems.length}</span>
+      </div>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={`${activeItem.name}-${activeIndex}`}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.35, ease: "easeOut" }}
+          className="flex items-center justify-between gap-3"
+        >
+          <span className="truncate text-xs font-black text-slate-900 dark:text-white">{activeItem.name}</span>
+          <span className="shrink-0 text-xs font-black text-emerald-700 dark:text-emerald-300">Rs. {activeItem.price || 0}</span>
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
+}
 
 export default function Menu() {
   const navigate = useNavigate();
@@ -292,6 +331,27 @@ export default function Menu() {
 
   const hasVariantChoices = useCallback((food) => getVariantOptions(food).length > 0, [getVariantOptions]);
 
+  const getFoodCategories = useCallback((food) => {
+    const categories = Array.isArray(food?.categories) && food.categories.length
+      ? food.categories
+      : [food?.category].filter(Boolean);
+    return [...new Set(categories.map((item) => String(item || "").trim()).filter(Boolean))];
+  }, []);
+
+  const getFoodCategoryLabel = useCallback((food) => getFoodCategories(food).join(", ") || "Menu", [getFoodCategories]);
+
+  const getComboItems = useCallback((food) => (
+    Array.isArray(food?.comboItems) ? food.comboItems.filter((item) => item?.name) : []
+  ), []);
+
+  const getComboTotalPrice = useCallback((food) => getComboItems(food)
+    .reduce((sum, item) => sum + Number(item.price || 0), 0), [getComboItems]);
+
+  const getServingLabel = (servingSize) => {
+    const next = Number(servingSize || 1);
+    return next >= 4 ? "4+ Person" : `${next} Person`;
+  };
+
   const withSelectedVariant = (food, variant = null) => {
     const selected = variant || getVariantOptions(food)[0] || null;
     if (!selected) return food;
@@ -328,6 +388,7 @@ export default function Menu() {
           servingSize: food.servingSize || 1,
           image: food.image,
           category: food.category,
+          categories: getFoodCategories(food),
           qty: newQty
         });
       }
@@ -354,10 +415,10 @@ export default function Menu() {
   };
 
   const isNonVegFood = useCallback((food) => {
-    const cat = String(food.category || "").toLowerCase();
+    const cat = getFoodCategories(food).join(" ").toLowerCase();
     const name = String(food.name || "").toLowerCase();
     return food.veg === false || cat.includes("non-veg") || cat.includes("chicken") || name.includes("chicken") || name.includes("mutton") || name.includes("egg");
-  }, []);
+  }, [getFoodCategories]);
 
   const isVegFood = useCallback((food) => !isNonVegFood(food), [isNonVegFood]);
 
@@ -378,24 +439,26 @@ export default function Menu() {
       } else if (category === "Favorites") {
         matchesCategory = isFavorite(food._id);
       } else {
-        const cat = food.category?.toLowerCase() || "";
+        const foodCategories = getFoodCategories(food).map((item) => item.toLowerCase());
+        const hasCategory = (value) => foodCategories.includes(value);
+        const hasCategoryText = (value) => foodCategories.some((item) => item.includes(value));
 
         if (selectedCategory === "veg") {
-          matchesCategory = food.veg === true || cat === "veg" || foodName.includes("veg") || foodName.includes("paneer");
+          matchesCategory = food.veg === true || hasCategory("veg") || foodName.includes("veg") || foodName.includes("paneer");
         } else if (selectedCategory === "non-veg") {
-          matchesCategory = food.veg === false || cat === "non-veg" || cat === "chicken" || foodName.includes("chicken") || foodName.includes("egg");
+          matchesCategory = food.veg === false || hasCategory("non-veg") || hasCategory("chicken") || foodName.includes("chicken") || foodName.includes("egg");
         } else if (selectedCategory === "drinks") {
-          matchesCategory = cat === "drinks" || cat === "water" || cat === "cold drink";
+          matchesCategory = hasCategory("drinks") || hasCategory("water") || hasCategory("cold drink");
         } else if (selectedCategory === "desserts") {
-          matchesCategory = cat === "desserts" || cat === "sweet";
+          matchesCategory = hasCategory("desserts") || hasCategory("sweet");
         } else {
-          matchesCategory = cat === selectedCategory || foodName.includes(selectedCategory);
+          matchesCategory = hasCategory(selectedCategory) || hasCategoryText(selectedCategory) || foodName.includes(selectedCategory);
         }
       }
 
       return matchesSearch && matchesCategory && matchesVegMode(food);
     });
-  }, [category, foods, isFavorite, matchesVegMode, search]);
+  }, [category, foods, getFoodCategories, isFavorite, matchesVegMode, search]);
 
   // POPULAR DISHES (Ranked by highest rating)
   const popularDishes = useMemo(() => foods
@@ -417,6 +480,7 @@ export default function Menu() {
     return {
       ...item,
       category: item.category || foodDetails?.category,
+      categories: item.categories || foodDetails?.categories,
       image: item.image || foodDetails?.image,
       name: item.name || foodDetails?.name,
     };
@@ -424,7 +488,9 @@ export default function Menu() {
   const cartTotal = useMemo(() => cart.reduce((sum, item) => sum + ((Number(item.price || 0) + Number(item.packingCharge || 0)) * item.qty), 0), [cart]);
   const cartCount = useMemo(() => cart.reduce((sum, item) => sum + item.qty, 0), [cart]);
   const cartPreviewItem = cartItemsWithDetails[0];
-  const orderedCategories = useMemo(() => [...new Set(cartItemsWithDetails.map((item) => item.category).filter(Boolean))], [cartItemsWithDetails]);
+  const orderedCategories = useMemo(() => [...new Set(cartItemsWithDetails.flatMap((item) => (
+    Array.isArray(item.categories) && item.categories.length ? item.categories : [item.category]
+  )).filter(Boolean))], [cartItemsWithDetails]);
   const unreadNotificationCount = useMemo(() => notifications.filter((item) => !(item.isRead || item.read)).length, [notifications]);
   const isLoggedIn = Boolean(localStorage.getItem("token") && localStorage.getItem("auth_state") === "logged_in");
 
@@ -466,10 +532,10 @@ export default function Menu() {
     if (cat.id === "All") return "/greengo-logo.svg";
     const selected = cat.id.toLowerCase();
     const match = foods.find((food) => {
-      const foodCategory = (food.category || "").toLowerCase();
-      if (foodCategory === selected) return true;
-      if (selected === "drinks") return ["drinks", "water", "cold drink"].includes(foodCategory);
-      if (selected === "non-veg") return ["non-veg", "chicken"].includes(foodCategory);
+      const foodCategories = getFoodCategories(food).map((item) => item.toLowerCase());
+      if (foodCategories.includes(selected)) return true;
+      if (selected === "drinks") return foodCategories.some((item) => ["drinks", "water", "cold drink"].includes(item));
+      if (selected === "non-veg") return foodCategories.some((item) => ["non-veg", "chicken"].includes(item));
       return (food.name || "").toLowerCase().includes(selected);
     });
     const image = match?.categoryImage || match?.image || "";
@@ -547,6 +613,11 @@ export default function Menu() {
       oldPriceFactor = 1.2,
       categoryPrefix = "In Category:",
     } = options;
+    const comboItems = getComboItems(food);
+    const isCombo = food.foodType === "combo" && comboItems.length > 0;
+    const comboTotal = getComboTotalPrice(food);
+    const comboSaving = Math.max(0, comboTotal - Number(food.price || 0));
+    const preparationTime = food.preparationTime || deliveryTime;
 
     return (
       <div
@@ -565,7 +636,7 @@ export default function Menu() {
           />
           <div className="absolute bottom-2 left-2 bg-slate-950/95 dark:bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-black text-white dark:text-slate-950 flex items-center gap-1 shadow-sm">
             <Clock size={10} className="text-brand-400" />
-            <span>{deliveryTime}</span>
+            <span>{preparationTime}</span>
           </div>
           <div className="absolute top-2 right-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm px-2 py-0.5 rounded-lg text-[10px] font-black text-slate-800 dark:text-slate-100 flex items-center gap-1 shadow-sm">
             <Star size={10} className="text-amber-500 fill-amber-500 shrink-0" />
@@ -580,8 +651,28 @@ export default function Menu() {
           {food.name}
         </h4>
         <p className="text-[11px] text-slate-500 dark:text-slate-300 font-bold uppercase tracking-wider mb-2.5">
-          {categoryPrefix} {food.category}
+          {categoryPrefix} {getFoodCategoryLabel(food)}
         </p>
+        <div className="mb-3 flex flex-wrap gap-1.5">
+          <span className="inline-flex items-center gap-1 rounded-full bg-slate-50 px-2 py-1 text-[10px] font-black text-slate-600 ring-1 ring-slate-100 dark:bg-slate-950 dark:text-slate-300 dark:ring-slate-800">
+            <Users size={10} /> {getServingLabel(food.servingSize)}
+          </span>
+          <span className="inline-flex items-center gap-1 rounded-full bg-orange-50 px-2 py-1 text-[10px] font-black text-orange-700 ring-1 ring-orange-100 dark:bg-orange-950/20 dark:text-orange-300 dark:ring-orange-900/40">
+            <Flame size={10} /> {food.spiceLevel || "Medium"}
+          </span>
+          <span className="rounded-full bg-indigo-50 px-2 py-1 text-[10px] font-black text-indigo-700 ring-1 ring-indigo-100 dark:bg-indigo-950/20 dark:text-indigo-300 dark:ring-indigo-900/40">
+            {food.sizeLevel || "Medium"}
+          </span>
+        </div>
+        {isCombo && (
+          <div className="mb-3 space-y-2">
+            <ComboItemsTicker items={comboItems} />
+            <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2 text-[10px] font-black text-slate-600 dark:bg-slate-950 dark:text-slate-300">
+              <span>{comboItems.length} items total Rs. {comboTotal}</span>
+              {comboSaving > 0 && <span className="text-emerald-600 dark:text-emerald-300">Save Rs. {comboSaving}</span>}
+            </div>
+          </div>
+        )}
         <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed mb-4.5 font-medium flex-1">
           {food.description}
         </p>
@@ -1073,7 +1164,7 @@ export default function Menu() {
                     />
                     <div className="absolute bottom-2 left-2 bg-slate-950/95 dark:bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-black text-white dark:text-slate-950 flex items-center gap-1 shadow-sm">
                       <Clock size={10} className="text-brand-400" />
-                      <span>20-30 min</span>
+                      <span>{food.preparationTime || "20-30 min"}</span>
                     </div>
                     <div className="absolute top-2 right-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm px-2 py-0.5 rounded-lg text-[10px] font-black text-slate-800 dark:text-slate-100 flex items-center gap-1 shadow-sm">
                       <Star size={10} className="text-amber-500 fill-amber-500 shrink-0" />
@@ -1087,7 +1178,29 @@ export default function Menu() {
                   >
                     {food.name}
                   </h4>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-300 font-bold uppercase tracking-wider mb-2.5">Category: {food.category}</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-300 font-bold uppercase tracking-wider mb-2.5">Category: {getFoodCategoryLabel(food)}</p>
+                  <div className="mb-3 flex flex-wrap gap-1.5">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-slate-50 px-2 py-1 text-[10px] font-black text-slate-600 ring-1 ring-slate-100 dark:bg-slate-950 dark:text-slate-300 dark:ring-slate-800">
+                      <Users size={10} /> {getServingLabel(food.servingSize)}
+                    </span>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-orange-50 px-2 py-1 text-[10px] font-black text-orange-700 ring-1 ring-orange-100 dark:bg-orange-950/20 dark:text-orange-300 dark:ring-orange-900/40">
+                      <Flame size={10} /> {food.spiceLevel || "Medium"}
+                    </span>
+                    <span className="rounded-full bg-indigo-50 px-2 py-1 text-[10px] font-black text-indigo-700 ring-1 ring-indigo-100 dark:bg-indigo-950/20 dark:text-indigo-300 dark:ring-indigo-900/40">
+                      {food.sizeLevel || "Medium"}
+                    </span>
+                  </div>
+                  {food.foodType === "combo" && getComboItems(food).length > 0 && (
+                    <div className="mb-3 space-y-2">
+                      <ComboItemsTicker items={getComboItems(food)} />
+                      <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2 text-[10px] font-black text-slate-600 dark:bg-slate-950 dark:text-slate-300">
+                        <span>{getComboItems(food).length} items total Rs. {getComboTotalPrice(food)}</span>
+                        {getComboTotalPrice(food) > Number(food.price || 0) && (
+                          <span className="text-emerald-600 dark:text-emerald-300">Save Rs. {getComboTotalPrice(food) - Number(food.price || 0)}</span>
+                        )}
+                      </div>
+                    </div>
+                  )}
                   <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed mb-4.5 font-medium flex-1">{food.description}</p>
                   
                   <div className="flex items-center justify-between gap-3 mt-auto pt-3 border-t border-slate-100 dark:border-slate-800/50">
@@ -1210,10 +1323,50 @@ export default function Menu() {
                   </div>
                 </div>
 
+                <div className="flex flex-wrap gap-2">
+                  <span className="inline-flex items-center gap-1.5 rounded-xl bg-slate-50 px-3 py-2 text-xs font-black text-slate-600 ring-1 ring-slate-100 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-800">
+                    <Clock size={14} /> {selectedFood.preparationTime || "20-30 min"}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 rounded-xl bg-slate-50 px-3 py-2 text-xs font-black text-slate-600 ring-1 ring-slate-100 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-800">
+                    <Users size={14} /> {getServingLabel(selectedFood.servingSize)}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 rounded-xl bg-orange-50 px-3 py-2 text-xs font-black text-orange-700 ring-1 ring-orange-100 dark:bg-orange-950/20 dark:text-orange-300 dark:ring-orange-900/40">
+                    <Flame size={14} /> {selectedFood.spiceLevel || "Medium"}
+                  </span>
+                  <span className="rounded-xl bg-indigo-50 px-3 py-2 text-xs font-black text-indigo-700 ring-1 ring-indigo-100 dark:bg-indigo-950/20 dark:text-indigo-300 dark:ring-indigo-900/40">
+                    {selectedFood.sizeLevel || "Medium"}
+                  </span>
+                </div>
+
                 <div>
                   <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Description</h4>
                   <p className="text-slate-600 dark:text-slate-300 leading-relaxed font-medium">{selectedFood.description || "No description available."}</p>
                 </div>
+
+                {selectedFood.foodType === "combo" && getComboItems(selectedFood).length > 0 && (
+                  <div className="rounded-3xl border border-emerald-100 bg-emerald-50/70 p-4 dark:border-emerald-900/40 dark:bg-emerald-950/20">
+                    <div className="mb-4 flex items-center justify-between gap-3">
+                      <div>
+                        <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">Combo Details</h3>
+                        <p className="mt-1 text-sm font-bold text-slate-500 dark:text-slate-400">
+                          {getComboItems(selectedFood).length} items for {getServingLabel(selectedFood.servingSize)}
+                        </p>
+                      </div>
+                      <span className="rounded-xl bg-white px-3 py-2 text-xs font-black text-emerald-700 shadow-sm dark:bg-slate-950 dark:text-emerald-300">
+                        Save Rs. {Math.max(0, getComboTotalPrice(selectedFood) - selectedFoodPrice)}
+                      </span>
+                    </div>
+                    <ComboItemsTicker items={getComboItems(selectedFood)} />
+                    <div className="mt-4 divide-y divide-emerald-100 overflow-hidden rounded-2xl bg-white dark:divide-emerald-900/40 dark:bg-slate-950">
+                      {getComboItems(selectedFood).map((item) => (
+                        <div key={item.name} className="flex items-center justify-between gap-3 px-4 py-3 text-sm font-bold">
+                          <span className="min-w-0 truncate text-slate-700 dark:text-slate-200">{item.name}</span>
+                          <span className="shrink-0 text-slate-900 dark:text-white">Rs. {item.price || 0}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {selectedFoodVariantOptions.length > 0 && (
                   <div>

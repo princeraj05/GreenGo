@@ -5,6 +5,7 @@ const foodSchema = new mongoose.Schema({
   price: { type: Number, required: true },
   description: String,
   category: { type: String, default: "" },
+  categories: [{ type: String }],
   categoryImage: String,
   veg: { type: Boolean, default: true },
   image: String,
@@ -24,6 +25,17 @@ const foodSchema = new mongoose.Schema({
     name: { type: String, default: "" },
     price: { type: Number, default: 0 }
   }],
+  preparationTime: { type: String, default: "15 - 20 min" },
+  spiceLevel: {
+    type: String,
+    enum: ["Small", "Medium", "Hard"],
+    default: "Medium"
+  },
+  sizeLevel: {
+    type: String,
+    enum: ["Small", "Medium", "Hard"],
+    default: "Medium"
+  },
   featured: { type: Boolean, default: false },
   totalOrders: { type: Number, default: 0 },
   revenueGenerated: { type: Number, default: 0 },
@@ -33,6 +45,7 @@ const foodSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 foodSchema.index({ category: 1, veg: 1, createdAt: -1 });
+foodSchema.index({ categories: 1, veg: 1, createdAt: -1 });
 foodSchema.index({ featured: 1, updatedAt: -1 });
 foodSchema.index({ totalOrders: -1, popularityScore: -1 });
 foodSchema.index({ revenueGenerated: -1 });

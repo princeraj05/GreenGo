@@ -1,11 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Edit2, Trash2, Star, ImagePlus, UploadCloud, X, UtensilsCrossed } from "lucide-react";
+import { Plus, Edit2, Trash2, ImagePlus, UploadCloud, X, UtensilsCrossed, Clock, Flame, Users } from "lucide-react";
 import API from "../../api/axios";
 import { getToken } from "../../utils/getToken";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
 import Card from "../../components/ui/Card";
+
+const MotionDiv = motion.div;
 
 export default function ManageFoods() {
   const categoryOptions = [
@@ -14,12 +16,13 @@ export default function ManageFoods() {
     "Snacks", "Thali", "Roll & Wraps", "Sandwich", "Soup", "Tea & Coffee"
   ];
   const variantOptions = ["Full Plate", "Half Plate", "Regular", "Large", "Small"];
+  const levelOptions = ["Small", "Medium", "Hard"];
   const [foods, setFoods] = useState([]);
   const initialForm = {
     name: "",
     price: "",
     description: "",
-    category: "Fast Food",
+    categories: ["Fast Food"],
     veg: "true",
     foodType: "single",
     mealCategory: "Anytime",
@@ -27,7 +30,10 @@ export default function ManageFoods() {
     packingCharge: "",
     variants: ["Regular"],
     variantPrices: { Regular: "" },
-    comboItemsText: "",
+    comboItems: [{ name: "", price: "" }],
+    preparationTime: "15 - 20 min",
+    spiceLevel: "Medium",
+    sizeLevel: "Medium",
     categoryImage: "",
     image: null,
     categoryImageFile: null
@@ -91,18 +97,72 @@ export default function ManageFoods() {
     }));
   };
 
-  const parseComboItems = () => form.comboItemsText
-    .split("\n")
-    .map((line) => {
-      const [name, price] = line.split("|").map((part) => String(part || "").trim());
-      return { name, price: Number(price || 0) };
-    })
+  const toggleCategory = (category) => {
+    if (category === "All") return;
+    setForm((current) => {
+      const selected = current.categories.includes(category)
+        ? current.categories.filter((item) => item !== category)
+        : [...current.categories, category];
+      return { ...current, categories: selected.length ? selected : [category] };
+    });
+  };
+
+  const updateComboItem = (index, field, value) => {
+    setForm((current) => ({
+      ...current,
+      comboItems: current.comboItems.map((item, itemIndex) => (
+        itemIndex === index ? { ...item, [field]: value } : item
+      ))
+    }));
+  };
+
+  const addComboItemRow = () => {
+    setForm((current) => ({
+      ...current,
+      comboItems: [...current.comboItems, { name: "", price: "" }]
+    }));
+  };
+
+  const removeComboItemRow = (index) => {
+    setForm((current) => ({
+      ...current,
+      comboItems: current.comboItems.length > 1
+        ? current.comboItems.filter((_, itemIndex) => itemIndex !== index)
+        : [{ name: "", price: "" }]
+    }));
+  };
+
+  const parseComboItems = () => form.comboItems
+    .map((item) => ({
+      name: String(item.name || "").trim(),
+      price: Number(item.price || 0)
+    }))
     .filter((item) => item.name);
+
+  const comboSummary = useMemo(() => {
+    const items = form.comboItems
+      .map((item) => ({
+        name: String(item.name || "").trim(),
+        price: Number(item.price || 0)
+      }))
+      .filter((item) => item.name);
+    const totalPrice = items.reduce((sum, item) => sum + Number(item.price || 0), 0);
+    const comboPrice = Number(form.price || 0);
+    const saving = Math.max(0, totalPrice - comboPrice);
+    const savingPercent = totalPrice > 0 ? Math.round((saving / totalPrice) * 100) : 0;
+    return { items, totalPrice, comboPrice, saving, savingPercent };
+  }, [form.comboItems, form.price]);
 
   const addFood = async (e) => {
     e.preventDefault();
     if (!form.name || !form.price || !form.description || (!form.image && !editingId)) {
       alert("All fields are required."); return;
+    }
+    if (form.categories.length === 0) {
+      alert("Please select at least one category."); return;
+    }
+    if (form.foodType === "combo" && parseComboItems().length < 2) {
+      alert("Combo ke liye kam se kam 2 food items add karein."); return;
     }
     setLoading(true);
     try {
@@ -111,17 +171,21 @@ export default function ManageFoods() {
       fd.append("name", form.name);
       fd.append("price", form.price);
       fd.append("description", form.description);
-      fd.append("category", form.category || "Pizza");
+      fd.append("category", form.categories[0] || "Pizza");
+      fd.append("categories", JSON.stringify(form.categories));
       fd.append("veg", form.veg);
       fd.append("foodType", form.foodType);
       fd.append("mealCategory", form.mealCategory);
-      fd.append("servingSize", form.foodType === "combo" ? 1 : form.servingSize);
+      fd.append("servingSize", form.servingSize);
       fd.append("packingCharge", form.packingCharge || 0);
       fd.append("variants", JSON.stringify(form.variants.map((variant) => ({
         name: variant,
         price: Number(form.variantPrices?.[variant] || form.price || 0)
       }))));
       fd.append("comboItems", JSON.stringify(form.foodType === "combo" ? parseComboItems() : []));
+      fd.append("preparationTime", form.preparationTime);
+      fd.append("spiceLevel", form.spiceLevel);
+      fd.append("sizeLevel", form.sizeLevel);
       fd.append("categoryImageCurrent", form.categoryImage || "");
       if (form.image) fd.append("image", form.image);
       if (form.categoryImageFile) fd.append("categoryImage", form.categoryImageFile);
@@ -154,7 +218,9 @@ export default function ManageFoods() {
       name: food.name,
       price: food.price,
       description: food.description,
-      category: food.category || "Fast Food",
+      categories: Array.isArray(food.categories) && food.categories.length
+        ? food.categories
+        : [food.category || "Fast Food"],
       veg: food.veg === false ? "false" : "true",
       foodType: food.foodType || "single",
       mealCategory: food.mealCategory || "Anytime",
@@ -170,7 +236,12 @@ export default function ManageFoods() {
             return acc;
           }, {})
         : { Regular: String(food.price || "") },
-      comboItemsText: Array.isArray(food.comboItems) ? food.comboItems.map((item) => `${item.name}|${item.price || 0}`).join("\n") : "",
+      comboItems: Array.isArray(food.comboItems) && food.comboItems.length
+        ? food.comboItems.map((item) => ({ name: item.name || "", price: String(item.price || "") }))
+        : [{ name: "", price: "" }],
+      preparationTime: food.preparationTime || "15 - 20 min",
+      spiceLevel: food.spiceLevel || "Medium",
+      sizeLevel: food.sizeLevel || "Medium",
       categoryImage: food.categoryImage || "",
       image: null,
       categoryImageFile: null
@@ -190,23 +261,15 @@ export default function ManageFoods() {
     } catch (err) { console.log(err); }
   };
 
-  const toggleFeatured = async (id, currentFeatured) => {
-    try {
-      const token = await getToken();
-      await API.put(`/api/foods/${id}`, { featured: !currentFeatured }, { headers: { Authorization: `Bearer ${token}` } });
-      loadFoods();
-    } catch (err) { console.log(err); }
-  };
-
   return (
     <div className="w-full pb-10">
       
-      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6 md:mb-10">
+      <MotionDiv initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6 md:mb-10">
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight">Manage Foods</h1>
         <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm sm:text-base md:text-lg font-medium">Add new items to the menu or manage existing ones.</p>
-      </motion.div>
+      </MotionDiv>
 
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+      <MotionDiv initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
         <Card className="p-5 md:p-8 mb-8 md:mb-12 border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-950">
           <h2 className="text-base md:text-xl font-bold text-slate-900 dark:text-white mb-5 md:mb-8 flex items-center gap-3 border-b border-slate-100 dark:border-slate-800/60 pb-4">
             <div className="w-10 h-10 rounded-xl bg-brand-50 dark:bg-brand-950/30 text-brand-600 dark:text-brand-400 flex items-center justify-center">
@@ -228,17 +291,23 @@ export default function ManageFoods() {
                   <Input name="price" type="number" placeholder="e.g. 249" value={form.price} onChange={handleChange} className="bg-slate-50 dark:bg-slate-900" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Category</label>
-                  <select 
-                    name="category" 
-                    value={form.category || "Veg"} 
-                    onChange={handleChange} 
-                    className="w-full px-5 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-950 focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 transition-all outline-none text-slate-900 dark:text-white font-medium"
-                  >
-                    {categoryOptions.map((option) => (
-                      <option key={option} value={option} className="bg-white dark:bg-slate-900">{option}</option>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Categories</label>
+                  <div className="flex min-h-[52px] flex-wrap gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-2 dark:border-slate-800 dark:bg-slate-900">
+                    {categoryOptions.filter((option) => option !== "All").map((option) => (
+                      <button
+                        key={option}
+                        type="button"
+                        onClick={() => toggleCategory(option)}
+                        className={`rounded-xl border px-3 py-2 text-xs font-black transition-all ${
+                          form.categories.includes(option)
+                            ? "border-brand-500 bg-brand-50 text-brand-700 dark:bg-brand-950/30 dark:text-brand-300"
+                            : "border-slate-200 bg-white text-slate-600 hover:border-brand-200 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300"
+                        }`}
+                      >
+                        {option}
+                      </button>
                     ))}
-                  </select>
+                  </div>
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Veg / Non-Veg</label>
@@ -267,22 +336,20 @@ export default function ManageFoods() {
                     <option value="combo" className="bg-white dark:bg-slate-900">Combo</option>
                   </select>
                 </div>
-                {form.foodType !== "combo" && (
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Serving For</label>
-                    <select
-                      name="servingSize"
-                      value={form.servingSize}
-                      onChange={handleChange}
-                      className="w-full px-5 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 transition-all outline-none text-slate-900 dark:text-white font-medium"
-                    >
-                      <option value="1" className="bg-white dark:bg-slate-900">1 Person</option>
-                      <option value="2" className="bg-white dark:bg-slate-900">2 Person</option>
-                      <option value="3" className="bg-white dark:bg-slate-900">3 Person</option>
-                      <option value="4" className="bg-white dark:bg-slate-900">4+ Person</option>
-                    </select>
-                  </div>
-                )}
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Serving For</label>
+                  <select
+                    name="servingSize"
+                    value={form.servingSize}
+                    onChange={handleChange}
+                    className="w-full px-5 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 transition-all outline-none text-slate-900 dark:text-white font-medium"
+                  >
+                    <option value="1" className="bg-white dark:bg-slate-900">1 Person</option>
+                    <option value="2" className="bg-white dark:bg-slate-900">2 Person</option>
+                    <option value="3" className="bg-white dark:bg-slate-900">3 Person</option>
+                    <option value="4" className="bg-white dark:bg-slate-900">4+ Person</option>
+                  </select>
+                </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Meal Category</label>
                   <select
@@ -300,6 +367,47 @@ export default function ManageFoods() {
                 <div>
                   <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Packing Charge (Rs.)</label>
                   <Input name="packingCharge" type="number" min="0" placeholder="0 for no charge" value={form.packingCharge} onChange={handleChange} className="bg-white dark:bg-slate-950" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 rounded-3xl border border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-950 p-4">
+                <div>
+                  <label className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                    <Clock size={14} /> Preparation Time
+                  </label>
+                  <Input
+                    name="preparationTime"
+                    placeholder="15 - 20 min"
+                    value={form.preparationTime}
+                    onChange={handleChange}
+                    className="bg-slate-50 dark:bg-slate-900"
+                  />
+                </div>
+                <div>
+                  <label className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                    <Flame size={14} /> Spice Level
+                  </label>
+                  <select
+                    name="spiceLevel"
+                    value={form.spiceLevel}
+                    onChange={handleChange}
+                    className="w-full px-5 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-950 focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 transition-all outline-none text-slate-900 dark:text-white font-medium"
+                  >
+                    {levelOptions.map((level) => <option key={level}>{level}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+                    <Users size={14} /> Size Level
+                  </label>
+                  <select
+                    name="sizeLevel"
+                    value={form.sizeLevel}
+                    onChange={handleChange}
+                    className="w-full px-5 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-950 focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 transition-all outline-none text-slate-900 dark:text-white font-medium"
+                  >
+                    {levelOptions.map((level) => <option key={level}>{level}</option>)}
+                  </select>
                 </div>
               </div>
 
@@ -344,18 +452,67 @@ export default function ManageFoods() {
 
               {form.foodType === "combo" && (
                 <div className="rounded-3xl border border-brand-100 bg-brand-50/60 p-4 dark:border-brand-900/40 dark:bg-brand-950/20">
-                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-2">Combo Items</label>
-                  <textarea
-                    name="comboItemsText"
-                    placeholder={"Chicken Roll|120\nFrench Fries|90\nCold Drink|40"}
-                    value={form.comboItemsText}
-                    onChange={handleChange}
-                    rows={4}
-                    className="w-full px-5 py-4 rounded-2xl border border-brand-100 dark:border-brand-900/50 bg-white dark:bg-slate-950 focus:ring-4 focus:ring-brand-500/20 focus:border-brand-500 transition-all outline-none resize-y text-slate-900 dark:text-white font-medium placeholder-slate-400 dark:placeholder:text-slate-500"
-                  />
-                  <p className="mt-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
-                    Combo me person option nahi dikhega. Har line me item name aur price ko pipe se likhein.
-                  </p>
+                  <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Combo Details</label>
+                      <p className="mt-1 text-xs font-semibold text-slate-500 dark:text-slate-400">Multiple food add karte hi ye user page par combo section banega.</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={addComboItemRow}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-500 px-3 py-2 text-xs font-black text-white shadow-sm shadow-brand-500/20"
+                    >
+                      <Plus size={14} /> Add Item
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {form.comboItems.map((item, index) => (
+                      <div key={index} className="grid grid-cols-1 gap-3 rounded-2xl border border-brand-100 bg-white p-3 dark:border-brand-900/50 dark:bg-slate-950 sm:grid-cols-[1fr_140px_44px]">
+                        <Input
+                          placeholder="Food name, e.g. Chicken Roll"
+                          value={item.name}
+                          onChange={(event) => updateComboItem(index, "name", event.target.value)}
+                          className="bg-slate-50 dark:bg-slate-900"
+                        />
+                        <Input
+                          type="number"
+                          min="0"
+                          placeholder="Price"
+                          value={item.price}
+                          onChange={(event) => updateComboItem(index, "price", event.target.value)}
+                          className="bg-slate-50 dark:bg-slate-900"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeComboItemRow(index)}
+                          className="flex h-12 w-full items-center justify-center rounded-xl border border-red-100 bg-red-50 text-red-500 transition-colors hover:bg-red-100 dark:border-red-900/40 dark:bg-red-950/20 dark:text-red-300 sm:w-11"
+                          title="Remove combo item"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-4 grid grid-cols-2 gap-3 rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-sm font-bold text-slate-700 dark:border-emerald-900/40 dark:bg-emerald-950/20 dark:text-slate-200 sm:grid-cols-4">
+                    <div>
+                      <span className="block text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Items</span>
+                      {comboSummary.items.length}
+                    </div>
+                    <div>
+                      <span className="block text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Price</span>
+                      Rs. {comboSummary.totalPrice}
+                    </div>
+                    <div>
+                      <span className="block text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400">Combo Price</span>
+                      Rs. {comboSummary.comboPrice}
+                    </div>
+                    <div className="text-emerald-700 dark:text-emerald-300">
+                      <span className="block text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400">You Save</span>
+                      Rs. {comboSummary.saving} ({comboSummary.savingPercent}%)
+                    </div>
+                  </div>
                 </div>
               )}
               
@@ -430,16 +587,16 @@ export default function ManageFoods() {
             
           </form>
         </Card>
-      </motion.div>
+      </MotionDiv>
 
       <div className="mb-6 flex items-center justify-between">
          <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Current Menu ({foods.length})</h2>
       </div>
       
-      <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-8">
+      <MotionDiv layout className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-8">
         <AnimatePresence>
           {foods.map((f, i) => (
-            <motion.div 
+            <MotionDiv 
               key={f._id} 
               layout
               initial={{ opacity: 0, scale: 0.9 }} 
@@ -476,9 +633,11 @@ export default function ManageFoods() {
                     <h3 className="font-bold text-slate-900 dark:text-white text-xl leading-tight group-hover:text-brand-600 transition-colors">{f.name}</h3>
                   </div>
                   <div className="flex gap-2 mb-2">
-                    <span className="px-2.5 py-0.5 text-xs font-bold bg-brand-50 dark:bg-brand-950/30 text-brand-600 dark:text-brand-400 rounded-md">
-                      {f.category || "Pizza"}
-                    </span>
+                    {(Array.isArray(f.categories) && f.categories.length ? f.categories : [f.category || "Pizza"]).slice(0, 2).map((categoryName) => (
+                      <span key={categoryName} className="px-2.5 py-0.5 text-xs font-bold bg-brand-50 dark:bg-brand-950/30 text-brand-600 dark:text-brand-400 rounded-md">
+                        {categoryName}
+                      </span>
+                    ))}
                     <span className="px-2.5 py-0.5 text-xs font-bold bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 rounded-md">
                       {f.foodType === "combo" ? "Combo" : `${f.servingSize || 1} Person`}
                     </span>
@@ -497,7 +656,7 @@ export default function ManageFoods() {
                 </div>
                 
               </Card>
-            </motion.div>
+            </MotionDiv>
           ))}
         </AnimatePresence>
         
@@ -510,7 +669,7 @@ export default function ManageFoods() {
             <p className="text-slate-500 dark:text-slate-400 font-medium">Your menu is empty. Add a new item above.</p>
           </div>
         )}
-      </motion.div>
+      </MotionDiv>
 
     </div>
   );
