@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   BadgeCheck,
@@ -40,6 +40,7 @@ const emptyAddress = { label: "Home", details: "", city: "", state: "", isPrimar
 
 export default function Profile() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -168,6 +169,13 @@ export default function Profile() {
     () => foods.filter((food) => favorites.includes(food._id)),
     [foods, favorites]
   );
+
+  const editProfileCompleted = Boolean(String(form.name || "").trim() && String(form.phone || "").trim());
+  const addressCompleted = Boolean(
+    (form.addresses || []).some((addr) => String(addr.details || "").trim()) ||
+    String(form.address || "").trim()
+  );
+  const profileCompletionPercent = (editProfileCompleted ? 50 : 0) + (addressCompleted ? 50 : 0);
 
   const referralCode = useMemo(() => {
     const source = form.name || form.phone || form.email || "GREENGO";
@@ -650,6 +658,38 @@ export default function Profile() {
             {message}
           </div>
         )}
+
+        <div className="mx-5 mt-4 rounded-3xl border border-emerald-100 bg-emerald-50/70 p-4 dark:border-emerald-900/40 dark:bg-emerald-950/20">
+          {location.state?.profileRequired && (
+            <p className="mb-3 text-sm font-black text-emerald-700 dark:text-emerald-300">
+              Features use karne ke liye profile complete karo.
+            </p>
+          )}
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Profile Level</p>
+              <h3 className="mt-1 text-xl font-black text-slate-950 dark:text-white">{profileCompletionPercent}% Completed</h3>
+            </div>
+            <span className={`rounded-2xl px-3 py-2 text-xs font-black ${
+              profileCompletionPercent === 100
+                ? "bg-emerald-500 text-white"
+                : "bg-white text-emerald-700 dark:bg-slate-950 dark:text-emerald-300"
+            }`}>
+              {profileCompletionPercent === 100 ? "Unlocked" : "Locked"}
+            </span>
+          </div>
+          <div className="mt-4 h-2 rounded-full bg-white dark:bg-slate-950">
+            <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${profileCompletionPercent}%` }} />
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-2 text-xs font-black">
+            <span className={editProfileCompleted ? "text-emerald-700 dark:text-emerald-300" : "text-slate-500 dark:text-slate-400"}>
+              Edit Profile: {editProfileCompleted ? "50%" : "Pending"}
+            </span>
+            <span className={addressCompleted ? "text-emerald-700 dark:text-emerald-300" : "text-slate-500 dark:text-slate-400"}>
+              Saved Address: {addressCompleted ? "50%" : "Pending"}
+            </span>
+          </div>
+        </div>
 
         <div className="px-5 py-4">
           <div className="divide-y divide-slate-100 dark:divide-slate-800">

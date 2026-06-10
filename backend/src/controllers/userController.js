@@ -110,6 +110,34 @@ const normalizeDeliveryDetails = (user) => {
   };
 };
 
+const hasUsableAddress = (user) => {
+  if (Array.isArray(user.addresses) && user.addresses.some((addr) => String(addr.details || "").trim())) {
+    return true;
+  }
+  return Boolean(String(user.address || "").trim());
+};
+
+const normalizeCustomerProfileCompletion = (user) => {
+  if (user.role === "deliveryBoy" || user.role === "admin") return;
+  const editProfileCompleted = Boolean(String(user.name || "").trim() && String(user.phone || "").trim());
+  const addressCompleted = hasUsableAddress(user);
+  const completionPercent = (editProfileCompleted ? 50 : 0) + (addressCompleted ? 50 : 0);
+  user.profileCompletion = {
+    ...(user.profileCompletion || {}),
+    editProfileCompleted,
+    addressCompleted,
+    completionPercent,
+    completed: completionPercent === 100,
+    updatedAt: new Date(),
+  };
+};
+
+const normalizeUserCompletion = (user) => {
+  if (!user) return;
+  normalizeCustomerProfileCompletion(user);
+  normalizeDeliveryDetails(user);
+};
+
 const logDeliveryChange = (user, field, oldValue, newValue) => {
   if (user.role !== "deliveryBoy") return;
   const before = oldValue == null ? "" : String(oldValue);
@@ -150,6 +178,9 @@ export const registerUser = async (req, res) => {
       phone,
       address
     });
+
+    normalizeUserCompletion(user);
+    await user.save();
 
     await notifyAdminUserEvent("New User Registered", user, "success");
 
@@ -214,6 +245,7 @@ export const loginUser = async (req, res) => {
     }
 
     user.lastLogin = new Date();
+    normalizeUserCompletion(user);
     await user.save();
     await notifyAdminUserEvent("User Logged In", user, "info");
 
@@ -263,10 +295,8 @@ export const getMe = async (req, res) => {
       user.primaryAddressId = primary?._id || null;
       await user.save();
     }
-    if (user?.role === "deliveryBoy") {
-      normalizeDeliveryDetails(user);
-      await user.save();
-    }
+    normalizeUserCompletion(user);
+    await user.save();
 
     res.json(user);
 
@@ -366,6 +396,7 @@ export const updateProfile = async (req, res) => {
       normalizeDeliveryDetails(user);
     }
 
+    normalizeUserCompletion(user);
     await user.save();
 
     res.json({ success: true, message: "Profile updated successfully", user });
@@ -545,6 +576,8 @@ export const googleLogin = async (req, res) => {
         role: "customer",
         lastLogin: new Date()
       });
+      normalizeUserCompletion(user);
+      await user.save();
       await notifyAdminUserEvent("New Google User", user, "success");
     } else {
       let updated = false;
@@ -560,6 +593,7 @@ export const googleLogin = async (req, res) => {
       user.lastLogin = new Date();
       updated = true;
       if (updated) {
+        normalizeUserCompletion(user);
         await user.save();
       }
       await notifyAdminUserEvent("User Logged In", user, "info");
@@ -782,9 +816,12 @@ export const verifyOtpEmail = async (req, res) => {
         provider: "email",
         lastLogin: new Date()
       });
+      normalizeUserCompletion(user);
+      await user.save();
       await notifyAdminUserEvent("New Email OTP User", user, "success");
     } else {
       user.lastLogin = new Date();
+      normalizeUserCompletion(user);
       await user.save();
       await notifyAdminUserEvent("User Logged In", user, "info");
     }
@@ -871,9 +908,12 @@ export const verifyOtpPhone = async (req, res) => {
         provider: "phone",
         lastLogin: new Date()
       });
+      normalizeUserCompletion(user);
+      await user.save();
       await notifyAdminUserEvent("New Phone OTP User", user, "success");
     } else {
       user.lastLogin = new Date();
+      normalizeUserCompletion(user);
       await user.save();
       await notifyAdminUserEvent("User Logged In", user, "info");
     }

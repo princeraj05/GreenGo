@@ -5,6 +5,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import PrivateRoute from "./PrivateRoute";
 import AdminRoute from "./AdminRoute";
 import DeliveryRoute from "./DeliveryRoute";
+import ProfileCompletionRoute from "./ProfileCompletionRoute";
 
 /* AUTH */
 const AuthPage = lazy(() => import("../pages/auth/AuthPage"));
@@ -78,18 +79,18 @@ export default function AppRoutes() {
         {/* USER PANEL */}
         <Route path="/user" element={<UserLayout />}>
           <Route index element={<Navigate to="/user/menu" replace />} />
-          <Route path="menu" element={<Menu />} />
-          <Route path="search" element={<PrivateRoute><FoodSearch /></PrivateRoute>} />
-          <Route path="dashboard" element={<PrivateRoute><UserDashboard /></PrivateRoute>} />
-          <Route path="cart" element={<PrivateRoute><Cart /></PrivateRoute>} />
-          <Route path="checkout" element={<PrivateRoute><Checkout /></PrivateRoute>} />
-          <Route path="orders" element={<PrivateRoute><Orders /></PrivateRoute>} />
-          <Route path="orders/:id/tracking" element={<PrivateRoute><OrderTrackingPage role="user" /></PrivateRoute>} />
+          <Route path="menu" element={<PrivateRoute><ProfileCompletionRoute><Menu /></ProfileCompletionRoute></PrivateRoute>} />
+          <Route path="search" element={<PrivateRoute><ProfileCompletionRoute><FoodSearch /></ProfileCompletionRoute></PrivateRoute>} />
+          <Route path="dashboard" element={<PrivateRoute><ProfileCompletionRoute><UserDashboard /></ProfileCompletionRoute></PrivateRoute>} />
+          <Route path="cart" element={<PrivateRoute><ProfileCompletionRoute><Cart /></ProfileCompletionRoute></PrivateRoute>} />
+          <Route path="checkout" element={<PrivateRoute><ProfileCompletionRoute><Checkout /></ProfileCompletionRoute></PrivateRoute>} />
+          <Route path="orders" element={<PrivateRoute><ProfileCompletionRoute><Orders /></ProfileCompletionRoute></PrivateRoute>} />
+          <Route path="orders/:id/tracking" element={<PrivateRoute><ProfileCompletionRoute><OrderTrackingPage role="user" /></ProfileCompletionRoute></PrivateRoute>} />
           <Route path="profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
-          <Route path="wishlist" element={<PrivateRoute><Wishlist /></PrivateRoute>} />
-          <Route path="contact" element={<PrivateRoute><UserContact /></PrivateRoute>} />
-          <Route path="budget-assistant" element={<PrivateRoute><BudgetAssistantPage /></PrivateRoute>} />
-          <Route path="notifications" element={<PrivateRoute><Notifications /></PrivateRoute>} />
+          <Route path="wishlist" element={<PrivateRoute><ProfileCompletionRoute><Wishlist /></ProfileCompletionRoute></PrivateRoute>} />
+          <Route path="contact" element={<PrivateRoute><ProfileCompletionRoute><UserContact /></ProfileCompletionRoute></PrivateRoute>} />
+          <Route path="budget-assistant" element={<PrivateRoute><ProfileCompletionRoute><BudgetAssistantPage /></ProfileCompletionRoute></PrivateRoute>} />
+          <Route path="notifications" element={<PrivateRoute><ProfileCompletionRoute><Notifications /></ProfileCompletionRoute></PrivateRoute>} />
         </Route>
 
         {/* DELIVERY BOY PANEL */}
@@ -103,9 +104,9 @@ export default function AppRoutes() {
             </PrivateRoute>
           }
         >
-          <Route index element={<DeliveryDashboard />} />
-          <Route path="orders" element={<DeliveryOrders />} />
-          <Route path="earnings" element={<DeliveryEarnings />} />
+          <Route index element={<ProfileCompletionRoute role="deliveryBoy"><DeliveryDashboard /></ProfileCompletionRoute>} />
+          <Route path="orders" element={<ProfileCompletionRoute role="deliveryBoy"><DeliveryOrders /></ProfileCompletionRoute>} />
+          <Route path="earnings" element={<ProfileCompletionRoute role="deliveryBoy"><DeliveryEarnings /></ProfileCompletionRoute>} />
           <Route path="profile" element={<DeliveryProfile />} />
         </Route>
 

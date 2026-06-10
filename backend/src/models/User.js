@@ -80,6 +80,14 @@ const userSchema = new mongoose.Schema(
     default: ""
   },
 
+  profileCompletion: {
+    editProfileCompleted: { type: Boolean, default: false },
+    addressCompleted: { type: Boolean, default: false },
+    completionPercent: { type: Number, default: 0 },
+    completed: { type: Boolean, default: false },
+    updatedAt: { type: Date }
+  },
+
   birthDate: {
     type: Date
   },
@@ -113,7 +121,7 @@ const userSchema = new mongoose.Schema(
 
   role: {
     type: String,
-    enum: ["customer", "user", "deliveryBoy", "admin"],
+    enum: ["customer", "deliveryBoy", "admin"],
     default: "customer"
   }
 },
