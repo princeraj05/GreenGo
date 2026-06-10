@@ -11,6 +11,8 @@ import {
   Gift,
   Heart,
   Info,
+  Eye,
+  EyeOff,
   LifeBuoy,
   LogOut,
   Mail,
@@ -62,6 +64,7 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [locationLoading, setLocationLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [developerPhotoIndex, setDeveloperPhotoIndex] = useState(0);
   const [developerFailedPhotos, setDeveloperFailedPhotos] = useState(() => new Set());
@@ -427,12 +430,23 @@ export default function Profile() {
               <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+91 98765 43210" />
             </Field>
             <Field label={form.hasPassword ? "Set New Password" : "Set Password"}>
-              <Input
-                type="password"
-                value={form.password}
-                onChange={(e) => setForm({ ...form, password: e.target.value })}
-                placeholder="Abc@123"
-              />
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  value={form.password}
+                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  placeholder="Abc@123"
+                  className="pr-12"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((value) => !value)}
+                  className="absolute inset-y-0 right-3 flex items-center text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
               <p className="mt-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
                 Min 6 chars: alphabet, number, special character.
               </p>

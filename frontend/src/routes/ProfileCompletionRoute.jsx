@@ -4,7 +4,20 @@ import { getApiUrl } from "../utils/getApiUrl";
 
 const API = getApiUrl();
 
-const isCustomerProfileComplete = (user) => Boolean(user?.profileCompletion?.completed);
+const hasSavedAddress = (user) => Boolean(
+  (Array.isArray(user?.addresses) && user.addresses.some((addr) => String(addr?.details || "").trim())) ||
+  String(user?.address || "").trim()
+);
+
+const isCustomerProfileComplete = (user) => Boolean(
+  user?.profileCompletion?.completed ||
+  (
+    String(user?.name || "").trim() &&
+    String(user?.phone || "").trim() &&
+    Boolean(user?.profileCompletion?.passwordSet || user?.profileCompletion?.editProfileCompleted) &&
+    hasSavedAddress(user)
+  )
+);
 
 const isDeliveryProfileComplete = (user) => Boolean(
   user?.deliveryDetails?.profileCompleted
