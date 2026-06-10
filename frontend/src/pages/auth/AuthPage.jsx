@@ -264,9 +264,14 @@ export default function AuthPage() {
 
       // Email OTP verification flow
       console.log("[AUTH] Sending email OTP to:", email);
-      await API.post("/api/users/send-otp-email", { email });
+      const res = await API.post("/api/users/send-otp-email", { email });
       
-      setOtpSentMessage(`We have sent a 6-digit verification code to your email: ${email}. Please check your inbox and enter the code.`);
+      let messageText = `We have sent a 6-digit verification code to your email: ${email}. Please check your inbox and enter the code.`;
+      if (res.data && res.data.otp) {
+        messageText += ` (Demo OTP: ${res.data.otp})`;
+      }
+      
+      setOtpSentMessage(messageText);
       setStep(2);
       setCountdown(60);
       setCanResend(false);
