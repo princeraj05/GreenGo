@@ -12,7 +12,34 @@ export default function ManageSettings() {
     storeLatitude: 25.5941,
     storeLongitude: 85.1376,
     isDistanceLimitEnabled: true,
+    deliveryChargeSlabs: [{ upToKm: 10, amount: 50 }, { upToKm: 50, amount: 100 }],
+    deliveryBoyAmountSlabs: [{ upToKm: 10, amount: 50 }, { upToKm: 100, amount: 100 }],
   });
+
+  const updateSlab = (field, index, key, value) => {
+    setForm((current) => ({
+      ...current,
+      [field]: current[field].map((slab, slabIndex) => (
+        slabIndex === index ? { ...slab, [key]: Number(value) } : slab
+      )),
+    }));
+  };
+
+  const addSlab = (field) => {
+    setForm((current) => ({
+      ...current,
+      [field]: [...current[field], { upToKm: "", amount: "" }],
+    }));
+  };
+
+  const removeSlab = (field, index) => {
+    setForm((current) => ({
+      ...current,
+      [field]: current[field].length > 1
+        ? current[field].filter((_, slabIndex) => slabIndex !== index)
+        : [{ upToKm: "", amount: "" }],
+    }));
+  };
 
   useEffect(() => {
     loadSettings();
@@ -30,6 +57,12 @@ export default function ManageSettings() {
           storeLatitude: data.storeLatitude !== undefined ? data.storeLatitude : 25.5941,
           storeLongitude: data.storeLongitude !== undefined ? data.storeLongitude : 85.1376,
           isDistanceLimitEnabled: data.isDistanceLimitEnabled !== undefined ? data.isDistanceLimitEnabled : true,
+          deliveryChargeSlabs: Array.isArray(data.deliveryChargeSlabs) && data.deliveryChargeSlabs.length
+            ? data.deliveryChargeSlabs
+            : [{ upToKm: 10, amount: data.deliveryChargeAmount || 50 }, { upToKm: 50, amount: 100 }],
+          deliveryBoyAmountSlabs: Array.isArray(data.deliveryBoyAmountSlabs) && data.deliveryBoyAmountSlabs.length
+            ? data.deliveryBoyAmountSlabs
+            : [{ upToKm: 10, amount: 50 }, { upToKm: 100, amount: 100 }],
         });
       }
     } catch (err) {
@@ -44,7 +77,11 @@ export default function ManageSettings() {
     setSaving(true);
     try {
       const token = await getToken();
-      await API.put("/api/settings", form, {
+      const payload = {
+        ...form,
+        deliveryChargeAmount: Number(form.deliveryChargeSlabs?.[0]?.amount || form.deliveryChargeAmount || 0),
+      };
+      await API.put("/api/settings", payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
       alert("Settings saved successfully!");
@@ -57,6 +94,50 @@ export default function ManageSettings() {
   };
 
   if (loading) return <p className="p-8 text-slate-900 dark:text-white">Loading settings...</p>;
+
+  const renderSlabRows = (field) => (
+    <div className="space-y-3">
+      {(form[field] || []).map((slab, index) => (
+        <div key={index} className="grid grid-cols-[1fr_1fr_auto] gap-3">
+          <div>
+            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Up to km</label>
+            <input
+              type="number"
+              min="0"
+              step="0.1"
+              value={slab.upToKm}
+              onChange={(e) => updateSlab(field, index, "upToKm", e.target.value)}
+              className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-slate-800 dark:text-white font-medium"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Amount (₹)</label>
+            <input
+              type="number"
+              min="0"
+              value={slab.amount}
+              onChange={(e) => updateSlab(field, index, "amount", e.target.value)}
+              className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-slate-800 dark:text-white font-medium"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => removeSlab(field, index)}
+            className="self-end px-4 py-3 rounded-xl border border-red-100 dark:border-red-900/40 bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-300 font-bold"
+          >
+            Remove
+          </button>
+        </div>
+      ))}
+      <button
+        type="button"
+        onClick={() => addSlab(field)}
+        className="w-full py-3 rounded-xl border border-dashed border-emerald-300 dark:border-emerald-800 text-emerald-600 dark:text-emerald-300 font-bold"
+      >
+        + Add Slab
+      </button>
+    </div>
+  );
 
   return (
     <div className="w-full h-full animate-fade-in pb-10 pt-8">
@@ -78,7 +159,7 @@ export default function ManageSettings() {
           
           <div className="flex items-center justify-between p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900">
             <div>
-              <h3 className="font-bold text-slate-800 dark:text-white">Enable Delivery Charge</h3>
+              <h3 className="font-bold text-slate-800 dark:text-white">Enable Custom Delivery Charge</h3>
               <p className="text-sm text-slate-500 dark:text-slate-400">Charge users for delivery during checkout</p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
@@ -100,6 +181,22 @@ export default function ManageSettings() {
                 onChange={(e) => setForm({ ...form, deliveryChargeAmount: Number(e.target.value) })}
                 className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-slate-800 dark:text-white font-medium" />
             </div>
+          </div>
+
+          <div className="border-t border-slate-100 dark:border-slate-800/80 pt-6">
+            <h3 className="font-extrabold text-slate-800 dark:text-white mb-2 uppercase tracking-wider text-xs">Custom Delivery Charge</h3>
+            <p className="mb-4 text-xs font-semibold text-slate-500 dark:text-slate-400">
+              Example: 10 km tak Rs. 50, 50 km tak Rs. 100.
+            </p>
+            {renderSlabRows("deliveryChargeSlabs")}
+          </div>
+
+          <div className="border-t border-slate-100 dark:border-slate-800/80 pt-6">
+            <h3 className="font-extrabold text-slate-800 dark:text-white mb-2 uppercase tracking-wider text-xs">Delivery Boy Amount Setting</h3>
+            <p className="mb-4 text-xs font-semibold text-slate-500 dark:text-slate-400">
+              Delivered order ke distance ke according delivery boy account me ye amount add hoga.
+            </p>
+            {renderSlabRows("deliveryBoyAmountSlabs")}
           </div>
 
           <div className="border-t border-slate-100 dark:border-slate-800/80 pt-6">

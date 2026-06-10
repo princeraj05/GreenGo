@@ -34,6 +34,7 @@ const orderSchema = new mongoose.Schema(
 
   subtotal:Number,
   deliveryCharge:Number,
+  deliveryBoyAmount:{ type: Number, default: 0 },
   total:Number,
 
   status:{

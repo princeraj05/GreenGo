@@ -1,5 +1,16 @@
 import Settings from "../models/Settings.js";
 
+const normalizeSlabs = (slabs) => {
+  if (!Array.isArray(slabs)) return [];
+  return slabs
+    .map((slab) => ({
+      upToKm: Number(slab?.upToKm || 0),
+      amount: Number(slab?.amount || 0),
+    }))
+    .filter((slab) => slab.upToKm > 0 && slab.amount >= 0)
+    .sort((a, b) => a.upToKm - b.upToKm);
+};
+
 export const getSettings = async (req, res) => {
   try {
     let settings = await Settings.findOne();
@@ -17,6 +28,8 @@ export const updateSettings = async (req, res) => {
     const { 
       deliveryChargeAmount, 
       isDeliveryChargeEnabled,
+      deliveryChargeSlabs,
+      deliveryBoyAmountSlabs,
       maxDeliveryDistance,
       storeLatitude,
       storeLongitude,
@@ -30,6 +43,8 @@ export const updateSettings = async (req, res) => {
     
     settings.deliveryChargeAmount = deliveryChargeAmount;
     settings.isDeliveryChargeEnabled = isDeliveryChargeEnabled;
+    if (deliveryChargeSlabs !== undefined) settings.deliveryChargeSlabs = normalizeSlabs(deliveryChargeSlabs);
+    if (deliveryBoyAmountSlabs !== undefined) settings.deliveryBoyAmountSlabs = normalizeSlabs(deliveryBoyAmountSlabs);
     if (maxDeliveryDistance !== undefined) settings.maxDeliveryDistance = Number(maxDeliveryDistance);
     if (storeLatitude !== undefined) settings.storeLatitude = Number(storeLatitude);
     if (storeLongitude !== undefined) settings.storeLongitude = Number(storeLongitude);

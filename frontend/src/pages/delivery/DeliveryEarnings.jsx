@@ -32,6 +32,7 @@ export default function DeliveryEarnings() {
 
   const cards = [
     ["Total COD Orders", data?.totalCodOrders || 0],
+    ["Delivery Amount", `Rs. ${data?.totalDeliveryBoyAmount || 0}`],
     ["Total COD Amount", `₹${data?.totalCodAmount || 0}`],
     ["Delivered COD Orders", data?.deliveredCodOrders || 0],
     ["Current Credit", `₹${data?.currentCredit || 0}`],
@@ -55,7 +56,7 @@ export default function DeliveryEarnings() {
         <div className="h-48 rounded-3xl bg-slate-100 dark:bg-slate-900 animate-pulse" />
       ) : (
         <>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
             {cards.map(([label, value]) => (
               <div key={label} className="rounded-3xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 p-5 shadow-sm">
                 <Wallet size={23} className="text-brand-600" />
@@ -82,6 +83,8 @@ export default function DeliveryEarnings() {
                   </div>
                   <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
                     <Info label="Date" value={new Date(row.date).toLocaleDateString()} />
+                    <Info label="Delivery Pay" value={`Rs. ${row.deliveryBoyAmount || 0}`} />
+                    <Info label="Distance" value={`${row.distance || 0} km`} />
                     <Info label="Amount" value={`₹${row.amount}`} />
                     <Info label="Customer" value={row.customer} />
                   </div>
@@ -95,7 +98,7 @@ export default function DeliveryEarnings() {
               <table className="min-w-[640px] w-full text-sm">
                 <thead className="bg-slate-50 dark:bg-slate-900/60">
                   <tr>
-                    {["Date", "Order ID", "Customer", "Amount", "Status"].map((head) => (
+                    {["Date", "Order ID", "Customer", "Amount", "Delivery Pay", "Distance", "Status"].map((head) => (
                       <th key={head} className="text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-500">{head}</th>
                     ))}
                   </tr>
@@ -107,6 +110,8 @@ export default function DeliveryEarnings() {
                       <td className="px-4 py-3 font-black">#{String(row.orderId).slice(-6).toUpperCase()}</td>
                       <td className="px-4 py-3 font-semibold">{row.customer}</td>
                       <td className="px-4 py-3 font-black">₹{row.amount}</td>
+                      <td className="px-4 py-3 font-black">Rs. {row.deliveryBoyAmount || 0}</td>
+                      <td className="px-4 py-3 font-semibold">{row.distance || 0} km</td>
                       <td className="px-4 py-3"><Badge variant={row.status === "Delivered" ? "success" : "warning"}>{row.status}</Badge></td>
                     </tr>
                   ))}

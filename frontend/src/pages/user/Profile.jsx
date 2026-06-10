@@ -215,12 +215,27 @@ export default function Profile() {
           const { latitude, longitude } = position.coords;
           const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
           const data = await res.json();
-          const addressText = data?.display_name || `Lat: ${latitude}, Lng: ${longitude}`;
-          const nextAddresses = [...(form.addresses || [emptyAddress])];
-          const primaryIndex = Math.max(nextAddresses.findIndex((addr) => addr.isPrimary), 0);
-          nextAddresses[primaryIndex] = { ...nextAddresses[primaryIndex], details: addressText, isPrimary: true };
+          const addressText = data?.display_name || "Current location";
+          const detailsWithCoords = `${addressText}\nLat: ${latitude}, Lng: ${longitude}`;
+          const addressData = data?.address || {};
+          const nextAddresses = (form.addresses || [emptyAddress]).map((addr) => ({ ...addr, isPrimary: false }));
+          const currentLocationIndex = nextAddresses.findIndex((addr) => addr.label === "Current Location");
+          const currentLocationAddress = {
+            label: "Current Location",
+            details: detailsWithCoords,
+            city: addressData.city || addressData.town || addressData.village || addressData.county || "",
+            state: addressData.state || "",
+            isPrimary: true,
+          };
+
+          if (currentLocationIndex >= 0) {
+            nextAddresses[currentLocationIndex] = currentLocationAddress;
+          } else {
+            nextAddresses.unshift(currentLocationAddress);
+          }
+
           setForm({ ...form, addresses: nextAddresses });
-          showMessage("Location added to your primary address");
+          showMessage("Current location added as address choice");
         } catch {
           showMessage("Location found, but address lookup failed.", "error");
         } finally {

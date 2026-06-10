@@ -85,6 +85,26 @@ const creditDeliveryBoyForCod = async (order) => {
   });
 };
 
+const getSlabAmount = (slabs = [], distance = null, fallback = 0) => {
+  const km = Number(distance || 0);
+  const sortedSlabs = Array.isArray(slabs)
+    ? slabs
+        .map((slab) => ({ upToKm: Number(slab?.upToKm || 0), amount: Number(slab?.amount || 0) }))
+        .filter((slab) => slab.upToKm > 0)
+        .sort((a, b) => a.upToKm - b.upToKm)
+    : [];
+  if (!sortedSlabs.length || !Number.isFinite(km) || km <= 0) return Number(fallback || 0);
+  const matchedSlab = sortedSlabs.find((slab) => km <= slab.upToKm) || sortedSlabs[sortedSlabs.length - 1];
+  return Number(matchedSlab?.amount || 0);
+};
+
+const creditDeliveryBoyAmount = async (order) => {
+  if (!order.assignedDeliveryBoy) return;
+  await User.findByIdAndUpdate(order.assignedDeliveryBoy, {
+    $inc: { deliveryCredit: Number(order.deliveryBoyAmount || 0) }
+  });
+};
+
 function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
   const R = 6371; // Earth's radius in km
   const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -143,6 +163,8 @@ export const createOrder = async (req, res) => {
     }
 
     let distance = null;
+    let finalDeliveryCharge = Number(deliveryCharge || 0);
+    let deliveryBoyAmount = 0;
     const settings = await Settings.findOne();
     if (settings && userLat !== undefined && userLat !== null && userLon !== undefined && userLon !== null) {
       distance = calculateHaversineDistance(
@@ -158,7 +180,19 @@ export const createOrder = async (req, res) => {
           message: `Delivery is not available. Your location is ${distance.toFixed(1)} km away, which exceeds our maximum delivery distance of ${settings.maxDeliveryDistance} km.`
         });
       }
+
+      finalDeliveryCharge = settings.isDeliveryChargeEnabled
+        ? getSlabAmount(settings.deliveryChargeSlabs, distance, settings.deliveryChargeAmount)
+        : 0;
+      deliveryBoyAmount = getSlabAmount(settings.deliveryBoyAmountSlabs, distance, 0);
+    } else if (settings) {
+      finalDeliveryCharge = settings.isDeliveryChargeEnabled ? Number(settings.deliveryChargeAmount || 0) : 0;
     }
+
+    const packingTotal = Array.isArray(items)
+      ? items.reduce((sum, item) => sum + (Number(item.packingCharge || 0) * Number(item.qty || 0)), 0)
+      : 0;
+    const finalTotal = Number(subtotal || 0) + packingTotal + finalDeliveryCharge;
 
     const order = await Order.create({
       userId: req.user.id,
@@ -176,8 +210,9 @@ export const createOrder = async (req, res) => {
       phone,
       paymentMethod,
       subtotal,
-      deliveryCharge,
-      total,
+      deliveryCharge: finalDeliveryCharge,
+      deliveryBoyAmount,
+      total: finalTotal,
       distance: distance ? Number(distance.toFixed(2)) : null,
       latitude: userLat,
       longitude: userLon,
@@ -194,7 +229,7 @@ export const createOrder = async (req, res) => {
     const customer = await User.findById(req.user.id).select("name email phone");
     await createAdminNotification({
       title: "New Order Placed",
-      message: `Order #${orderCode(order._id)} | ${formatPaymentMethod(paymentMethod)} | Total ₹${Number(total || 0)} | ${customer?.name || "Customer"} | ${customer?.email || "N/A"} | ${phone || customer?.phone || "N/A"}`,
+      message: `Order #${orderCode(order._id)} | ${formatPaymentMethod(paymentMethod)} | Total ₹${Number(finalTotal || 0)} | ${customer?.name || "Customer"} | ${customer?.email || "N/A"} | ${phone || customer?.phone || "N/A"}`,
       type: isCodPayment(paymentMethod) ? "warning" : "success",
       actionPath: "/admin/orders",
       data: {
@@ -202,7 +237,7 @@ export const createOrder = async (req, res) => {
         orderId: String(order._id),
         userId: String(req.user.id),
         paymentMethod: formatPaymentMethod(paymentMethod),
-        total,
+        total: finalTotal,
       },
     });
 
@@ -316,6 +351,7 @@ export const updateOrderStatus = async (req,res)=>{
     if (status === "Delivered" && order.status !== "Delivered") {
       await addDeliveredStats(order);
       await creditDeliveryBoyForCod(order);
+      await creditDeliveryBoyAmount(order);
     }
 
     const update = {status};
@@ -527,6 +563,7 @@ export const markAssignedOrderDelivered = async (req, res) => {
 
     await addDeliveredStats(order);
     await creditDeliveryBoyForCod(order);
+    await creditDeliveryBoyAmount(order);
 
     order.status = "Delivered";
     order.assignmentStatus = "Delivered";
@@ -568,14 +605,18 @@ export const getDeliveryEarnings = async (req, res) => {
     const deliveryUser = await requireDeliveryProfile(req, res);
     if (!deliveryUser) return;
     const [orders, user] = await Promise.all([
-      Order.find({ assignedDeliveryBoy: req.user.id, paymentMethod: { $regex: /^cod$/i } }).sort({ createdAt: -1 }).lean(),
+      Order.find({ assignedDeliveryBoy: req.user.id }).sort({ createdAt: -1 }).lean(),
       User.findById(req.user.id).select("deliveryCredit").lean(),
     ]);
-    const deliveredCodOrders = orders.filter((order) => order.status === "Delivered");
+    const deliveredCodOrders = orders.filter((order) => order.status === "Delivered" && isCodPayment(order.paymentMethod));
     const totalCodAmount = deliveredCodOrders.reduce((sum, order) => sum + Number(order.total || 0), 0);
+    const totalDeliveryBoyAmount = orders
+      .filter((order) => order.status === "Delivered")
+      .reduce((sum, order) => sum + Number(order.deliveryBoyAmount || 0), 0);
     res.json({
-      totalCodOrders: orders.length,
+      totalCodOrders: orders.filter((order) => isCodPayment(order.paymentMethod)).length,
       totalCodAmount,
+      totalDeliveryBoyAmount,
       deliveredCodOrders: deliveredCodOrders.length,
       currentCredit: user?.deliveryCredit || 0,
       rows: orders.map((order) => ({
@@ -583,6 +624,8 @@ export const getDeliveryEarnings = async (req, res) => {
         orderId: order._id,
         customer: order.phone || "Customer",
         amount: order.total || 0,
+        deliveryBoyAmount: order.deliveryBoyAmount || 0,
+        distance: order.distance || 0,
         status: order.status,
       })),
     });

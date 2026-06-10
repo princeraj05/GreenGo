@@ -22,6 +22,19 @@ function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
   return R * c;
 }
 
+const getSlabAmount = (slabs = [], distance = null, fallback = 0) => {
+  const km = Number(distance || 0);
+  const sortedSlabs = Array.isArray(slabs)
+    ? slabs
+        .map((slab) => ({ upToKm: Number(slab?.upToKm || 0), amount: Number(slab?.amount || 0) }))
+        .filter((slab) => slab.upToKm > 0)
+        .sort((a, b) => a.upToKm - b.upToKm)
+    : [];
+  if (!sortedSlabs.length || !Number.isFinite(km) || km <= 0) return Number(fallback || 0);
+  const matchedSlab = sortedSlabs.find((slab) => km <= slab.upToKm) || sortedSlabs[sortedSlabs.length - 1];
+  return Number(matchedSlab?.amount || 0);
+};
+
 export default function Checkout() {
   const navigate = useNavigate();
   const [cart, setCart] = useState([]);
@@ -30,6 +43,7 @@ export default function Checkout() {
   const [paymentMethod, setPaymentMethod] = useState("UPI");
   const [customMessage, setCustomMessage] = useState(""); // <-- Added
   const [deliveryCharge, setDeliveryCharge] = useState(40);
+  const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(false);
   const [locationLoading, setLocationLoading] = useState(false);
   const [userCoords, setUserCoords] = useState(null); // { latitude, longitude }
@@ -52,6 +66,7 @@ export default function Checkout() {
     fetch(`${import.meta.env.VITE_API_URL}/api/settings`)
       .then(res => res.json())
       .then(settingsData => {
+        setSettings(settingsData);
         if (settingsData && settingsData.isDeliveryChargeEnabled !== undefined) {
           setDeliveryCharge(settingsData.isDeliveryChargeEnabled ? settingsData.deliveryChargeAmount : 0);
         }
@@ -88,11 +103,30 @@ export default function Checkout() {
     );
   }, [userCoords]);
 
+  useEffect(() => {
+    if (!settings || !userCoords?.latitude || !userCoords?.longitude) return;
+    const dist = calculateHaversineDistance(
+      settings.storeLatitude,
+      settings.storeLongitude,
+      userCoords.latitude,
+      userCoords.longitude
+    );
+    updateDeliveryChargeByDistance(settings, dist);
+  }, [settings, userCoords]);
+
   const subtotal = cart.reduce((s, i) => s + Number(i.price || 0) * Number(i.qty || 0), 0);
   const packingCharges = cart.reduce((s, i) => s + Number(i.packingCharge || 0) * Number(i.qty || 0), 0);
   const taxes = 0;
   const total = subtotal + packingCharges + deliveryCharge + taxes;
   const totalItems = cart.reduce((s, i) => s + Number(i.qty || 0), 0);
+
+  const updateDeliveryChargeByDistance = (settingsData, distance) => {
+    const nextCharge = settingsData?.isDeliveryChargeEnabled
+      ? getSlabAmount(settingsData.deliveryChargeSlabs, distance, settingsData.deliveryChargeAmount)
+      : 0;
+    setDeliveryCharge(nextCharge);
+    return nextCharge;
+  };
 
   const syncCart = (nextCart) => {
     if (nextCart.length > 0) {
@@ -162,6 +196,7 @@ export default function Checkout() {
       // Fetch store settings to calculate & validate distance
       const settingsRes = await fetch(`${import.meta.env.VITE_API_URL}/api/settings`);
       const settingsData = await settingsRes.json();
+      let checkoutDeliveryCharge = deliveryCharge;
 
       if (settingsData && settingsData.isDistanceLimitEnabled && lat !== undefined && lat !== null && lon !== undefined && lon !== null) {
         const dist = calculateHaversineDistance(
@@ -176,7 +211,12 @@ export default function Checkout() {
           setLoading(false);
           return;
         }
+        checkoutDeliveryCharge = updateDeliveryChargeByDistance(settingsData, dist);
+      } else if (settingsData) {
+        checkoutDeliveryCharge = updateDeliveryChargeByDistance(settingsData, null);
       }
+
+      const checkoutTotal = subtotal + packingCharges + checkoutDeliveryCharge + taxes;
 
       if (paymentMethod !== "COD") {
         const orderRes = await fetch(`${import.meta.env.VITE_API_URL}/api/payment/create-order`, {
@@ -185,7 +225,7 @@ export default function Checkout() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ amount: total }),
+          body: JSON.stringify({ amount: checkoutTotal }),
         });
 
         const orderData = await orderRes.json();
@@ -222,7 +262,7 @@ export default function Checkout() {
 
             const verifyData = await verifyRes.json();
             if (verifyData.success) {
-              await createFinalOrder(token, lat, lon);
+              await createFinalOrder(token, lat, lon, checkoutDeliveryCharge, checkoutTotal);
             } else {
               alert("Payment Verification Failed!");
               setLoading(false);
@@ -240,7 +280,7 @@ export default function Checkout() {
         
         rzp1.open();
       } else {
-        await createFinalOrder(token, lat, lon);
+        await createFinalOrder(token, lat, lon, checkoutDeliveryCharge, checkoutTotal);
       }
     } catch (err) {
       console.error("Checkout error:", err);
@@ -249,7 +289,7 @@ export default function Checkout() {
     }
   };
 
-  const createFinalOrder = async (token, lat, lon) => {
+  const createFinalOrder = async (token, lat, lon, finalDeliveryCharge = deliveryCharge, finalTotal = total) => {
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/orders`, {
         method: "POST",
@@ -258,7 +298,7 @@ export default function Checkout() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          items: cart, address, phone, paymentMethod, subtotal, deliveryCharge, total,
+          items: cart, address, phone, paymentMethod, subtotal, deliveryCharge: finalDeliveryCharge, total: finalTotal,
           latitude: lat, longitude: lon,
           customMessage
         }),
