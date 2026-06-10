@@ -417,7 +417,9 @@ export default function Menu() {
   const isNonVegFood = useCallback((food) => {
     const cat = getFoodCategories(food).join(" ").toLowerCase();
     const name = String(food.name || "").toLowerCase();
-    return food.veg === false || cat.includes("non-veg") || cat.includes("chicken") || name.includes("chicken") || name.includes("mutton") || name.includes("egg");
+    // "egg" is its own type — show in veg mode unless explicitly non-veg
+    if (food.veg === "egg") return false; // egg shows in veg mode
+    return food.veg === false || food.veg === "false" || cat.includes("non-veg") || cat.includes("chicken") || name.includes("chicken") || name.includes("mutton");
   }, [getFoodCategories]);
 
   const isVegFood = useCallback((food) => !isNonVegFood(food), [isNonVegFood]);
@@ -515,7 +517,7 @@ export default function Menu() {
       : null;
   const selectedFoodPrice = selectedVariant?.price || Number(selectedFood?.price || 0);
   const cleanAddressPart = (value = "") => String(value)
-    .replace(/\b(?:Jaipur|Rajasthan)\b/gi, "")
+    .replace(/\b(?:Khagaria|)\b/gi, "")
     .replace(/\s*,\s*,/g, ",")
     .replace(/^[\s,.-]+|[\s,.-]+$/g, "")
     .trim();
@@ -1583,4 +1585,3 @@ export default function Menu() {
     </div>
   );
 }
-
