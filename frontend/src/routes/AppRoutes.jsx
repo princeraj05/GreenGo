@@ -82,15 +82,15 @@ export default function AppRoutes() {
           <Route path="menu" element={<Menu />} />
           <Route path="search" element={<PrivateRoute><ProfileCompletionRoute><FoodSearch /></ProfileCompletionRoute></PrivateRoute>} />
           <Route path="dashboard" element={<PrivateRoute><ProfileCompletionRoute><UserDashboard /></ProfileCompletionRoute></PrivateRoute>} />
-          <Route path="cart" element={<PrivateRoute><ProfileCompletionRoute><Cart /></ProfileCompletionRoute></PrivateRoute>} />
+          <Route path="cart" element={<Cart />} />
           <Route path="checkout" element={<PrivateRoute><ProfileCompletionRoute><Checkout /></ProfileCompletionRoute></PrivateRoute>} />
-          <Route path="orders" element={<PrivateRoute><ProfileCompletionRoute><Orders /></ProfileCompletionRoute></PrivateRoute>} />
+          <Route path="orders" element={<Orders />} />
           <Route path="orders/:id/tracking" element={<PrivateRoute><ProfileCompletionRoute><OrderTrackingPage role="user" /></ProfileCompletionRoute></PrivateRoute>} />
           <Route path="profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
-          <Route path="wishlist" element={<PrivateRoute><ProfileCompletionRoute><Wishlist /></ProfileCompletionRoute></PrivateRoute>} />
-          <Route path="contact" element={<PrivateRoute><ProfileCompletionRoute><UserContact /></ProfileCompletionRoute></PrivateRoute>} />
+          <Route path="wishlist" element={<Wishlist />} />
+          <Route path="contact" element={<UserContact />} />
           <Route path="budget-assistant" element={<PrivateRoute><ProfileCompletionRoute><BudgetAssistantPage /></ProfileCompletionRoute></PrivateRoute>} />
-          <Route path="notifications" element={<PrivateRoute><ProfileCompletionRoute><Notifications /></ProfileCompletionRoute></PrivateRoute>} />
+          <Route path="notifications" element={<Notifications />} />
         </Route>
 
         {/* DELIVERY BOY PANEL */}

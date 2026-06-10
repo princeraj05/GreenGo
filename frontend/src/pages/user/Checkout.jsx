@@ -47,6 +47,24 @@ export default function Checkout() {
   const [loading, setLoading] = useState(false);
   const [locationLoading, setLocationLoading] = useState(false);
   const [userCoords, setUserCoords] = useState(null); // { latitude, longitude }
+  const [profileDeliveryReady, setProfileDeliveryReady] = useState(false);
+
+  const getSavedAddressText = (userData) => {
+    const primaryAddress = Array.isArray(userData?.addresses)
+      ? userData.addresses.find((addr) => addr?.isPrimary) || userData.addresses[0]
+      : null;
+    return String(primaryAddress?.details || userData?.address || "").trim();
+  };
+
+  const redirectToLoginForDeliveryDetails = () => {
+    alert("Please login first and complete your profile address before placing an order.");
+    navigate("/", {
+      state: {
+        from: { pathname: "/user/checkout" },
+        loginRequired: true,
+      },
+    });
+  };
 
   useEffect(() => {
     if (!window.Razorpay) {
@@ -82,7 +100,9 @@ export default function Checkout() {
       .then(userData => {
         if (userData) {
           if (userData.phone) setPhone(userData.phone);
-          if (userData.address) setAddress(userData.address);
+          const savedAddress = getSavedAddressText(userData);
+          if (savedAddress) setAddress(savedAddress);
+          setProfileDeliveryReady(Boolean(userData.phone && savedAddress));
         }
       })
       .catch(err => console.error("Could not fetch user", err));
@@ -152,6 +172,11 @@ export default function Checkout() {
   const placeOrder = async () => {
     if (cart.length === 0) {
       alert("Your cart is empty.");
+      return;
+    }
+
+    if (!profileDeliveryReady) {
+      redirectToLoginForDeliveryDetails();
       return;
     }
 
@@ -322,6 +347,11 @@ export default function Checkout() {
   };
 
   const useCurrentLocation = () => {
+    if (!profileDeliveryReady) {
+      redirectToLoginForDeliveryDetails();
+      return;
+    }
+
     if (!navigator.geolocation) {
       alert("Geolocation is not supported by your browser.");
       return;

@@ -567,7 +567,6 @@ export default function Menu() {
       return (
         <button
           onClick={() => {
-            if (!requireLogin("/user/menu")) return;
             hasVariantChoices(food) ? selectFoodDetails(food) : updateQuantity(food, 1);
           }}
           className="px-3.5 py-2 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs shadow-md shadow-brand-500/20 active:scale-95 transition-all"
@@ -589,7 +588,6 @@ export default function Menu() {
         <div className="flex items-center bg-brand-50 dark:bg-brand-950/40 border border-brand-100 dark:border-brand-800 rounded-xl p-0.5">
           <button
             onClick={() => {
-              if (!requireLogin("/user/menu")) return;
               hasVariantChoices(food) ? selectFoodDetails(food) : updateQuantity(food, cartItem.qty - 1);
             }}
             className="w-8 h-8 rounded-lg bg-white dark:bg-slate-900 text-brand-600 dark:text-brand-300 font-extrabold flex items-center justify-center border border-slate-100 dark:border-slate-800"
@@ -601,7 +599,6 @@ export default function Menu() {
           </span>
           <button
             onClick={() => {
-              if (!requireLogin("/user/menu")) return;
               hasVariantChoices(food) ? selectFoodDetails(food) : updateQuantity(food, cartItem.qty + 1);
             }}
             className="w-8 h-8 rounded-lg bg-brand-500 text-white font-extrabold flex items-center justify-center shadow-md shadow-brand-500/20"
@@ -1477,7 +1474,6 @@ export default function Menu() {
                   </div>
                   <Button
                     onClick={() => {
-                      if (!requireLogin("/user/menu")) return;
                       updateQuantity(withSelectedVariant(selectedFood, selectedVariant), selectedFoodQty);
                       setSelectedFood(null);
                     }}
@@ -1495,7 +1491,6 @@ export default function Menu() {
                   <div className="flex items-center justify-between w-full bg-brand-50 dark:bg-brand-950/30 border border-brand-100 dark:border-brand-900 rounded-2xl p-2 shadow-sm">
                     <button
                       onClick={() => {
-                        if (!requireLogin("/user/menu")) return;
                         updateQuantity(selectedFood, (cart.find(i => i._id === selectedFood._id)?.qty || 0) - 1);
                       }}
                       className="w-12 h-12 rounded-xl bg-white dark:bg-slate-900 text-brand-600 dark:text-brand-400 hover:bg-slate-50 dark:hover:bg-slate-800 font-extrabold flex items-center justify-center transition-all select-none border border-slate-100 dark:border-slate-800"
@@ -1507,7 +1502,6 @@ export default function Menu() {
                     </span>
                     <button
                       onClick={() => {
-                        if (!requireLogin("/user/menu")) return;
                         updateQuantity(selectedFood, (cart.find(i => i._id === selectedFood._id)?.qty || 0) + 1);
                       }}
                       className="w-12 h-12 rounded-xl bg-brand-500 text-white hover:bg-brand-600 font-extrabold flex items-center justify-center transition-all select-none shadow-md shadow-brand-500/20"
@@ -1518,7 +1512,6 @@ export default function Menu() {
                 ) : (
                   <Button
                     onClick={() => {
-                      if (!requireLogin("/user/menu")) return;
                       updateQuantity(selectedFood, 1);
                     }}
                     className="w-full gap-2 py-4 text-base rounded-2xl"
@@ -1602,10 +1595,7 @@ export default function Menu() {
         isOpen={isBudgetOpen}
         onClose={() => setIsBudgetOpen(false)}
         foods={foods}
-        onAddToCart={(food, qty) => {
-          if (!requireLogin("/user/menu")) return;
-          updateQuantity(food, qty);
-        }}
+        onAddToCart={updateQuantity}
       />
     </div>
   );
