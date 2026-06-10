@@ -1,6 +1,11 @@
 import nodemailer from "nodemailer";
 import dns from "dns";
 
+// Force IPv4 DNS resolution first (fixes ENETUNREACH IPv6 issues on Render/Heroku)
+if (dns.setDefaultResultOrder) {
+  dns.setDefaultResultOrder("ipv4first");
+}
+
 const escapeHtml = (value) =>
   String(value || "")
     .replace(/&/g, "&amp;")
