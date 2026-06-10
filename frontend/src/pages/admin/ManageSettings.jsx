@@ -59,7 +59,7 @@ export default function ManageSettings() {
   if (loading) return <p className="p-8 text-slate-900 dark:text-white">Loading settings...</p>;
 
   return (
-    <div className="w-full h-full animate-fade-in pb-10">
+    <div className="w-full h-full animate-fade-in pb-10 pt-8">
       <div className="mb-10">
         <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Global Settings</h1>
         <p className="text-slate-500 dark:text-slate-400 mt-1">Configure global application properties.</p>
