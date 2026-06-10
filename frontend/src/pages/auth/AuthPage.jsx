@@ -262,22 +262,17 @@ export default function AuthPage() {
         return;
       }
 
-      // Email Link passwordless flow
-      const actionCodeSettings = {
-        url: window.location.origin + "/login",
-        handleCodeInApp: true,
-      };
-      console.log("[FIREBASE AUTH] Sending email sign-in link to:", email);
-      await sendSignInLinkToEmail(auth, email, actionCodeSettings);
-      window.localStorage.setItem('emailForSignIn', email);
+      // Email OTP verification flow
+      console.log("[AUTH] Sending email OTP to:", email);
+      await API.post("/api/users/send-otp-email", { email });
       
-      setOtpSentMessage(`We have sent a secure sign-in link to your email: ${email}. Please check your inbox and click the link to sign in.`);
+      setOtpSentMessage(`We have sent a 6-digit verification code to your email: ${email}. Please check your inbox and enter the code.`);
       setStep(2);
       setCountdown(60);
       setCanResend(false);
     } catch (err) {
-      console.error("[FIREBASE AUTH] OTP Send Error:", err);
-      setError(err.message || "Failed to send verification code. Please check your credentials or try again.");
+      console.error("[AUTH] OTP Send Error:", err);
+      setError(err.response?.data?.message || err.message || "Failed to send verification code. Please check your credentials or try again.");
     } finally {
       setLoading(false);
     }
@@ -285,10 +280,6 @@ export default function AuthPage() {
 
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
-    if (authMethod === "email") {
-      setError("Please check your email and click the verification link to log in. Verification code is not required for email link.");
-      return;
-    }
     const otp = otpValues.join("");
     if (otp.length !== 6) {
       setError("Please enter all 6 digits of the verification code.");
@@ -299,6 +290,22 @@ export default function AuthPage() {
     setError("");
 
     try {
+      if (authMethod === "email") {
+        console.log("[AUTH] Verifying Email OTP...");
+        const res = await API.post("/api/users/verify-otp-email", { email, otp });
+        const data = res.data;
+        
+        localStorage.setItem("token", data.token);
+        try {
+          const meRes = await API.get("/api/users/me");
+          await saveSession(data.token, meRes.data);
+        } catch {
+          await saveSession(data.token, { email, role: data.role });
+        }
+        navigate(getPostLoginPath(data.role), { replace: true });
+        return;
+      }
+
       console.log("[FIREBASE AUTH] Verifying SMS OTP...");
       const confirmationResult = window.confirmationResult;
       if (!confirmationResult) {
@@ -321,8 +328,8 @@ export default function AuthPage() {
       }
       navigate(getPostLoginPath(data.role), { replace: true });
     } catch (err) {
-      console.error("[FIREBASE AUTH] SMS OTP Verification error:", err);
-      setError(err.message || "Invalid or expired OTP. Please try again.");
+      console.error("[AUTH] Verification error:", err);
+      setError(err.response?.data?.message || err.message || "Invalid or expired OTP. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -373,11 +380,8 @@ export default function AuthPage() {
         window.confirmationResult = confirmation;
         setCountdown(30);
       } else {
-        const actionCodeSettings = {
-          url: window.location.origin + "/login",
-          handleCodeInApp: true,
-        };
-        await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+        console.log("[AUTH] Resending email OTP to:", email);
+        await API.post("/api/users/send-otp-email", { email });
         setCountdown(60);
       }
       setCanResend(false);
@@ -769,13 +773,13 @@ export default function AuthPage() {
 
               {/* Form */}
               <form onSubmit={handleVerifyOtp} className="space-y-6">
-                {authMethod === "phone" ? (
+                {authMethod === "phone" || authMethod === "email" ? (
                   <>
                     {/* OTP Input Grid (6 boxes) */}
                     <div className="flex justify-between gap-2.5" onPaste={handleOtpPaste}>
                       {otpValues.map((value, idx) => (
                         <input
-                          key={idx}
+                           key={idx}
                           type="text"
                           ref={(el) => (otpRefs.current[idx] = el)}
                           value={value}
@@ -822,14 +826,14 @@ export default function AuthPage() {
 
                 {/* Resend Timer Options */}
                 <div className="text-center text-sm font-semibold text-slate-500 dark:text-slate-400 pt-2">
-                  Didn't receive {authMethod === "phone" ? "code" : "link"}?{" "}
+                  Didn't receive code?{" "}
                   {canResend ? (
                     <button
                       type="button"
                       onClick={handleResendOtp}
                       className="text-brand-500 dark:text-brand-400 font-extrabold hover:underline"
                     >
-                      Resend {authMethod === "phone" ? "Code" : "Link"}
+                      Resend Code
                     </button>
                   ) : (
                     <span className="text-slate-400 dark:text-slate-500">
