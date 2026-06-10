@@ -81,6 +81,7 @@ const userSchema = new mongoose.Schema(
   },
 
   profileCompletion: {
+    passwordSet: { type: Boolean, default: false },
     editProfileCompleted: { type: Boolean, default: false },
     addressCompleted: { type: Boolean, default: false },
     completionPercent: { type: Number, default: 0 },

@@ -24,6 +24,7 @@ export default function AuthPage() {
   const [authMethod, setAuthMethod] = useState("email"); // "email" | "phone"
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [phonePassword, setPhonePassword] = useState("");
   const [step, setStep] = useState(1); // 1: Identifier entry, 2: OTP verification
   const [otpValues, setOtpValues] = useState(Array(6).fill(""));
   const [loading, setLoading] = useState(false);
@@ -178,28 +179,31 @@ export default function AuthPage() {
     setDevOtpMsg("");
 
     try {
-      if (authMethod === "email") {
-        const res = await API.post("/api/users/send-otp-email", { email });
-        setOtpSentMessage(`We have sent a 6-digit verification code to your email: ${email}`);
-        
-        // Handle SMTP failure fallback (where OTP is sent in response for testing)
-        if (res.data.otp) {
-          setDevOtpMsg(`Testing Code: ${res.data.otp}`);
+      if (authMethod === "phone") {
+        const res = await API.post("/api/users/login-phone", { phone, password: phonePassword });
+        const data = res.data;
+        localStorage.setItem("token", data.token);
+        try {
+          const meRes = await API.get("/api/users/me");
+          await saveSession(data.token, meRes.data);
+        } catch {
+          await saveSession(data.token, { phone, role: data.role });
         }
-      } else {
-        const res = await API.post("/api/users/send-otp-phone", { phone });
-        setOtpSentMessage(`We have sent a 6-digit verification code to your phone number: ${phone}`);
-        if (res.data.otp) {
-          setDevOtpMsg(`Testing Code: ${res.data.otp}`);
-        }
+        navigate(getPostLoginPath(data.role), { replace: true });
+        return;
       }
 
+      const res = await API.post("/api/users/send-otp-email", { email });
+      setOtpSentMessage(`We have sent a 6-digit verification code to your email: ${email}`);
+      if (res.data.otp) {
+        setDevOtpMsg(`Testing Code: ${res.data.otp}`);
+      }
       setStep(2);
       setCountdown(30);
       setCanResend(false);
       setOtpValues(Array(6).fill(""));
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to send verification code. Please try again.");
+      setError(err.response?.data?.message || (authMethod === "phone" ? "Phone login failed. Please try again." : "Failed to send verification code. Please try again."));
     } finally {
       setLoading(false);
     }
@@ -217,29 +221,16 @@ export default function AuthPage() {
     setError("");
 
     try {
-      if (authMethod === "email") {
-        const res = await API.post("/api/users/verify-otp-email", { email, otp });
-        const data = res.data;
-        localStorage.setItem("token", data.token);
-        try {
-          const meRes = await API.get("/api/users/me");
-          await saveSession(data.token, meRes.data);
-        } catch {
-          await saveSession(data.token, { email, role: data.role });
-        }
-        navigate(getPostLoginPath(data.role), { replace: true });
-      } else {
-        const res = await API.post("/api/users/verify-otp-phone", { phone, otp });
-        const data = res.data;
-        localStorage.setItem("token", data.token);
-        try {
-          const meRes = await API.get("/api/users/me");
-          await saveSession(data.token, meRes.data);
-        } catch {
-          await saveSession(data.token, { phone, role: data.role });
-        }
-        navigate(getPostLoginPath(data.role), { replace: true });
+      const res = await API.post("/api/users/verify-otp-email", { email, otp });
+      const data = res.data;
+      localStorage.setItem("token", data.token);
+      try {
+        const meRes = await API.get("/api/users/me");
+        await saveSession(data.token, meRes.data);
+      } catch {
+        await saveSession(data.token, { email, role: data.role });
       }
+      navigate(getPostLoginPath(data.role), { replace: true });
     } catch (err) {
       setError(err.response?.data?.message || "Invalid or expired OTP. Please try again.");
     } finally {
@@ -285,16 +276,9 @@ export default function AuthPage() {
     setError("");
     setDevOtpMsg("");
     try {
-      if (authMethod === "email") {
-        const res = await API.post("/api/users/send-otp-email", { email });
-        if (res.data.otp) {
-          setDevOtpMsg(`Testing Code: ${res.data.otp}`);
-        }
-      } else {
-        const res = await API.post("/api/users/send-otp-phone", { phone });
-        if (res.data.otp) {
-          setDevOtpMsg(`Testing Code: ${res.data.otp}`);
-        }
+      const res = await API.post("/api/users/send-otp-email", { email });
+      if (res.data.otp) {
+        setDevOtpMsg(`Testing Code: ${res.data.otp}`);
       }
       setCountdown(30);
       setCanResend(false);
@@ -394,7 +378,7 @@ export default function AuthPage() {
             <div className="mb-6">
               <h2 className="text-xl font-extrabold text-gray-900 dark:text-white">Sign in or create account</h2>
               <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">
-                Enter your details to get verification code
+                {authMethod === "phone" ? "Enter phone number and password" : "Enter your details to get verification code"}
               </p>
             </div>
 
@@ -469,6 +453,23 @@ export default function AuthPage() {
                       className="flex-1 px-5 py-3.5 rounded-2xl border border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 transition-all font-bold tracking-wide text-gray-900 dark:text-white"
                     />
                   </div>
+                  <div className="space-y-2 pt-3">
+                    <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
+                      Password
+                    </label>
+                    <input
+                      type="password"
+                      placeholder="Enter password"
+                      value={phonePassword}
+                      required
+                      minLength={6}
+                      onChange={(e) => setPhonePassword(e.target.value)}
+                      className="w-full px-5 py-3.5 rounded-2xl border border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 transition-all font-bold tracking-wide text-gray-900 dark:text-white"
+                    />
+                    <p className="text-[11px] font-semibold text-gray-400 dark:text-slate-500">
+                      Password: min 6 chars with alphabet, number, special character.
+                    </p>
+                  </div>
                 </div>
               )}
 
@@ -480,11 +481,11 @@ export default function AuthPage() {
               >
                 {loading ? (
                   <>
-                    <Loader2 className="w-5 h-5 animate-spin" /> Sending Code...
+                    <Loader2 className="w-5 h-5 animate-spin" /> {authMethod === "phone" ? "Logging in..." : "Sending Code..."}
                   </>
                 ) : (
                   <>
-                    Send verification code <ArrowRight className="w-4 h-4" />
+                    {authMethod === "phone" ? "Login with password" : "Send verification code"} <ArrowRight className="w-4 h-4" />
                   </>
                 )}
               </button>

@@ -4,24 +4,10 @@ import { getApiUrl } from "../utils/getApiUrl";
 
 const API = getApiUrl();
 
-const hasCustomerEditProfile = (user) => Boolean(
-  String(user?.name || "").trim() &&
-  String(user?.phone || "").trim()
-);
-
-const hasCustomerAddress = (user) => {
-  if (Array.isArray(user?.addresses) && user.addresses.some((addr) => String(addr?.details || "").trim())) {
-    return true;
-  }
-  return Boolean(String(user?.address || "").trim());
-};
-
-const isCustomerProfileComplete = (user) => hasCustomerEditProfile(user) && hasCustomerAddress(user);
+const isCustomerProfileComplete = (user) => Boolean(user?.profileCompletion?.completed);
 
 const isDeliveryProfileComplete = (user) => Boolean(
-  String(user?.name || "").trim() &&
-  String(user?.phone || "").trim() &&
-  String(user?.deliveryDetails?.address || user?.address || "").trim()
+  user?.deliveryDetails?.profileCompleted
 );
 
 export default function ProfileCompletionRoute({ children, role = "customer" }) {

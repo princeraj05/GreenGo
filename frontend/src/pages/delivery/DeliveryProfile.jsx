@@ -13,6 +13,8 @@ const emptyForm = {
   deliveryAddress: "",
   deliveryLatitude: "",
   deliveryLongitude: "",
+  password: "",
+  hasPassword: false,
 };
 
 export default function DeliveryProfile() {
@@ -28,9 +30,17 @@ export default function DeliveryProfile() {
     () => Boolean(
       String(form.name || "").trim() &&
       String(form.phone || "").trim() &&
-      String(form.deliveryAddress || "").trim()
+      String(form.deliveryAddress || "").trim() &&
+      (form.hasPassword || String(form.password || "").trim())
     ),
     [form]
+  );
+
+  const isStrongPassword = (password = "") => (
+    password.length >= 6 &&
+    /[A-Za-z]/.test(password) &&
+    /\d/.test(password) &&
+    /[^A-Za-z0-9]/.test(password)
   );
 
   async function loadProfile() {
@@ -46,6 +56,8 @@ export default function DeliveryProfile() {
         deliveryAddress: details.address || user.address || "",
         deliveryLatitude: details.latitude ?? "",
         deliveryLongitude: details.longitude ?? "",
+        password: "",
+        hasPassword: Boolean(user.profileCompletion?.passwordSet || details.profileCompleted),
       });
     } catch (err) {
       console.error("Failed to load delivery profile:", err);
@@ -106,7 +118,11 @@ export default function DeliveryProfile() {
 
   const saveProfile = async () => {
     if (!isComplete) {
-      setError("Name, phone number aur address complete karo.");
+      setError("Name, phone number, address aur password complete karo.");
+      return;
+    }
+    if (form.password && !isStrongPassword(form.password)) {
+      setError("Password me alphabet, number, special character aur minimum 6 characters hone chahiye.");
       return;
     }
 
@@ -115,6 +131,7 @@ export default function DeliveryProfile() {
       const payload = {
         name: form.name.trim(),
         phone: form.phone.trim(),
+        password: form.password,
         address: form.deliveryAddress.trim(),
         deliveryAddress: form.deliveryAddress.trim(),
         deliveryLatitude: form.deliveryLatitude,
@@ -131,6 +148,8 @@ export default function DeliveryProfile() {
         deliveryAddress: details.address || user.address || current.deliveryAddress,
         deliveryLatitude: details.latitude ?? current.deliveryLatitude,
         deliveryLongitude: details.longitude ?? current.deliveryLongitude,
+        password: "",
+        hasPassword: Boolean(details.profileCompleted || form.password),
       }));
       window.dispatchEvent(new Event("delivery-profile-updated"));
       showMessage("Delivery profile updated. Ab assigned orders visible honge.");
@@ -191,6 +210,18 @@ export default function DeliveryProfile() {
 
           <Field label="Phone Number" icon={Phone}>
             <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="9876543210" />
+          </Field>
+
+          <Field label={form.hasPassword ? "Set New Password" : "Set Password"} icon={User}>
+            <Input
+              type="password"
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              placeholder="Abc@123"
+            />
+            <p className="mt-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
+              Min 6 chars: alphabet, number, special character.
+            </p>
           </Field>
 
           <Field label="Email" icon={Mail}>

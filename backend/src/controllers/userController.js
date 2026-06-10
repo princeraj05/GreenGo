@@ -13,6 +13,14 @@ const maskToken = (token) => {
   return `${token.slice(0, 12)}...${token.slice(-8)}`;
 };
 
+const PASSWORD_RULE_MESSAGE = "Password must be at least 6 characters and include alphabet, number, and special character.";
+const isStrongPassword = (password = "") => (
+  String(password).length >= 6 &&
+  /[A-Za-z]/.test(password) &&
+  /\d/.test(password) &&
+  /[^A-Za-z0-9]/.test(password)
+);
+
 const normalizeRole = (role) => (role === "user" || !role ? "customer" : role);
 
 const sanitizeBody = (body = {}) => ({
@@ -99,7 +107,7 @@ const normalizeDeliveryDetails = (user) => {
   if (user.role !== "deliveryBoy") return;
   const details = user.deliveryDetails || {};
   const address = String(details.address || user.address || "").trim();
-  const hasProfile = Boolean(String(user.name || "").trim() && String(user.phone || "").trim() && address);
+  const hasProfile = Boolean(String(user.name || "").trim() && String(user.phone || "").trim() && address && user.password);
   user.deliveryDetails = {
     ...details,
     address,
@@ -107,6 +115,13 @@ const normalizeDeliveryDetails = (user) => {
     completedAt: hasProfile ? details.completedAt || new Date() : null,
     updatedAt: details.updatedAt || new Date(),
     changeLog: details.changeLog || [],
+  };
+  user.profileCompletion = {
+    ...(user.profileCompletion || {}),
+    passwordSet: Boolean(user.password),
+    completed: hasProfile,
+    completionPercent: hasProfile ? 100 : 0,
+    updatedAt: new Date(),
   };
 };
 
@@ -119,11 +134,12 @@ const hasUsableAddress = (user) => {
 
 const normalizeCustomerProfileCompletion = (user) => {
   if (user.role === "deliveryBoy" || user.role === "admin") return;
-  const editProfileCompleted = Boolean(String(user.name || "").trim() && String(user.phone || "").trim());
+  const editProfileCompleted = Boolean(String(user.name || "").trim() && String(user.phone || "").trim() && user.password);
   const addressCompleted = hasUsableAddress(user);
   const completionPercent = (editProfileCompleted ? 50 : 0) + (addressCompleted ? 50 : 0);
   user.profileCompletion = {
     ...(user.profileCompletion || {}),
+    passwordSet: Boolean(user.password),
     editProfileCompleted,
     addressCompleted,
     completionPercent,
@@ -160,6 +176,10 @@ export const registerUser = async (req, res) => {
   try {
 
     const { name, email, password, phone, address } = req.body;
+
+    if (!isStrongPassword(password)) {
+      return res.status(400).json({ message: PASSWORD_RULE_MESSAGE });
+    }
 
     const existingUser = await User.findOne({ email });
 
@@ -281,6 +301,45 @@ export const loginUser = async (req, res) => {
   }
 };
 
+export const loginWithPhonePassword = async (req, res) => {
+  try {
+    const { phone, password } = req.body;
+    if (!phone || !password) {
+      return res.status(400).json({ message: "Phone number and password are required" });
+    }
+
+    const user = await User.findOne({ phone });
+    if (!user) {
+      return res.status(400).json({ message: "User not found with this phone number" });
+    }
+    if (!user.password) {
+      return res.status(400).json({ message: "Password not set. Please login another way and set password in profile." });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid phone number or password" });
+    }
+
+    user.lastLogin = new Date();
+    normalizeUserCompletion(user);
+    await user.save();
+    await notifyAdminUserEvent("User Logged In", user, "info");
+
+    const role = normalizeRole(user.role);
+    const token = jwt.sign(
+      { id: user._id, phone: user.phone, role },
+      process.env.JWT_SECRET || "SECRET123",
+      { expiresIn: "7d" }
+    );
+
+    res.json({ success: true, token, role });
+  } catch (err) {
+    console.error("Phone password login error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 
 /* ================= GET ME ================= */
 
@@ -325,6 +384,7 @@ export const updateProfile = async (req, res) => {
       deliveryTime,
       notifications,
       birthDate,
+      password,
       deliveryAddress,
       deliveryLatitude,
       deliveryLongitude
@@ -373,6 +433,12 @@ export const updateProfile = async (req, res) => {
     user.deliveryTime = deliveryTime !== undefined ? deliveryTime : user.deliveryTime;
     user.notifications = notifications !== undefined ? notifications : user.notifications;
     user.birthDate = birthDate !== undefined && birthDate !== "" ? new Date(birthDate) : user.birthDate;
+    if (password !== undefined && password !== "") {
+      if (!isStrongPassword(password)) {
+        return res.status(400).json({ message: PASSWORD_RULE_MESSAGE });
+      }
+      user.password = await bcrypt.hash(password, 10);
+    }
 
     if (user.role === "deliveryBoy") {
       const nextDeliveryAddress = deliveryAddress !== undefined ? deliveryAddress : address;
@@ -706,6 +772,9 @@ export const resetPassword = async (req, res) => {
 
     if (!password) {
       return res.status(400).json({ message: "New password is required" });
+    }
+    if (!isStrongPassword(password)) {
+      return res.status(400).json({ message: PASSWORD_RULE_MESSAGE });
     }
 
     const hashedToken = crypto.createHash("sha256").update(token).digest("hex");

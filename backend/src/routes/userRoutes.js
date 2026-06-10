@@ -2,6 +2,7 @@ import express from "express";
 import {
   registerUser,
   loginUser,
+  loginWithPhonePassword,
   getMe,
   updateProfile,
   toggleFavorite,
@@ -10,8 +11,6 @@ import {
   resetPassword,
   sendOtpEmail,
   verifyOtpEmail,
-  sendOtpPhone,
-  verifyOtpPhone,
   getBudgetRecommendations
 } from "../controllers/userController.js";
 
@@ -21,6 +20,7 @@ const router = express.Router();
 
 router.post("/register", registerUser);
 router.post("/login", loginUser);
+router.post("/login-phone", loginWithPhonePassword);
 router.get("/me", protect, getMe);
 router.put("/profile", protect, updateProfile);
 router.post("/favorites/toggle", protect, toggleFavorite);
@@ -31,7 +31,5 @@ router.post("/reset-password/:token", resetPassword);
 
 router.post("/send-otp-email", sendOtpEmail);
 router.post("/verify-otp-email", verifyOtpEmail);
-router.post("/send-otp-phone", sendOtpPhone);
-router.post("/verify-otp-phone", verifyOtpPhone);
 
 export default router;

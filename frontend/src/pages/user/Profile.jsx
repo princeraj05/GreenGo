@@ -50,6 +50,8 @@ export default function Profile() {
     deliveryTime: "",
     notifications: "",
     birthDate: "",
+    password: "",
+    hasPassword: false,
   });
   const [foods, setFoods] = useState([]);
   const [favorites, setFavorites] = useState([]);
@@ -137,6 +139,8 @@ export default function Profile() {
           deliveryTime: userData.deliveryTime || "",
           notifications: userData.notifications || "",
           birthDate: userData.birthDate ? new Date(userData.birthDate).toISOString().slice(0, 10) : "",
+          password: "",
+          hasPassword: Boolean(userData.profileCompletion?.passwordSet || userData.profileCompletion?.editProfileCompleted),
         };
         setForm(nextForm);
         setFavorites(userData.favorites || []);
@@ -170,7 +174,7 @@ export default function Profile() {
     [foods, favorites]
   );
 
-  const editProfileCompleted = Boolean(String(form.name || "").trim() && String(form.phone || "").trim());
+  const editProfileCompleted = Boolean(String(form.name || "").trim() && String(form.phone || "").trim() && form.hasPassword);
   const addressCompleted = Boolean(
     (form.addresses || []).some((addr) => String(addr.details || "").trim()) ||
     String(form.address || "").trim()
@@ -257,7 +261,22 @@ export default function Profile() {
     );
   };
 
-  const saveProfile = async (override = {}) => {
+  const isStrongPassword = (password = "") => (
+    password.length >= 6 &&
+    /[A-Za-z]/.test(password) &&
+    /\d/.test(password) &&
+    /[^A-Za-z0-9]/.test(password)
+  );
+
+  const saveProfile = async (override = {}, options = {}) => {
+    if (options.requirePassword && !form.hasPassword && !form.password) {
+      showMessage("Please set password to complete profile.", "error");
+      return;
+    }
+    if (form.password && !isStrongPassword(form.password)) {
+      showMessage("Password must include alphabet, number, special character and min 6 chars.", "error");
+      return;
+    }
     setSaving(true);
     try {
       const token = await getToken();
@@ -285,6 +304,8 @@ export default function Profile() {
         address: userData.address || payload.address,
         addresses: normalizeAddresses(userData),
         birthDate: userData.birthDate ? new Date(userData.birthDate).toISOString().slice(0, 10) : payload.birthDate,
+        password: "",
+        hasPassword: Boolean(userData.profileCompletion?.passwordSet || userData.profileCompletion?.editProfileCompleted || payload.password),
       };
       setForm(nextForm);
       showMessage("Profile updated successfully");
@@ -375,13 +396,24 @@ export default function Profile() {
             <Field label="Mobile Number">
               <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+91 98765 43210" />
             </Field>
+            <Field label={form.hasPassword ? "Set New Password" : "Set Password"}>
+              <Input
+                type="password"
+                value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                placeholder="Abc@123"
+              />
+              <p className="mt-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                Min 6 chars: alphabet, number, special character.
+              </p>
+            </Field>
             <Field label="Preferred Delivery Time">
               <Input value={form.deliveryTime} onChange={(e) => setForm({ ...form, deliveryTime: e.target.value })} placeholder="ASAP / 8:00 PM" />
             </Field>
             <Field label="Birthday">
               <Input type="date" value={form.birthDate} onChange={(e) => setForm({ ...form, birthDate: e.target.value })} />
             </Field>
-            <Button onClick={() => saveProfile()} disabled={saving} className="w-full rounded-2xl py-3 gap-2">
+            <Button onClick={() => saveProfile({}, { requirePassword: true })} disabled={saving} className="w-full rounded-2xl py-3 gap-2">
               <Save size={18} />
               {saving ? "Saving..." : "Save Profile"}
             </Button>
