@@ -264,14 +264,9 @@ export default function AuthPage() {
 
       // Email OTP verification flow
       console.log("[AUTH] Sending email OTP to:", email);
-      const res = await API.post("/api/users/send-otp-email", { email });
+      await API.post("/api/users/send-otp-email", { email });
       
-      let messageText = `We have sent a 6-digit verification code to your email: ${email}. Please check your inbox and enter the code.`;
-      if (res.data && res.data.otp) {
-        messageText += ` (Demo OTP: ${res.data.otp})`;
-      }
-      
-      setOtpSentMessage(messageText);
+      setOtpSentMessage(`We have sent a 6-digit verification code to your email: ${email}. Please check your inbox and enter the code.`);
       setStep(2);
       setCountdown(60);
       setCanResend(false);
@@ -697,11 +692,11 @@ export default function AuthPage() {
                 >
                   {loading ? (
                     <>
-                      <Loader2 className="w-5 h-5 animate-spin" /> {authMethod === "phone" ? "Signing In..." : "Sending Link..."}
+                      <Loader2 className="w-5 h-5 animate-spin" /> {authMethod === "phone" ? "Signing In..." : "Sending OTP..."}
                     </>
                   ) : (
                     <>
-                      {authMethod === "phone" ? "Sign In" : "Send verification link"} <ArrowRight className="w-4 h-4" />
+                      {authMethod === "phone" ? "Sign In" : "Send OTP"} <ArrowRight className="w-4 h-4" />
                     </>
                   )}
                 </button>
