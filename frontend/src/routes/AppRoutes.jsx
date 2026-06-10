@@ -79,7 +79,7 @@ export default function AppRoutes() {
         {/* USER PANEL */}
         <Route path="/user" element={<UserLayout />}>
           <Route index element={<Navigate to="/user/menu" replace />} />
-          <Route path="menu" element={<PrivateRoute><ProfileCompletionRoute><Menu /></ProfileCompletionRoute></PrivateRoute>} />
+          <Route path="menu" element={<Menu />} />
           <Route path="search" element={<PrivateRoute><ProfileCompletionRoute><FoodSearch /></ProfileCompletionRoute></PrivateRoute>} />
           <Route path="dashboard" element={<PrivateRoute><ProfileCompletionRoute><UserDashboard /></ProfileCompletionRoute></PrivateRoute>} />
           <Route path="cart" element={<PrivateRoute><ProfileCompletionRoute><Cart /></ProfileCompletionRoute></PrivateRoute>} />
