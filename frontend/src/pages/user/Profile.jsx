@@ -309,6 +309,9 @@ export default function Profile() {
       };
       setForm(nextForm);
       showMessage("Profile updated successfully");
+      if (activeSection === "edit") {
+        setActiveSection(null);
+      }
     } catch (err) {
       console.error(err);
       showMessage("Failed to update profile", "error");
