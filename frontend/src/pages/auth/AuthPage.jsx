@@ -143,7 +143,17 @@ export default function AuthPage() {
         await signInWithRedirect(auth, googleProvider);
       } else {
         console.log("[GOOGLE DEBUG] Using popup");
-        const result = await signInWithPopup(auth, googleProvider);
+        let result;
+        try {
+          result = await signInWithPopup(auth, googleProvider);
+        } catch (popupErr) {
+          if (popupErr.code === "auth/popup-blocked") {
+            console.log("[GOOGLE DEBUG] Popup blocked, falling back to redirect...");
+            await signInWithRedirect(auth, googleProvider);
+            return;
+          }
+          throw popupErr;
+        }
         const user = result.user;
         console.log("[GOOGLE DEBUG] Firebase user received:", user.email);
         

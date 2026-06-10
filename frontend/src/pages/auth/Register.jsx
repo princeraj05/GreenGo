@@ -137,7 +137,17 @@ export default function Register() {
       if (window.Capacitor || isMobile) {
         await signInWithRedirect(auth, googleProvider);
       } else {
-        const result = await signInWithPopup(auth, googleProvider);
+        let result;
+        try {
+          result = await signInWithPopup(auth, googleProvider);
+        } catch (popupErr) {
+          if (popupErr.code === "auth/popup-blocked") {
+            console.log("[GOOGLE AUTH] Popup blocked, falling back to redirect...");
+            await signInWithRedirect(auth, googleProvider);
+            return;
+          }
+          throw popupErr;
+        }
         const user = result.user;
         
         // Get Firebase ID Token
