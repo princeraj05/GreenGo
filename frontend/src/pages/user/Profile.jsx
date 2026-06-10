@@ -738,7 +738,7 @@ export default function Profile() {
         <div className="mx-5 mt-4 rounded-3xl border border-emerald-100 bg-emerald-50/70 p-4 dark:border-emerald-900/40 dark:bg-emerald-950/20">
           {location.state?.profileRequired && (
             <p className="mb-3 text-sm font-black text-emerald-700 dark:text-emerald-300">
-              Features use karne ke liye profile complete karo.
+              Please complete your profile to unlock all features.
             </p>
           )}
           <div className="flex items-center justify-between gap-3">

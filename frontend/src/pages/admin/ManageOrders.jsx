@@ -109,21 +109,6 @@ export default function ManageOrders() {
                   </Badge>
                 </div>
 
-                {/* Status Selector */}
-                <div className="mb-4 md:mb-6">
-                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Update Status</label>
-                  <select 
-                    value={o.status} 
-                    onChange={(e) => setETA(o._id, e.target.value)}
-                    className="w-full px-3 md:px-4 py-2.5 md:py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200 font-bold text-sm md:text-base focus:outline-none focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all appearance-none cursor-pointer focus:bg-white dark:focus:bg-slate-950"
-                  >
-                    <option value="Pending" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Pending</option>
-                    <option value="Preparing" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Preparing</option>
-                    <option value="Out for Delivery" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Out for Delivery</option>
-                    <option value="Delivered" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Delivered</option>
-                  </select>
-                </div>
-
                 {/* Delivery Assignment */}
                 <div className="mb-4 md:mb-6 rounded-2xl border border-emerald-100 dark:border-emerald-900/40 bg-emerald-50/50 dark:bg-emerald-950/20 p-3">
                   <label className="block text-xs font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider mb-2">Assign Delivery Boy</label>

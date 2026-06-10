@@ -61,7 +61,7 @@ export default function DeliveryProfile() {
       });
     } catch (err) {
       console.error("Failed to load delivery profile:", err);
-      setError("Profile load nahi ho paya.");
+      setError("Failed to load profile.");
     }
   }
 
@@ -82,7 +82,7 @@ export default function DeliveryProfile() {
 
   const useCurrentLocation = () => {
     if (!navigator.geolocation) {
-      setError("Is device/browser me location support nahi hai.");
+      setError("Location services are not supported on this device or browser.");
       return;
     }
 
@@ -105,12 +105,12 @@ export default function DeliveryProfile() {
             deliveryLongitude: longitude,
           }));
           setLocationLoading(false);
-          showMessage("Current location address me add ho gaya.");
+          showMessage("Current location updated successfully.");
         }
       },
       () => {
         setLocationLoading(false);
-        setError("Location permission allow karo ya manual address fill karo.");
+        setError("Please enable location permissions or enter your address manually.");
       },
       { enableHighAccuracy: true, timeout: 12000, maximumAge: 5000 }
     );
@@ -118,11 +118,11 @@ export default function DeliveryProfile() {
 
   const saveProfile = async () => {
     if (!isComplete) {
-      setError("Name, phone number, address aur password complete karo.");
+      setError("Please complete your name, phone number, address, and password.");
       return;
     }
     if (form.password && !isStrongPassword(form.password)) {
-      setError("Password me alphabet, number, special character aur minimum 6 characters hone chahiye.");
+      setError("Password must be at least 6 characters and contain letters, numbers, and special characters.");
       return;
     }
 
@@ -152,10 +152,10 @@ export default function DeliveryProfile() {
         hasPassword: Boolean(details.profileCompleted || form.password),
       }));
       window.dispatchEvent(new Event("delivery-profile-updated"));
-      showMessage("Delivery profile updated. Ab assigned orders visible honge.");
+      showMessage("Delivery profile updated successfully. Assigned orders will now be visible.");
     } catch (err) {
       console.error("Failed to save delivery profile:", err);
-      setError(err.response?.data?.message || "Profile save nahi ho paya.");
+      setError(err.response?.data?.message || "Failed to save profile.");
     } finally {
       setSaving(false);
     }
@@ -168,7 +168,7 @@ export default function DeliveryProfile() {
       <div>
         <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight leading-tight">Profile</h2>
         <p className="text-sm sm:text-base font-semibold text-slate-500 dark:text-slate-400 mt-1">
-          Assigned orders dekhne ke liye delivery profile complete karo.
+          Complete your delivery profile to view assigned orders.
         </p>
       </div>
 
@@ -241,7 +241,7 @@ export default function DeliveryProfile() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
             <div className="min-w-0">
               <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Delivery Address</p>
-              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">Current location use karo ya manually address update karo.</p>
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">Use your current location or update the address manually.</p>
             </div>
             <button
               type="button"

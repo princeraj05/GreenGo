@@ -49,7 +49,7 @@ export default function DeliveryEarnings() {
         <div className="rounded-2xl bg-white dark:bg-slate-950 border border-amber-100 dark:border-amber-900/40 p-6 sm:p-10 text-center shadow-sm">
           <User className="mx-auto text-amber-500" size={36} />
           <h3 className="mt-4 text-xl font-black">Complete delivery profile first</h3>
-          <p className="mt-1 text-sm font-semibold text-slate-500 dark:text-slate-400">Earnings dekhne ke liye profile complete karo.</p>
+          <p className="mt-1 text-sm font-semibold text-slate-500 dark:text-slate-400">Please complete your profile to view your earnings.</p>
           <Button onClick={() => navigate("/delivery/profile")} className="mt-5 rounded-2xl">Complete Profile</Button>
         </div>
       ) : loading ? (
