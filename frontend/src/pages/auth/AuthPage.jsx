@@ -1,18 +1,20 @@
 import { useCallback, useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, Phone, ArrowLeft, ArrowRight, Loader2, Sparkles } from "lucide-react";
+import { Mail, Phone, ArrowLeft, ArrowRight, Loader2, Sparkles, Sun, Moon } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
 import API from "../../api/axios";
 import { signInWithPopup, signInWithRedirect, getRedirectResult } from "firebase/auth";
 import { auth, googleProvider } from "../../config/firebase";
 import { saveSession } from "../../utils/authStorage";
 import { getRoleHomePath } from "../../utils/roleRedirect";
+import { useTheme } from "../../context/ThemeContext";
 
 const MotionImg = motion.img;
 const MotionDiv = motion.div;
 
 export default function AuthPage() {
+  const { theme, toggleTheme } = useTheme();
   const loginSlides = [
     "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=900",
     "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80&w=900",
@@ -302,6 +304,15 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-slate-50 dark:bg-slate-950 px-4 py-8 md:py-12 overflow-hidden relative transition-colors duration-300">
+      <button
+        type="button"
+        onClick={toggleTheme}
+        className="fixed left-4 top-4 z-20 w-10 h-10 rounded-full bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-200 transition-all active:scale-95 shadow-lg sm:left-8 sm:top-8"
+        title="Toggle Theme"
+      >
+        {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+      </button>
+
       <button
         type="button"
         onClick={() => navigate("/user/menu", { replace: true })}
