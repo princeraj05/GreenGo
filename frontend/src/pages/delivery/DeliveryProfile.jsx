@@ -164,26 +164,26 @@ export default function DeliveryProfile() {
   const completedFromServer = Boolean(profile?.deliveryDetails?.profileCompleted);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 sm:space-y-6">
       <div>
-        <h2 className="text-2xl sm:text-3xl font-black tracking-tight">Profile</h2>
-        <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 mt-1">
+        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight leading-tight">Profile</h2>
+        <p className="text-sm sm:text-base font-semibold text-slate-500 dark:text-slate-400 mt-1">
           Assigned orders dekhne ke liye delivery profile complete karo.
         </p>
       </div>
 
-      <div className="rounded-3xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 p-5 shadow-sm">
+      <div className="rounded-2xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 p-4 sm:p-5 lg:p-6 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-5 mb-5">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-brand-500 text-white flex items-center justify-center text-2xl font-black">
+          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+            <div className="shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-brand-500 text-white flex items-center justify-center text-2xl font-black">
               {form.name ? form.name[0].toUpperCase() : "D"}
             </div>
-            <div>
-              <h3 className="text-xl font-black">{form.name || "Delivery Partner"}</h3>
+            <div className="min-w-0">
+              <h3 className="text-lg sm:text-xl font-black truncate">{form.name || "Delivery Partner"}</h3>
               <p className="text-sm font-bold text-brand-600 dark:text-brand-400">GreenGo Delivery Boy</p>
             </div>
           </div>
-          <span className={`inline-flex items-center gap-2 rounded-2xl px-4 py-2 text-xs font-black uppercase tracking-wider ${
+          <span className={`inline-flex w-fit items-center gap-2 rounded-2xl px-4 py-2 text-xs font-black uppercase tracking-wider ${
             completedFromServer
               ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300"
               : "bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-300"
@@ -228,7 +228,7 @@ export default function DeliveryProfile() {
             <Input value={form.email} disabled readOnly className="bg-slate-100 dark:bg-slate-900 cursor-not-allowed" />
           </Field>
 
-          <div className="rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4">
+          <div className="rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4 min-w-0">
             <MapPin size={17} className="text-brand-600 mb-2" />
             <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Join Date</p>
             <p className="mt-1 font-black text-slate-950 dark:text-white">
@@ -239,7 +239,7 @@ export default function DeliveryProfile() {
 
         <div className="mt-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
-            <div>
+            <div className="min-w-0">
               <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Delivery Address</p>
               <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">Current location use karo ya manually address update karo.</p>
             </div>
@@ -247,7 +247,7 @@ export default function DeliveryProfile() {
               type="button"
               onClick={useCurrentLocation}
               disabled={locationLoading}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-50 dark:bg-brand-950/30 text-brand-700 dark:text-brand-300 px-4 py-2.5 text-sm font-black disabled:opacity-60"
+              className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-brand-50 dark:bg-brand-950/30 text-brand-700 dark:text-brand-300 px-4 py-2.5 text-sm font-black disabled:opacity-60"
             >
               <Navigation size={16} />
               {locationLoading ? "Detecting..." : "Use My Location"}
@@ -257,11 +257,11 @@ export default function DeliveryProfile() {
             value={form.deliveryAddress}
             onChange={(e) => setForm({ ...form, deliveryAddress: e.target.value })}
             placeholder="House/Street, Area, City, State"
-            className="w-full min-h-28 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 text-sm font-semibold text-slate-900 dark:text-white outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 resize-y"
+            className="w-full min-h-28 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 text-sm font-semibold text-slate-900 dark:text-white outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 resize-y break-words"
           />
         </div>
 
-        <div className="mt-5 flex flex-col sm:flex-row gap-3">
+        <div className="mt-5 grid grid-cols-1 sm:flex sm:flex-row gap-3">
           <Button onClick={saveProfile} disabled={saving} className="flex-1 rounded-2xl gap-2 py-3">
             <Save size={18} /> {saving ? "Saving..." : completedFromServer ? "Update Profile" : "Complete Profile"}
           </Button>
@@ -277,7 +277,7 @@ export default function DeliveryProfile() {
 function Field({ label, icon: Icon, children }) {
   const FieldIcon = Icon;
   return (
-    <label className="rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4 block">
+    <label className="rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4 block min-w-0">
       <FieldIcon size={17} className="text-brand-600 mb-2" />
       <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2 block">{label}</span>
       {children}

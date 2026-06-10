@@ -141,42 +141,42 @@ export default function DeliveryOrders() {
   }, []);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 sm:space-y-6">
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <h2 className="text-2xl sm:text-3xl font-black tracking-tight">Assigned Orders</h2>
-          <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 mt-1">Accept, reject, navigate, and complete deliveries.</p>
+        <div className="min-w-0">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight leading-tight">Assigned Orders</h2>
+          <p className="text-sm sm:text-base font-semibold text-slate-500 dark:text-slate-400 mt-1">Accept, reject, navigate, and complete deliveries.</p>
         </div>
-        <button type="button" onClick={loadOrders} className="w-11 h-11 rounded-2xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 flex items-center justify-center">
+        <button type="button" onClick={loadOrders} className="shrink-0 w-11 h-11 rounded-2xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 flex items-center justify-center shadow-sm">
           <RefreshCw size={18} />
         </button>
       </div>
 
       {profileRequired ? (
-        <div className="rounded-3xl bg-white dark:bg-slate-950 border border-amber-100 dark:border-amber-900/40 p-10 text-center">
+        <div className="rounded-2xl bg-white dark:bg-slate-950 border border-amber-100 dark:border-amber-900/40 p-6 sm:p-10 text-center shadow-sm">
           <User className="mx-auto text-amber-500" size={36} />
           <h3 className="mt-4 text-xl font-black">Complete delivery profile first</h3>
           <p className="mt-1 text-sm font-semibold text-slate-500 dark:text-slate-400">Assigned orders dekhne ke liye name, phone aur address save karo.</p>
           <Button onClick={() => navigate("/delivery/profile")} className="mt-5 rounded-2xl">Complete Profile</Button>
         </div>
       ) : loading ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {[1, 2].map((item) => <div key={item} className="h-72 rounded-3xl bg-slate-100 dark:bg-slate-900 animate-pulse" />)}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+          {[1, 2].map((item) => <div key={item} className="h-72 rounded-2xl bg-slate-100 dark:bg-slate-900 animate-pulse" />)}
         </div>
       ) : orders.length === 0 ? (
-        <div className="rounded-3xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 p-10 text-center">
+        <div className="rounded-2xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 p-6 sm:p-10 text-center shadow-sm">
           <Package className="mx-auto text-slate-400" size={36} />
           <h3 className="mt-4 text-xl font-black">No assigned orders</h3>
           <p className="mt-1 text-sm font-semibold text-slate-500 dark:text-slate-400">New assignments will appear here.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
           {orders.map((order) => {
             const distance = distanceToCustomer(order);
             return (
-            <div key={order._id} className="rounded-3xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 p-5 shadow-sm space-y-4">
-              <div className="flex items-center justify-between gap-3">
-                <h3 className="text-lg font-black">#{String(order._id).slice(-6).toUpperCase()}</h3>
+            <div key={order._id} className="rounded-2xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 p-4 sm:p-5 shadow-sm space-y-4">
+              <div className="flex items-start justify-between gap-3">
+                <h3 className="text-lg font-black break-all">#{String(order._id).slice(-6).toUpperCase()}</h3>
                 <Badge variant={order.status === "Delivered" ? "success" : order.status === "RejectedByDeliveryBoy" ? "danger" : "warning"}>
                   {order.status}
                 </Badge>
@@ -184,12 +184,12 @@ export default function DeliveryOrders() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm font-semibold text-slate-600 dark:text-slate-300">
                 <InfoLine label="Customer" value={order.customerName || "GreenGo Customer"} />
-                <InfoLine label="Amount" value={`₹${order.total || 0}`} />
+                <InfoLine label="Amount" value={`Rs. ${order.total || 0}`} />
                 <InfoLine label="Payment" value={order.paymentMethod || "COD"} />
                 <InfoLine label="Order Time" value={new Date(order.createdAt).toLocaleString()} />
               </div>
 
-              <div className="rounded-2xl bg-slate-50 dark:bg-slate-900 p-4 space-y-2">
+              <div className="rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4 space-y-2">
                 <p className="text-sm font-bold flex items-center gap-2">
                   <Phone size={15} className="text-brand-500" />
                   {order.phone || "No phone"}
@@ -208,18 +208,18 @@ export default function DeliveryOrders() {
                 {order.items?.map((item, index) => (
                   <div key={index} className="flex justify-between gap-3 text-xs font-bold text-slate-500 dark:text-slate-400">
                     <span>{item.name} x {item.qty}</span>
-                    <span>₹{Number(item.price || 0) * Number(item.qty || 0)}</span>
+                    <span>Rs. {Number(item.price || 0) * Number(item.qty || 0)}</span>
                   </div>
                 ))}
               </div>
 
-              <div className="flex flex-wrap gap-2 pt-2">
+              <div className="grid grid-cols-1 sm:flex sm:flex-wrap gap-2 pt-2">
                 {order.assignmentStatus === "Assigned" && (
                   <>
-                    <Button disabled={actionLoading === `${order._id}-accept`} onClick={() => acceptAndShare(order)} className="min-h-11 rounded-xl gap-2">
+                    <Button disabled={actionLoading === `${order._id}-accept`} onClick={() => acceptAndShare(order)} className="min-h-11 w-full sm:w-auto rounded-xl gap-2">
                       <CheckCircle size={16} /> Accept & Start Delivery
                     </Button>
-                    <button type="button" onClick={() => runAction(order._id, "reject", { reason: prompt("Reject reason (optional)") || "" })} className="min-h-11 px-4 py-2.5 rounded-xl bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 font-black text-sm flex items-center gap-2">
+                    <button type="button" onClick={() => runAction(order._id, "reject", { reason: prompt("Reject reason (optional)") || "" })} className="min-h-11 w-full sm:w-auto px-4 py-2.5 rounded-xl bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 font-black text-sm flex items-center justify-center gap-2">
                       <XCircle size={16} /> Reject
                     </button>
                   </>
@@ -227,18 +227,18 @@ export default function DeliveryOrders() {
                 {order.status === "AcceptedByDeliveryBoy" && (
                   <>
                     {!sharingOrders[order._id] ? (
-                      <Button onClick={() => startSharing(order._id)} className="min-h-11 rounded-xl gap-2">
+                      <Button onClick={() => startSharing(order._id)} className="min-h-11 w-full sm:w-auto rounded-xl gap-2">
                         <Navigation size={16} /> Start Delivery
                       </Button>
                     ) : (
-                      <button type="button" onClick={() => stopSharing(order._id)} className="min-h-11 px-4 py-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-300 font-black text-sm flex items-center gap-2">
+                      <button type="button" onClick={() => stopSharing(order._id)} className="min-h-11 w-full sm:w-auto px-4 py-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-300 font-black text-sm flex items-center justify-center gap-2">
                         <Navigation size={16} /> Stop Sharing
                       </button>
                     )}
-                    <button type="button" onClick={() => openMaps(order)} className="min-h-11 px-4 py-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-300 font-black text-sm flex items-center gap-2">
+                    <button type="button" onClick={() => openMaps(order)} className="min-h-11 w-full sm:w-auto px-4 py-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-300 font-black text-sm flex items-center justify-center gap-2">
                       <MapPin size={16} /> Open Map
                     </button>
-                    <Button disabled={actionLoading === `${order._id}-delivered`} onClick={() => markDelivered(order._id)} className="min-h-11 rounded-xl gap-2 bg-emerald-600 hover:bg-emerald-700">
+                    <Button disabled={actionLoading === `${order._id}-delivered`} onClick={() => markDelivered(order._id)} className="min-h-11 w-full sm:w-auto rounded-xl gap-2 bg-emerald-600 hover:bg-emerald-700">
                       <Clock size={16} /> Mark As Delivered
                     </Button>
                   </>

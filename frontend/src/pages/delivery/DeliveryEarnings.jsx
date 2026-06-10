@@ -33,40 +33,42 @@ export default function DeliveryEarnings() {
   const cards = [
     ["Total COD Orders", data?.totalCodOrders || 0],
     ["Delivery Amount", `Rs. ${data?.totalDeliveryBoyAmount || 0}`],
-    ["Total COD Amount", `₹${data?.totalCodAmount || 0}`],
+    ["Total COD Amount", `Rs. ${data?.totalCodAmount || 0}`],
     ["Delivered COD Orders", data?.deliveredCodOrders || 0],
-    ["Current Credit", `₹${data?.currentCredit || 0}`],
+    ["Current Credit", `Rs. ${data?.currentCredit || 0}`],
   ];
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 sm:space-y-6">
       <div>
-        <h2 className="text-2xl sm:text-3xl font-black tracking-tight">COD Earnings</h2>
-        <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 mt-1">Only COD delivered orders add to your credit.</p>
+        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight leading-tight">COD Earnings</h2>
+        <p className="text-sm sm:text-base font-semibold text-slate-500 dark:text-slate-400 mt-1">Only COD delivered orders add to your credit.</p>
       </div>
 
       {profileRequired ? (
-        <div className="rounded-3xl bg-white dark:bg-slate-950 border border-amber-100 dark:border-amber-900/40 p-10 text-center">
+        <div className="rounded-2xl bg-white dark:bg-slate-950 border border-amber-100 dark:border-amber-900/40 p-6 sm:p-10 text-center shadow-sm">
           <User className="mx-auto text-amber-500" size={36} />
           <h3 className="mt-4 text-xl font-black">Complete delivery profile first</h3>
           <p className="mt-1 text-sm font-semibold text-slate-500 dark:text-slate-400">Earnings dekhne ke liye profile complete karo.</p>
           <Button onClick={() => navigate("/delivery/profile")} className="mt-5 rounded-2xl">Complete Profile</Button>
         </div>
       ) : loading ? (
-        <div className="h-48 rounded-3xl bg-slate-100 dark:bg-slate-900 animate-pulse" />
+        <div className="h-48 rounded-2xl bg-slate-100 dark:bg-slate-900 animate-pulse" />
       ) : (
         <>
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+          <div className="grid grid-cols-1 min-[420px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
             {cards.map(([label, value]) => (
-              <div key={label} className="rounded-3xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 p-5 shadow-sm">
+              <div key={label} className="rounded-2xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 p-4 sm:p-5 shadow-sm min-h-[132px] flex flex-col justify-between">
                 <Wallet size={23} className="text-brand-600" />
-                <p className="mt-4 text-2xl font-black">{value}</p>
-                <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">{label}</p>
+                <div className="mt-4 min-w-0">
+                  <p className="text-xl sm:text-2xl font-black break-words leading-tight">{value}</p>
+                  <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 leading-tight">{label}</p>
+                </div>
               </div>
             ))}
           </div>
 
-          <div className="rounded-3xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm">
+          <div className="rounded-2xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm">
             <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
               <Package size={18} className="text-brand-600" />
               <h3 className="font-black">COD Order History</h3>
@@ -85,7 +87,7 @@ export default function DeliveryEarnings() {
                     <Info label="Date" value={new Date(row.date).toLocaleDateString()} />
                     <Info label="Delivery Pay" value={`Rs. ${row.deliveryBoyAmount || 0}`} />
                     <Info label="Distance" value={`${row.distance || 0} km`} />
-                    <Info label="Amount" value={`₹${row.amount}`} />
+                    <Info label="Amount" value={`Rs. ${row.amount}`} />
                     <Info label="Customer" value={row.customer} />
                   </div>
                 </div>
@@ -109,7 +111,7 @@ export default function DeliveryEarnings() {
                       <td className="px-4 py-3 font-semibold text-slate-600 dark:text-slate-300">{new Date(row.date).toLocaleDateString()}</td>
                       <td className="px-4 py-3 font-black">#{String(row.orderId).slice(-6).toUpperCase()}</td>
                       <td className="px-4 py-3 font-semibold">{row.customer}</td>
-                      <td className="px-4 py-3 font-black">₹{row.amount}</td>
+                      <td className="px-4 py-3 font-black">Rs. {row.amount}</td>
                       <td className="px-4 py-3 font-black">Rs. {row.deliveryBoyAmount || 0}</td>
                       <td className="px-4 py-3 font-semibold">{row.distance || 0} km</td>
                       <td className="px-4 py-3"><Badge variant={row.status === "Delivered" ? "success" : "warning"}>{row.status}</Badge></td>
