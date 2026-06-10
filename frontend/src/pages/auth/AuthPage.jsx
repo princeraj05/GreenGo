@@ -235,18 +235,23 @@ export default function AuthPage() {
 
     try {
       if (authMethod === "phone") {
-        setupRecaptcha();
-        const phoneNumber = "+91" + phone;
-        const appVerifier = window.recaptchaVerifier;
-        console.log("[FIREBASE AUTH] Sending SMS verification to:", phoneNumber);
-        const confirmation = await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
-        window.confirmationResult = confirmation;
+        console.log(`[LOGIN PROCESS] Attempting phone password login for ${phone}`);
+        const res = await API.post("/api/users/login-phone", {
+          phone,
+          password: phonePassword,
+        });
+
+        const data = res.data;
+        localStorage.setItem("token", data.token);
         
-        setOtpSentMessage(`We have sent a 6-digit verification code to your phone number: +91 ${phone}`);
-        setStep(2);
-        setCountdown(30);
-        setCanResend(false);
-        setOtpValues(Array(6).fill(""));
+        try {
+          const meRes = await API.get("/api/users/me");
+          await saveSession(data.token, meRes.data);
+        } catch {
+          await saveSession(data.token, { phone, role: data.role });
+        }
+
+        navigate(getPostLoginPath(data.role), { replace: true });
         return;
       }
 
@@ -475,7 +480,7 @@ export default function AuthPage() {
             <div className="mb-6">
               <h2 className="text-xl font-extrabold text-gray-900 dark:text-white">Sign in or create account</h2>
               <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">
-                {authMethod === "phone" ? "Enter phone number to receive OTP" : "Enter your details to get verification link"}
+                {authMethod === "phone" ? "Enter your phone number and password" : "Enter your details to get verification link"}
               </p>
             </div>
 
@@ -530,24 +535,39 @@ export default function AuthPage() {
                   </div>
                 </div>
               ) : (
-                <div className="space-y-2">
-                  <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
-                    Phone Number
-                  </label>
-                  <div className="flex gap-2.5">
-                    {/* Country Code Selector (Zomato style +91) */}
-                    <div className="px-3 py-3.5 rounded-2xl border border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 text-sm font-bold text-gray-700 dark:text-slate-300 select-none flex items-center">
-                      🇮🇳 +91
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
+                      Phone Number
+                    </label>
+                    <div className="flex gap-2.5">
+                      {/* Country Code Selector (Zomato style +91) */}
+                      <div className="px-3 py-3.5 rounded-2xl border border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 text-sm font-bold text-gray-700 dark:text-slate-300 select-none flex items-center">
+                        🇮🇳 +91
+                      </div>
+                      <input
+                        type="tel"
+                        placeholder="10-digit number"
+                        value={phone}
+                        required
+                        pattern="^[0-9]{10}$"
+                        title="Please enter a valid 10-digit phone number"
+                        onChange={(e) => setPhone(e.target.value)}
+                        className="flex-1 px-5 py-3.5 rounded-2xl border border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 transition-all font-bold tracking-wide text-gray-900 dark:text-white"
+                      />
                     </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
+                      Password
+                    </label>
                     <input
-                      type="tel"
-                      placeholder="10-digit number"
-                      value={phone}
+                      type="password"
+                      placeholder="••••••••"
+                      value={phonePassword}
                       required
-                      pattern="^[0-9]{10}$"
-                      title="Please enter a valid 10-digit phone number"
-                      onChange={(e) => setPhone(e.target.value)}
-                      className="flex-1 px-5 py-3.5 rounded-2xl border border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 transition-all font-bold tracking-wide text-gray-900 dark:text-white"
+                      onChange={(e) => setPhonePassword(e.target.value)}
+                      className="w-full px-5 py-3.5 rounded-2xl border border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 transition-all font-medium text-gray-900 dark:text-white"
                     />
                   </div>
                 </div>
@@ -561,11 +581,11 @@ export default function AuthPage() {
               >
                 {loading ? (
                   <>
-                    <Loader2 className="w-5 h-5 animate-spin" /> Sending Code...
+                    <Loader2 className="w-5 h-5 animate-spin" /> {authMethod === "phone" ? "Signing In..." : "Sending Link..."}
                   </>
                 ) : (
                   <>
-                    Send verification code <ArrowRight className="w-4 h-4" />
+                    {authMethod === "phone" ? "Sign In" : "Send verification link"} <ArrowRight className="w-4 h-4" />
                   </>
                 )}
               </button>

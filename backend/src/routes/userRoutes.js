@@ -16,12 +16,13 @@ import {
 } from "../controllers/userController.js";
 
 import { protect } from "../middleware/authMiddleware.js";
+import { rateLimitLogin } from "../middleware/rateLimiter.js";
 
 const router = express.Router();
 
 router.post("/register", registerUser);
 router.post("/login", loginUser);
-router.post("/login-phone", loginWithPhonePassword);
+router.post("/login-phone", rateLimitLogin, loginWithPhonePassword);
 router.get("/me", protect, getMe);
 router.put("/profile", protect, updateProfile);
 router.post("/favorites/toggle", protect, toggleFavorite);

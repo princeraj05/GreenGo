@@ -308,17 +308,23 @@ export const loginWithPhonePassword = async (req, res) => {
       return res.status(400).json({ message: "Phone number and password are required" });
     }
 
+    // Validate phone number format (must be 10 digits)
+    const phoneRegex = /^[0-9]{10}$/;
+    if (!phoneRegex.test(phone)) {
+      return res.status(400).json({ message: "Invalid phone number or password" });
+    }
+
     const user = await User.findOne({ phone });
     if (!user) {
-      return res.status(400).json({ message: "We couldn't verify your phone number and password. Please sign in with email OTP or Google, complete your profile, and set a password." });
+      return res.status(400).json({ message: "Invalid phone number or password" });
     }
     if (!user.password) {
-      return res.status(400).json({ message: "A password has not been set for this account. Please sign in with email OTP or Google, complete your profile, and set a password." });
+      return res.status(400).json({ message: "Invalid phone number or password" });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({ message: "We couldn't verify your phone number and password. Please sign in with email OTP or Google, complete your profile, and set a password." });
+      return res.status(400).json({ message: "Invalid phone number or password" });
     }
 
     user.lastLogin = new Date();
@@ -339,6 +345,7 @@ export const loginWithPhonePassword = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 
 /* ================= GET ME ================= */
