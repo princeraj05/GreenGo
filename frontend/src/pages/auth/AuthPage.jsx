@@ -303,7 +303,7 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-slate-50 dark:bg-slate-950 px-4 py-8 md:py-12 overflow-hidden relative transition-colors duration-300">
+    <div className="min-h-screen w-full flex items-stretch sm:items-center justify-center bg-slate-50 dark:bg-slate-950 sm:px-4 sm:py-8 md:py-12 overflow-y-auto relative transition-colors duration-300">
       <button
         type="button"
         onClick={toggleTheme}
@@ -326,7 +326,7 @@ export default function AuthPage() {
       <div className="absolute bottom-0 right-0 w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-red-500/10 dark:bg-red-500/5 rounded-full blur-[80px] md:blur-[120px] translate-x-1/3 translate-y-1/3 pointer-events-none" />
 
       {/* Main Container */}
-      <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-[0_12px_40px_rgba(0,0,0,0.06)] border border-gray-100 dark:border-slate-800/80 px-6 py-10 md:px-8 transition-all duration-300 z-10">
+      <div className="relative w-full sm:max-w-md bg-white dark:bg-slate-900 rounded-none sm:rounded-3xl shadow-none sm:shadow-[0_12px_40px_rgba(0,0,0,0.06)] border-0 sm:border border-gray-100 dark:border-slate-800/80 px-6 py-10 md:px-8 transition-all duration-300 z-10 flex flex-col justify-center min-h-screen sm:min-h-0">
         <div className="-mx-2 -mt-4 mb-7 overflow-hidden rounded-3xl h-40 relative bg-slate-100 dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
           <AnimatePresence mode="wait">
             <MotionImg

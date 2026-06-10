@@ -7,15 +7,20 @@ export default function ForgotPassword() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [resetUrl, setResetUrl] = useState("");
 
   const handleForgotPassword = async (e) => {
     e.preventDefault();
     setLoading(true);
     setMessage("");
     setError("");
+    setResetUrl("");
     try {
       const res = await API.post("/api/users/forgot-password", { email });
       setMessage(res.data.message || "Password reset email has been sent successfully!");
+      if (res.data.resetUrl) {
+        setResetUrl(res.data.resetUrl);
+      }
     } catch (err) {
       setError(err.response?.data?.message || "Something went wrong. Please try again.");
     } finally {
@@ -24,15 +29,15 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50 dark:bg-transparent px-4 py-10 overflow-hidden relative">
+    <div className="min-h-screen w-full flex items-stretch sm:items-center justify-center bg-gray-50 dark:bg-transparent sm:px-4 sm:py-10 overflow-y-auto relative">
 
       {/* Decorative Background Elements */}
       <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-brand-500/10 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
       <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-brand-300/10 rounded-full blur-[100px] translate-x-1/3 translate-y-1/3 pointer-events-none" />
 
-      <div className="relative w-full max-w-md z-10">
+      <div className="relative w-full sm:max-w-md z-10 flex flex-col justify-center min-h-screen sm:min-h-0">
 
-        <div className="flex flex-col items-center mb-8">
+        <div className="flex flex-col items-center mb-6 sm:mb-8">
           <Link to="/" className="w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-300 flex items-center justify-center shadow-xl shadow-brand-500/30 mb-4 hover:scale-105 transition-transform">
             <span className="text-3xl text-white">🍔</span>
           </Link>
@@ -40,12 +45,24 @@ export default function ForgotPassword() {
           <p className="text-sm font-medium text-gray-500 dark:text-slate-400 mt-2">Reset your account password</p>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100 dark:border-slate-800 px-8 py-10">
+        <div className="bg-white dark:bg-slate-900 rounded-none sm:rounded-3xl shadow-none sm:shadow-[0_8px_30px_rgb(0,0,0,0.06)] border-0 sm:border border-gray-100 dark:border-slate-800 px-8 py-10 flex-1 sm:flex-initial flex flex-col justify-center">
           <h2 className="text-xl font-black text-gray-900 dark:text-white mb-6">Forgot Password</h2>
 
           {message && (
             <div className="mb-6 p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/40 text-emerald-700 dark:text-emerald-400 text-sm font-medium">
               {message}
+            </div>
+          )}
+
+          {resetUrl && (
+            <div className="mb-6 p-4 rounded-xl bg-orange-50 dark:bg-orange-950/20 border border-orange-100 dark:border-orange-900/40 text-orange-700 dark:text-orange-400 text-sm font-medium text-center">
+              <p className="mb-3 font-semibold">Demo/Fallback link available:</p>
+              <a
+                href={resetUrl}
+                className="inline-block px-5 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-bold shadow-md shadow-orange-600/10 transition-all hover:scale-105 active:scale-95"
+              >
+                Reset Password Now
+              </a>
             </div>
           )}
 
