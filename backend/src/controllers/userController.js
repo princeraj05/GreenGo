@@ -919,7 +919,7 @@ export const sendOtpEmail = async (req, res) => {
 
     // Generate 6 digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
     // Delete existing OTPs for this email and save new one
     await Otp.deleteMany({ email });
@@ -972,7 +972,19 @@ export const verifyOtpEmail = async (req, res) => {
     }
 
     const otpRecord = await Otp.findOne({ email, otp });
-    if (!otpRecord || otpRecord.expiresAt < new Date()) {
+    if (!otpRecord) {
+      console.log(`[OTP VERIFY DEBUG] No OTP record found for email: ${email} and otp: ${otp}`);
+      const anyRecord = await Otp.findOne({ email });
+      if (anyRecord) {
+        console.log(`[OTP VERIFY DEBUG] Active OTP for this email in database is actually: ${anyRecord.otp} (expiresAt: ${anyRecord.expiresAt})`);
+      } else {
+        console.log(`[OTP VERIFY DEBUG] No OTP records exist at all in database for email: ${email}`);
+      }
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
+
+    if (otpRecord.expiresAt < new Date()) {
+      console.log(`[OTP VERIFY DEBUG] OTP record found but is expired. expiresAt: ${otpRecord.expiresAt}, server time: ${new Date()}`);
       return res.status(400).json({ message: "Invalid or expired OTP" });
     }
 
