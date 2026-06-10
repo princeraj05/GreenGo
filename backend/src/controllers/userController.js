@@ -347,7 +347,7 @@ export const getMe = async (req, res) => {
 
   try {
 
-    const user = await User.findById(req.user.id).select("-password");
+    const user = await User.findById(req.user.id);
     if (user && (!user.addresses || user.addresses.length === 0) && user.address) {
       user.addresses = normalizeAddresses([], user.address);
       const primary = user.addresses.find((addr) => addr.isPrimary);
@@ -357,7 +357,9 @@ export const getMe = async (req, res) => {
     normalizeUserCompletion(user);
     await user.save();
 
-    res.json(user);
+    const safeUser = user.toObject();
+    delete safeUser.password;
+    res.json(safeUser);
 
   } catch (err) {
 
@@ -465,7 +467,9 @@ export const updateProfile = async (req, res) => {
     normalizeUserCompletion(user);
     await user.save();
 
-    res.json({ success: true, message: "Profile updated successfully", user });
+    const safeUser = user.toObject();
+    delete safeUser.password;
+    res.json({ success: true, message: "Profile updated successfully", user: safeUser });
   } catch (err) {
     res.status(500).json({ message: "Server error" });
   }
