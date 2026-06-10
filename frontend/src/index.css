@@ -30,6 +30,10 @@
   --slate-800: #1f2937;
   --slate-900: #111827;
   --slate-950: #030712;
+
+  /* Autofill variables */
+  --autofill-bg: #FFFFFF;
+  --autofill-text: #111827;
 }
 
 .dark {
@@ -58,6 +62,10 @@
   --slate-800: #1f2937;
   --slate-900: #111827;
   --slate-950: #030712;
+
+  /* Autofill variables for Dark Mode */
+  --autofill-bg: #030712;
+  --autofill-text: #f3f4f6;
 }
 
 
@@ -69,6 +77,16 @@
   
   body {
     @apply bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 font-sans antialiased transition-colors duration-300;
+  }
+
+  /* Autofill overrides */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover, 
+  input:-webkit-autofill:focus, 
+  input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px var(--autofill-bg) inset !important;
+    -webkit-text-fill-color: var(--autofill-text) !important;
+    transition: background-color 5000s ease-in-out 0s;
   }
 
   /* Custom Scrollbar for a premium feel */
