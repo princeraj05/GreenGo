@@ -52,7 +52,6 @@ export default function AuthPage() {
   const [error, setError] = useState("");
   const [countdown, setCountdown] = useState(30);
   const [canResend, setCanResend] = useState(false);
-  const [devOtpMsg, setDevOtpMsg] = useState(""); // Holds phone OTP for testing environment visibility
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -240,7 +239,6 @@ export default function AuthPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
-    setDevOtpMsg("");
 
     try {
       if (authMethod === "phone") {
@@ -366,7 +364,6 @@ export default function AuthPage() {
     if (!canResend) return;
     setLoading(true);
     setError("");
-    setDevOtpMsg("");
     try {
       if (authMethod === "phone") {
         setupRecaptcha();
@@ -752,7 +749,6 @@ export default function AuthPage() {
                   onClick={() => {
                     setStep(1);
                     setError("");
-                    setDevOtpMsg("");
                   }}
                   className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white mb-4 transition-colors"
                 >

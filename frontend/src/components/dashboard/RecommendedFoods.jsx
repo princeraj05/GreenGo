@@ -1,10 +1,13 @@
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
 
 export default function RecommendedFoods({ foods }) {
   if (!foods || foods.length === 0) return null;
 
   // Let's just pick up to 4 random foods to show as recommended
-  const recommended = [...foods].sort(() => 0.5 - Math.random()).slice(0, 4);
+  const recommended = useMemo(() => {
+    return [...foods].sort(() => 0.5 - Math.random()).slice(0, 4);
+  }, [foods]);
 
   return (
     <div className="mb-10">

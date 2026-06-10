@@ -33,7 +33,7 @@ export default function Orders() {
 
   const canCancel = (o) => {
     if (["Delivered", "Out for Delivery", "Cancelled"].includes(o.status)) return false;
-    const timeDiff = now - new Date(o.createdAt).getTime();
+    const timeDiff = Date.now() - new Date(o.createdAt).getTime();
     return timeDiff <= 5 * 60 * 1000;
   };
 
