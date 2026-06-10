@@ -7,6 +7,7 @@ import {
   updateProfile,
   toggleFavorite,
   googleLogin,
+  firebaseLogin,
   forgotPassword,
   resetPassword,
   sendOtpEmail,
@@ -26,6 +27,7 @@ router.put("/profile", protect, updateProfile);
 router.post("/favorites/toggle", protect, toggleFavorite);
 router.post("/budget-recommendations", protect, getBudgetRecommendations);
 router.post("/google-login", googleLogin);
+router.post("/firebase-login", firebaseLogin);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password/:token", resetPassword);
 

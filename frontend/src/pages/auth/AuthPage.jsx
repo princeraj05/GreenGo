@@ -4,7 +4,16 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Phone, ArrowLeft, ArrowRight, Loader2, Sparkles, Sun, Moon } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
 import API from "../../api/axios";
-import { signInWithPopup, signInWithRedirect, getRedirectResult } from "firebase/auth";
+import { 
+  signInWithPopup, 
+  signInWithRedirect, 
+  getRedirectResult,
+  RecaptchaVerifier,
+  signInWithPhoneNumber,
+  sendSignInLinkToEmail,
+  isSignInWithEmailLink,
+  signInWithEmailLink
+} from "firebase/auth";
 import { auth, googleProvider } from "../../config/firebase";
 import { saveSession } from "../../utils/authStorage";
 import { getRoleHomePath } from "../../utils/roleRedirect";
@@ -67,7 +76,7 @@ export default function AuthPage() {
     return () => clearInterval(timer);
   }, [step, countdown]);
 
-  // Handle Firebase redirect Google sign-in result on mount
+  // Handle Firebase redirect Google sign-in result and Email Link sign-in on mount
   useEffect(() => {
     let processed = false;
     const handleUserSession = async (user) => {
@@ -75,30 +84,50 @@ export default function AuthPage() {
       processed = true;
       setLoading(true);
       try {
-        console.log("[GOOGLE DEBUG] Firebase user received:", user.email);
-        console.log("[GOOGLE DEBUG] ID token generated");
+        console.log("[FIREBASE AUTH] User session handler triggered:", user.email || user.phoneNumber);
         const idToken = await user.getIdToken(true);
         
-        console.log("[GOOGLE DEBUG] Backend sync started");
-        const res = await API.post("/api/users/google-login", { idToken });
+        console.log("[FIREBASE AUTH] Backend sync started");
+        const res = await API.post("/api/users/firebase-login", { idToken });
         const data = res.data;
-        console.log("[GOOGLE DEBUG] Backend sync success");
+        console.log("[FIREBASE AUTH] Backend sync success");
         
         localStorage.setItem("token", data.token);
         try {
           const meRes = await API.get("/api/users/me");
           await saveSession(data.token, meRes.data);
         } catch {
-          await saveSession(data.token, { email: user.email, role: data.role });
+          await saveSession(data.token, { email: user.email, phone: user.phoneNumber, role: data.role });
         }
         navigate(getPostLoginPath(data.role), { replace: true });
       } catch (err) {
-        console.error("[GOOGLE AUTH] Google session handler failed:", err);
-        setError("Google authentication backend sync failed.");
+        console.error("[FIREBASE AUTH] Session handler failed:", err);
+        setError("Firebase authentication backend sync failed.");
       } finally {
         setLoading(false);
       }
     };
+
+    // Check if redirect link is Firebase Email Sign-in Link
+    if (isSignInWithEmailLink(auth, window.location.href)) {
+      let emailForSignIn = window.localStorage.getItem('emailForSignIn');
+      if (!emailForSignIn) {
+        emailForSignIn = window.prompt('Please enter your email to confirm sign-in:');
+      }
+      if (emailForSignIn) {
+        setLoading(true);
+        signInWithEmailLink(auth, emailForSignIn, window.location.href)
+          .then(async (result) => {
+            window.localStorage.removeItem('emailForSignIn');
+            await handleUserSession(result.user);
+          })
+          .catch((err) => {
+            console.error("[FIREBASE AUTH] Email link sign in failed:", err);
+            setError("Invalid or expired sign-in link.");
+            setLoading(false);
+          });
+      }
+    }
 
     const checkRedirect = async () => {
       try {
@@ -184,6 +213,20 @@ export default function AuthPage() {
     }
   };
 
+  const setupRecaptcha = () => {
+    if (!window.recaptchaVerifier) {
+      window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
+        size: "invisible",
+        callback: () => {
+          // reCAPTCHA solved, ready to send OTP.
+        },
+        "expired-callback": () => {
+          setError("reCAPTCHA expired. Please try again.");
+        }
+      });
+    }
+  };
+
   const handleSendOtp = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -192,30 +235,37 @@ export default function AuthPage() {
 
     try {
       if (authMethod === "phone") {
-        const res = await API.post("/api/users/login-phone", { phone, password: phonePassword });
-        const data = res.data;
-        localStorage.setItem("token", data.token);
-        try {
-          const meRes = await API.get("/api/users/me");
-          await saveSession(data.token, meRes.data);
-        } catch {
-          await saveSession(data.token, { phone, role: data.role });
-        }
-        navigate(getPostLoginPath(data.role), { replace: true });
+        setupRecaptcha();
+        const phoneNumber = "+91" + phone;
+        const appVerifier = window.recaptchaVerifier;
+        console.log("[FIREBASE AUTH] Sending SMS verification to:", phoneNumber);
+        const confirmation = await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
+        window.confirmationResult = confirmation;
+        
+        setOtpSentMessage(`We have sent a 6-digit verification code to your phone number: +91 ${phone}`);
+        setStep(2);
+        setCountdown(30);
+        setCanResend(false);
+        setOtpValues(Array(6).fill(""));
         return;
       }
 
-      const res = await API.post("/api/users/send-otp-email", { email });
-      setOtpSentMessage(`We have sent a 6-digit verification code to your email: ${email}`);
-      if (res.data.otp) {
-        setDevOtpMsg(`Testing Code: ${res.data.otp}`);
-      }
+      // Email Link passwordless flow
+      const actionCodeSettings = {
+        url: window.location.origin + "/login",
+        handleCodeInApp: true,
+      };
+      console.log("[FIREBASE AUTH] Sending email sign-in link to:", email);
+      await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+      window.localStorage.setItem('emailForSignIn', email);
+      
+      setOtpSentMessage(`We have sent a secure sign-in link to your email: ${email}. Please check your inbox and click the link to sign in.`);
       setStep(2);
-      setCountdown(30);
+      setCountdown(60);
       setCanResend(false);
-      setOtpValues(Array(6).fill(""));
     } catch (err) {
-      setError(err.response?.data?.message || (authMethod === "phone" ? "Phone login failed. Please try again." : "Failed to send verification code. Please try again."));
+      console.error("[FIREBASE AUTH] OTP Send Error:", err);
+      setError(err.message || "Failed to send verification code. Please check your credentials or try again.");
     } finally {
       setLoading(false);
     }
@@ -223,6 +273,10 @@ export default function AuthPage() {
 
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
+    if (authMethod === "email") {
+      setError("Please check your email and click the verification link to log in. Verification code is not required for email link.");
+      return;
+    }
     const otp = otpValues.join("");
     if (otp.length !== 6) {
       setError("Please enter all 6 digits of the verification code.");
@@ -233,18 +287,30 @@ export default function AuthPage() {
     setError("");
 
     try {
-      const res = await API.post("/api/users/verify-otp-email", { email, otp });
+      console.log("[FIREBASE AUTH] Verifying SMS OTP...");
+      const confirmationResult = window.confirmationResult;
+      if (!confirmationResult) {
+        throw new Error("No pending verification session found. Please request a new OTP code.");
+      }
+      const userCredential = await confirmationResult.confirm(otp);
+      console.log("[FIREBASE AUTH] OTP Verified! Fetching ID Token...");
+      const idToken = await userCredential.user.getIdToken();
+      
+      console.log("[FIREBASE AUTH] Backend sync started...");
+      const res = await API.post("/api/users/firebase-login", { idToken });
       const data = res.data;
+      
       localStorage.setItem("token", data.token);
       try {
         const meRes = await API.get("/api/users/me");
         await saveSession(data.token, meRes.data);
       } catch {
-        await saveSession(data.token, { email, role: data.role });
+        await saveSession(data.token, { phone: phone, role: data.role });
       }
       navigate(getPostLoginPath(data.role), { replace: true });
     } catch (err) {
-      setError(err.response?.data?.message || "Invalid or expired OTP. Please try again.");
+      console.error("[FIREBASE AUTH] SMS OTP Verification error:", err);
+      setError(err.message || "Invalid or expired OTP. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -288,11 +354,21 @@ export default function AuthPage() {
     setError("");
     setDevOtpMsg("");
     try {
-      const res = await API.post("/api/users/send-otp-email", { email });
-      if (res.data.otp) {
-        setDevOtpMsg(`Testing Code: ${res.data.otp}`);
+      if (authMethod === "phone") {
+        setupRecaptcha();
+        const phoneNumber = "+91" + phone;
+        const appVerifier = window.recaptchaVerifier;
+        const confirmation = await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
+        window.confirmationResult = confirmation;
+        setCountdown(30);
+      } else {
+        const actionCodeSettings = {
+          url: window.location.origin + "/login",
+          handleCodeInApp: true,
+        };
+        await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+        setCountdown(60);
       }
-      setCountdown(30);
       setCanResend(false);
       setOtpValues(Array(6).fill(""));
     } catch {
@@ -399,7 +475,7 @@ export default function AuthPage() {
             <div className="mb-6">
               <h2 className="text-xl font-extrabold text-gray-900 dark:text-white">Sign in or create account</h2>
               <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">
-                {authMethod === "phone" ? "Enter phone number and password" : "Enter your details to get verification code"}
+                {authMethod === "phone" ? "Enter phone number to receive OTP" : "Enter your details to get verification link"}
               </p>
             </div>
 
@@ -474,23 +550,6 @@ export default function AuthPage() {
                       className="flex-1 px-5 py-3.5 rounded-2xl border border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 transition-all font-bold tracking-wide text-gray-900 dark:text-white"
                     />
                   </div>
-                  <div className="space-y-2 pt-3">
-                    <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
-                      Password
-                    </label>
-                    <input
-                      type="password"
-                      placeholder="Enter password"
-                      value={phonePassword}
-                      required
-                      minLength={6}
-                      onChange={(e) => setPhonePassword(e.target.value)}
-                      className="w-full px-5 py-3.5 rounded-2xl border border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500/25 focus:border-orange-500 transition-all font-bold tracking-wide text-gray-900 dark:text-white"
-                    />
-                    <p className="text-[11px] font-semibold text-gray-400 dark:text-slate-500">
-                      Password: min 6 chars with alphabet, number, special character.
-                    </p>
-                  </div>
                 </div>
               )}
 
@@ -502,11 +561,11 @@ export default function AuthPage() {
               >
                 {loading ? (
                   <>
-                    <Loader2 className="w-5 h-5 animate-spin" /> {authMethod === "phone" ? "Logging in..." : "Sending Code..."}
+                    <Loader2 className="w-5 h-5 animate-spin" /> Sending Code...
                   </>
                 ) : (
                   <>
-                    {authMethod === "phone" ? "Login with password" : "Send verification code"} <ArrowRight className="w-4 h-4" />
+                    Send verification code <ArrowRight className="w-4 h-4" />
                   </>
                 )}
               </button>
@@ -558,7 +617,7 @@ export default function AuthPage() {
           </div>
         )}
 
-        {/* STEP 2: Enter OTP */}
+        {/* STEP 2: Enter OTP or Wait for Email Link */}
         {step === 2 && (
           <div>
             {/* Header Text */}
@@ -574,64 +633,77 @@ export default function AuthPage() {
               >
                 <ArrowLeft className="w-3.5 h-3.5" /> Back
               </button>
-              <h2 className="text-xl font-extrabold text-gray-900 dark:text-white">OTP Verification</h2>
+              <h2 className="text-xl font-extrabold text-gray-900 dark:text-white">
+                {authMethod === "phone" ? "OTP Verification" : "Verification Link Sent"}
+              </h2>
               <p className="text-sm text-gray-500 dark:text-slate-400 mt-1 leading-relaxed">
                 {otpSentMessage}
               </p>
             </div>
 
-            {/* Developer/Testing Code Banner */}
-            {devOtpMsg && (
-              <div className="mb-5 p-3.5 rounded-xl bg-orange-500/10 dark:bg-orange-500/5 border border-orange-500/20 text-orange-600 dark:text-orange-400 text-xs font-bold tracking-wider flex items-center justify-between">
-                <span>Testing Code: <code className="ml-1 select-all bg-orange-100 dark:bg-orange-950 px-2 py-0.5 rounded font-black text-sm">{devOtpMsg.split(": ")[1]}</code></span>
-                <span className="text-[10px] uppercase bg-orange-500 text-white px-2 py-0.5 rounded-full font-black">Local</span>
-              </div>
-            )}
-
             {/* Form */}
             <form onSubmit={handleVerifyOtp} className="space-y-6">
-              {/* OTP Input Grid (6 boxes) */}
-              <div className="flex justify-between gap-2.5" onPaste={handleOtpPaste}>
-                {otpValues.map((value, idx) => (
-                  <input
-                    key={idx}
-                    type="text"
-                    ref={(el) => (otpRefs.current[idx] = el)}
-                    value={value}
-                    required
-                    maxLength={1}
-                    onChange={(e) => handleOtpChange(idx, e.target.value)}
-                    onKeyDown={(e) => handleOtpKeyDown(idx, e)}
-                    className="w-11 h-13 md:w-12 md:h-14 text-center text-2xl font-black rounded-xl border border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 transition-all text-gray-900 dark:text-white shadow-sm"
-                  />
-                ))}
-              </div>
+              {authMethod === "phone" ? (
+                <>
+                  {/* OTP Input Grid (6 boxes) */}
+                  <div className="flex justify-between gap-2.5" onPaste={handleOtpPaste}>
+                    {otpValues.map((value, idx) => (
+                      <input
+                        key={idx}
+                        type="text"
+                        ref={(el) => (otpRefs.current[idx] = el)}
+                        value={value}
+                        required
+                        maxLength={1}
+                        onChange={(e) => handleOtpChange(idx, e.target.value)}
+                        onKeyDown={(e) => handleOtpKeyDown(idx, e)}
+                        className="w-11 h-13 md:w-12 md:h-14 text-center text-2xl font-black rounded-xl border border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 transition-all text-gray-900 dark:text-white shadow-sm"
+                      />
+                    ))}
+                  </div>
 
-              {/* Verify Button */}
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-4 mt-2 rounded-2xl bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white font-extrabold text-md shadow-lg shadow-orange-500/20 active:scale-[0.98] transition-all disabled:opacity-75 flex items-center justify-center gap-2"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" /> Verifying...
-                  </>
-                ) : (
-                  "Verify & Proceed"
-                )}
-              </button>
+                  {/* Verify Button */}
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full py-4 mt-2 rounded-2xl bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white font-extrabold text-md shadow-lg shadow-orange-500/20 active:scale-[0.98] transition-all disabled:opacity-75 flex items-center justify-center gap-2"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" /> Verifying...
+                      </>
+                    ) : (
+                      "Verify & Proceed"
+                    )}
+                  </button>
+                </>
+              ) : (
+                <div className="flex flex-col items-center justify-center p-6 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 text-center space-y-4">
+                  <div className="w-16 h-16 rounded-full bg-orange-100 dark:bg-orange-950/40 flex items-center justify-center text-orange-600 dark:text-orange-400">
+                    <Mail className="w-8 h-8 animate-bounce" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="font-bold text-gray-900 dark:text-white">Waiting for verification</p>
+                    <p className="text-xs text-gray-500 dark:text-slate-400">Please click the link sent to your inbox. This page will automatically sign you in once redirect is complete.</p>
+                  </div>
+                  {loading && (
+                    <div className="flex items-center gap-2 text-xs font-bold text-orange-500">
+                      <Loader2 className="w-4 h-4 animate-spin" /> Processing login...
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Resend Timer Options */}
               <div className="text-center text-sm font-semibold text-gray-500 dark:text-slate-400 pt-2">
-                Didn't receive code?{" "}
+                Didn't receive {authMethod === "phone" ? "code" : "link"}?{" "}
                 {canResend ? (
                   <button
                     type="button"
                     onClick={handleResendOtp}
                     className="text-orange-500 dark:text-orange-400 font-extrabold hover:underline"
                   >
-                    Resend Code
+                    Resend {authMethod === "phone" ? "Code" : "Link"}
                   </button>
                 ) : (
                   <span className="text-gray-400 dark:text-slate-500">
@@ -644,6 +716,7 @@ export default function AuthPage() {
         )}
 
       </div>
+      <div id="recaptcha-container"></div>
     </div>
   );
 }

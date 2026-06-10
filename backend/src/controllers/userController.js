@@ -698,6 +698,100 @@ export const googleLogin = async (req, res) => {
   }
 };
 
+/* ================= FIREBASE GENERAL LOGIN ================= */
+
+export const firebaseLogin = async (req, res) => {
+  try {
+    const { idToken } = req.body;
+    console.log("[AUTH DEBUG] Firebase login request received");
+    if (!idToken) {
+      return res.status(400).json({ message: "ID token is required" });
+    }
+
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    const { uid, email, phone_number, name, picture, firebase } = decodedToken;
+    const provider = firebase?.sign_in_provider || "firebase";
+    
+    console.log("[AUTH DEBUG] Firebase token verified successfully:", { uid, email, phone_number, provider });
+
+    // Try to find the user by email or phone
+    let query = {};
+    if (email) {
+      query.email = email;
+    } else if (phone_number) {
+      const cleanPhone = phone_number.replace(/^\+91/, "");
+      query.$or = [{ phone: phone_number }, { phone: cleanPhone }];
+    } else {
+      return res.status(400).json({ message: "Invalid token details. Email or phone number is required." });
+    }
+
+    let user = await User.findOne(query);
+
+    if (!user) {
+      // Create new user
+      const defaultName = name || (email ? email.split("@")[0] : `User_${(phone_number || '').slice(-4)}`);
+      user = await User.create({
+        name: defaultName,
+        email: email || undefined,
+        phone: phone_number ? phone_number.replace(/^\+91/, "") : undefined,
+        uid,
+        provider,
+        avatar: picture || "",
+        role: "customer",
+        lastLogin: new Date()
+      });
+      normalizeUserCompletion(user);
+      await user.save();
+      await notifyAdminUserEvent(`New ${provider} User`, user, "success");
+    } else {
+      // Sync info with user account
+      let updated = false;
+      if (!user.uid) {
+        user.uid = uid;
+        user.provider = provider;
+        updated = true;
+      }
+      if (picture && !user.avatar) {
+        user.avatar = picture;
+        updated = true;
+      }
+      if (phone_number && !user.phone) {
+        user.phone = phone_number.replace(/^\+91/, "");
+        updated = true;
+      }
+      user.lastLogin = new Date();
+      updated = true;
+      if (updated) {
+        normalizeUserCompletion(user);
+        await user.save();
+      }
+      await notifyAdminUserEvent("User Logged In", user, "info");
+    }
+
+    const jwtPayload = {
+      id: user._id,
+      email: user.email,
+      role: normalizeRole(user.role)
+    };
+
+    const token = jwt.sign(
+      jwtPayload,
+      process.env.JWT_SECRET || "SECRET123",
+      { expiresIn: "7d" }
+    );
+
+    res.json({
+      success: true,
+      token,
+      role: normalizeRole(user.role)
+    });
+
+  } catch (err) {
+    console.error("Firebase authentication failed:", err);
+    res.status(401).json({ message: "Firebase verification failed or invalid token" });
+  }
+};
+
 /* ================= FORGOT PASSWORD ================= */
 
 export const forgotPassword = async (req, res) => {
@@ -847,13 +941,8 @@ export const sendOtpEmail = async (req, res) => {
       await sendEmail({ to: email, subject, text, html });
       res.json({ success: true, message: "OTP sent to your email successfully" });
     } catch (emailErr) {
-      console.error("[OTP ERROR] Failed to send email via SMTP, sending mock success response:", emailErr.message);
-      // In case SMTP is blocked/fails, we still return the OTP to prevent breaking the flow
-      res.json({
-        success: true,
-        message: "OTP generated (SMTP send failed, fallback enabled)",
-        otp: otp
-      });
+      console.error("[OTP ERROR] Failed to send email via SMTP:", emailErr.message);
+      res.status(500).json({ message: "Failed to send OTP email. Please try again later." });
     }
 
   } catch (err) {
