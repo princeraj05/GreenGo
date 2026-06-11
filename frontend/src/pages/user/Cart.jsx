@@ -117,7 +117,7 @@ export default function Cart() {
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
             My Cart
           </h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm sm:text-base md:text-lg font-medium">Review your items before proceeding to checkout.</p>
+          
         </div>
         {cart.length > 0 && (
           <Button variant="ghost" onClick={() => navigate('/user/menu')} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 py-2.5 px-4 text-sm">
