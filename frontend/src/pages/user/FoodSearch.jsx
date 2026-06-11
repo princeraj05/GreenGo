@@ -212,8 +212,8 @@ export default function FoodSearch() {
     <div className="mx-auto w-full max-w-6xl pb-28">
       
       {/* --- STICKY SEARCH BAR HEADER --- */}
-      {/* Tailwind: sticky top-0 keeps input field visible while user scrolls through large grid arrays */}
-      <div className="sticky top-0 z-30 -mx-4 bg-slate-50/95 px-4 pb-4 pt-1 backdrop-blur dark:bg-slate-900/95 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+      {/* Tailwind: sticky top-16 on mobile keeps input field visible while user scrolls through large grid arrays */}
+      <div className="sticky top-16 md:top-0 z-30 -mx-4 bg-slate-50/95 px-4 pb-4 pt-1 backdrop-blur dark:bg-slate-900/95 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
         <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-3 shadow-sm dark:border-slate-800 dark:bg-slate-950">
           <button
             type="button"

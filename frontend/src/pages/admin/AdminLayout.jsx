@@ -344,7 +344,7 @@ export default function AdminLayout() {
 
         {/* --- DYNAMIC PAGE OUTLET --- */}
         {/* Relative placement containing backdrop blobs */}
-        <div className="flex-1 p-4 sm:p-6 lg:p-10 pb-24 md:pb-10 relative overflow-hidden bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
+        <div className="flex-1 p-4 sm:p-6 lg:p-10 pb-24 md:pb-10 relative overflow-x-hidden bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
            {/* Decorative Background Elements */}
            <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-brand-50 dark:bg-transparent rounded-full blur-[120px] -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
            <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-50/50 dark:bg-transparent rounded-full blur-[100px] translate-y-1/2 -translate-x-1/3 pointer-events-none"></div>
