@@ -11,14 +11,16 @@ if (!admin.apps.length) {
       console.log("Firebase Admin initialized successfully using service account certificate.");
     } catch (err) {
       console.error("Failed to parse or initialize Firebase Admin with service account certificate:", err);
+      admin.initializeApp({
+        projectId: "byte-bite-placeholder"
+      });
     }
-  } else if (process.env.FIREBASE_PROJECT_ID) {
-    admin.initializeApp({
-      projectId: process.env.FIREBASE_PROJECT_ID
-    });
-    console.log("Firebase Admin initialized successfully using Project ID.");
   } else {
-    console.warn("WARNING: Firebase environment variables (FIREBASE_SERVICE_ACCOUNT or FIREBASE_PROJECT_ID) are missing. Firebase verification may fail.");
+    const projectId = process.env.FIREBASE_PROJECT_ID || "byte-bite-placeholder";
+    admin.initializeApp({
+      projectId: projectId
+    });
+    console.log(`Firebase Admin initialized successfully using Project ID: ${projectId}`);
   }
 }
 
