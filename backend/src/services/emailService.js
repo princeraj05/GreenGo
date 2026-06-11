@@ -41,6 +41,9 @@ const getTransporter = async () => {
   }
 
   let activeHost = host;
+  if (!activeHost && service && service.toLowerCase() === "gmail") {
+    activeHost = "smtp.gmail.com";
+  }
   let resolvedHost = activeHost;
   const port = Number(process.env.SMTP_PORT || 587);
   const secure = process.env.SMTP_SECURE === "true";
