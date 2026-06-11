@@ -741,7 +741,7 @@ export default function Menu() {
     <div className="max-w-7xl mx-auto w-full pb-10 px-2 sm:px-4 relative animate-fade-in transition-colors">
       
       {/* 1. HEADER SECTION */}
-      <div className="sticky top-0 z-[9999] flex items-center justify-between gap-3 py-4 mb-4 border-b border-slate-100 dark:border-slate-800/60 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-xl shadow-[0_2px_12px_rgba(0,0,0,0.08)]">
+      <div className="sticky top-0 z-[9999] flex items-center justify-between gap-3 py-2.5 mb-2 border-b border-slate-100 dark:border-slate-800/60 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-xl shadow-[0_2px_12px_rgba(0,0,0,0.08)]">
         {/* Left: Branding & Location */}
         <div className="flex flex-1 items-center gap-3 min-w-0">
           <div className="w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center shadow-lg shadow-brand-500/20 overflow-hidden border border-brand-100 dark:border-brand-900 bg-white [&>span]:hidden">
@@ -798,7 +798,7 @@ export default function Menu() {
           {/* Theme Switcher */}
           <button
             onClick={toggleTheme}
-            className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800"
+            className="w-9 h-11 sm:w-10 sm:h-12 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800"
             title="Toggle Theme"
           >
             {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
@@ -807,7 +807,7 @@ export default function Menu() {
           {/* Notifications Icon with unread badge */}
           <button
             onClick={() => requireLogin("/user/notifications") && navigate("/user/notifications")}
-            className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800 relative"
+            className="w-9 h-11 sm:w-10 sm:h-12 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800 relative"
           >
             <Bell size={16} />
             {unreadNotificationCount > 0 && (
@@ -820,7 +820,7 @@ export default function Menu() {
           {/* User Avatar */}
           <div 
             onClick={() => requireLogin("/user/profile") && navigate("/user/profile")}
-            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-brand-500 text-white flex items-center justify-center text-sm font-extrabold cursor-pointer hover:scale-105 transition-transform"
+            className="w-9 h-11 sm:w-10 sm:h-12 rounded-xl bg-brand-500 text-white flex items-center justify-center text-sm font-extrabold cursor-pointer hover:scale-105 transition-transform"
           >
             {user.name ? user.name.charAt(0).toUpperCase() : "U"}
           </div>
@@ -828,8 +828,8 @@ export default function Menu() {
       </div>
 
       {/* 2. SEARCH BAR */}
-      <div className="mb-6 flex items-stretch gap-2 sm:gap-3">
-        <div className="relative flex-1 min-w-0">
+      <div className="mb-3.5 flex items-stretch gap-2 sm:gap-3">
+        <div className="relative flex-1 min-w-0 h-14">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
             <Search className="h-5 w-5 text-rose-500" />
           </div>
@@ -844,7 +844,7 @@ export default function Menu() {
               setSearch(e.target.value);
               setShowAllFoods(false);
             }}
-            className="w-full pl-12 pr-12 py-4 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-2xl outline-none focus:ring-4 focus:ring-brand-500/15 focus:border-brand-500 text-sm sm:text-base font-bold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm transition-all"
+            className="w-full h-full pl-12 pr-12 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-2xl outline-none focus:ring-4 focus:ring-brand-500/15 focus:border-brand-500 text-sm sm:text-base font-bold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm transition-all"
           />
           <button
             type="button"
@@ -862,7 +862,7 @@ export default function Menu() {
             setVegModeNotice(nextVegMode ? "Veg mode is ON" : "Veg mode is OFF");
             if (nextVegMode && ["Non-Veg", "Chicken", "Kebabs"].includes(category)) setCategory("All");
           }}
-          className={`w-[68px] sm:w-[82px] rounded-2xl border shadow-sm flex flex-col items-center justify-center gap-1 px-1 py-2 transition-all duration-300 ${
+          className={`w-[68px] sm:w-[82px] h-14 rounded-2xl border shadow-sm flex flex-col items-center justify-center gap-0.5 px-1 transition-all duration-300 ${
             vegMode
               ? "border-emerald-200 bg-emerald-50 text-emerald-700 shadow-emerald-500/10 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300"
               : "border-slate-200 bg-white text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
@@ -871,8 +871,8 @@ export default function Menu() {
         >
           <span className="text-[10px] sm:text-[11px] font-black leading-none">VEG</span>
           <span className="text-[8px] sm:text-[9px] font-black leading-none opacity-80">MODE</span>
-          <span className={`relative h-5 w-10 rounded-full transition-colors duration-300 ${vegMode ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-700"}`}>
-            <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-md transition-transform duration-300 ${vegMode ? "translate-x-[21px]" : "translate-x-0.5"}`} />
+          <span className={`relative h-4.5 w-9 rounded-full transition-colors duration-300 ${vegMode ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-700"}`}>
+            <span className={`absolute top-0.5 h-3.5 w-3.5 rounded-full bg-white shadow-md transition-transform duration-300 ${vegMode ? "translate-x-[18px]" : "translate-x-0.5"}`} />
           </span>
         </button>
       </div>
@@ -892,16 +892,16 @@ export default function Menu() {
 
       {/* 3. AUTO SLIDING OFFER BANNER */}
       {currentBanner && (
-        <div className="relative h-44 sm:h-48 md:h-56 rounded-3xl overflow-hidden mb-6 shadow-md shadow-brand-500/5 transition-all animate-fade-in group">
+        <div className="relative h-56 sm:h-64 md:h-72 lg:h-80 rounded-3xl overflow-hidden mb-4 shadow-md shadow-brand-500/5 transition-all animate-fade-in group bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950">
           <img
             src={currentBanner.image.startsWith("http") ? currentBanner.image : getImageUrl(currentBanner.image)}
             alt={currentBanner.title}
-            className="w-full h-full object-cover"
+            className="absolute right-0 top-0 h-full w-[50%] md:w-[45%] object-cover md:object-contain object-right z-0"
             onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=800'; }}
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/40 to-transparent flex flex-col justify-center p-6 text-white">
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/70 to-transparent flex flex-col justify-center p-6 text-white z-10">
             <span className="text-[10px] font-black tracking-widest text-brand-400 uppercase mb-1">{currentBanner.description}</span>
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight leading-tight">{currentBanner.title}</h2>
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight leading-tight max-w-[50%]">{currentBanner.title}</h2>
             {currentBanner.discountText && (
               <span className="mt-2 text-xs font-black bg-brand-500 text-white px-2.5 py-1 rounded-md w-fit shadow-sm uppercase">
                 {currentBanner.discountText}
@@ -910,8 +910,8 @@ export default function Menu() {
             <button 
               onClick={() => {
                 if (currentBanner.code) {
-                  navigator.clipboard.writeText(currentBanner.code);
-                  alert(`Coupon code "${currentBanner.code}" copied to clipboard!`);
+                   navigator.clipboard.writeText(currentBanner.code);
+                   alert(`Coupon code "${currentBanner.code}" copied to clipboard!`);
                 }
               }}
               className="mt-4 bg-white hover:bg-slate-100 text-slate-950 px-4.5 py-2 rounded-xl text-xs font-extrabold w-fit transition-all active:scale-95 shadow-lg shadow-black/25"
@@ -935,7 +935,7 @@ export default function Menu() {
       )}
 
       {/* 4. BUDGET ASSISTANT CARD */}
-      <div className="mb-6 rounded-2xl sm:rounded-3xl border border-brand-100 dark:border-brand-900/60 bg-white dark:bg-slate-900 shadow-sm px-3 py-3 sm:px-5 sm:py-4 flex items-center gap-3 sm:gap-5">
+      <div className="mb-4 rounded-2xl sm:rounded-3xl border border-brand-100 dark:border-brand-900/60 bg-white dark:bg-slate-900 shadow-sm px-3 py-6 sm:px-5 sm:py-8 flex items-center gap-3 sm:gap-5">
         <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full bg-green-600 text-white flex items-center justify-center shrink-0 shadow-lg shadow-green-600/20">
           <Wallet size={23} className="sm:w-8 sm:h-8" />
         </div>
@@ -944,9 +944,6 @@ export default function Menu() {
             Budget Assistant
             <Sparkles size={17} className="text-green-600 fill-green-600 shrink-0 sm:w-5 sm:h-5" />
           </h3>
-          <p className="text-slate-600 dark:text-slate-300 text-[11px] sm:text-sm md:text-base font-semibold leading-snug mt-1 max-w-xl line-clamp-2">
-            Tell us your budget and we'll suggest the best combos & dishes for you!
-          </p>
         </div>
         <button
           type="button"
@@ -960,8 +957,8 @@ export default function Menu() {
       </div>
 
       {/* 5. FOOD CATEGORIES HORIZONTAL SLIDER */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
+      <div className="mb-5">
+        <div className="flex items-center justify-between mb-3">
           <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Food Categories</h3>
           <button
             type="button"
@@ -971,7 +968,7 @@ export default function Menu() {
             See All <ChevronDown size={14} />
           </button>
         </div>
-        <div className="flex gap-3 overflow-x-auto no-scrollbar py-2">
+        <div className="flex gap-3 overflow-x-auto no-scrollbar py-2 flex-nowrap whitespace-nowrap">
           {visibleCategories.filter(cat => !(vegMode && ["Non-Veg", "Chicken", "Kebabs"].includes(cat.id))).map(cat => {
             const isSelected = category.toLowerCase() === cat.id.toLowerCase();
             const hasOrderedItems = orderedCategories.some((itemCategory) => itemCategory.toLowerCase() === cat.id.toLowerCase());
@@ -1086,34 +1083,42 @@ export default function Menu() {
 
       {/* 6. POPULAR DISHES SECTION */}
       {category === "All" && (
-        <div className="mb-10">
-          <div className="flex items-center justify-between mb-4.5">
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-3">
             <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Popular Dishes</h3>
             <button type="button" onClick={() => openFoodCollection("Popular Dishes", popularDishes)} className="text-xs font-black text-brand-600 dark:text-brand-300">See All</button>
           </div>
-          <div className="grid grid-cols-3 gap-2 sm:gap-4 lg:gap-6">
-            {popularDishes.slice(0, 3).map((food) => renderFoodCard(food, { deliveryTime: "25-30 min", oldPriceFactor: 1.25 }))}
+          <div className="flex gap-3 sm:gap-4 lg:gap-6 overflow-x-auto no-scrollbar py-2 flex-nowrap">
+            {popularDishes.slice(0, 8).map((food) => (
+              <div key={food._id} className="w-[180px] sm:w-[220px] md:w-[260px] shrink-0">
+                {renderFoodCard(food, { deliveryTime: "25-30 min", oldPriceFactor: 1.25 })}
+              </div>
+            ))}
           </div>
         </div>
       )}
 
       {/* 7. RECOMMENDED FOR YOU */}
       {category === "All" && (
-        <div className="mb-10">
-          <div className="flex items-center justify-between mb-4.5">
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-3">
             <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Recommended For You</h3>
             <button type="button" onClick={() => openFoodCollection("Recommended For You", recommendedFoods)} className="text-xs font-black text-brand-600 dark:text-brand-300">See All</button>
           </div>
-          <div className="grid grid-cols-3 gap-2 sm:gap-4 lg:gap-6">
-            {recommendedFoods.slice(0, 3).map((food) => renderFoodCard(food, { deliveryTime: "20-25 min", oldPriceFactor: 1.2 }))}
+          <div className="flex gap-3 sm:gap-4 lg:gap-6 overflow-x-auto no-scrollbar py-2 flex-nowrap">
+            {recommendedFoods.slice(0, 8).map((food) => (
+              <div key={food._id} className="w-[180px] sm:w-[220px] md:w-[260px] shrink-0">
+                {renderFoodCard(food, { deliveryTime: "20-25 min", oldPriceFactor: 1.2 })}
+              </div>
+            ))}
           </div>
         </div>
       )}
 
       {/* 8. ALL PRODUCTS SECTION */}
       {category === "All" && search === "" && (
-        <div className="mb-10">
-          <div className="flex items-center justify-between mb-4.5">
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-3">
             <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">All Products</h3>
             <button type="button" onClick={() => openFoodCollection("All Products", allProductFoods)} className="text-xs font-black text-brand-600 dark:text-brand-300">See All</button>
           </div>
@@ -1126,8 +1131,12 @@ export default function Menu() {
               <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">No products available right now.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-3 gap-2 sm:gap-4 lg:gap-6">
-              {allProductFoods.slice(0, 3).map((food) => renderFoodCard(food, { deliveryTime: "20-30 min", oldPriceFactor: 1.15, categoryPrefix: "Category:" }))}
+            <div className="flex gap-3 sm:gap-4 lg:gap-6 overflow-x-auto no-scrollbar py-2 flex-nowrap">
+              {allProductFoods.slice(0, 10).map((food) => (
+                <div key={food._id} className="w-[180px] sm:w-[220px] md:w-[260px] shrink-0">
+                  {renderFoodCard(food, { deliveryTime: "20-30 min", oldPriceFactor: 1.15, categoryPrefix: "Category:" })}
+                </div>
+              ))}
             </div>
           )}
         </div>
