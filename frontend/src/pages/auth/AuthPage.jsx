@@ -523,155 +523,144 @@ export default function AuthPage() {
           </div>
 
           {step === 1 ? (
-            /* Laptop Side-by-Side View / Mobile toggled or stacked view */
-            <div className="w-full flex flex-col md:flex-row gap-8 lg:gap-12 items-stretch justify-center">
+            /* Unified tab switcher for Email and Phone login */
+            <div className="w-full max-w-md bg-white dark:bg-slate-900/80 p-6 sm:p-8 rounded-3xl border border-slate-100 dark:border-slate-800/60 shadow-[0_12px_40px_rgba(0,0,0,0.03)] flex flex-col">
               
-              {/* Left Form: Email Secure Link Login */}
-              <div className="flex-1 bg-white dark:bg-slate-900/80 p-6 sm:p-8 rounded-2xl border border-slate-100 dark:border-slate-800/60 shadow-[0_8px_30px_rgb(0,0,0,0.02)] flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="w-8 h-8 rounded-lg bg-brand-500/10 flex items-center justify-center text-brand-600 dark:text-brand-400 font-bold">
-                      <Mail size={16} />
+              {/* Tab Selector Widget */}
+              <div className="flex bg-slate-100 dark:bg-slate-950 rounded-2xl p-1 mb-6 border border-slate-200/50 dark:border-slate-800/50">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMethod("email");
+                    setError("");
+                  }}
+                  className={`flex-1 py-3 rounded-xl text-xs font-extrabold transition-all duration-300 flex items-center justify-center gap-2 ${
+                    authMethod === "email"
+                      ? "bg-white dark:bg-slate-800 text-brand-600 dark:text-brand-400 shadow-sm border border-slate-200/30 dark:border-slate-700/30"
+                      : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                  }`}
+                >
+                  <Mail className={`w-4 h-4 transition-colors ${authMethod === "email" ? "text-brand-500" : "text-slate-400"}`} /> 
+                  Email Address
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMethod("phone");
+                    setError("");
+                  }}
+                  className={`flex-1 py-3 rounded-xl text-xs font-extrabold transition-all duration-300 flex items-center justify-center gap-2 ${
+                    authMethod === "phone"
+                      ? "bg-white dark:bg-slate-800 text-brand-600 dark:text-brand-400 shadow-sm border border-slate-200/30 dark:border-slate-700/30"
+                      : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                  }`}
+                >
+                  <Phone className={`w-4 h-4 transition-colors ${authMethod === "phone" ? "text-brand-500" : "text-slate-400"}`} /> 
+                  Phone Number
+                </button>
+              </div>
+
+              {authMethod === "email" ? (
+                /* Email Login Block */
+                <form onSubmit={handleSendOtp} className="space-y-5">
+                  <div className="space-y-1.5 text-left">
+                    <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      Email Address
+                    </label>
+                    <div className="relative flex items-center">
+                      <Mail className="absolute left-3.5 w-4 h-4 text-slate-400 dark:text-slate-500 transition-colors pointer-events-none" />
+                      <input
+                        type="email"
+                        placeholder="you@example.com"
+                        value={email}
+                        required
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 transition-all font-medium text-slate-900 dark:text-white text-xs sm:text-sm"
+                      />
                     </div>
-                    <h2 className="text-base sm:text-lg font-black text-gray-900 dark:text-white">Email Address</h2>
                   </div>
-                  <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mb-6 font-medium leading-relaxed">
-                    Enter your email to receive a passwordless secure sign-in OTP to access your account.
-                  </p>
-                  
-                  <form onSubmit={(e) => { setAuthMethod("email"); handleSendOtp(e); }} className="space-y-4">
-                    <div className="space-y-1.5">
-                      <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        Email Address
-                      </label>
-                      <div className="relative flex items-center">
-                        <Mail className="absolute left-3.5 w-4 h-4 text-slate-400 dark:text-slate-500 transition-colors pointer-events-none" />
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full py-3.5 rounded-xl bg-[#008726] hover:bg-[#00701e] text-white font-extrabold text-xs sm:text-sm shadow-md active:scale-[0.98] transition-all disabled:opacity-75 flex items-center justify-center gap-1.5"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Sending OTP...
+                      </>
+                    ) : (
+                      <>
+                        Send Email OTP
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+                </form>
+              ) : (
+                /* Phone Login Block */
+                <form onSubmit={handleSendOtp} className="space-y-5">
+                  <div className="space-y-1.5 text-left">
+                    <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      Phone Number
+                    </label>
+                    <div className="flex gap-2 items-center">
+                      <div className="px-3.5 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs sm:text-sm font-extrabold text-slate-700 dark:text-slate-300 select-none flex items-center shrink-0">
+                        🇮🇳 +91
+                      </div>
+                      <div className="relative flex-1 flex items-center">
+                        <Phone className="absolute left-3.5 w-4 h-4 text-slate-400 dark:text-slate-500 transition-colors pointer-events-none" />
                         <input
-                          type="email"
-                          placeholder="you@example.com"
-                          value={email}
-                          required={authMethod === "email" || email.length > 0}
-                          onChange={(e) => {
-                            setEmail(e.target.value);
-                            setAuthMethod("email");
-                          }}
-                          className="w-full pl-10 pr-4 py-2.5 sm:py-3 rounded-xl border border-slate-200 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 transition-all font-medium text-slate-900 dark:text-white text-xs sm:text-sm"
+                          type="tel"
+                          placeholder="10-digit number"
+                          value={phone}
+                          required
+                          pattern="^[0-9]{10}$"
+                          title="Please enter a valid 10-digit phone number"
+                          onChange={(e) => setPhone(e.target.value)}
+                          className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 transition-all font-bold tracking-wide text-slate-900 dark:text-white text-xs sm:text-sm"
                         />
                       </div>
                     </div>
-
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      onClick={() => setAuthMethod("email")}
-                      className="w-full py-2.5 sm:py-3.5 rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-brand-500/15 active:scale-[0.98] transition-all disabled:opacity-75 flex items-center justify-center gap-1.5"
-                    >
-                      {loading && authMethod === "email" ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          Sending OTP...
-                        </>
-                      ) : (
-                        <>
-                          Send Email OTP
-                          <ArrowRight className="w-4 h-4" />
-                        </>
-                      )}
-                    </button>
-                  </form>
-                </div>
-              </div>
-
-              {/* Middle Divider (Laptop only) */}
-              <div className="hidden md:flex flex-col items-center justify-center">
-                <div className="w-px h-28 bg-slate-200 dark:bg-slate-800" />
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 my-4">OR</span>
-                <div className="w-px h-28 bg-slate-200 dark:bg-slate-800" />
-              </div>
-
-              {/* Right Form: Phone + Password Login */}
-              <div className="flex-1 bg-white dark:bg-slate-900/80 p-6 sm:p-8 rounded-2xl border border-slate-100 dark:border-slate-800/60 shadow-[0_8px_30px_rgb(0,0,0,0.02)] flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="w-8 h-8 rounded-lg bg-brand-500/10 flex items-center justify-center text-brand-600 dark:text-brand-400 font-bold">
-                      <Phone size={16} />
-                    </div>
-                    <h2 className="text-base sm:text-lg font-black text-gray-900 dark:text-white">Phone & Password</h2>
                   </div>
-                  <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mb-6 font-medium leading-relaxed">
-                    Log in instantly using your registered phone number and secret password credentials.
-                  </p>
-                  
-                  <form onSubmit={(e) => { setAuthMethod("phone"); handleSendOtp(e); }} className="space-y-4">
-                    <div className="space-y-1.5">
-                      <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        Phone Number
-                      </label>
-                      <div className="flex gap-1.5 items-center">
-                        <div className="px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs sm:text-sm font-extrabold text-slate-700 dark:text-slate-300 select-none flex items-center shrink-0">
-                          🇮🇳 +91
-                        </div>
-                        <div className="relative flex-1 flex items-center">
-                          <Phone className="absolute left-3.5 w-4 h-4 text-slate-400 dark:text-slate-500 transition-colors pointer-events-none" />
-                          <input
-                            type="tel"
-                            placeholder="10-digit number"
-                            value={phone}
-                            required={authMethod === "phone" || phone.length > 0}
-                            pattern="^[0-9]{10}$"
-                            title="Please enter a valid 10-digit phone number"
-                            onChange={(e) => {
-                              setPhone(e.target.value);
-                              setAuthMethod("phone");
-                            }}
-                            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 transition-all font-bold tracking-wide text-slate-900 dark:text-white text-xs sm:text-sm"
-                          />
-                        </div>
-                      </div>
+
+                  <div className="space-y-1.5 text-left">
+                    <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                      Password
+                    </label>
+                    <div className="relative flex items-center">
+                      <Lock className="absolute left-3.5 w-4 h-4 text-slate-400 dark:text-slate-500 transition-colors pointer-events-none" />
+                      <input
+                        type="password"
+                        placeholder="••••••••"
+                        value={phonePassword}
+                        required
+                        onChange={(e) => setPhonePassword(e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 transition-all font-medium text-slate-900 dark:text-white text-xs sm:text-sm"
+                      />
                     </div>
+                  </div>
 
-                    <div className="space-y-1.5">
-                      <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        Password
-                      </label>
-                      <div className="relative flex items-center">
-                        <Lock className="absolute left-3.5 w-4 h-4 text-slate-400 dark:text-slate-500 transition-colors pointer-events-none" />
-                        <input
-                          type="password"
-                          placeholder="••••••••"
-                          value={phonePassword}
-                          required={authMethod === "phone" || phonePassword.length > 0}
-                          onChange={(e) => {
-                            setPhonePassword(e.target.value);
-                            setAuthMethod("phone");
-                          }}
-                          className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 transition-all font-medium text-slate-900 dark:text-white text-xs sm:text-sm"
-                        />
-                      </div>
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      onClick={() => setAuthMethod("phone")}
-                      className="w-full py-2.5 sm:py-3.5 rounded-xl bg-gradient-to-r from-slate-800 to-slate-950 dark:from-slate-700 dark:to-slate-850 hover:bg-slate-900 text-white font-extrabold text-xs sm:text-sm shadow-md active:scale-[0.98] transition-all disabled:opacity-75 flex items-center justify-center gap-1.5"
-                    >
-                      {loading && authMethod === "phone" ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          Signing In...
-                        </>
-                      ) : (
-                        <>
-                          Sign In with Password
-                          <ArrowRight className="w-4 h-4" />
-                        </>
-                      )}
-                    </button>
-                  </form>
-                </div>
-              </div>
-
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full py-3.5 rounded-xl bg-[#008726] hover:bg-[#00701e] text-white font-extrabold text-xs sm:text-sm shadow-md active:scale-[0.98] transition-all disabled:opacity-75 flex items-center justify-center gap-1.5"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Signing In...
+                      </>
+                    ) : (
+                      <>
+                        Sign In
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+                </form>
+              )}
             </div>
           ) : (
             /* OTP Verification Step Form */

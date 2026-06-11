@@ -461,7 +461,7 @@ export default function UserLayout() {
         "fixed bottom-4 left-4 right-4 z-50 transition-all duration-300 transform md:hidden",
         showBottomNav ? "translate-y-0 opacity-100" : "translate-y-28 opacity-0 pointer-events-none"
       )}>
-        <nav className="bg-white/80 dark:bg-slate-950/85 backdrop-blur-xl border border-white/20 dark:border-slate-800/50 shadow-[0_8px_32px_rgba(0,0,0,0.08)] rounded-2xl flex items-center justify-around py-2.5 px-2">
+        <nav className="bg-white/80 dark:bg-slate-950/85 backdrop-blur-xl border border-slate-200/50 dark:border-slate-800/50 shadow-[0_8px_32px_rgba(0,0,0,0.08)] rounded-2xl flex items-center justify-around py-2.5 px-2">
           {bottomNavLinks.map(({ to, end, label, icon, badge }) => (
             <NavLink
               key={to}
