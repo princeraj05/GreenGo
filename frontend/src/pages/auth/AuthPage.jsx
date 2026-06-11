@@ -25,11 +25,11 @@ const MotionDiv = motion.div;
 export default function AuthPage() {
   const { theme, toggleTheme } = useTheme();
   const loginSlides = [
-    "/loginPhoto/banner1.png",
-    "/loginPhoto/banner2.png",
-    "/loginPhoto/banner3.png",
-    "/loginPhoto/banner4.png",
-    "/loginPhoto/banner5.png"
+    "/loginPhoto/banner1.jpg",
+    "/loginPhoto/banner2.jpg",
+    "/loginPhoto/banner3.jpg",
+    "/loginPhoto/banner4.jpg",
+    "/loginPhoto/banner5.jpg"
   ];
   const slideContent = [
     { title: "Fresh Food, Fast Delivery", desc: "Enjoy your favorite meals delivered hot and fresh directly to your doorstep." },
