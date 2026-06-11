@@ -94,6 +94,91 @@ const getTransporter = async () => {
   };
 };
 
+const sendMailViaNodemailer = async ({ from, to, replyTo, subject, text, html }) => {
+  const { transporter, host: activeHost, port: activePort } = await getTransporter();
+
+  try {
+    console.log(`Sending mail via standard SMTP ${activeHost}:${activePort}...`);
+    return await transporter.sendMail({
+      from,
+      to,
+      replyTo,
+      subject,
+      text,
+      html,
+    });
+  } catch (err) {
+    console.warn(`SMTP send failed on ${activeHost}:${activePort}:`, err.message);
+
+    const isDefaultPort587 = Number(activePort) === 587;
+    const fallbackPort = isDefaultPort587 ? 465 : 587;
+    const fallbackSecure = !isDefaultPort587;
+
+    console.log(`Attempting SMTP fallback to port ${fallbackPort} (secure: ${fallbackSecure})...`);
+
+    try {
+      const host = process.env.SMTP_HOST;
+      const service = process.env.SMTP_SERVICE || process.env.EMAIL_SERVICE || "gmail";
+      const user = process.env.SMTP_USER || process.env.EMAIL_USER || process.env.MAIL_USER;
+      const pass = process.env.SMTP_PASS || process.env.EMAIL_PASS || process.env.MAIL_PASS;
+
+      let fallbackHost = host;
+      if (!fallbackHost && service && service.toLowerCase() === "gmail") {
+        fallbackHost = "smtp.gmail.com";
+      }
+
+      let resolvedHost = fallbackHost;
+      if (fallbackHost) {
+        try {
+          const { address } = await dns.promises.lookup(fallbackHost, { family: 4 });
+          resolvedHost = address;
+        } catch (dnsErr) {
+          // ignore
+        }
+      }
+
+      let fallbackConfig;
+      if (resolvedHost) {
+        fallbackConfig = {
+          host: resolvedHost,
+          port: fallbackPort,
+          secure: fallbackSecure,
+          requireTLS: fallbackPort === 587,
+          auth: { user, pass },
+          connectionTimeout: 10000,
+          greetingTimeout: 10000,
+          socketTimeout: 15000,
+          tls: {
+            servername: fallbackHost,
+          }
+        };
+      } else {
+        fallbackConfig = {
+          service,
+          auth: { user, pass },
+          connectionTimeout: 10000,
+          greetingTimeout: 10000,
+          socketTimeout: 15000,
+        };
+      }
+
+      const fallbackTransporter = nodemailer.createTransport(fallbackConfig);
+      console.log(`Sending mail via fallback SMTP ${resolvedHost || service}:${fallbackPort}...`);
+      return await fallbackTransporter.sendMail({
+        from,
+        to,
+        replyTo,
+        subject,
+        text,
+        html,
+      });
+    } catch (fallbackErr) {
+      console.error(`SMTP fallback also failed:`, fallbackErr.message);
+      throw err;
+    }
+  }
+};
+
 export const sendContactReplyEmail = async ({
   to,
   name,
@@ -211,19 +296,7 @@ export const sendContactReplyEmail = async ({
 
   // 3. Fallback to Nodemailer SMTP
   console.log("Attempting to send email via standard SMTP...");
-  const { transporter, host: activeHost, port: activePort } = await getTransporter();
-
-  console.log(`Verifying SMTP connection to ${activeHost}:${activePort}...`);
-  try {
-    await transporter.verify();
-    console.log(`SMTP connection verification SUCCEEDED for ${activeHost}:${activePort}`);
-  } catch (verifyErr) {
-    console.error(`SMTP connection verification FAILED for ${activeHost}:${activePort}:`, verifyErr);
-    throw new Error(`SMTP connection verification failed: ${verifyErr.message || verifyErr}`);
-  }
-
-  console.log(`Sending mail from "${from}" to "${to}" via ${activeHost}:${activePort}...`);
-  return transporter.sendMail({
+  return sendMailViaNodemailer({
     from,
     to,
     replyTo,
@@ -313,8 +386,7 @@ export const sendEmail = async ({ to, subject, text, html }) => {
 
   // 3. Nodemailer SMTP
   console.log("Attempting to send generic email via standard SMTP...");
-  const { transporter } = await getTransporter();
-  return transporter.sendMail({
+  return sendMailViaNodemailer({
     from,
     to,
     replyTo,
