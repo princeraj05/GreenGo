@@ -231,7 +231,7 @@ export default function FoodSearch() {
               setQuery(event.target.value);
               setActiveCategory("All");
             }}
-            placeholder="Restaurant name or a dish..."
+            placeholder="Search food..."
             className="min-w-0 flex-1 bg-transparent text-base font-bold text-slate-900 outline-none placeholder:text-slate-400 dark:text-white sm:text-lg"
           />
           {query && (
@@ -260,16 +260,15 @@ export default function FoodSearch() {
       {/* --- QUICK PROMPTS INSPIRATION tags --- */}
       {!query && (
         <section className="mb-8 overflow-hidden">
-          <p className="mb-4 font-serif text-2xl font-black italic text-rose-500">Think it, search it</p>
           <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
             {quickPrompts.map((prompt) => (
               <button
                 key={prompt}
                 type="button"
                 onClick={() => setQuery(prompt)}
-                className="shrink-0 rounded-full border border-rose-200 bg-white px-4 py-2.5 text-sm font-black text-slate-700 shadow-sm dark:border-rose-900/50 dark:bg-slate-950 dark:text-slate-200"
+                className="shrink-0 rounded-full border border-brand-200 hover:border-brand-300 bg-white px-4 py-2.5 text-sm font-black text-slate-700 shadow-sm dark:border-brand-900/50 dark:bg-slate-950 dark:text-slate-200"
               >
-                <Sparkles size={15} className="mr-2 inline text-rose-500" />
+                <Sparkles size={15} className="mr-2 inline text-brand-500" />
                 {prompt}
               </button>
             ))}

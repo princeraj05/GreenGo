@@ -913,12 +913,23 @@ export default function Menu() {
             )}
           </button>
 
-          <div 
+          <MotionDiv 
             onClick={() => requireLogin("/user/profile") && navigate("/user/profile")}
-            className="w-9 h-11 sm:w-10 sm:h-12 rounded-xl bg-brand-500 text-white flex items-center justify-center text-sm font-extrabold cursor-pointer hover:scale-105 transition-transform"
+            animate={vegMode ? {
+              scale: [1, 1.08, 1],
+              boxShadow: ["0px 0px 0px rgba(16, 185, 129, 0)", "0px 0px 12px rgba(16, 185, 129, 0.6)", "0px 0px 0px rgba(16, 185, 129, 0)"]
+            } : { scale: 1 }}
+            transition={vegMode ? {
+              duration: 2,
+              repeat: Infinity,
+              ease: "easeInOut"
+            } : {}}
+            className={`w-9 h-11 sm:w-10 sm:h-12 rounded-xl bg-brand-500 text-white flex items-center justify-center text-sm font-extrabold cursor-pointer ${
+              vegMode ? "ring-2 ring-emerald-400" : "hover:scale-105 transition-transform"
+            }`}
           >
             {user.name ? user.name.charAt(0).toUpperCase() : "U"}
-          </div>
+          </MotionDiv>
         </div>
       </div>
 
@@ -969,7 +980,9 @@ export default function Menu() {
           <span className="text-[10px] sm:text-[11px] font-black leading-none">VEG</span>
           <span className="text-[8px] sm:text-[9px] font-black leading-none opacity-80">MODE</span>
           <span className={`relative h-4.5 w-9 rounded-full transition-colors duration-300 ${vegMode ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-700"}`}>
-            <span className={`absolute top-0.5 h-3.5 w-3.5 rounded-full bg-white shadow-md transition-transform duration-300 ${vegMode ? "translate-x-[18px]" : "translate-x-0.5"}`} />
+            <span className={`absolute top-0.5 h-3.5 w-3.5 rounded-full bg-white shadow-md transition-transform duration-300 flex items-center justify-center ${vegMode ? "translate-x-[18px]" : "translate-x-0.5"}`}>
+              {vegMode && <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />}
+            </span>
           </span>
         </button>
       </div>
@@ -1044,7 +1057,7 @@ export default function Menu() {
         </div>
         <button
           type="button"
-          onClick={() => requireLogin("/user/budget-assistant") && navigate("/user/budget-assistant")}
+          onClick={() => navigate("/user/budget-assistant")}
           className="shrink-0 min-w-[76px] sm:min-w-[128px] px-3 sm:px-5 py-2.5 sm:py-3.5 rounded-2xl bg-green-700 hover:bg-green-800 text-white font-black text-xs sm:text-base flex items-center justify-center gap-1 sm:gap-2 shadow-lg shadow-green-700/20 active:scale-95 transition-all"
         >
           Start

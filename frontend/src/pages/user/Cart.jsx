@@ -240,7 +240,19 @@ export default function Cart() {
                 </div>
 
                 <Button
-                  onClick={() => navigate("/user/checkout")}
+                  onClick={() => {
+                    const isLoggedIn = Boolean(localStorage.getItem("token") && localStorage.getItem("auth_state") === "logged_in");
+                    if (!isLoggedIn) {
+                      navigate("/", {
+                        state: {
+                          from: { pathname: "/user/checkout" },
+                          loginRequired: true,
+                        },
+                      });
+                    } else {
+                      navigate("/user/checkout");
+                    }
+                  }}
                   className="w-full gap-1.5 rounded-xl py-2.5 text-xs font-bold shadow-brand-500/20"
                 >
                   <ShieldCheck size={14} />

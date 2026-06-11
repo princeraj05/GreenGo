@@ -89,7 +89,7 @@ export default function AppRoutes() {
           <Route path="profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
           <Route path="wishlist" element={<Wishlist />} />
           <Route path="contact" element={<UserContact />} />
-          <Route path="budget-assistant" element={<PrivateRoute><ProfileCompletionRoute><BudgetAssistantPage /></ProfileCompletionRoute></PrivateRoute>} />
+          <Route path="budget-assistant" element={<BudgetAssistantPage />} />
           <Route path="notifications" element={<Notifications />} />
         </Route>
 
