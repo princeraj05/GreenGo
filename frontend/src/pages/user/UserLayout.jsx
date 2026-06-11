@@ -2,7 +2,7 @@ import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { 
   LayoutDashboard, UtensilsCrossed, ShoppingCart, 
-  Clock, User, Phone, LogOut, X, Home, Sun, Moon, Heart, MessageCircle, Bell, MoreHorizontal
+  Clock, User, Phone, LogOut, X, Home, Sun, Moon, Heart, MessageCircle, Bell, MoreHorizontal, MapPin, ChevronDown, Plus
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getToken } from "../../utils/getToken";
@@ -44,6 +44,9 @@ export default function UserLayout() {
   const [pendingCount, setPendingCount] = useState(0);
   // unreadCount: Total unread notifications count
   const [unreadCount, setUnreadCount] = useState(0);
+  const [user, setUser] = useState({});
+  const [showAddressPicker, setShowAddressPicker] = useState(false);
+  const [newAddress, setNewAddress] = useState({ label: "Home", details: "", city: "", state: "" });
 
   /* --- EFFECTS & LIFECYCLE --- */
 
@@ -82,6 +85,7 @@ export default function UserLayout() {
 
     // Listen to custom cart updates
     window.addEventListener("cart-updated", updateCartCount);
+    window.addEventListener("address-updated", loadUser);
 
     // Poll pending orders count
     const interval = setInterval(loadPendingOrdersCount, 15000);
@@ -89,6 +93,7 @@ export default function UserLayout() {
 
     return () => {
       window.removeEventListener("cart-updated", updateCartCount);
+      window.removeEventListener("address-updated", loadUser);
       clearInterval(interval);
       clearInterval(notifInterval);
     };
@@ -128,6 +133,12 @@ export default function UserLayout() {
       if (res.ok) {
         const data = await res.json();
         setName(data.name);
+        if (!Array.isArray(data.addresses) || data.addresses.length === 0) {
+          data.addresses = data.address
+            ? [{ label: "Home", details: data.address, city: "", state: "", isPrimary: true }]
+            : [{ label: "Home", details: "", city: "", state: "", isPrimary: true }];
+        }
+        setUser(data);
         if (window.diagnostics) {
           window.diagnostics.userObject = data;
           window.diagnostics.addLog(`UserLayout loadUser: Loaded user "${data.name}" (role: ${data.role})`);
@@ -144,6 +155,44 @@ export default function UserLayout() {
         window.diagnostics.addError(`UserLayout loadUser exception: ${e.message}`);
       }
     }
+  };
+
+  const cleanAddressPart = (value = "") => String(value)
+    .replace(/\b(?:Khagaria|)\b/gi, "")
+    .replace(/\s*,\s*,/g, ",")
+    .replace(/^[\s,.-]+|[\s,.-]+$/g, "")
+    .trim();
+
+  const formatAddressLine = (addr) => {
+    if (!addr) return "";
+    return [addr.details, addr.city, addr.state].map(cleanAddressPart).filter(Boolean).join(", ");
+  };
+
+  const saveAddresses = async (addresses) => {
+    const token = await getToken();
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/profile`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ addresses })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      setUser(data.user);
+      window.dispatchEvent(new Event("address-updated"));
+    }
+  };
+
+  const setPrimaryAddress = async (index) => {
+    const addresses = (user.addresses || []).map((addr, i) => ({ ...addr, isPrimary: i === index }));
+    setUser({ ...user, addresses });
+    await saveAddresses(addresses);
+  };
+
+  const addAddress = async () => {
+    if (!newAddress.details.trim()) return;
+    const addresses = [...(user.addresses || []), { ...newAddress, isPrimary: !(user.addresses || []).length }];
+    setNewAddress({ label: "Home", details: "", city: "", state: "" });
+    await saveAddresses(addresses);
   };
 
   /**
@@ -303,6 +352,101 @@ export default function UserLayout() {
       {/* Tailwind: md:pl-72 shifts container content to prevent occlusion by the fixed desktop sidebar */}
       <div className="flex-1 flex flex-col w-full md:pl-72 min-h-screen transition-all duration-300">
         
+        {/* --- MOBILE TOPBAR (FIXED HEADER) --- */}
+        {/* Hidden on desktop. Sticky top-0 pins it at the top of the mobile screen. */}
+        <div className="sticky top-0 z-40 h-16 flex items-center justify-between px-4 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 md:hidden transition-colors duration-300 shadow-sm">
+          {/* Brand Logo & Location selector */}
+          <div className="flex flex-1 items-center gap-2 min-w-0 relative">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center shadow-md overflow-hidden bg-white border border-brand-100 dark:border-brand-900 shrink-0 select-none pointer-events-none [&>span]:hidden">
+              <img src="/greengo-logo.svg" alt="GreenGo" className="w-full h-full object-cover" />
+              <span className="text-white text-sm">🍔</span>
+            </div>
+            
+            <div className="min-w-0 relative flex-1">
+              <div className="flex items-center gap-0.5">
+                <span className="font-extrabold text-brand-500 text-base tracking-tight leading-none">Green</span>
+                <span className="font-extrabold text-slate-950 dark:text-white text-base tracking-tight leading-none">GO</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (isLoggedIn) {
+                    setShowAddressPicker(!showAddressPicker);
+                  } else {
+                    navigate("/", { state: { loginRequired: true, from: { pathname: "/user/menu" } } });
+                  }
+                }}
+                className="flex items-center gap-0.5 text-[10px] text-slate-600 dark:text-slate-300 font-bold max-w-[130px] sm:max-w-[200px]"
+              >
+                <MapPin size={10} className="text-brand-500 shrink-0" />
+                <span className="truncate">{(user.addresses || []).find(addr => addr.isPrimary) || (user.addresses || [])[0] ? [(user.addresses || []).find(addr => addr.isPrimary) || (user.addresses || [])[0]].map(addr => [addr.label, formatAddressLine(addr)].filter(Boolean).join(" - ")) : "Select address"}</span>
+                <ChevronDown size={11} className="shrink-0" />
+              </button>
+
+              {/* Address Picker Popover */}
+              {showAddressPicker && (
+                <div className="absolute left-0 top-full mt-2 w-[280px] bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-2xl z-[100] p-3 text-slate-900 dark:text-white">
+                  <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                    {(user.addresses || []).map((addr, index) => (
+                      <button key={index} type="button" onClick={() => { setPrimaryAddress(index); setShowAddressPicker(false); }} className={`w-full text-left p-2.5 rounded-xl border transition-all ${addr.isPrimary ? "border-brand-500 bg-brand-50 dark:bg-brand-950/30" : "border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900"}`}>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-extrabold text-xs text-slate-900 dark:text-white">{addr.label || "Address"}</span>
+                          {addr.isPrimary && <span className="text-[8px] font-black text-brand-600 dark:text-brand-400 uppercase">Primary</span>}
+                        </div>
+                        <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold line-clamp-2 mt-0.5">{formatAddressLine(addr) || "Address details required"}</p>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="mt-2.5 pt-2.5 border-t border-slate-100 dark:border-slate-800 space-y-2">
+                    <div className="grid grid-cols-2 gap-2">
+                      <input value={newAddress.label} onChange={(e) => setNewAddress({ ...newAddress, label: e.target.value })} placeholder="Home" className="px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-[10px] font-bold text-slate-900 dark:text-white outline-none" />
+                      <input value={newAddress.city} onChange={(e) => setNewAddress({ ...newAddress, city: e.target.value })} placeholder="City" className="px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-[10px] font-bold text-slate-900 dark:text-white outline-none" />
+                    </div>
+                    <input value={newAddress.details} onChange={(e) => setNewAddress({ ...newAddress, details: e.target.value })} placeholder="Full address" className="w-full px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-[10px] font-bold text-slate-900 dark:text-white outline-none" />
+                    <button type="button" onClick={addAddress} className="w-full py-1.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white text-[10px] font-extrabold flex items-center justify-center gap-1">
+                      <Plus size={11} /> Add Address
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Right Actions */}
+          <div className="flex shrink-0 items-center gap-1.5">
+            <button
+              onClick={toggleTheme}
+              className="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800 shadow-sm"
+              aria-label="Toggle Theme"
+            >
+              {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
+            </button>
+            <button 
+              onClick={() => {
+                if (isLoggedIn) navigate("/user/notifications");
+                else navigate("/", { state: { loginRequired: true, from: { pathname: "/user/notifications" } } });
+              }}
+              className="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800 shadow-sm relative"
+              aria-label="Notifications"
+            >
+              <Bell size={16} />
+              {unreadCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-brand-500 rounded-full border border-white dark:border-slate-900" />
+              )}
+            </button>
+            <button
+              onClick={() => {
+                if (isLoggedIn) navigate("/user/profile");
+                else navigate("/", { state: { loginRequired: true, from: { pathname: "/user/profile" } } });
+              }}
+              className="w-9 h-9 flex items-center justify-center rounded-xl bg-brand-500 text-white font-extrabold text-sm shadow-sm"
+              aria-label="Profile"
+            >
+              {name ? name.charAt(0).toUpperCase() : "U"}
+            </button>
+          </div>
+        </div>
+
         {/* Page Content Panel */}
         <div className="flex-1 p-4 sm:p-6 lg:p-8 pb-28 md:pb-8 overflow-x-hidden">
           <div className="w-full h-full max-w-7xl mx-auto animate-fade-in">

@@ -235,6 +235,11 @@ export default function Menu() {
     loadBanners();
     loadNotifications();
     loadUser();
+
+    window.addEventListener("address-updated", loadUser);
+    return () => {
+      window.removeEventListener("address-updated", loadUser);
+    };
   }, []);
 
   // Sets up slideshow timers for rotating hero discount banners
@@ -838,7 +843,7 @@ export default function Menu() {
       
       {/* --- 1. HEADER SECTION --- */}
       {/* Tailwind: sticky top-0 keeps dashboard header pinned at the top. z-[9999] floats it above scroll elements */}
-      <div className="sticky top-0 z-[9999] flex items-center justify-between gap-3 py-2.5 mb-2 border-b border-slate-100 dark:border-slate-800/60 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-xl shadow-[0_2px_12px_rgba(0,0,0,0.08)]">
+      <div className="sticky top-0 z-[9999] hidden md:flex items-center justify-between gap-3 py-2.5 mb-2 border-b border-slate-100 dark:border-slate-800/60 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-xl shadow-[0_2px_12px_rgba(0,0,0,0.08)]">
         {/* Left: Branding logo & clickable Shipping Address popover */}
         <div className="flex flex-1 items-center gap-3 min-w-0">
           <div className="w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center shadow-lg shadow-brand-500/20 overflow-hidden border border-brand-100 dark:border-brand-900 bg-white [&>span]:hidden">
