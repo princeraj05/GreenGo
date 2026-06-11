@@ -12,11 +12,11 @@ if (!admin.apps.length) {
     } catch (err) {
       console.error("Failed to parse or initialize Firebase Admin with service account certificate:", err);
       admin.initializeApp({
-        projectId: "bytebite-1d79a"
+        projectId: "greengo-40db2"
       });
     }
   } else {
-    const projectId = process.env.FIREBASE_PROJECT_ID || "bytebite-1d79a";
+    const projectId = process.env.FIREBASE_PROJECT_ID || "greengo-40db2";
     admin.initializeApp({
       projectId: projectId
     });
