@@ -990,18 +990,18 @@ export default function Menu() {
 
       {/* --- 3. AUTO SLIDING OFFER HERO BANNER --- */}
       {currentBanner && (
-        <div className="relative h-56 sm:h-64 md:h-72 lg:h-80 rounded-3xl overflow-hidden mb-4 shadow-md shadow-brand-500/5 transition-all animate-fade-in group bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950">
+        <div className="relative h-36 sm:h-40 md:h-48 rounded-3xl overflow-hidden mb-4 shadow-md shadow-brand-500/5 transition-all animate-fade-in group bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950">
           <img
             src={currentBanner.image.startsWith("http") ? currentBanner.image : getImageUrl(currentBanner.image)}
             alt={currentBanner.title}
             className="absolute right-0 top-0 h-full w-[50%] md:w-[45%] object-cover md:object-contain object-right z-0"
             onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=800'; }}
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/70 to-transparent flex flex-col justify-center p-6 text-white z-10">
-            <span className="text-[10px] font-black tracking-widest text-brand-400 uppercase mb-1">{currentBanner.description}</span>
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight leading-tight max-w-[50%]">{currentBanner.title}</h2>
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/70 to-transparent flex flex-col justify-center p-4 sm:p-6 text-white z-10">
+            <span className="text-[9px] sm:text-[10px] font-black tracking-widest text-brand-400 uppercase mb-0.5 sm:mb-1">{currentBanner.description}</span>
+            <h2 className="text-base sm:text-lg md:text-xl font-black tracking-tight leading-tight max-w-[50%]">{currentBanner.title}</h2>
             {currentBanner.discountText && (
-              <span className="mt-2 text-xs font-black bg-brand-500 text-white px-2.5 py-1 rounded-md w-fit shadow-sm uppercase">
+              <span className="mt-1 sm:mt-2 text-[10px] font-black bg-brand-500 text-white px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md w-fit shadow-sm uppercase">
                 {currentBanner.discountText}
               </span>
             )}
@@ -1012,7 +1012,7 @@ export default function Menu() {
                    alert(`Coupon code "${currentBanner.code}" copied to clipboard!`);
                 }
               }}
-              className="mt-4 bg-white hover:bg-slate-100 text-slate-950 px-4.5 py-2 rounded-xl text-xs font-extrabold w-fit transition-all active:scale-95 shadow-lg shadow-black/25"
+              className="mt-2.5 sm:mt-4 bg-white hover:bg-slate-100 text-slate-950 px-3.5 py-1.5 sm:px-4.5 sm:py-2 rounded-xl text-[10px] sm:text-xs font-extrabold w-fit transition-all active:scale-95 shadow-lg shadow-black/25"
             >
               {currentBanner.buttonText || "ORDER NOW"}
             </button>

@@ -690,14 +690,6 @@ export default function Checkout() {
                   </label>
                 ))}
               </div>
-
-              {/* Secure Payment Reminder Notice */}
-              <div className="mt-5 p-3 rounded-xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-100/60 dark:border-amber-900/20 flex items-start gap-2.5">
-                <span className="text-xs">ℹ️</span>
-                <p className="text-[11px] text-amber-800 dark:text-amber-300 font-medium leading-relaxed">
-                  If payment icons, UPI logos, or QR codes fail to load, please temporarily disable any ad-blockers, tracking protection, or privacy shields (such as Brave Shield) for this site. Security extensions often mistakenly block secure payment assets.
-                </p>
-              </div>
             </Card>
           </motion.div>
         </div>
