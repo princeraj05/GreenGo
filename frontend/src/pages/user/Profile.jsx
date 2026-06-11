@@ -675,8 +675,8 @@ export default function Profile() {
       return (
         <Section title="Help & Support" onClose={() => setActiveSection(null)}>
           <div className="space-y-3">
-            <SupportRow icon={Phone} title="Call Support" detail="+91 98765 43210" />
-            <SupportRow icon={Mail} title="Email Support" detail="support@greengo.app" />
+            <SupportRow icon={Phone} title="Call Support" detail="+91 7361809619" />
+            <SupportRow icon={Mail} title="Email Support" detail="shivam851214@gmail.com" />
             <SupportRow icon={CircleHelp} title="Order Help" detail="For active order issues, open Orders and check latest status." />
           </div>
         </Section>

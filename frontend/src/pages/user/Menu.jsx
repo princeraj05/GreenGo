@@ -1120,16 +1120,16 @@ export default function Menu() {
               exit={{ opacity: 0, y: 80 }}
               className="w-full max-w-3xl max-h-[82vh] bg-white dark:bg-slate-950 rounded-t-[2rem] shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden"
             >
-              <div className="relative px-5 pt-8 pb-4 border-b border-slate-100 dark:border-slate-800">
+              <div className="relative px-5 pt-5 pb-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">Cuisines and dishes</h3>
                 <button
                   type="button"
                   onClick={() => setShowAllCategories(false)}
-                  className="absolute -top-7 left-1/2 -translate-x-1/2 w-14 h-14 rounded-full bg-slate-900 text-white flex items-center justify-center shadow-xl"
+                  className="w-10 h-10 rounded-full bg-slate-100 text-slate-700 dark:bg-slate-900 dark:text-slate-200 flex items-center justify-center shadow-sm"
                   title="Close"
                 >
-                  <X size={26} />
+                  <X size={20} />
                 </button>
-                <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Cuisines and dishes</h3>
               </div>
               <div className="p-4 sm:p-6 overflow-y-auto max-h-[68vh]">
                 <div className="grid grid-cols-4 gap-x-3 gap-y-6">
