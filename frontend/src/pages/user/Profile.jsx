@@ -95,10 +95,10 @@ export default function Profile() {
 
   /* --- MEMOIZED DERIVED VALUES --- */
 
-  // Candidate image paths for developer carousel slideshow
+  // Candidate image paths for developer carousel slideshow (max 2 photo candidates)
   const developerPhotoCandidates = useMemo(() => {
     const extensions = [".jpg", ".JPG", ".jpeg", ".JPEG", ".png", ".webp", ""];
-    const numberedPhotos = Array.from({ length: 5 }, (_, index) => index + 1).flatMap((number) =>
+    const numberedPhotos = Array.from({ length: 2 }, (_, index) => index + 1).flatMap((number) =>
       extensions.map((ext) => `/developerPhoto/activeDeveloperPhoto${number}${ext}`)
     );
     return [...numberedPhotos, "/activeDeveloperPhoto.jpg"];
@@ -381,9 +381,7 @@ export default function Profile() {
       };
       setForm(nextForm);
       showMessage("Profile updated successfully");
-      const nextEditCompleted = Boolean(String(nextForm.name || "").trim() && String(nextForm.phone || "").trim() && nextForm.hasPassword);
-      const nextAddressCompleted = getCleanAddresses(nextForm.addresses).length > 0 || Boolean(String(nextForm.address || "").trim());
-      if (activeSection === "edit" || (activeSection === "addresses" && nextEditCompleted && nextAddressCompleted)) {
+      if (activeSection === "edit" || activeSection === "addresses") {
         setActiveSection(null);
       }
     } catch (err) {
@@ -727,7 +725,6 @@ export default function Profile() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <DeveloperInfo label="Mobile Number" value="7479845306" />
               <DeveloperInfo label="Country" value="India" />
               <DeveloperInfo label="From" value="Khagaria, Bihar" />
               <DeveloperInfo label="Current City" value="Jalandhar, Punjab" />
@@ -804,18 +801,18 @@ export default function Profile() {
         )}
 
         {/* PROFILE COMPLETION PERCENT BAR */}
-        <div className="mx-5 mt-4 rounded-3xl border border-emerald-100 bg-emerald-50/70 p-4 dark:border-emerald-900/40 dark:bg-emerald-950/20">
+        <div className="mx-5 mt-3 rounded-2xl border border-emerald-100 bg-emerald-50/70 p-3.5 dark:border-emerald-900/40 dark:bg-emerald-950/20">
           {location.state?.profileRequired && (
-            <p className="mb-3 text-sm font-black text-emerald-700 dark:text-emerald-300">
+            <p className="mb-2 text-xs font-bold text-emerald-700 dark:text-emerald-300">
               Please complete your profile to unlock all features.
             </p>
           )}
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Profile Level</p>
-              <h3 className="mt-1 text-xl font-black text-slate-950 dark:text-white">{profileCompletionPercent}% Completed</h3>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Profile Level</p>
+              <h3 className="mt-0.5 text-lg font-black text-slate-950 dark:text-white">{profileCompletionPercent}% Completed</h3>
             </div>
-            <span className={`rounded-2xl px-3 py-2 text-xs font-black ${
+            <span className={`rounded-xl px-2.5 py-1.5 text-xs font-bold ${
               profileCompletionPercent === 100
                 ? "bg-emerald-500 text-white"
                 : "bg-white text-emerald-700 dark:bg-slate-950 dark:text-emerald-300"
@@ -823,10 +820,10 @@ export default function Profile() {
               {profileCompletionPercent === 100 ? "Unlocked" : "Locked"}
             </span>
           </div>
-          <div className="mt-4 h-2 rounded-full bg-white dark:bg-slate-950">
+          <div className="mt-3 h-1.5 rounded-full bg-white dark:bg-slate-950">
             <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${profileCompletionPercent}%` }} />
           </div>
-          <div className="mt-3 grid grid-cols-2 gap-2 text-xs font-black">
+          <div className="mt-2.5 grid grid-cols-2 gap-2 text-[11px] font-bold">
             <span className={editProfileCompleted ? "text-emerald-700 dark:text-emerald-300" : "text-slate-500 dark:text-slate-400"}>
               Edit Profile: {editProfileCompleted ? "50%" : "Pending"}
             </span>
@@ -844,21 +841,21 @@ export default function Profile() {
                 key={item.id}
                 type="button"
                 onClick={() => setActiveSection(item.id)}
-                className="w-full flex items-center gap-4 py-4 text-left group"
+                className="w-full flex items-center gap-4 py-3 text-left group"
               >
-                <span className="w-12 h-12 rounded-2xl bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-300 flex items-center justify-center shrink-0">
-                  <item.icon size={22} />
+                <span className="w-10 h-10 rounded-2xl bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-300 flex items-center justify-center shrink-0">
+                  <item.icon size={20} />
                 </span>
-                <span className="flex-1 font-black text-slate-950 dark:text-white text-base sm:text-lg">{item.label}</span>
-                <ChevronRight size={20} className="text-slate-400 group-hover:text-green-600 transition-colors" />
+                <span className="flex-1 font-bold text-slate-900 dark:text-white text-sm sm:text-base">{item.label}</span>
+                <ChevronRight size={18} className="text-slate-400 group-hover:text-green-600 transition-colors" />
               </button>
             ))}
 
-            <button type="button" onClick={() => setShowLogoutConfirm(true)} className="w-full flex items-center gap-4 py-4 text-left group">
-              <span className="w-12 h-12 rounded-2xl bg-red-50 dark:bg-red-950/20 text-red-500 flex items-center justify-center shrink-0">
-                <LogOut size={22} />
+            <button type="button" onClick={() => setShowLogoutConfirm(true)} className="w-full flex items-center gap-4 py-3 text-left group">
+              <span className="w-10 h-10 rounded-2xl bg-red-50 dark:bg-red-950/20 text-red-500 flex items-center justify-center shrink-0">
+                <LogOut size={20} />
               </span>
-              <span className="flex-1 font-black text-red-600 dark:text-red-400 text-base sm:text-lg">Logout</span>
+              <span className="flex-1 font-bold text-red-600 dark:text-red-400 text-sm sm:text-base">Logout</span>
             </button>
           </div>
         </div>
