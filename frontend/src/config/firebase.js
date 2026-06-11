@@ -2,13 +2,13 @@ import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCIHxA4erXI5z_qaI60RpoqFakRtZKL32U",
-  authDomain: "bytebite-1d79a.firebaseapp.com",
-  projectId: "bytebite-1d79a",
-  storageBucket: "bytebite-1d79a.firebasestorage.app",
-  messagingSenderId: "601593999050",
-  appId: "1:601593999050:web:34d4d35b7d351181034e33",
-  measurementId: "G-8QT4TBTV0R"
+  apiKey: "AIzaSyBRzVQcULVdtjmCUidgNaYC2f01tkePCEE",
+  authDomain: "greengo-40db2.firebaseapp.com",
+  projectId: "greengo-40db2",
+  storageBucket: "greengo-40db2.firebasestorage.app",
+  messagingSenderId: "514910313840",
+  appId: "1:514910313840:web:9aca8ff1f55ff78897c3b5",
+  measurementId: "G-Z3NCB3NBJ1"
 };
 
 const app = initializeApp(firebaseConfig);
