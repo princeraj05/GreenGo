@@ -95,13 +95,12 @@ export default function Profile() {
 
   /* --- MEMOIZED DERIVED VALUES --- */
 
-  // Candidate image paths for developer carousel slideshow (max 2 photo candidates)
+  // Candidate image paths for developer carousel slideshow (exactly the 2 available photos)
   const developerPhotoCandidates = useMemo(() => {
-    const extensions = [".jpg", ".JPG", ".jpeg", ".JPEG", ".png", ".webp", ""];
-    const numberedPhotos = Array.from({ length: 2 }, (_, index) => index + 1).flatMap((number) =>
-      extensions.map((ext) => `/developerPhoto/activeDeveloperPhoto${number}${ext}`)
-    );
-    return [...numberedPhotos, "/activeDeveloperPhoto.jpg"];
+    return [
+      "/developerPhoto/activeDeveloperPhoto1.jpg",
+      "/developerPhoto/activeDeveloperPhoto5.jpg"
+    ];
   }, []);
 
   // Returns first available developer image that loaded successfully
