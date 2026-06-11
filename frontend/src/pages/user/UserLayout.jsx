@@ -303,45 +303,6 @@ export default function UserLayout() {
       {/* Tailwind: md:pl-72 shifts container content to prevent occlusion by the fixed desktop sidebar */}
       <div className="flex-1 flex flex-col w-full md:pl-72 min-h-screen transition-all duration-300">
         
-        {/* Mobile Topbar */}
-        <div className="sticky top-0 z-40 h-16 flex items-center justify-between px-4 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 md:hidden transition-colors duration-300">
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center shadow-md shrink-0">
-              <span className="text-white text-sm font-black">G</span>
-            </div>
-            <span className="font-black text-slate-950 dark:text-white text-base sm:text-lg truncate">GreenGo</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={toggleTheme}
-              className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors border border-slate-100 dark:border-slate-800 shadow-sm"
-              aria-label="Toggle Theme"
-            >
-              {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
-            </button>
-            <button 
-              type="button"
-              onClick={() => navigate("/user/notifications")}
-              className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors border border-slate-100 dark:border-slate-800 shadow-sm relative"
-              aria-label="Open notifications"
-            >
-              <Bell size={18} />
-              {unreadCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-brand-500 rounded-full border-2 border-white animate-pulse" />
-              )}
-            </button>
-            <button 
-              type="button"
-              onClick={() => navigate("/user/profile")}
-              className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors border border-slate-100 dark:border-slate-800 shadow-sm"
-              aria-label="Open profile"
-            >
-              <User size={18} />
-            </button>
-          </div>
-        </div>
-
         {/* Page Content Panel */}
         <div className="flex-1 p-4 sm:p-6 lg:p-8 pb-28 md:pb-8 overflow-x-hidden">
           <div className="w-full h-full max-w-7xl mx-auto animate-fade-in">

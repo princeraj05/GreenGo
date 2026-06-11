@@ -764,16 +764,7 @@ export default function Profile() {
         
         {/* Profile Header Details (Banner Area) */}
         <div className="bg-gradient-to-br from-emerald-50 to-white dark:from-emerald-950/20 dark:to-slate-950 px-5 pt-6 pb-7">
-          <button
-            type="button"
-            onClick={() => navigate("/user/menu")}
-            className="absolute top-5 right-5 w-10 h-10 rounded-full flex items-center justify-center text-slate-700 dark:text-slate-200 hover:bg-white/70 dark:hover:bg-slate-900"
-            title="Close"
-          >
-            <X size={22} />
-          </button>
-
-          <div className="flex items-center gap-4 pr-12">
+          <div className="flex items-center gap-4">
             <div className="w-20 h-20 rounded-full bg-green-500 text-white flex items-center justify-center text-4xl font-black shadow-lg shadow-green-500/20">
               {form.name ? form.name.charAt(0).toUpperCase() : <User size={38} />}
             </div>

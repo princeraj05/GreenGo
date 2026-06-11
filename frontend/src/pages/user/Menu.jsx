@@ -837,8 +837,8 @@ export default function Menu() {
     <div className="max-w-7xl mx-auto w-full pb-10 px-2 sm:px-4 relative animate-fade-in transition-colors">
       
       {/* --- 1. HEADER SECTION --- */}
-      {/* Tailwind: sticky top-16 on mobile keeps dashboard header pinned below mobile layout header. z-[9999] floats it above scroll elements */}
-      <div className="sticky top-16 md:top-0 z-[9999] flex items-center justify-between gap-3 py-2.5 mb-2 border-b border-slate-100 dark:border-slate-800/60 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-xl shadow-[0_2px_12px_rgba(0,0,0,0.08)]">
+      {/* Tailwind: sticky top-0 keeps dashboard header pinned at the top. z-[9999] floats it above scroll elements */}
+      <div className="sticky top-0 z-[9999] flex items-center justify-between gap-3 py-2.5 mb-2 border-b border-slate-100 dark:border-slate-800/60 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-xl shadow-[0_2px_12px_rgba(0,0,0,0.08)]">
         {/* Left: Branding logo & clickable Shipping Address popover */}
         <div className="flex flex-1 items-center gap-3 min-w-0">
           <div className="w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center shadow-lg shadow-brand-500/20 overflow-hidden border border-brand-100 dark:border-brand-900 bg-white [&>span]:hidden">
@@ -1003,7 +1003,7 @@ export default function Menu() {
 
       {/* --- 3. AUTO SLIDING OFFER HERO BANNER --- */}
       {currentBanner && (
-        <div className="relative h-36 sm:h-40 md:h-48 rounded-3xl overflow-hidden mb-4 shadow-md shadow-brand-500/5 transition-all animate-fade-in group bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950">
+        <div className="relative h-28 sm:h-40 md:h-48 rounded-3xl overflow-hidden mb-4 shadow-md shadow-brand-500/5 transition-all animate-fade-in group bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950">
           <img
             src={currentBanner.image.startsWith("http") ? currentBanner.image : getImageUrl(currentBanner.image)}
             alt={currentBanner.title}
@@ -1045,24 +1045,25 @@ export default function Menu() {
       )}
 
       {/* --- 4. BUDGET ASSISTANT CARD SECTION --- */}
-      <div className="mb-4 rounded-2xl sm:rounded-3xl border border-brand-100 dark:border-brand-900/60 bg-white dark:bg-slate-900 shadow-sm px-3 py-6 sm:px-5 sm:py-8 flex items-center gap-3 sm:gap-5">
-        <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full bg-green-600 text-white flex items-center justify-center shrink-0 shadow-lg shadow-green-600/20">
-          <Wallet size={23} className="sm:w-8 sm:h-8" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <h3 className="font-black text-slate-950 dark:text-white text-base sm:text-xl md:text-2xl tracking-tight flex items-center gap-1.5 leading-tight">
-            Budget Assistant
-            <Sparkles size={17} className="text-green-600 fill-green-600 shrink-0 sm:w-5 sm:h-5" />
-          </h3>
+      <div className="mb-4 rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm p-3.5 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-10 h-10 rounded-full bg-green-600 text-white flex items-center justify-center shrink-0 shadow-md">
+            <Wallet size={18} />
+          </div>
+          <div className="min-w-0">
+            <h3 className="font-extrabold text-slate-950 dark:text-white text-sm sm:text-base tracking-tight flex items-center gap-1 leading-none">
+              Budget Assistant
+              <Sparkles size={14} className="text-green-600 fill-green-600 shrink-0" />
+            </h3>
+          </div>
         </div>
         <button
           type="button"
           onClick={() => navigate("/user/budget-assistant")}
-          className="shrink-0 min-w-[76px] sm:min-w-[128px] px-3 sm:px-5 py-2.5 sm:py-3.5 rounded-2xl bg-green-700 hover:bg-green-800 text-white font-black text-xs sm:text-base flex items-center justify-center gap-1 sm:gap-2 shadow-lg shadow-green-700/20 active:scale-95 transition-all"
+          className="shrink-0 px-4 py-2 rounded-xl bg-green-700 hover:bg-green-800 text-white font-extrabold text-xs sm:text-sm flex items-center justify-center gap-1 shadow-md active:scale-95 transition-all"
         >
-          Start
-          <span className="hidden sm:inline">Now</span>
-          <ChevronRight size={16} className="sm:w-5 sm:h-5" />
+          Start <span className="hidden sm:inline">Now</span>
+          <ChevronRight size={14} />
         </button>
       </div>
 
