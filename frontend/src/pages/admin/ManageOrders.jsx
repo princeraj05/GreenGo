@@ -7,15 +7,45 @@ import Card from "../../components/ui/Card";
 import Badge from "../../components/ui/Badge";
 import Button from "../../components/ui/Button";
 
+/**
+ * ManageOrders Component
+ * Admin order center interface. Facilitates live order tracking,
+ * assigning active delivery riders, manually updating estimated times of arrival (ETA),
+ * and links to geographic real-time tracking views.
+ */
 export default function ManageOrders() {
+  // Pagination page size limit configuration
   const PAGE_SIZE = 24;
+
+  // ==========================================
+  // STATE DECLARATIONS
+  // ==========================================
+
+  // Array containing all system orders records
   const [orders, setOrders] = useState([]);
+
+  // Array of active delivery riders profiles loaded for assignment options
   const [deliveryBoys, setDeliveryBoys] = useState([]);
+
+  // Map tracking custom ETA minute input drafts mapped by Order ID
   const [etaInput, setEtaInput] = useState({});
+
+  // Map tracking rider assignment selections mapped by Order ID
   const [assignInput, setAssignInput] = useState({});
+
+  // Local timestamp counter for calculating live countdown timers
   const [now, setNow] = useState(0);
+
+  // Pagination count limit indicator
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
+  // ==========================================
+  // DATA FETCHING & EVENT HANDLERS
+  // ==========================================
+
+  /**
+   * Fetches customer orders list.
+   */
   const loadOrders = useCallback(async () => {
     try {
       const token = await getToken();
@@ -24,6 +54,9 @@ export default function ManageOrders() {
     } catch (err) { console.log(err); }
   }, []);
 
+  /**
+   * Fetches the registered delivery boys list.
+   */
   const loadDeliveryBoys = useCallback(async () => {
     try {
       const token = await getToken();
@@ -32,6 +65,7 @@ export default function ManageOrders() {
     } catch (err) { console.log(err); }
   }, []);
 
+  // Poll setup and mount loading callbacks
   useEffect(() => {
     Promise.resolve().then(() => {
       loadOrders();
@@ -41,6 +75,9 @@ export default function ManageOrders() {
     return () => clearInterval(timer);
   }, [loadDeliveryBoys, loadOrders]);
 
+  /**
+   * Associates a delivery rider with an order record.
+   */
   const assignDeliveryBoy = async (orderId) => {
     const deliveryBoyId = assignInput[orderId];
     if (!deliveryBoyId) return;
@@ -52,6 +89,9 @@ export default function ManageOrders() {
     } catch (err) { console.log(err); }
   };
 
+  /**
+   * Updates preparation and transit ETA estimates.
+   */
   const setETA = async (id, status) => {
     try {
       const token = await getToken();
@@ -64,6 +104,9 @@ export default function ManageOrders() {
     } catch (err) { console.log(err); }
   };
 
+  /**
+   * Evaluates the remaining time countdown relative to delivery goals.
+   */
   const remaining = (o) => {
     if (o.status === "Delivered") return "Delivered";
     if (!o.etaMinutes || !o.etaSetAt) return "Not Set";
@@ -73,16 +116,22 @@ export default function ManageOrders() {
     const s = Math.floor((diff % 60000) / 1000);
     return `${m}m ${s}s`;
   };
+
+  // Slice orders array down to current pagination limits
   const visibleOrders = useMemo(() => orders.slice(0, visibleCount), [orders, visibleCount]);
+
+  // Denotes if more unrendered orders exist
   const hasMoreOrders = visibleOrders.length < orders.length;
 
   return (
+    // Outer wrap container
     <div className="w-full pb-10">
 
+      {/* --- HEADER SECTION --- */}
       <div className="mb-6 md:mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3 md:gap-4 leading-tight">
-            <div className="w-10 h-10 md:w-12 md:h-12 bg-emerald-50 dark:bg-emerald-950/30 rounded-2xl flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-emerald-50 dark:bg-emerald-950/30 rounded-2xl flex items-center justify-center text-emerald-600 dark:text-emerald-450 shrink-0">
               <Package size={22} className="md:w-7 md:h-7" />
             </div>
             Manage Orders
@@ -90,7 +139,10 @@ export default function ManageOrders() {
           <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm sm:text-base md:text-lg font-medium leading-snug">Track and update all customer orders in real-time.</p>
         </div>
       </div>
+      {/* --- END HEADER SECTION --- */}
 
+      {/* --- ORDERS CARDS GRID --- */}
+      {/* Employs responsive breakpoints md:grid-cols-2 and lg:grid-cols-3 to arrange order cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
           {visibleOrders.map((o, i) => (
             <div
@@ -99,17 +151,17 @@ export default function ManageOrders() {
             >
               <Card hover className="p-4 sm:p-5 md:p-6 h-full flex flex-col border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-950">
 
-                {/* Order ID + Status */}
+                {/* --- ORDER ID + STATUS BADGE --- */}
                 <div className="flex items-center justify-between gap-3 mb-4 md:mb-6">
                   <p className="font-extrabold text-slate-900 dark:text-white text-base md:text-lg">
-                    #<span className="text-emerald-600 dark:text-emerald-400">{o._id.slice(-6).toUpperCase()}</span>
+                    #<span className="text-emerald-600 dark:text-emerald-450">{o._id.slice(-6).toUpperCase()}</span>
                   </p>
                   <Badge variant={o.status === 'Delivered' ? 'success' : o.status === 'Preparing' ? 'warning' : o.status === 'Cancelled' ? 'danger' : 'brand'} className="uppercase tracking-wider text-[10px] md:text-xs whitespace-nowrap">
                     {o.status}
                   </Badge>
                 </div>
 
-                {/* Delivery Assignment */}
+                {/* --- DELIVERY BOY ASSIGNMENT SECTION --- */}
                 <div className="mb-4 md:mb-6 rounded-2xl border border-emerald-100 dark:border-emerald-900/40 bg-emerald-50/50 dark:bg-emerald-950/20 p-3">
                   <label className="block text-xs font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider mb-2">Assign Delivery Boy</label>
                   {o.assignedDeliveryBoy && (
@@ -136,7 +188,7 @@ export default function ManageOrders() {
                   </div>
                 </div>
 
-                {/* Address & ETA */}
+                {/* --- ADDRESS & ETA LOGISTICS DETAIL --- */}
                 <div className="bg-slate-50 dark:bg-slate-900/60 rounded-2xl p-3 md:p-4 border border-slate-100 dark:border-slate-800/50 space-y-2.5 md:space-y-3 mb-4 md:mb-6">
                   <p className="text-xs md:text-sm font-medium text-slate-600 dark:text-slate-300 flex items-start gap-2 leading-snug break-words">
                     <MapPin size={16} className="text-emerald-500 shrink-0 mt-0.5" /> 
@@ -165,7 +217,7 @@ export default function ManageOrders() {
                   )}
                 </div>
 
-                {/* ETA Input */}
+                {/* --- ETA UPDATE CONTROLS --- */}
                 {o.status !== "Delivered" && (
                   <div className="flex gap-2 mb-4 md:mb-6">
                     <input type="number" placeholder="ETA (min)"
@@ -184,7 +236,7 @@ export default function ManageOrders() {
                   </Button>
                 </Link>
 
-                {/* Items */}
+                {/* --- ORDER ITEMS QUANTITIES LIST --- */}
                 <div className="space-y-2 mb-4 md:mb-6 flex-1">
                   {o.items.map((i, idx) => (
                     <div key={idx} className="flex justify-between items-start gap-3 text-xs md:text-sm font-medium text-slate-600 dark:text-slate-400 py-1 border-b border-slate-50 dark:border-slate-800/40 last:border-0">
@@ -194,7 +246,7 @@ export default function ManageOrders() {
                   ))}
                 </div>
 
-                {/* Total */}
+                {/* --- TOTAL SUM SECTION --- */}
                 <div className="flex justify-between items-center pt-4 border-t border-slate-100 dark:border-slate-800/60 mt-auto">
                   <span className="text-xs md:text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Amount</span>
                   <span className="text-xl md:text-2xl font-black text-slate-900 dark:text-white">
@@ -206,6 +258,9 @@ export default function ManageOrders() {
             </div>
           ))}
       </div>
+      {/* --- END ORDERS CARDS GRID --- */}
+
+      {/* Show More Pagination control */}
       {hasMoreOrders && (
         <div className="mt-6 flex justify-center">
           <Button

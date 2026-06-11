@@ -2,9 +2,25 @@ import { useEffect, useState } from "react";
 import API from "../../api/axios";
 import { getToken } from "../../utils/getToken";
 
+/**
+ * ManageSettings Component
+ * Main configurations screen allowing the admin to set global variables
+ * like coordinates, delivery distance limits, delivery charges,
+ * and delivery rider payouts slabs based on distance.
+ */
 export default function ManageSettings() {
+  
+  // ==========================================
+  // STATE DECLARATIONS
+  // ==========================================
+
+  // Loading indicator for fetching configurations
   const [loading, setLoading] = useState(true);
+
+  // Saving indicator for write requests
   const [saving, setSaving] = useState(false);
+
+  // Form input configurations initialized with default values
   const [form, setForm] = useState({
     deliveryChargeAmount: 40,
     isDeliveryChargeEnabled: true,
@@ -16,6 +32,13 @@ export default function ManageSettings() {
     deliveryBoyAmountSlabs: [{ upToKm: 10, amount: 50 }, { upToKm: 100, amount: 100 }],
   });
 
+  // ==========================================
+  // DATA FETCHING & EVENT HANDLERS
+  // ==========================================
+
+  /**
+   * Modifies dynamic details inside settings slab lists (distance or amount).
+   */
   const updateSlab = (field, index, key, value) => {
     setForm((current) => ({
       ...current,
@@ -25,6 +48,9 @@ export default function ManageSettings() {
     }));
   };
 
+  /**
+   * Appends a new blank slab item parameter.
+   */
   const addSlab = (field) => {
     setForm((current) => ({
       ...current,
@@ -32,6 +58,9 @@ export default function ManageSettings() {
     }));
   };
 
+  /**
+   * Removes a slab item parameter.
+   */
   const removeSlab = (field, index) => {
     setForm((current) => ({
       ...current,
@@ -41,10 +70,14 @@ export default function ManageSettings() {
     }));
   };
 
+  // Fetch configurations on component mount
   useEffect(() => {
     loadSettings();
   }, []);
 
+  /**
+   * Fetches global settings from endpoint.
+   */
   const loadSettings = async () => {
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/settings`);
@@ -72,6 +105,9 @@ export default function ManageSettings() {
     }
   };
 
+  /**
+   * Updates global settings configuration records.
+   */
   const handleSave = async (e) => {
     e.preventDefault();
     setSaving(true);
@@ -95,6 +131,7 @@ export default function ManageSettings() {
 
   if (loading) return <p className="p-8 text-slate-900 dark:text-white">Loading settings...</p>;
 
+  // Renders editable list rows for slabs
   const renderSlabRows = (field) => (
     <div className="space-y-3">
       {(form[field] || []).map((slab, index) => (
@@ -140,12 +177,18 @@ export default function ManageSettings() {
   );
 
   return (
+    // Outer layouts wrap with fade-in animations
     <div className="w-full h-full animate-fade-in pb-10 pt-8">
+      
+      {/* --- HEADER SECTION --- */}
       <div className="mb-10">
         <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Global Settings</h1>
         <p className="text-slate-500 dark:text-slate-400 mt-1">Configure global application properties.</p>
       </div>
+      {/* --- END HEADER SECTION --- */}
 
+      {/* --- SETTINGS FORM PANEL --- */}
+      {/* Tailwind classes: shadows and max width limits keep form layout clean on large displays */}
       <div className="bg-white dark:bg-slate-950 rounded-3xl p-8 mb-10 border border-slate-100 dark:border-slate-800/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] max-w-2xl">
         <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
           <svg className="w-6 h-6 text-emerald-500 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -157,6 +200,7 @@ export default function ManageSettings() {
         
         <form onSubmit={handleSave} className="space-y-8">
           
+          {/* Custom Delivery Toggle Switch */}
           <div className="flex items-center justify-between p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900">
             <div>
               <h3 className="font-bold text-slate-800 dark:text-white">Enable Custom Delivery Charge</h3>
@@ -183,6 +227,7 @@ export default function ManageSettings() {
             </div>
           </div>
 
+          {/* Delivery Charge Slabs section */}
           <div className="border-t border-slate-100 dark:border-slate-800/80 pt-6">
             <h3 className="font-extrabold text-slate-800 dark:text-white mb-2 uppercase tracking-wider text-xs">Custom Delivery Charge</h3>
             <p className="mb-4 text-xs font-semibold text-slate-500 dark:text-slate-400">
@@ -191,6 +236,7 @@ export default function ManageSettings() {
             {renderSlabRows("deliveryChargeSlabs")}
           </div>
 
+          {/* Rider payout settings section */}
           <div className="border-t border-slate-100 dark:border-slate-800/80 pt-6">
             <h3 className="font-extrabold text-slate-800 dark:text-white mb-2 uppercase tracking-wider text-xs">Delivery Boy Amount Setting</h3>
             <p className="mb-4 text-xs font-semibold text-slate-500 dark:text-slate-400">
@@ -199,6 +245,7 @@ export default function ManageSettings() {
             {renderSlabRows("deliveryBoyAmountSlabs")}
           </div>
 
+          {/* Geographic Limits Section */}
           <div className="border-t border-slate-100 dark:border-slate-800/80 pt-6">
             <h3 className="font-extrabold text-slate-800 dark:text-white mb-4 uppercase tracking-wider text-xs">Distance & Location Limits</h3>
             
@@ -237,6 +284,8 @@ export default function ManageSettings() {
           </button>
         </form>
       </div>
+      {/* --- END SETTINGS FORM PANEL --- */}
+
     </div>
   );
 }

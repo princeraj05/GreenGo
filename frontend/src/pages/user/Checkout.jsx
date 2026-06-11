@@ -9,7 +9,12 @@ import Input from "../../components/ui/Input";
 import { cn } from "../../utils/cn";
 import { getImageUrl } from "../../utils/getApiUrl";
 
+/* --- HELPER FUNCTIONS --- */
 
+/**
+ * calculateHaversineDistance: Computes the great-circle distance between two points on a sphere 
+ * using their latitudes and longitudes.
+ */
 function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
   const R = 6371; // Earth's radius in km
   const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -22,6 +27,10 @@ function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
   return R * c;
 }
 
+/**
+ * getSlabAmount: Matches the computed distance with delivery charge distance slabs 
+ * to determine the applicable delivery fee.
+ */
 const getSlabAmount = (slabs = [], distance = null, fallback = 0) => {
   const km = Number(distance || 0);
   const sortedSlabs = Array.isArray(slabs)
@@ -35,20 +44,41 @@ const getSlabAmount = (slabs = [], distance = null, fallback = 0) => {
   return Number(matchedSlab?.amount || 0);
 };
 
+/**
+ * Checkout Component
+ * 
+ * Manages order review, customer address / contact input, GPS-based delivery fee calculations,
+ * and payment integration with COD and Razorpay secure payment gateway.
+ */
 export default function Checkout() {
   const navigate = useNavigate();
+
+  /* --- STATE DECLARATIONS --- */
+  // cart: Stores the items currently placed in the user's cart
   const [cart, setCart] = useState([]);
+  // address: Delivery address string, updated manually or via reverse-geocoding
   const [address, setAddress] = useState("");
+  // phone: User contact number
   const [phone, setPhone] = useState("");
+  // paymentMethod: Selected option for transaction ("UPI", "COD", or "Card")
   const [paymentMethod, setPaymentMethod] = useState("UPI");
-  const [customMessage, setCustomMessage] = useState(""); // <-- Added
+  // customMessage: Cooking instructions or delivery notes written by the customer
+  const [customMessage, setCustomMessage] = useState("");
+  // deliveryCharge: Standard or slab-calculated fee for delivering the order
   const [deliveryCharge, setDeliveryCharge] = useState(40);
+  // settings: General store configurations fetched from backend API (e.g. coordinates, distance limit)
   const [settings, setSettings] = useState(null);
+  // loading: Disables interactive elements and shows spinner during checkout submission
   const [loading, setLoading] = useState(false);
+  // locationLoading: Loader state for GPS location fetching & reverse geocoding
   const [locationLoading, setLocationLoading] = useState(false);
-  const [userCoords, setUserCoords] = useState(null); // { latitude, longitude }
+  // userCoords: Stores latitude & longitude of the customer's browser location
+  const [userCoords, setUserCoords] = useState(null);
+  // profileDeliveryReady: Boolean indicating if user profile has phone & primary address filled
   const [profileDeliveryReady, setProfileDeliveryReady] = useState(false);
 
+  /* --- HELPER METHOD --- */
+  // Extracts the primary address text or general address from user record
   const getSavedAddressText = (userData) => {
     const primaryAddress = Array.isArray(userData?.addresses)
       ? userData.addresses.find((addr) => addr?.isPrimary) || userData.addresses[0]
@@ -56,6 +86,7 @@ export default function Checkout() {
     return String(primaryAddress?.details || userData?.address || "").trim();
   };
 
+  // Triggers alert and routes user to root route with checkout origin context if details are missing
   const redirectToLoginForDeliveryDetails = () => {
     alert("Please login first and complete your profile address before placing an order.");
     navigate("/", {
@@ -66,6 +97,9 @@ export default function Checkout() {
     });
   };
 
+  /* --- DATA FETCHING & EFFECTS --- */
+
+  // Dynamically mounts the Razorpay payment checkout script on page mount
   useEffect(() => {
     if (!window.Razorpay) {
       const script = document.createElement("script");
@@ -77,6 +111,7 @@ export default function Checkout() {
     }
   }, []);
 
+  // Loads the user cart, general store settings, and user contact/address on mount
   useEffect(() => {
     const data = JSON.parse(localStorage.getItem("cart")) || [];
     setCart(data);
@@ -109,6 +144,7 @@ export default function Checkout() {
     }
   }, [navigate]);
 
+  // Requests browser geolocation permissions and extracts coordinates
   useEffect(() => {
     if (!navigator.geolocation || userCoords) return;
     navigator.geolocation.getCurrentPosition(
@@ -123,6 +159,7 @@ export default function Checkout() {
     );
   }, [userCoords]);
 
+  // Recalculates delivery fee once both store settings and user coordinates are loaded
   useEffect(() => {
     if (!settings || !userCoords?.latitude || !userCoords?.longitude) return;
     const dist = calculateHaversineDistance(
@@ -134,12 +171,18 @@ export default function Checkout() {
     updateDeliveryChargeByDistance(settings, dist);
   }, [settings, userCoords]);
 
+  /* --- PRICE CALCULATION COMPUTATIONS --- */
   const subtotal = cart.reduce((s, i) => s + Number(i.price || 0) * Number(i.qty || 0), 0);
   const packingCharges = cart.reduce((s, i) => s + Number(i.packingCharge || 0) * Number(i.qty || 0), 0);
   const taxes = 0;
   const total = subtotal + packingCharges + deliveryCharge + taxes;
   const totalItems = cart.reduce((s, i) => s + Number(i.qty || 0), 0);
 
+  /* --- EVENT HANDLERS --- */
+
+  /**
+   * updateDeliveryChargeByDistance: Recalculates next delivery charge slab
+   */
   const updateDeliveryChargeByDistance = (settingsData, distance) => {
     const nextCharge = settingsData?.isDeliveryChargeEnabled
       ? getSlabAmount(settingsData.deliveryChargeSlabs, distance, settingsData.deliveryChargeAmount)
@@ -148,6 +191,9 @@ export default function Checkout() {
     return nextCharge;
   };
 
+  /**
+   * syncCart: Updates local state and localStorage, firing synchronization event
+   */
   const syncCart = (nextCart) => {
     if (nextCart.length > 0) {
       localStorage.setItem("cart", JSON.stringify(nextCart));
@@ -158,6 +204,9 @@ export default function Checkout() {
     window.dispatchEvent(new Event("cart-updated"));
   };
 
+  /**
+   * updateCartQuantity: Changes the purchase volume of a single food item
+   */
   const updateCartQuantity = (itemId, nextQty) => {
     const nextCart = cart
       .map((item) => item._id === itemId ? { ...item, qty: nextQty } : item)
@@ -165,10 +214,17 @@ export default function Checkout() {
     syncCart(nextCart);
   };
 
+  /**
+   * removeCartItem: Deletes the item from cart array completely
+   */
   const removeCartItem = (itemId) => {
     syncCart(cart.filter((item) => item._id !== itemId));
   };
 
+  /**
+   * placeOrder: Processes store limits, validates delivery coordinates distance,
+   * configures Razorpay options, and opens payment modal, or places COD orders.
+   */
   const placeOrder = async () => {
     if (cart.length === 0) {
       alert("Your cart is empty.");
@@ -314,6 +370,10 @@ export default function Checkout() {
     }
   };
 
+  /**
+   * createFinalOrder: Places order record directly in database through backend,
+   * clears local cart variables, and redirects to orders history tracker.
+   */
   const createFinalOrder = async (token, lat, lon, finalDeliveryCharge = deliveryCharge, finalTotal = total) => {
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/orders`, {
@@ -346,6 +406,10 @@ export default function Checkout() {
     }
   };
 
+  /**
+   * useCurrentLocation: Queries GPS permissions, maps reverse geocoding via OpenStreetMap API
+   * to populate physical address string.
+   */
   const useCurrentLocation = () => {
     if (!profileDeliveryReady) {
       redirectToLoginForDeliveryDetails();
@@ -381,6 +445,7 @@ export default function Checkout() {
     });
   };
 
+  // Payment method options mapping helper
   const paymentOptions = [
     { id: 'UPI', title: 'UPI (GPay, PhonePe)', desc: 'Pay securely using UPI apps', icon: <Smartphone size={24} /> },
     { id: 'COD', title: 'Cash on Delivery', desc: 'Pay when your food arrives', icon: <Banknote size={24} /> },
@@ -388,12 +453,17 @@ export default function Checkout() {
   ];
 
   return (
+    /* --- MAIN PAGE CONTAINER --- */
+    /* Tailwind: max-w-5xl mx-auto centers and sets width constraint. pb-10 reserves whitespace at the bottom */
     <div className="max-w-5xl mx-auto w-full pb-10">
+      
+      {/* --- CHECKOUT HEADER --- */}
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6 md:mb-10">
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight">Checkout Securely</h1>
         <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm sm:text-base md:text-lg font-medium">Complete your order details and payment.</p>
       </motion.div>
 
+      {/* --- ORDER ITEMS REVIEW BOX --- */}
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-6 md:mb-8">
         <Card className="p-4 sm:p-5 md:p-6 border-slate-100 dark:border-slate-800/60 rounded-3xl overflow-hidden">
           <div className="flex items-center justify-between gap-3 mb-4">
@@ -411,7 +481,10 @@ export default function Checkout() {
             </span>
           </div>
 
+          {/* Empty cart fallback check */}
           {cart.length === 0 ? (
+            
+            /* --- EMPTY CART WARNING SECTION --- */
             <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 p-8 text-center">
               <ShoppingBag className="mx-auto text-slate-300 dark:text-slate-700" size={34} />
               <h3 className="mt-3 text-base font-black text-slate-900 dark:text-white">Your cart is empty</h3>
@@ -422,6 +495,8 @@ export default function Checkout() {
             </div>
           ) : (
             <>
+              {/* --- ACTIVE ORDER ITEMS HORIZONTAL SCROLL LIST --- */}
+              {/* Tailwind: overflow-x-auto enables side scrolling for cart item cards on small displays; snap-x enforces horizontal locking */}
               <div className="-mx-4 sm:-mx-5 md:-mx-6 overflow-x-auto scroll-smooth no-scrollbar px-4 sm:px-5 md:px-6 pb-3">
                 <div className="flex gap-3 md:gap-4 snap-x snap-mandatory">
                   {cart.map((item) => (
@@ -476,6 +551,7 @@ export default function Checkout() {
                 </div>
               </div>
 
+              {/* --- PRICE BREAKDOWN SLAB --- */}
               <div className="mt-2 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 p-3 sm:p-4">
                 <div className="space-y-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
                   <div className="flex items-center justify-between">
@@ -507,9 +583,14 @@ export default function Checkout() {
         </Card>
       </motion.div>
 
+      {/* --- FORM AND SUMMARY TWO-COLUMN LAYOUT --- */}
+      {/* Tailwind: flex-col on mobile, flex-row on desktop (lg:flex-row) to arrange checkout forms next to receipt panels */}
       <div className="flex flex-col lg:flex-row gap-6 md:gap-8">
+        
+        {/* Left Columns - Form Entry Elements */}
         <div className="flex-1 space-y-4 md:space-y-6">
-          {/* Delivery Details Section */}
+          
+          {/* --- DELIVERY DETAILS INPUT CARD --- */}
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
             <Card className="p-4 sm:p-6 md:p-8 relative overflow-hidden border-slate-100 dark:border-slate-800/60 rounded-3xl">
               <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4 md:mb-6 flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
@@ -541,7 +622,6 @@ export default function Checkout() {
                   />
                 </div>
 
-
                 <div>
                   <label className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5 block">Phone Number</label>
                   <div className="relative">
@@ -571,7 +651,7 @@ export default function Checkout() {
             </Card>
           </motion.div>
 
-          {/* Payment Options Section */}
+          {/* --- PAYMENT OPTIONS CARD --- */}
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}>
             <Card className="p-4 sm:p-6 md:p-8 border-slate-100 dark:border-slate-800/60 rounded-3xl">
               <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4 md:mb-6 flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
@@ -611,6 +691,7 @@ export default function Checkout() {
                 ))}
               </div>
 
+              {/* Secure Payment Reminder Notice */}
               <div className="mt-5 p-3 rounded-xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-100/60 dark:border-amber-900/20 flex items-start gap-2.5">
                 <span className="text-xs">ℹ️</span>
                 <p className="text-[11px] text-amber-800 dark:text-amber-300 font-medium leading-relaxed">
@@ -621,8 +702,11 @@ export default function Checkout() {
           </motion.div>
         </div>
 
-        {/* Order Summary */}
+        {/* Right Column - Receipt Summary stickiness */}
         <div className="w-full lg:w-[380px] shrink-0">
+          
+          {/* --- STICKY RECEIPT CHECKOUT PANEL --- */}
+          {/* Tailwind: sticky top-24 makes sure the summary panel follows scrolling viewport */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
             <Card className="p-5 md:p-8 sticky top-24 border-slate-100 dark:border-slate-800/60 rounded-3xl md:rounded-[2rem]">
               <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 border-b border-slate-100 dark:border-slate-800 pb-3">Order Summary</h3>
@@ -656,6 +740,7 @@ export default function Checkout() {
                 <span className="text-2xl md:text-3xl font-black text-brand-500">₹{total}</span>
               </div>
 
+              {/* Order Confirmation Submission Button */}
               <Button
                 onClick={placeOrder}
                 disabled={loading}

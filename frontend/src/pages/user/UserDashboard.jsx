@@ -11,22 +11,45 @@ import ActivityTimeline from "../../components/dashboard/ActivityTimeline";
 import RecommendedFoods from "../../components/dashboard/RecommendedFoods";
 import OffersSection from "../../components/dashboard/OffersSection";
 
+/**
+ * UserDashboard Component
+ * 
+ * Aggregates client metrics, lists ongoing orders, recommends food categories,
+ * displays promo banners, and lists alerts. Includes developer diagnostics reporting.
+ */
 export default function UserDashboard() {
+  
+  /* --- STATE DECLARATIONS --- */
+  // orders: Previous checkout history of the user
   const [orders, setOrders] = useState([]);
-  const [foods, setFoods] = useState([]); // Recommended Foods
+  // foods: Curated dishes recommended for the dashboard stream
+  const [foods, setFoods] = useState([]);
+  // user: Information matching profile record of the client
   const [user, setUser] = useState({});
+  // stats: Summary metrics (orders count, total price sum, loyal reward points)
   const [stats, setStats] = useState({ totalOrders: 0, totalSpent: 0, rewardPoints: 0 });
+  // offers: Active coupons and deals
   const [offers, setOffers] = useState([]);
+  // notifications: Alerts and broadcasts from administration
   const [notifications, setNotifications] = useState([]);
+  // dismissedNotifs: Local storage reference tracking closed alerts
   const [dismissedNotifs, setDismissedNotifs] = useState(
     JSON.parse(localStorage.getItem("dismissedNotifs")) || []
   );
+  // loading: Page spinner toggle
   const [loading, setLoading] = useState(true);
 
+  /* --- DATA FETCHING & EFFECTS --- */
+
+  // Triggers API pipeline on dashboard mount
   useEffect(() => {
     loadDashboardData();
   }, []);
 
+  /**
+   * loadDashboardData: Parallel queries fetching all dashboard-related resources.
+   * Includes diagnostics logs for debugging purposes.
+   */
   const loadDashboardData = async () => {
     try {
       const token = await getToken();
@@ -46,6 +69,8 @@ export default function UserDashboard() {
       if (window.diagnostics) {
         window.diagnostics.addLog(`UserDashboard: Fetching dashboard APIs from VITE_API_URL = ${import.meta.env.VITE_API_URL}`);
       }
+      
+      // Parallel network fetches for dashboard data
       const [ordersRes, recommendedRes, userRes, statsRes, offersRes, notifRes] = await Promise.all([
         fetch(`${import.meta.env.VITE_API_URL}/api/orders/my`, { headers: { Authorization: `Bearer ${token}` } }),
         fetch(`${import.meta.env.VITE_API_URL}/api/dashboard/recommended`, { headers: { Authorization: `Bearer ${token}` } }),
@@ -90,6 +115,7 @@ export default function UserDashboard() {
     }
   };
 
+  /* --- MEMOIZED / DERIVED VARIABLES --- */
   const activeOrders = orders.filter(o => o.status === "Pending" || o.status === "Preparing" || o.status === "Out for Delivery");
   const activeOrdersCount = activeOrders.length;
   const mostRecentActiveOrder = activeOrders.length > 0 ? activeOrders[0] : null;
@@ -97,6 +123,7 @@ export default function UserDashboard() {
   const totalOrders = orders.length;
   const totalSpent = orders.reduce((sum, o) => sum + (o.total || 0), 0);
 
+  // Filters out expired and user-dismissed alerts
   const activeNotifications = notifications.filter(n => {
     const isDismissed = dismissedNotifs.includes(n._id);
     const isExpired = n.expiresAt && new Date(n.expiresAt) <= new Date();
@@ -113,9 +140,10 @@ export default function UserDashboard() {
   }
 
   return (
+    /* --- MAIN DASHBOARD VIEW --- */
     <div className="w-full max-w-6xl mx-auto animate-fade-in pb-10 min-h-screen">
       
-      {/* Notifications Bar */}
+      {/* --- NOTIFICATIONS BANNER LIST --- */}
       {activeNotifications.length > 0 && (
         <div className="flex flex-col gap-4 mx-4 sm:mx-0 mt-6 mb-2">
           {activeNotifications.map(n => {
@@ -172,10 +200,13 @@ export default function UserDashboard() {
         </div>
       )}
 
+      {/* --- DASHBOARD HERO COMPONENT --- */}
       <DashboardHero userName={user.name} />
       
+      {/* --- QUICK ACTION BUTTONS --- */}
       <QuickActions />
       
     </div>
   );
 }
+

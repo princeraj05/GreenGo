@@ -8,24 +8,46 @@ import { getToken } from "../../utils/getToken";
 
 const API = getApiUrl();
 
+/**
+ * Wishlist Component
+ * 
+ * Manages user's bookmarked food items. Allows toggling wishlist items,
+ * adjusting cart quantities from the wishlist cards, and viewing all items in a layout grid modal.
+ */
 export default function Wishlist() {
   const navigate = useNavigate();
+
+  /* --- STATE DECLARATIONS --- */
+  // foods: Array of matching food items determined by active favorites list
   const [foods, setFoods] = useState([]);
+  // favorites: List of IDs matching user liked foods
   const [favorites, setFavorites] = useState([]);
+  // cart: Current items loaded from localStorage cart array
   const [cart, setCart] = useState([]);
+  // loading: Controls visible loader screen
   const [loading, setLoading] = useState(true);
+  // showAllLiked: Toggles fullscreen grid modal showing all favorited items
   const [showAllLiked, setShowAllLiked] = useState(false);
 
+  /* --- EFFECTS & DATA FETCHING --- */
+
+  // Load wishlist database details and local storage cart values on mount
   useEffect(() => {
     loadWishlistData();
     loadCart();
   }, []);
 
+  /**
+   * loadCart: Retrieves items stored inside browser local storage cart keys.
+   */
   const loadCart = () => {
     const data = JSON.parse(localStorage.getItem("cart")) || [];
     setCart(data);
   };
 
+  /**
+   * loadWishlistData: Retrieves user's favorite IDs, downloads entire foods list, and keeps the overlap.
+   */
   const loadWishlistData = async () => {
     try {
       const token = await getToken();
@@ -56,6 +78,11 @@ export default function Wishlist() {
     }
   };
 
+  /* --- ACTIONS & HANDLERS --- */
+
+  /**
+   * toggleFavoriteFood: Syncs deletion of liked items back to backend database.
+   */
   const toggleFavoriteFood = async (foodId) => {
     try {
       const token = await getToken();
@@ -79,6 +106,9 @@ export default function Wishlist() {
     }
   };
 
+  /**
+   * updateQuantity: Appends, adjusts, or deletes item selections in local checkout cart database.
+   */
   const updateQuantity = (food, newQty) => {
     let currentCart = JSON.parse(localStorage.getItem("cart")) || [];
     const existingIndex = currentCart.findIndex((item) => item._id === food._id);
@@ -104,6 +134,11 @@ export default function Wishlist() {
 
   const getCartItem = (food) => cart.find((item) => item._id === food._id);
 
+  /* --- RENDERING HELPERS --- */
+
+  /**
+   * renderCartAction: Returns either add to cart buttons or quantity counters.
+   */
   const renderCartAction = (food) => {
     const cartItem = getCartItem(food);
     if (!cartItem) {
@@ -142,6 +177,9 @@ export default function Wishlist() {
     );
   };
 
+  /**
+   * renderWishlistCard: Renders standard card templates for liked foods list layout.
+   */
   const renderWishlistCard = (food, className = "") => (
     <motion.div
       key={food._id}
@@ -204,7 +242,10 @@ export default function Wishlist() {
   );
 
   return (
+    /* --- MAIN WISHLIST LAYOUT --- */
     <div className="max-w-7xl mx-auto w-full pb-10 px-2 sm:px-4 animate-fade-in">
+      
+      {/* WISHLIST MAIN HEADER AREA */}
       <div className="mb-8 animate-slide-in">
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -227,11 +268,13 @@ export default function Wishlist() {
         </div>
       </div>
 
+      {/* WISHLIST CARD CAROUSEL VIEWPORTS */}
       {loading ? (
         <div className="flex justify-center items-center py-20">
           <div className="w-12 h-12 border-4 border-brand-100 border-t-brand-500 rounded-full animate-spin" />
         </div>
       ) : foods.length === 0 ? (
+        /* Empty wishlist state indicator */
         <div className="flex flex-col items-center justify-center py-16 text-center bg-white dark:bg-slate-950 rounded-[2.5rem] border border-slate-100 dark:border-slate-800/60 shadow-sm">
           <div className="w-16 h-16 bg-slate-50 dark:bg-slate-900 rounded-2xl flex items-center justify-center mb-6 text-slate-400">
             <Heart size={32} />
@@ -245,6 +288,7 @@ export default function Wishlist() {
           </Button>
         </div>
       ) : (
+        /* Liked items display slider list */
         <div>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Liked Foods</h2>
@@ -258,6 +302,7 @@ export default function Wishlist() {
         </div>
       )}
 
+      {/* --- ALL WISHLIST ITEMS MODAL OVERLAY --- */}
       <AnimatePresence>
         {showAllLiked && (
           <div className="fixed inset-0 z-[1900] flex items-end justify-center bg-slate-950/60 backdrop-blur-sm sm:items-center sm:p-4">
@@ -284,6 +329,7 @@ export default function Wishlist() {
                 </button>
               </div>
 
+              {/* Grid content list of all liked products */}
               <div className="flex-1 overflow-y-auto p-4 sm:p-6">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   <AnimatePresence>{foods.map((food) => renderWishlistCard(food, "min-w-0"))}</AnimatePresence>
@@ -296,3 +342,4 @@ export default function Wishlist() {
     </div>
   );
 }
+

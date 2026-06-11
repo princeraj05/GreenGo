@@ -40,9 +40,19 @@ const MotionDiv = motion.div;
 
 const emptyAddress = { label: "Home", details: "", city: "", state: "", isPrimary: true };
 
+/**
+ * Profile Component
+ * 
+ * Manages user accounts details, addresses, favorite food lists, refer-a-friend links, active discount coupons,
+ * support contact tickets, and developer bio profiles.
+ */
 export default function Profile() {
   const navigate = useNavigate();
   const location = useLocation();
+
+  /* --- STATE DECLARATIONS --- */
+  
+  // form: Local form input controls mapping current customer info
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -55,22 +65,37 @@ export default function Profile() {
     password: "",
     hasPassword: false,
   });
+  // foods: Catalog of items matching favorites list IDs
   const [foods, setFoods] = useState([]);
+  // favorites: List of user liked items IDs
   const [favorites, setFavorites] = useState([]);
+  // coupons: Active coupon entities retrieved from backend
   const [coupons, setCoupons] = useState([]);
+  // contacts: Client message tickets log history
   const [contacts, setContacts] = useState([]);
+  // activeSection: Selected settings tab opened in slider overlay modal
   const [activeSection, setActiveSection] = useState(null);
+  // suggestion: Feedback ticket fields
   const [suggestion, setSuggestion] = useState({ subject: "", message: "" });
+  
+  // loaders & toggles
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [locationLoading, setLocationLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  
+  // developer profile variables
   const [developerPhotoIndex, setDeveloperPhotoIndex] = useState(0);
   const [developerFailedPhotos, setDeveloperFailedPhotos] = useState(() => new Set());
+  
+  // screen warnings & notifications
   const [message, setMessage] = useState("");
   const [msgType, setMsgType] = useState("");
 
+  /* --- MEMOIZED DERIVED VALUES --- */
+
+  // Candidate image paths for developer carousel slideshow
   const developerPhotoCandidates = useMemo(() => {
     const extensions = [".jpg", ".JPG", ".jpeg", ".JPEG", ".png", ".webp", ""];
     const numberedPhotos = Array.from({ length: 5 }, (_, index) => index + 1).flatMap((number) =>
@@ -79,6 +104,7 @@ export default function Profile() {
     return [...numberedPhotos, "/activeDeveloperPhoto.jpg"];
   }, []);
 
+  // Returns first available developer image that loaded successfully
   const activeDeveloperPhoto = useMemo(() => {
     if (developerFailedPhotos.size >= developerPhotoCandidates.length) return "";
     for (let offset = 0; offset < developerPhotoCandidates.length; offset += 1) {
@@ -89,10 +115,14 @@ export default function Profile() {
     return "";
   }, [developerFailedPhotos, developerPhotoCandidates, developerPhotoIndex]);
 
+  /* --- DATA FETCHING & LIFECYCLE --- */
+
+  // Load backend configurations on component mount
   useEffect(() => {
     loadProfileData();
   }, []);
 
+  // Sets up automatic photo rotations for developer profile slide deck
   useEffect(() => {
     const timer = setInterval(() => {
       setDeveloperPhotoIndex((current) => (current + 1) % developerPhotoCandidates.length);
@@ -100,6 +130,11 @@ export default function Profile() {
     return () => clearInterval(timer);
   }, [developerPhotoCandidates.length]);
 
+  /* --- ACTIONS & HANDLERS --- */
+
+  /**
+   * showMessage: Renders floating top alerts on forms.
+   */
   const showMessage = (text, type = "success") => {
     setMessage(text);
     setMsgType(type);
@@ -140,6 +175,9 @@ export default function Profile() {
     }));
   };
 
+  /**
+   * loadProfileData: Retrieves profile fields, food references, active coupons, and support requests.
+   */
   const loadProfileData = async () => {
     try {
       const token = await getToken();
@@ -238,6 +276,9 @@ export default function Profile() {
     });
   };
 
+  /**
+   * useCurrentLocation: Fetches browser coordinates and requests OpenStreetMap reverse lookup.
+   */
   const useCurrentLocation = () => {
     if (!navigator.geolocation) {
       showMessage("Location is not supported on this device.", "error");
@@ -292,6 +333,9 @@ export default function Profile() {
     /[^A-Za-z0-9]/.test(password)
   );
 
+  /**
+   * saveProfile: Syncs updated user settings and address updates to the server.
+   */
   const saveProfile = async (override = {}, options = {}) => {
     if (options.requirePassword && !form.hasPassword && !form.password) {
       showMessage("Please set password to complete profile.", "error");
@@ -350,6 +394,9 @@ export default function Profile() {
     }
   };
 
+  /**
+   * toggleFavoriteFood: Syncs dynamic food liking toggles.
+   */
   const toggleFavoriteFood = async (foodId) => {
     try {
       const token = await getToken();
@@ -364,11 +411,14 @@ export default function Profile() {
         setFavorites(data.favorites || []);
         showMessage("Favorites updated");
       }
-    } catch {
+    } catch (currentFail) {
       showMessage("Failed to update favorite", "error");
     }
   };
 
+  /**
+   * submitSuggestion: Submits contact message fields to admin inbox.
+   */
   const submitSuggestion = async () => {
     if (!suggestion.message.trim()) {
       showMessage("Please write your suggestion.", "error");
@@ -390,11 +440,14 @@ export default function Profile() {
       setSuggestion({ subject: "", message: "" });
       showMessage("Suggestion sent successfully");
       loadProfileData();
-    } catch {
+    } catch (err) {
       showMessage("Failed to send suggestion", "error");
     }
   };
 
+  /**
+   * confirmLogout: Removes session identifiers and redirects to auth portal.
+   */
   const confirmLogout = async () => {
     setShowLogoutConfirm(false);
     await clearSession();
@@ -413,9 +466,11 @@ export default function Profile() {
     { id: "developer", label: "About Developer", icon: User },
   ];
 
+  /* --- RENDER SECTION ROUTER --- */
   const renderSection = () => {
     if (!activeSection) return null;
 
+    // Edit Profile Modal Section
     if (activeSection === "edit") {
       return (
         <Section title="Edit Profile" onClose={() => setActiveSection(null)}>
@@ -466,6 +521,7 @@ export default function Profile() {
       );
     }
 
+    // Saved Addresses Modal Section
     if (activeSection === "addresses") {
       return (
         <Section title="Saved Addresses" onClose={() => setActiveSection(null)}>
@@ -509,6 +565,7 @@ export default function Profile() {
       );
     }
 
+    // Favorite Foods Modal Section
     if (activeSection === "favorites") {
       return (
         <Section title="My Favorite Foods" onClose={() => setActiveSection(null)}>
@@ -536,6 +593,7 @@ export default function Profile() {
       );
     }
 
+    // Refer & Earn Modal Section
     if (activeSection === "refer") {
       return (
         <Section title="Refer & Earn" onClose={() => setActiveSection(null)}>
@@ -561,6 +619,7 @@ export default function Profile() {
       );
     }
 
+    // Coupons Modal Section
     if (activeSection === "coupons") {
       return (
         <Section title="Coupons" onClose={() => setActiveSection(null)}>
@@ -584,6 +643,7 @@ export default function Profile() {
       );
     }
 
+    // Suggestions Modal Section
     if (activeSection === "suggestions") {
       return (
         <Section title="Suggestions" onClose={() => setActiveSection(null)}>
@@ -613,6 +673,7 @@ export default function Profile() {
       );
     }
 
+    // Help & Support Modal Section
     if (activeSection === "support") {
       return (
         <Section title="Help & Support" onClose={() => setActiveSection(null)}>
@@ -625,6 +686,7 @@ export default function Profile() {
       );
     }
 
+    // About GreenGo Modal Section
     if (activeSection === "about") {
       return (
         <Section title="About GreenGo" onClose={() => setActiveSection(null)}>
@@ -637,6 +699,7 @@ export default function Profile() {
       );
     }
 
+    // Developer Profile Section
     if (activeSection === "developer") {
       return (
         <Section title="About Developer" onClose={() => setActiveSection(null)}>
@@ -699,7 +762,11 @@ export default function Profile() {
 
   return (
     <div className="w-full max-w-5xl mx-auto pb-10 px-0 sm:px-4">
+      
+      {/* --- PROFILE CARD CONTAINER --- */}
       <div className="relative overflow-hidden bg-white dark:bg-slate-950 sm:rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-800 min-h-[calc(100vh-7rem)]">
+        
+        {/* Profile Header Details (Banner Area) */}
         <div className="bg-gradient-to-br from-emerald-50 to-white dark:from-emerald-950/20 dark:to-slate-950 px-5 pt-6 pb-7">
           <button
             type="button"
@@ -728,6 +795,7 @@ export default function Profile() {
           </div>
         </div>
 
+        {/* Validation Feedback Alert Messages */}
         {message && (
           <div className={`mx-5 mt-4 p-3 rounded-2xl flex items-center gap-2 font-bold text-sm ${msgType === "error" ? "bg-red-50 text-red-700 dark:bg-red-950/20 dark:text-red-300" : "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-300"}`}>
             {msgType === "error" ? <XCircle size={18} /> : <CheckCircle size={18} />}
@@ -735,6 +803,7 @@ export default function Profile() {
           </div>
         )}
 
+        {/* PROFILE COMPLETION PERCENT BAR */}
         <div className="mx-5 mt-4 rounded-3xl border border-emerald-100 bg-emerald-50/70 p-4 dark:border-emerald-900/40 dark:bg-emerald-950/20">
           {location.state?.profileRequired && (
             <p className="mb-3 text-sm font-black text-emerald-700 dark:text-emerald-300">
@@ -767,6 +836,7 @@ export default function Profile() {
           </div>
         </div>
 
+        {/* SETTINGS OPTION BUTTON LIST */}
         <div className="px-5 py-4">
           <div className="divide-y divide-slate-100 dark:divide-slate-800">
             {menuItems.map((item) => (
@@ -798,8 +868,10 @@ export default function Profile() {
         </div>
       </div>
 
+      {/* --- OVERLAY DETAILED VIEWS --- */}
       <AnimatePresence>{renderSection()}</AnimatePresence>
 
+      {/* --- LOGOUT CONFIRMATION POPUP --- */}
       {showLogoutConfirm && (
         <div className="fixed inset-0 z-[2200] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-950/65 backdrop-blur-sm" onClick={() => setShowLogoutConfirm(false)} />
@@ -824,6 +896,7 @@ export default function Profile() {
   );
 }
 
+/* --- REUSABLE CARD OVERLAY MODAL WRAPPER --- */
 function Section({ title, children, onClose }) {
   return (
     <div className="fixed inset-0 z-[2100] flex items-end sm:items-center justify-center bg-slate-950/55 backdrop-blur-sm p-0 sm:p-4">
@@ -845,6 +918,7 @@ function Section({ title, children, onClose }) {
   );
 }
 
+/* --- REUSABLE FORM FIELD WRAPPER --- */
 function Field({ label, children }) {
   return (
     <label className="block">
@@ -854,6 +928,7 @@ function Field({ label, children }) {
   );
 }
 
+/* --- REUSABLE EMPTY STATE COMPONENT --- */
 function EmptyText({ text }) {
   return (
     <div className="rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 p-8 text-center">
@@ -862,6 +937,7 @@ function EmptyText({ text }) {
   );
 }
 
+/* --- REUSABLE DEVELOPER INFORMATION CARD --- */
 function DeveloperInfo({ label, value }) {
   return (
     <div className="rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 p-4">
@@ -871,6 +947,7 @@ function DeveloperInfo({ label, value }) {
   );
 }
 
+/* --- REUSABLE SUPPORT DETAIL ROW --- */
 function SupportRow({ icon: Icon, title, detail }) {
   const RowIcon = Icon;
   return (
@@ -885,4 +962,3 @@ function SupportRow({ icon: Icon, title, detail }) {
     </div>
   );
 }
-

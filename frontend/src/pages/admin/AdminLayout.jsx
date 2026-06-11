@@ -11,27 +11,59 @@ import { clearSession } from "../../utils/authStorage";
 import { cn } from "../../utils/cn";
 import { useTheme } from "../../context/ThemeContext";
 
+// Framer Motion helper for animated layout divisions
 const MotionDiv = motion.div;
 
+/**
+ * AdminLayout Component
+ * Serves as the overarching template frame for the Admin portal.
+ * Houses the Desktop Sidebar, Mobile Topbar/Bottom Navigation,
+ * responsive theme management, and authenticates & tracks active admin info.
+ */
 export default function AdminLayout() {
   const navigate = useNavigate();
+
+  // ==========================================
+  // STATE DECLARATIONS
+  // ==========================================
+
+  // Admin user's name display state
   const [name, setName] = useState("");
+
+  // Drawer / Mobile sidebar opening toggle state
   const [open, setOpen] = useState(false);
+
+  // Tracks count of unread admin notifications
   const [unreadCount, setUnreadCount] = useState(0);
+
+  // Application theme hooks context (dark vs light mode toggle)
   const { theme, toggleTheme } = useTheme();
+
+  // Flag to reveal or hide Logout Confirmation dialog popup
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
+  // Mobile Bottom Navigation display flags on scroll triggers
+  const [showBottomNav, setShowBottomNav] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
+  // Mobile bottom-sheet 'More' options drawer toggle
+  const [moreOpen, setMoreOpen] = useState(false);
+
+  // ==========================================
+  // EVENT HANDLERS & ROUTINES
+  // ==========================================
+
+  /**
+   * Finalizes the admin logout procedure. Clears state session keys
+   * and redirects user back to Login page.
+   */
   const confirmLogout = async () => {
     setShowLogoutConfirm(false);
     await clearSession();
     navigate("/login", { replace: true });
   };
 
-  // Mobile Bottom Navigation and Drawer State
-  const [showBottomNav, setShowBottomNav] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
-  const [moreOpen, setMoreOpen] = useState(false);
-
+  // Listens to scroll events to hide the Mobile Bottom Nav bar on scroll-down
   useEffect(() => {
     const handleScroll = () => {
       if (typeof window !== "undefined") {
@@ -48,6 +80,9 @@ export default function AdminLayout() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
 
+  /**
+   * Loads authenticated admin details (e.g. name, role) from API
+   */
   const loadAdmin = useCallback(async () => {
     const token = await getToken();
     if (window.diagnostics) {
@@ -86,6 +121,9 @@ export default function AdminLayout() {
     }
   }, []);
 
+  /**
+   * Fetches admin notifications to update unread badge counts
+   */
   const loadAlerts = useCallback(async () => {
     const token = await getToken();
     if (!token) return;
@@ -105,6 +143,7 @@ export default function AdminLayout() {
     }
   }, []);
 
+  // Poll notifications periodically and load basic profiles on mount
   useEffect(() => { 
     if (window.diagnostics) {
       window.diagnostics.adminLayoutMounted = "YES";
@@ -119,6 +158,7 @@ export default function AdminLayout() {
     return () => clearInterval(timer);
   }, [loadAdmin, loadAlerts]);
 
+  // Sidebar Links config (Desktop layout views)
   const desktopNavLinks = [
     { to: "/admin", end: true, label: "Dashboard", icon: <LayoutDashboard size={20} /> },
     { to: "/admin/foods", label: "Manage Foods", icon: <UtensilsCrossed size={20} /> },
@@ -133,7 +173,7 @@ export default function AdminLayout() {
     { to: "/admin/settings", label: "Settings", icon: <Settings size={20} /> },
   ];
 
-  // Mobile navigation bottom bar buttons (max 5 buttons, with last one being 'More')
+  // Primary bottom navigation links config (Mobile viewport)
   const mobileNavLinks = [
     { to: "/admin", end: true, label: "Dashboard", icon: <LayoutDashboard size={20} /> },
     { to: "/admin/orders", label: "Orders", icon: <Package size={20} /> },
@@ -141,12 +181,13 @@ export default function AdminLayout() {
     { to: "/admin/users", label: "Users", icon: <Users size={20} /> },
   ];
 
+  // Helper trigger to handle logging out from the interface
   const handleLogout = () => {
     setMoreOpen(false);
     setShowLogoutConfirm(true);
   };
 
-  // List of links in the Mobile Bottom Sheet
+  // Additional drawer sheet options list configuration for mobile viewport overflow
   const moreSheetLinks = [
     { to: "/admin/contacts", label: "Messages", icon: <MessageSquare size={20} />, badge: unreadCount },
     { to: "/admin/notifications", label: "Notifications", icon: <Bell size={20} />, badge: unreadCount },
@@ -159,9 +200,10 @@ export default function AdminLayout() {
   ];
 
   return (
+    // Outer Layout Frame: grid fallback with custom dark/light theme switching variables
     <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 font-sans text-slate-900 dark:text-white transition-colors duration-300">
       
-      {/* Mobile Overlay (drawer closing toggle fallback) */}
+      {/* --- MOBILE DRAWER BACKDROP OVERLAY --- */}
       {open && (
         <div
           className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[900] md:hidden transition-opacity"
@@ -169,7 +211,8 @@ export default function AdminLayout() {
         />
       )}
 
-      {/* Desktop Sidebar (Always hidden on mobile, visible from md up) */}
+      {/* --- DESKTOP SIDEBAR --- */}
+      {/* Tailwind details: hidden md:flex forces display only on screens above MD breakpoint */}
       <div className="fixed top-0 left-0 bottom-0 w-72 z-[1000] hidden md:flex flex-col bg-slate-950 border-r border-slate-800 shadow-2xl">
         {/* Brand */}
         <div className="px-8 pt-8 pb-6 border-b border-slate-800/50">
@@ -217,7 +260,7 @@ export default function AdminLayout() {
           ))}
         </nav>
 
-        {/* Logout */}
+        {/* Logout button at bottom of Sidebar */}
         <div className="px-6 pb-8 pt-4">
           <button
             onClick={() => setShowLogoutConfirm(true)}
@@ -228,11 +271,14 @@ export default function AdminLayout() {
           </button>
         </div>
       </div>
+      {/* --- END DESKTOP SIDEBAR --- */}
 
-      {/* Main Content Area */}
+      {/* --- MAIN CONTENT FRAME --- */}
+      {/* Tailwind details: md:pl-72 pushes the section to match the sidebar width on desktop */}
       <div className="flex-1 flex flex-col w-full md:pl-72 min-h-screen transition-all duration-300 relative bg-slate-50 dark:bg-slate-950">
         
-        {/* Mobile Topbar */}
+        {/* --- MOBILE TOPBAR --- */}
+        {/* Hidden on desktop using md:hidden */}
         <div className="sticky top-0 z-40 h-16 flex items-center justify-between px-4 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 md:hidden transition-colors duration-300">
           <div className="flex items-center gap-2 min-w-0">
             <div className="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center shadow-md shrink-0">
@@ -259,8 +305,10 @@ export default function AdminLayout() {
             </button>
           </div>
         </div>
+        {/* --- END MOBILE TOPBAR --- */}
 
-        {/* Topbar for Desktop viewports */}
+        {/* --- DESKTOP TOPBAR --- */}
+        {/* Visible only on screens above MD breakpoint */}
         <div className="sticky top-0 z-30 h-20 hidden md:flex items-center justify-between px-6 lg:px-10 bg-white/70 dark:bg-slate-950 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-950 shadow-sm dark:shadow-none transition-colors duration-300">
           <h2 className="text-xl font-bold text-slate-800 dark:text-white tracking-tight">Admin Portal</h2>
 
@@ -286,14 +334,16 @@ export default function AdminLayout() {
                 )}
              </button>
              
-             {/* Profile Avatar (Small) */}
+             {/* Profile Avatar Display */}
              <div className="w-10 h-10 rounded-full bg-brand-100 dark:bg-brand-900/55 text-brand-600 dark:text-brand-400 shadow-sm flex items-center justify-center cursor-pointer">
                 <span className="font-bold text-sm">{name ? name.charAt(0).toUpperCase() : 'A'}</span>
              </div>
           </div>
         </div>
+        {/* --- END DESKTOP TOPBAR --- */}
 
-        {/* Dynamic Page Content - adjusted padding at the bottom for mobile */}
+        {/* --- DYNAMIC PAGE OUTLET --- */}
+        {/* Relative placement containing backdrop blobs */}
         <div className="flex-1 p-4 sm:p-6 lg:p-10 pb-24 md:pb-10 relative overflow-hidden bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
            {/* Decorative Background Elements */}
            <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-brand-50 dark:bg-transparent rounded-full blur-[120px] -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
@@ -303,10 +353,13 @@ export default function AdminLayout() {
              <Outlet />
            </div>
         </div>
+        {/* --- END DYNAMIC PAGE OUTLET --- */}
 
       </div>
+      {/* --- END MAIN CONTENT FRAME --- */}
 
-      {/* Admin Mobile Floating Bottom Navigation */}
+      {/* --- MOBILE FLOATING BOTTOM NAVIGATION --- */}
+      {/* Uses translate-y transition logic for showing/hiding bottom nav elements during active scrolls */}
       <div className={cn(
         "fixed bottom-4 left-4 right-4 z-[800] transition-all duration-300 transform md:hidden",
         showBottomNav ? "translate-y-0 opacity-100" : "translate-y-28 opacity-0 pointer-events-none"
@@ -329,7 +382,7 @@ export default function AdminLayout() {
             </NavLink>
           ))}
 
-          {/* Plus / More Options Button */}
+          {/* Plus / More Options trigger */}
           <button
             onClick={() => setMoreOpen(true)}
             className={cn(
@@ -342,12 +395,13 @@ export default function AdminLayout() {
           </button>
         </nav>
       </div>
+      {/* --- END MOBILE FLOATING BOTTOM NAVIGATION --- */}
 
-      {/* Mobile Drawer (Bottom Sheet Options) */}
+      {/* --- MOBILE MORE OPTIONS DRAWER / BOTTOM SHEET --- */}
       <AnimatePresence>
         {moreOpen && (
           <>
-            {/* Backdrop */}
+            {/* Dark sheet background mask overlay */}
             <MotionDiv
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -356,7 +410,7 @@ export default function AdminLayout() {
               className="fixed inset-0 bg-slate-950/65 backdrop-blur-sm z-[900] md:hidden"
             />
 
-            {/* Bottom Sheet Drawer */}
+            {/* Slide up panel sheet container */}
             <MotionDiv
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
@@ -367,7 +421,7 @@ export default function AdminLayout() {
               {/* Drag Handle Decoration */}
               <div className="w-12 h-1 bg-slate-800 rounded-full mx-auto mb-6" />
 
-              {/* Header */}
+              {/* Header inside drawer */}
               <div className="flex items-center justify-between mb-8 px-2">
                 <h3 className="text-lg font-black tracking-tight flex items-center gap-2">
                   <span className="text-brand-400">⚡</span> More Functions
@@ -380,7 +434,7 @@ export default function AdminLayout() {
                 </button>
               </div>
 
-              {/* Grid Content */}
+              {/* Grid content displaying links in a 3-column layout */}
               <div className="grid grid-cols-3 gap-y-8 gap-x-4 mb-4">
                 {moreSheetLinks.map(({ label, icon, to, action, badge, danger }) => {
                   const content = (
@@ -426,16 +480,17 @@ export default function AdminLayout() {
           </>
         )}
       </AnimatePresence>
+      {/* --- END MOBILE MORE OPTIONS DRAWER / BOTTOM SHEET --- */}
 
-      {/* Confirmation Dialog Modal */}
+      {/* --- CONFIRMATION DIALOG MODAL --- */}
       {showLogoutConfirm && (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
-          {/* Backdrop */}
+          {/* Backdrop element click-dismissible */}
           <div 
             className="fixed inset-0 bg-slate-950/65 backdrop-blur-sm"
             onClick={() => setShowLogoutConfirm(false)}
           />
-          {/* Dialog */}
+          {/* Main prompt box container */}
           <div className="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 max-w-sm w-full shadow-2xl animate-fade-in text-center">
             <div className="w-16 h-16 rounded-2xl bg-red-50 dark:bg-red-950/20 text-red-500 flex items-center justify-center mx-auto mb-6">
               <LogOut size={32} />
@@ -463,11 +518,15 @@ export default function AdminLayout() {
           </div>
         </div>
       )}
+      {/* --- END CONFIRMATION DIALOG MODAL --- */}
     </div>
   );
 }
 
+/**
+ * UserAvatar Helper Component
+ * Simply yields the uppercase initial letter of the active admin's name
+ */
 function UserAvatar({name}) {
   return <span className="text-brand-400 font-bold">{name ? name.charAt(0).toUpperCase() : 'A'}</span>;
 }
-

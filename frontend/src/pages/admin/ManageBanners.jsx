@@ -3,9 +3,24 @@ import { getToken } from "../../utils/getToken";
 import { getImageUrl } from "../../utils/getApiUrl";
 import Button from "../../components/ui/Button";
 
+/**
+ * ManageBanners Component
+ * Interface allowing administrators to upload, customize, prioritize,
+ * and toggle promotional sliding image banners on the store homepage.
+ */
 export default function ManageBanners() {
+  
+  // ==========================================
+  // STATE DECLARATIONS
+  // ==========================================
+
+  // Array of promotional banner records fetched from the database
   const [banners, setBanners] = useState([]);
+
+  // Loading indicator for async operations
   const [loading, setLoading] = useState(true);
+
+  // Form input field configurations for creating or updating a banner
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -14,13 +29,25 @@ export default function ManageBanners() {
     displayOrder: 0,
     active: true
   });
+
+  // Local state container for files selected via standard file inputs
   const [imageFile, setImageFile] = useState(null);
+
+  // Stores the target banner ID being actively edited
   const [editingId, setEditingId] = useState(null);
 
+  // ==========================================
+  // DATA FETCHING & EVENT HANDLERS
+  // ==========================================
+
+  // Load all banners on initial component rendering
   useEffect(() => {
     loadBanners();
   }, []);
 
+  /**
+   * Fetches all banners (both active and inactive status) for admin management views.
+   */
   const loadBanners = async () => {
     try {
       const token = await getToken();
@@ -36,6 +63,10 @@ export default function ManageBanners() {
     }
   };
 
+  /**
+   * Handles submission of the create/edit banner form.
+   * Utilizes FormData API to handle binary image file uploads.
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -79,6 +110,9 @@ export default function ManageBanners() {
     }
   };
 
+  /**
+   * Loads banner details into the form state for editing.
+   */
   const handleEdit = (banner) => {
     setEditingId(banner._id);
     setForm({
@@ -92,6 +126,9 @@ export default function ManageBanners() {
     setImageFile(null);
   };
 
+  /**
+   * Requests deletion of a specific banner.
+   */
   const handleDelete = async (id) => {
     if (!confirm("Delete this banner?")) return;
     try {
@@ -108,6 +145,9 @@ export default function ManageBanners() {
     }
   };
 
+  /**
+   * Resets all form fields and editing configurations.
+   */
   const resetForm = () => {
     setEditingId(null);
     setForm({
@@ -122,14 +162,22 @@ export default function ManageBanners() {
   };
 
   return (
+    // Outer wrap containing entry anim parameters
     <div className="animate-fade-in">
+      
+      {/* --- HEADER SECTION --- */}
       <div className="mb-8 animate-slide-in">
         <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Manage Banners</h1>
         <p className="text-slate-500 dark:text-slate-400 mt-1">Add, edit, or delete sliding offer banners for GoGreen Home Page.</p>
       </div>
+      {/* --- END HEADER SECTION --- */}
 
+      {/* --- SPLIT GRID PANELS --- */}
+      {/* Uses 1 column on smaller viewport screens and 3 columns on desktop 'lg' screens */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Create/Edit Form */}
+        
+        {/* --- FORM PANEL SECTION --- */}
+        {/* Col span 1 handles form dimensions */}
         <div className="lg:col-span-1 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm h-fit transition-colors">
           <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
             {editingId ? "Edit Banner" : "New Banner"}
@@ -232,8 +280,10 @@ export default function ManageBanners() {
             </div>
           </form>
         </div>
+        {/* --- END FORM PANEL SECTION --- */}
 
-        {/* Banners List */}
+        {/* --- BANNERS CARD LIST PANEL --- */}
+        {/* Col span 2 displays banners list layout */}
         <div className="lg:col-span-2">
           {loading ? (
             <p className="text-slate-500 dark:text-slate-400">Loading banners...</p>
@@ -242,6 +292,7 @@ export default function ManageBanners() {
               {banners.map((banner) => (
                 <div key={banner._id} className={`p-4 rounded-3xl border-2 transition-all flex flex-col justify-between ${banner.active ? 'border-brand-100 dark:border-brand-900/50 bg-brand-50/10 dark:bg-brand-950/10' : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/20'}`}>
                   <div>
+                    {/* Banner Card Header Details */}
                     <div className="relative h-32 rounded-2xl overflow-hidden mb-3 bg-slate-950/20">
                       <img
                         src={getImageUrl(banner.image)}
@@ -268,6 +319,7 @@ export default function ManageBanners() {
                     )}
                   </div>
 
+                  {/* Banner Card Footer controls */}
                   <div className="flex justify-between items-center mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
                     <span className="text-xs font-bold text-slate-400">Btn: "{banner.buttonText}"</span>
                     <div className="flex gap-2">
@@ -290,6 +342,8 @@ export default function ManageBanners() {
             </div>
           )}
         </div>
+        {/* --- END BANNERS CARD LIST PANEL --- */}
+
       </div>
     </div>
   );

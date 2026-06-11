@@ -9,27 +9,40 @@ import { clearSession } from "../../utils/authStorage";
 import { cn } from "../../utils/cn";
 import { useTheme } from "../../context/ThemeContext";
 
+/**
+ * UserLayout Component
+ * 
+ * Provides layout wrapper for storefront modules. Manages desktop sidebars,
+ * scroll-reactive mobile bottom nav bars, user profiles name lookups, and session management.
+ */
 export default function UserLayout() {
   const navigate = useNavigate();
+
+  /* --- STATE DECLARATIONS --- */
+  // name: Logged-in profile user's name
   const [name, setName] = useState("");
+  // open: Triggers mobile slide-up sheets
   const [open, setOpen] = useState(false);
+  // theme: Current dark/light context state
   const { theme, toggleTheme } = useTheme();
+  // showLogoutConfirm: Triggers logout confirmation dialog box
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  // isLoggedIn: Authenticated flag matching active sessions in local storage
   const isLoggedIn = Boolean(localStorage.getItem("token") && localStorage.getItem("auth_state") === "logged_in");
 
-  const confirmLogout = async () => {
-    setShowLogoutConfirm(false);
-    await clearSession();
-    navigate("/login", { replace: true });
-  };
-
   // Bottom Navigation state & badges
+  // showBottomNav: Toggles bottom nav on scrolls
   const [showBottomNav, setShowBottomNav] = useState(true);
+  // lastScrollY: Remembers previous window scroll pixel offset
   const [lastScrollY, setLastScrollY] = useState(0);
+  // cartCount: Quantity totals shown above Cart icons
   const [cartCount, setCartCount] = useState(0);
+  // pendingCount: Active order quantities shown above Orders icons
   const [pendingCount, setPendingCount] = useState(0);
 
-  // Scroll listener (depends on lastScrollY)
+  /* --- EFFECTS & LIFECYCLE --- */
+
+  // Scroll listener tracking scroll direction: hides bottom navigation on scroll down, reveals it on scroll up
   useEffect(() => {
     const handleScroll = () => {
       if (typeof window !== "undefined") {
@@ -48,6 +61,45 @@ export default function UserLayout() {
     };
   }, [lastScrollY]);
 
+  // Performs user details downloads, loads cart quantities, registers custom event triggers
+  useEffect(() => {
+    if (window.diagnostics) {
+      window.diagnostics.userLayoutMounted = "YES";
+      window.diagnostics.loadingState = "UserLayout Mounting";
+      window.diagnostics.addLog("UserLayout: mounted successfully");
+    }
+    queueMicrotask(() => {
+      loadUser();
+      updateCartCount();
+      loadPendingOrdersCount();
+    });
+
+    // Listen to custom cart updates
+    window.addEventListener("cart-updated", updateCartCount);
+
+    // Poll pending orders count
+    const interval = setInterval(loadPendingOrdersCount, 15000);
+
+    return () => {
+      window.removeEventListener("cart-updated", updateCartCount);
+      clearInterval(interval);
+    };
+  }, []);
+
+  /* --- SERVICE ACTION HANDLERS --- */
+
+  /**
+   * confirmLogout: Triggers session deletion logic.
+   */
+  const confirmLogout = async () => {
+    setShowLogoutConfirm(false);
+    await clearSession();
+    navigate("/login", { replace: true });
+  };
+
+  /**
+   * loadUser: Fetches active account information.
+   */
   const loadUser = async () => {
     const token = await getToken();
     if (window.diagnostics) {
@@ -86,12 +138,18 @@ export default function UserLayout() {
     }
   };
 
+  /**
+   * updateCartCount: Counts items inside the customer's cart list.
+   */
   const updateCartCount = () => {
     const data = JSON.parse(localStorage.getItem("cart")) || [];
     const totalItems = data.reduce((sum, item) => sum + (item.qty || 0), 0);
     setCartCount(totalItems);
   };
 
+  /**
+   * loadPendingOrdersCount: Evaluates orders still in transit to display on nav badges.
+   */
   const loadPendingOrdersCount = async () => {
     const token = await getToken();
     if (!token) return;
@@ -109,31 +167,7 @@ export default function UserLayout() {
     }
   };
 
-  // Initial mounts and updates (non-scrolling triggers)
-  useEffect(() => {
-    if (window.diagnostics) {
-      window.diagnostics.userLayoutMounted = "YES";
-      window.diagnostics.loadingState = "UserLayout Mounting";
-      window.diagnostics.addLog("UserLayout: mounted successfully");
-    }
-    queueMicrotask(() => {
-      loadUser();
-      updateCartCount();
-      loadPendingOrdersCount();
-    });
-
-    // Listen to custom cart updates
-    window.addEventListener("cart-updated", updateCartCount);
-
-    // Poll pending orders count
-    const interval = setInterval(loadPendingOrdersCount, 15000);
-
-    return () => {
-      window.removeEventListener("cart-updated", updateCartCount);
-      clearInterval(interval);
-    };
-  }, []);
-
+  /* --- NAVIGATION LINKS CONFIGS --- */
   const desktopNavLinks = [
     { to: "/user/menu", label: "Home", icon: <Home size={20} /> },
     { to: "/user/wishlist", label: "Wishlist", icon: <Heart size={20} /> },
@@ -158,9 +192,12 @@ export default function UserLayout() {
 
   return (
     <div className="flex min-h-screen bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
-      {/* Desktop Sidebar (Hidden on mobile) */}
+      
+      {/* --- 1. DESKTOP SIDEBAR NAVIGATION --- */}
+      {/* Tailwind: hidden md:flex holds sidebar drawer visible on larger desktop displays only */}
       <div className="fixed top-0 left-0 bottom-0 w-72 z-[1000] hidden md:flex flex-col bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 shadow-sm transition-colors duration-300">
-        {/* Brand */}
+        
+        {/* Brand Banner */}
         <div className="px-6 h-20 flex items-center justify-between border-b border-slate-100 dark:border-slate-800/50">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-md shadow-brand-500/20 overflow-hidden bg-white border border-brand-100 dark:border-brand-900 [&>span]:hidden">
@@ -178,7 +215,7 @@ export default function UserLayout() {
           </button>
         </div>
 
-        {/* User Info */}
+        {/* User profile identity header */}
         <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800/50">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-900 flex items-center justify-center border border-slate-200 dark:border-slate-800">
@@ -191,7 +228,7 @@ export default function UserLayout() {
           </div>
         </div>
 
-        {/* Nav Links */}
+        {/* Desktop navigation link block */}
         <nav className="flex-1 px-4 py-6 flex flex-col gap-2 overflow-y-auto custom-scrollbar">
           {desktopNavLinks.map(({ to, end, label, icon }) => (
             <NavLink
@@ -211,7 +248,7 @@ export default function UserLayout() {
           ))}
         </nav>
 
-        {/* Logout */}
+        {/* Logout toolbar CTA */}
         <div className="p-4 border-t border-slate-100 dark:border-slate-800/50">
           {isLoggedIn ? (
             <button
@@ -233,7 +270,8 @@ export default function UserLayout() {
         </div>
       </div>
 
-      {/* Main Content Area */}
+      {/* --- 2. MAIN WORKSPACE CONTAINER --- */}
+      {/* Tailwind: md:pl-72 shifts container content to prevent occlusion by the fixed desktop sidebar */}
       <div className="flex-1 flex flex-col w-full md:pl-72 min-h-screen transition-all duration-300">
         
         {/* Mobile Topbar */}
@@ -244,7 +282,6 @@ export default function UserLayout() {
             </div>
             <span className="font-extrabold text-slate-900 dark:text-white text-lg"><span className="text-brand-500">Green</span>GO</span>
           </div>
-          {/* Right actions (theme toggle + profile) */}
           <div className="flex items-center gap-2">
             <button
               onClick={toggleTheme}
@@ -262,7 +299,7 @@ export default function UserLayout() {
           </div>
         </div>
 
-        {/* Page Content - with additional padding-bottom on mobile to prevent occlusion by bottom nav */}
+        {/* Page Content Panel */}
         <div className="flex-1 p-4 sm:p-6 lg:p-8 pb-28 md:pb-8 overflow-x-hidden">
           <div className="w-full h-full max-w-7xl mx-auto animate-fade-in">
             <Outlet />
@@ -270,7 +307,8 @@ export default function UserLayout() {
         </div>
       </div>
 
-      {/* Modern Glassmorphic Bottom Navigation Bar (Mobile View) */}
+      {/* --- 3. FLOATING BOTTOM NAVIGATION BAR (MOBILE ONLY) --- */}
+      {/* Tailwind: fixed bottom-4 pins floating bar above bottom margins. md:hidden removes layout on larger displays */}
       <div className={cn(
         "fixed bottom-4 left-4 right-4 z-50 transition-all duration-300 transform md:hidden",
         showBottomNav ? "translate-y-0 opacity-100" : "translate-y-28 opacity-0 pointer-events-none"
@@ -310,6 +348,7 @@ export default function UserLayout() {
         </nav>
       </div>
 
+      {/* --- 4. MORE NAV LINKS SLIDE UP PANEL --- */}
       {open && (
         <div className="fixed inset-0 z-[900] md:hidden">
           <button
@@ -343,15 +382,15 @@ export default function UserLayout() {
         </div>
       )}
 
-      {/* Confirmation Dialog Modal */}
+      {/* --- 5. LOGOUT CONFIRMATION DIALOG MODAL --- */}
       {showLogoutConfirm && (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
-          {/* Backdrop */}
+          {/* Backdrop overlay */}
           <div 
             className="fixed inset-0 bg-slate-950/65 backdrop-blur-sm"
             onClick={() => setShowLogoutConfirm(false)}
           />
-          {/* Dialog */}
+          {/* Action Dialog Container */}
           <div className="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 max-w-sm w-full shadow-2xl animate-fade-in text-center">
             <div className="w-16 h-16 rounded-2xl bg-red-50 dark:bg-red-950/20 text-red-500 flex items-center justify-center mx-auto mb-6">
               <LogOut size={32} />

@@ -6,6 +6,7 @@ import { clearSession } from "../../utils/authStorage";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
 
+// Initial empty form structure template for the Profile setup
 const emptyForm = {
   name: "",
   phone: "",
@@ -18,14 +19,32 @@ const emptyForm = {
 };
 
 export default function DeliveryProfile() {
+  // --- REACT STATE & CUSTOM HOOKS ---
+  
+  // Navigation utility to change route paths
   const navigate = useNavigate();
+  
+  // State storing the database user profile details
   const [profile, setProfile] = useState(null);
+  
+  // Form input field attributes state mapping
   const [form, setForm] = useState(emptyForm);
+  
+  // Async status flag showing if the profile update API call is in progress
   const [saving, setSaving] = useState(false);
+  
+  // Geolocation lookup status indicator for GPS/reverse-geocoding loading states
   const [locationLoading, setLocationLoading] = useState(false);
+  
+  // Toast text holding success confirmation feedback
   const [message, setMessage] = useState("");
+  
+  // Toast text holding custom error warnings
   const [error, setError] = useState("");
 
+  // --- FORM VALIDATION UTILITIES ---
+  
+  // Evaluates if all essential form input details have been filled out properly
   const isComplete = useMemo(
     () => Boolean(
       String(form.name || "").trim() &&
@@ -36,6 +55,7 @@ export default function DeliveryProfile() {
     [form]
   );
 
+  // Regex utility check enforcing password strength conventions (length >= 6, includes letter, number, and special character)
   const isStrongPassword = (password = "") => (
     password.length >= 6 &&
     /[A-Za-z]/.test(password) &&
@@ -43,6 +63,9 @@ export default function DeliveryProfile() {
     /[^A-Za-z0-9]/.test(password)
   );
 
+  // --- API DATA FETCHING & EVENT HANDLERS ---
+
+  // Loads the profile of the logged-in delivery user and updates form fields
   async function loadProfile() {
     try {
       const res = await API.get("/api/users/me");
@@ -65,21 +88,25 @@ export default function DeliveryProfile() {
     }
   }
 
+  // Load user details when the component mounts
   useEffect(() => {
     Promise.resolve().then(loadProfile);
   }, []);
 
+  // Signs out the delivery partner, removes session credentials, and redirects to login
   const logout = async () => {
     await clearSession();
     navigate("/login", { replace: true });
   };
 
+  // Helper utility to show dynamic statuses that auto-dismiss in 3 seconds
   const showMessage = (text) => {
     setMessage(text);
     setError("");
     setTimeout(() => setMessage(""), 3000);
   };
 
+  // Triggers browser Geolocation APIs to reverse-geocode GPS coordinates via OpenStreetMap Nominatim API
   const useCurrentLocation = () => {
     if (!navigator.geolocation) {
       setError("Location services are not supported on this device or browser.");
@@ -116,6 +143,7 @@ export default function DeliveryProfile() {
     );
   };
 
+  // Submits updated parameters to `/api/users/profile` and fires a refresh event to update parent state templates
   const saveProfile = async () => {
     if (!isComplete) {
       setError("Please complete your name, phone number, address, and password.");
@@ -151,6 +179,7 @@ export default function DeliveryProfile() {
         password: "",
         hasPassword: Boolean(details.profileCompleted || form.password),
       }));
+      // Alert parent layouts/listeners that profile completion variables have updated
       window.dispatchEvent(new Event("delivery-profile-updated"));
       showMessage("Delivery profile updated successfully. Assigned orders will now be visible.");
     } catch (err) {
@@ -164,7 +193,11 @@ export default function DeliveryProfile() {
   const completedFromServer = Boolean(profile?.deliveryDetails?.profileCompleted);
 
   return (
+    // Outer content layout wrapper
     <div className="space-y-5 sm:space-y-6">
+      
+      {/* --- HEADER SECTION --- */}
+      {/* Display page titles */}
       <div>
         <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight leading-tight">Profile</h2>
         <p className="text-sm sm:text-base font-semibold text-slate-500 dark:text-slate-400 mt-1">
@@ -172,7 +205,12 @@ export default function DeliveryProfile() {
         </p>
       </div>
 
+      {/* --- MAIN PROFILE CARD --- */}
+      {/* Card container holding profile form items */}
       <div className="rounded-2xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 p-4 sm:p-5 lg:p-6 shadow-sm">
+        
+        {/* --- PROFILE AVATAR SUMMARY HEADER --- */}
+        {/* Profile identity avatar representation displaying dynamic initials & status badges */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-5 mb-5">
           <div className="flex items-center gap-3 sm:gap-4 min-w-0">
             <div className="shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-brand-500 text-white flex items-center justify-center text-2xl font-black">
@@ -193,6 +231,8 @@ export default function DeliveryProfile() {
           </span>
         </div>
 
+        {/* --- NOTIFICATION FEEDBACK STATUS ALERT --- */}
+        {/* Renders conditional banner for validation issues or transaction results */}
         {(message || error) && (
           <div className={`mb-5 rounded-2xl px-4 py-3 text-sm font-bold ${
             error
@@ -203,6 +243,8 @@ export default function DeliveryProfile() {
           </div>
         )}
 
+        {/* --- FORM CONFIGURATION INPUT FIELDS --- */}
+        {/* Layout grid configuration matching responsive dimensions (2 columns on desktops, 1 on small tablets) */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <Field label="Name" icon={User}>
             <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Your full name" />
@@ -237,6 +279,8 @@ export default function DeliveryProfile() {
           </div>
         </div>
 
+        {/* --- DELIVERY LOCATION ADDRESS & TEXT AREA SECTION --- */}
+        {/* Handles map geocoding controls, address descriptions, and coordinates mappings */}
         <div className="mt-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
             <div className="min-w-0">
@@ -261,6 +305,8 @@ export default function DeliveryProfile() {
           />
         </div>
 
+        {/* --- ACTION BUTTON SECTION --- */}
+        {/* Displays responsive row for updating profile attributes and logging out */}
         <div className="mt-5 grid grid-cols-1 sm:flex sm:flex-row gap-3">
           <Button onClick={saveProfile} disabled={saving} className="flex-1 rounded-2xl gap-2 py-3">
             <Save size={18} /> {saving ? "Saving..." : completedFromServer ? "Update Profile" : "Complete Profile"}
@@ -274,6 +320,7 @@ export default function DeliveryProfile() {
   );
 }
 
+// Sub-component defining wrapper label fields with dynamic icon headers and titles
 function Field({ label, icon: Icon, children }) {
   const FieldIcon = Icon;
   return (
@@ -284,4 +331,3 @@ function Field({ label, icon: Icon, children }) {
     </label>
   );
 }
-

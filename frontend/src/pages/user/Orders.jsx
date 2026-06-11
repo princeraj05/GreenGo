@@ -8,19 +8,39 @@ import Badge from "../../components/ui/Badge";
 import { getApiUrl, getImageUrl } from "../../utils/getApiUrl";
 import Button from "../../components/ui/Button";
 
+/**
+ * Orders Component
+ * 
+ * Lists customer food orders and enables real-time tracking, cancellation support within 5 minutes of placing,
+ * and reviewing dishes through a custom write/edit star rating feedback popup.
+ */
 export default function Orders() {
+  
+  /* --- STATE DECLARATIONS --- */
+  // orders: Array of customer checkout records retrieved from database
   const [orders, setOrders] = useState([]);
+  // loading: Manages page loading placeholders
   const [loading, setLoading] = useState(true);
+  // reviews: Reviews submitted by the logged-in customer
   const [reviews, setReviews] = useState([]);
 
-  // Modal States
+  /* --- MODAL STATE DECLARATIONS --- */
+  // reviewModalOpen: Displays feedback submission popup details
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  // selectedOrder: Tracks order reference being reviewed
   const [selectedOrder, setSelectedOrder] = useState(null);
+  // selectedFoodItem: Tracks dish item within order being graded
   const [selectedFoodItem, setSelectedFoodItem] = useState(null);
+  // rating: Current star grade selected (1 to 5)
   const [rating, setRating] = useState(5);
+  // reviewText: Message text input for reviews
   const [reviewText, setReviewText] = useState("");
+  // editingReviewId: Reference ID of feedback if updating existing reviews
   const [editingReviewId, setEditingReviewId] = useState(null);
 
+  /* --- EFFECTS & LIFECYCLE --- */
+
+  // Load orders and user reviews on initialization and poll data updates every 10 seconds
   useEffect(() => {
     loadOrders();
     loadUserReviews();
@@ -31,12 +51,21 @@ export default function Orders() {
     return () => clearInterval(t);
   }, []);
 
+  /* --- ACTIONS, HELPERS & SERVICE FLOWS --- */
+
+  /**
+   * canCancel: Determines if an order can be cancelled by verifying it was created
+   * less than 5 minutes ago and has not reached preparation or delivery stages.
+   */
   const canCancel = (o) => {
     if (["Delivered", "Out for Delivery", "Cancelled"].includes(o.status)) return false;
     const timeDiff = Date.now() - new Date(o.createdAt).getTime();
     return timeDiff <= 5 * 60 * 1000;
   };
 
+  /**
+   * handleCancelOrder: Submits cancellation request to server and refreshes logs.
+   */
   const handleCancelOrder = async (orderId) => {
     if (!window.confirm("Are you sure you want to cancel this order?")) return;
     try {
@@ -56,6 +85,9 @@ export default function Orders() {
     }
   };
 
+  /**
+   * loadUserReviews: Pulls previous reviews posted by the current customer account.
+   */
   const loadUserReviews = async () => {
     try {
       const token = await getToken();
@@ -69,6 +101,9 @@ export default function Orders() {
     }
   };
 
+  /**
+   * handleOpenWriteReview: Initializes empty rating input values for writing a new review.
+   */
   const handleOpenWriteReview = (order, item) => {
     setSelectedOrder(order);
     setSelectedFoodItem(item);
@@ -78,6 +113,9 @@ export default function Orders() {
     setReviewModalOpen(true);
   };
 
+  /**
+   * handleOpenEditReview: Populates values for modifying an existing review.
+   */
   const handleOpenEditReview = (review, order, item) => {
     setSelectedOrder(order);
     setSelectedFoodItem(item);
@@ -87,6 +125,9 @@ export default function Orders() {
     setReviewModalOpen(true);
   };
 
+  /**
+   * handleSubmitReview: Submits new feedback or pushes updates to existing reviews.
+   */
   const handleSubmitReview = async () => {
     if (!reviewText.trim()) return;
     try {
@@ -123,6 +164,9 @@ export default function Orders() {
     }
   };
 
+  /**
+   * handleDeleteReview: Deletes a review from the database.
+   */
   const handleDeleteReview = async (reviewId) => {
     if (!window.confirm("Are you sure you want to delete this review?")) return;
     try {
@@ -140,6 +184,9 @@ export default function Orders() {
     }
   };
 
+  /**
+   * loadOrders: Requests orders list for active customer.
+   */
   const loadOrders = async () => {
     try {
       const token = await getToken();
@@ -158,6 +205,9 @@ export default function Orders() {
     }
   };
 
+  /**
+   * getProgress: Maps text statuses to width percentages for tracker lines.
+   */
   const getProgress = (status) => {
     if (status === "Delivered") return 100;
     if (status === "Out for Delivery") return 75;
@@ -166,6 +216,9 @@ export default function Orders() {
     return 25; // Pending
   };
 
+  /**
+   * getStatusIcon: Selects tracking icon based on status string.
+   */
   const getStatusIcon = (status) => {
     if (status === "Delivered") return <CheckCircle size={16} />;
     if (status === "Out for Delivery") return <Truck size={16} />;
@@ -183,7 +236,10 @@ export default function Orders() {
   }
 
   return (
+    /* --- MAIN PAGE WRAPPER --- */
     <div className="max-w-5xl mx-auto w-full pb-10">
+      
+      {/* Page Title Header */}
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6 md:mb-10">
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
           <div className="w-10 h-10 sm:w-12 sm:h-12 bg-brand-50 dark:bg-brand-950/35 rounded-xl sm:rounded-2xl flex items-center justify-center text-brand-600 dark:text-brand-300 shrink-0">
@@ -194,7 +250,9 @@ export default function Orders() {
         <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm sm:text-base md:text-lg font-medium">Track your delicious food journey.</p>
       </motion.div>
 
+      {/* --- ORDERS STREAM --- */}
       {orders.length === 0 ? (
+        /* Empty feedback layout if orders empty */
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
           <Card className="text-center py-12 md:py-20 border-slate-100 rounded-3xl">
             <div className="w-16 h-16 sm:w-24 sm:h-24 bg-slate-50 dark:bg-slate-900 rounded-full flex items-center justify-center mx-auto mb-4 md:mb-6 text-slate-300 dark:text-slate-600">
@@ -215,6 +273,7 @@ export default function Orders() {
             >
               <Card className="p-4 sm:p-6 md:p-8 border-slate-100 rounded-3xl">
                 
+                {/* Order card header details */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 md:mb-8">
                   <div>
                     <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
@@ -228,7 +287,7 @@ export default function Orders() {
                   </Badge>
                 </div>
 
-                {/* TRACKER */}
+                {/* --- PROGRESS TRACKER BAR --- */}
                 <div className="mb-6 md:mb-10 relative">
                   <div className="overflow-hidden h-2.5 mb-3 text-xs flex rounded-full bg-slate-100 shadow-inner">
                     <motion.div 
@@ -246,6 +305,7 @@ export default function Orders() {
                   </div>
                 </div>
 
+                {/* --- ORDERED FOOD ITEMS CHECKLIST --- */}
                 <div className="bg-slate-50/50 dark:bg-slate-900/40 rounded-2xl p-1.5 mb-4 md:mb-6 border border-slate-100 dark:border-slate-800/60">
                   {o.items.map((i, iIdx) => (
                     <div key={iIdx} className="flex items-center gap-3 p-2.5 border-b border-slate-100 dark:border-slate-800/40 last:border-0 hover:bg-white dark:hover:bg-slate-900 rounded-xl transition-colors">
@@ -260,6 +320,7 @@ export default function Orders() {
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-0.5 text-xs font-medium">
                           <span className="text-slate-500">Qty: {i.qty}</span>
                           
+                          {/* Render review inputs ONLY if item delivery is confirmed */}
                           {o.status === "Delivered" && (() => {
                             const itemReview = reviews.find(r => String(r.orderId) === String(o._id) && String(r.foodId) === String(i.foodId));
                             if (itemReview) {
@@ -302,6 +363,7 @@ export default function Orders() {
                   ))}
                 </div>
 
+                {/* --- ORDER TOTALS & ACTIONS ROW --- */}
                 <div className="flex justify-between items-center border-t border-slate-100 dark:border-slate-800/60 pt-4 md:pt-6">
                   <div className="space-y-0.5">
                     <p className="text-slate-500 text-xs md:text-sm font-medium">
@@ -338,7 +400,7 @@ export default function Orders() {
         </div>
       )}
       
-      {/* ── WRITE/EDIT REVIEW MODAL ── */}
+      {/* --- WRITE/EDIT DISH REVIEW OVERLAY MODAL --- */}
       <AnimatePresence>
         {reviewModalOpen && selectedFoodItem && (
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[2000] flex items-center justify-center p-4">
@@ -368,7 +430,7 @@ export default function Orders() {
                   <p className="font-bold text-slate-800 dark:text-white text-base md:text-lg">{selectedFoodItem.name}</p>
                 </div>
 
-                {/* Rating selection */}
+                {/* Rating selection (Interactive Star Grid) */}
                 <div>
                   <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 text-center">Your Rating</h4>
                   <div className="flex gap-1.5 justify-center">
@@ -389,7 +451,7 @@ export default function Orders() {
                   </div>
                 </div>
 
-                {/* Text selection */}
+                {/* Review comments entry box */}
                 <div>
                   <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Review Comment</h4>
                   <textarea
@@ -402,7 +464,7 @@ export default function Orders() {
                 </div>
               </div>
 
-              {/* Submit */}
+              {/* Submit CTA toolbar */}
               <div className="mt-6 flex gap-2.5">
                 <Button
                   variant="secondary"
@@ -426,3 +488,4 @@ export default function Orders() {
     </div>
   );
 }
+

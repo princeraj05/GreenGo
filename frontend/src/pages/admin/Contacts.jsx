@@ -3,30 +3,70 @@ import { CheckCircle2, MessageCircle, Search, Send } from "lucide-react";
 import API from "../../api/axios";
 import { getToken } from "../../utils/getToken";
 
+/**
+ * Helper to format datetime stamps to readable 2-digit locale time strings.
+ */
 function formatTime(date) {
   if (!date) return "";
   return new Date(date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
+/**
+ * Helper to generate initials from a name (max 2 characters).
+ */
 function initialsFor(name = "User") {
   return name.trim().substring(0, 2).toUpperCase() || "U";
 }
 
+/**
+ * Helper to get the status text for email responses.
+ */
 function getEmailStatusText(message) {
   if (message.emailReplyStatus === "sent") return "Email sent";
   if (message.emailReplyStatus === "failed") return "Email failed";
   return "Email pending";
 }
 
+/**
+ * Contacts Component
+ * Manages customer queries and support messages in a live chat inbox format.
+ * Admins can filter contacts by search text, review conversation histories,
+ * and reply to pending messages directly via email/API integration.
+ */
 export default function Contacts() {
+  
+  // ==========================================
+  // STATE DECLARATIONS
+  // ==========================================
+  
+  // Entire list of messages fetched from the database
   const [contacts, setContacts] = useState([]);
+
+  // The unique identifier matching the selected user conversation
   const [selectedKey, setSelectedKey] = useState("");
+
+  // Dictionary keeping track of draft replies typed for each conversation key
   const [replyText, setReplyText] = useState({});
+
+  // Query state for search filter
   const [search, setSearch] = useState("");
+
+  // Sending status indicator for the reply submission trigger
   const [sending, setSending] = useState(false);
+
+  // Common UI error feedback container
   const [error, setError] = useState("");
+
+  // Ref container targeting the bottom scroll target in the chat window
   const chatEndRef = useRef(null);
 
+  // ==========================================
+  // DATA FETCHING & EVENT HANDLERS
+  // ==========================================
+
+  /**
+   * Fetches contact submissions from backend admin endpoints.
+   */
   async function loadContacts() {
     try {
       const token = await getToken();
@@ -40,10 +80,15 @@ export default function Contacts() {
     }
   }
 
+  // Load support submissions on initial mount
   useEffect(() => {
     loadContacts();
   }, []);
 
+  /**
+   * Memoized logic to group messages into conversations by email/uid.
+   * Calculates pending messages and sorts by the most recent conversation date.
+   */
   const conversations = useMemo(() => {
     const grouped = contacts.reduce((acc, contact) => {
       const key = String(contact.email || contact.uid || contact._id || "unknown").toLowerCase();
@@ -75,6 +120,9 @@ export default function Contacts() {
       .sort((a, b) => new Date(b.latest?.createdAt || 0) - new Date(a.latest?.createdAt || 0));
   }, [contacts]);
 
+  /**
+   * Memoized logic to filter conversations by matching name, email, or latest message text.
+   */
   const filteredConversations = useMemo(() => {
     const query = search.trim().toLowerCase();
     if (!query) return conversations;
@@ -83,6 +131,7 @@ export default function Contacts() {
     );
   }, [conversations, search]);
 
+  // Evaluates which conversation object is currently selected based on selectedKey
   const selectedConversation =
     filteredConversations.find((conversation) => conversation.key === selectedKey) ||
     conversations.find((conversation) => conversation.key === selectedKey) ||
@@ -90,16 +139,21 @@ export default function Contacts() {
     conversations[0] ||
     null;
 
+  // Auto-selects the first active conversation if no selectedKey is present
   useEffect(() => {
     if (!selectedKey && selectedConversation?.key) {
       setSelectedKey(selectedConversation.key);
     }
   }, [selectedConversation, selectedKey]);
 
+  // Auto-scrolls chat interface to the bottom whenever conversation messages change
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [selectedConversation?.messages]);
 
+  /**
+   * Sends the admin's reply message to the server for the current conversation.
+   */
   const sendReply = async () => {
     if (!selectedConversation) return;
 
@@ -128,6 +182,9 @@ export default function Contacts() {
     }
   };
 
+  /**
+   * Allows replying to support tickets via the Enter key.
+   */
   const handleKeyDown = (event) => {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
@@ -136,8 +193,14 @@ export default function Contacts() {
   };
 
   return (
+    // Main layouts wrapper. Employs responsive horizontal-to-vertical layout logic: flex-col with lg:flex-row
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 pb-10 lg:flex-row lg:gap-8">
+      
+      {/* --- LEFT HAND: COMPOSE REPLY FORM --- */}
+      {/* Tailwind details: flex-1 allows sharing horizontal screen space evenly on desktop */}
       <div className="flex-1">
+        
+        {/* Header section */}
         <div className="mb-6 md:mb-8">
           <h2 className="flex items-center gap-2.5 text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white md:text-4xl">
             <MessageCircle className="h-8 w-8 text-brand-500" />
@@ -148,8 +211,11 @@ export default function Contacts() {
           </p>
         </div>
 
+        {/* Search, Dropdown and Textarea Form controls */}
         <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-premium transition-colors dark:border-slate-800/60 dark:bg-slate-950 md:p-8">
           <div className="space-y-4">
+            
+            {/* Customer Search & Select section */}
             <div>
               <label className="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-300 sm:text-sm">
                 Customer
@@ -178,6 +244,7 @@ export default function Contacts() {
               )}
             </div>
 
+            {/* Admin Message Area input */}
             <div>
               <label className="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-300 sm:text-sm">
                 Message
@@ -195,12 +262,14 @@ export default function Contacts() {
               />
             </div>
 
+            {/* Error notifications */}
             {error && (
               <p className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-xs font-bold text-red-600 dark:border-red-900/40 dark:bg-red-950/20 dark:text-red-300">
                 {error}
               </p>
             )}
 
+            {/* Submit Button */}
             <button
               type="button"
               disabled={sending || !selectedConversation || !replyText[selectedConversation.key]?.trim()}
@@ -213,8 +282,13 @@ export default function Contacts() {
           </div>
         </div>
       </div>
+      {/* --- END LEFT HAND SECTION --- */}
 
+      {/* --- RIGHT HAND: SUPPORT LIVE INBOX CHAT WINDOW --- */}
+      {/* Tailwind details: fixed height (h-[450px] md:h-[600px]) coupled with flex-col overflow-hidden to support scrolling chat logs */}
       <div className="flex h-[450px] flex-1 flex-col overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-premium transition-colors dark:border-slate-800/60 dark:bg-slate-950 md:h-[600px]">
+        
+        {/* Inbox header status */}
         <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50 p-4 transition-colors dark:border-slate-800/60 dark:bg-slate-900/80 md:p-5">
           <h3 className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-slate-900 dark:text-white">
             <span className="relative flex h-2 w-2">
@@ -230,6 +304,7 @@ export default function Contacts() {
           )}
         </div>
 
+        {/* Live chat logs */}
         <div className="scrollbar-thin flex-1 space-y-4 overflow-y-auto bg-slate-50/50 p-4 dark:bg-slate-950/25 md:space-y-5 md:p-6">
           {!selectedConversation ? (
             <div className="flex h-full flex-col items-center justify-center gap-2 text-xs font-medium text-slate-400 dark:text-slate-500 sm:text-sm">
@@ -239,6 +314,8 @@ export default function Contacts() {
           ) : (
             selectedConversation.messages.map((contact) => (
               <div key={contact._id} className="flex animate-fade-in flex-col gap-3 md:gap-4">
+                
+                {/* --- CUSTOMER MESSAGE OUTLET --- */}
                 <div className="flex justify-end">
                   <div className="max-w-[85%] rounded-2xl rounded-tr-sm bg-brand-500 p-3.5 text-white shadow-md shadow-brand-500/10 sm:max-w-[80%]">
                     <div className="mb-1 flex items-center justify-end gap-1.5">
@@ -253,6 +330,7 @@ export default function Contacts() {
                   </div>
                 </div>
 
+                {/* --- ADMIN REPLY OUTLET --- */}
                 <div className="flex justify-start">
                   {contact.reply ? (
                     <div className="max-w-[85%] rounded-2xl rounded-tl-sm border border-slate-200/80 bg-white p-3.5 text-slate-800 shadow-sm transition-colors dark:border-slate-800/80 dark:bg-slate-900 dark:text-slate-200 sm:max-w-[80%]">
@@ -274,6 +352,7 @@ export default function Contacts() {
                       </div>
                     </div>
                   ) : (
+                    /* --- WAITING PLACEHOLDER --- */
                     <div className="flex items-center gap-2 rounded-2xl rounded-tl-sm border border-slate-200/80 bg-white p-3 text-slate-500 shadow-sm transition-colors dark:border-slate-800/80 dark:bg-slate-900 dark:text-slate-400">
                       <div className="flex items-center gap-1">
                         <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-brand-500 [animation-delay:-0.3s]" />
@@ -284,12 +363,16 @@ export default function Contacts() {
                     </div>
                   )}
                 </div>
+
               </div>
             ))
           )}
+          {/* Scroll anchor tag targeting the bottom boundary */}
           <div ref={chatEndRef} />
         </div>
       </div>
+      {/* --- END SUPPORT LIVE INBOX SECTION --- */}
+
     </div>
   );
 }

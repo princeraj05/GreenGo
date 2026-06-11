@@ -5,9 +5,22 @@ import { Bike, CheckCircle2, Clock3, IndianRupee, Package, Truck, UtensilsCrosse
 import { motion } from "framer-motion";
 import Card from "../../components/ui/Card";
 
+// Framer Motion helper for animated layout divisions
 const MotionDiv = motion.div;
 
+/**
+ * AdminDashboard Component
+ * Renders the dashboard page containing business performance analytics,
+ * daily order statistics, interactive charts for monthly revenue and daily orders,
+ * and a modal for active delivery boys tracking.
+ */
 export default function AdminDashboard() {
+  
+  // ==========================================
+  // STATE DECLARATIONS
+  // ==========================================
+  
+  // State for holding core dashboard statistics
   const [stats, setStats] = useState({
     users: 0,
     orders: 0,
@@ -22,14 +35,28 @@ export default function AdminDashboard() {
     todayCancelledOrders: 0,
     totalCancelledOrders: 0,
   });
+
+  // State to hold details of active delivery boys currently on duty
   const [activeDeliveryBoys, setActiveDeliveryBoys] = useState([]);
+
+  // State to control visibility of the Active Delivery Boys details Modal
   const [showDeliveryBoys, setShowDeliveryBoys] = useState(false);
+
+  // State for Recharts data inputs (Revenue per month, orders per day, and top food items)
   const [chartData, setChartData] = useState({
     revenueByMonth: [],
     ordersByDay: [],
     topFoods: []
   });
 
+  // ==========================================
+  // DATA FETCHING & EVENT HANDLERS
+  // ==========================================
+
+  /**
+   * Fetch dashboard statistics and analytics data from the backend APIs.
+   * Utilizes utility function 'getToken' for authentication.
+   */
   const loadStats = useCallback(async () => {
     try {
       const token = await getToken();
@@ -79,6 +106,7 @@ export default function AdminDashboard() {
         window.diagnostics.loadingState = "AdminDashboard: complete";
       }
 
+      // Populate dashboard counts and daily summaries
       setStats({
         users: data.totalCustomers || 0,
         orders: data.totalOrders || 0,
@@ -109,10 +137,12 @@ export default function AdminDashboard() {
     }
   }, []);
 
+  // Fetch dashboard data on component mount
   useEffect(() => {
     Promise.resolve().then(loadStats);
   }, [loadStats]);
 
+  // Static list configuration for generic high-level stats cards (not rendered but defined)
   const cards = [
     {
       label: "Total Users",
@@ -143,6 +173,8 @@ export default function AdminDashboard() {
       accent: "from-purple-500 to-purple-600"
     },
   ];
+
+  // Daily statistics card configuration including labels, icons, gradient badges and interactions
   const dailyCards = [
     { label: "Today's Orders", value: stats.todayOrders, icon: <Package size={28} className="text-blue-600" />, bg: "bg-blue-100", accent: "from-blue-500 to-blue-600" },
     { label: "Today's Revenue", value: `Rs.${stats.todayRevenue}`, icon: <IndianRupee size={28} className="text-emerald-600" />, bg: "bg-emerald-100", accent: "from-emerald-500 to-emerald-600" },
@@ -157,17 +189,23 @@ export default function AdminDashboard() {
   void cards;
 
   return (
+    // Main Container styling: Full width with bottom padding
     <div className="w-full pb-10">
-      {/* Header section */}
+      
+      {/* --- HEADER SECTION --- */}
+      {/* Tailwind classes: mb-6 md:mb-10 controls bottom margin spacing; tracking-tight enhances text aesthetics */}
       <MotionDiv initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6 md:mb-10">
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight">Overview</h1>
         <p className="text-slate-500 dark:text-slate-400 mt-1.5 md:mt-2 text-sm sm:text-base md:text-lg font-medium max-w-xl">Here is the latest snapshot of your business today.</p>
       </MotionDiv>
+      {/* --- END HEADER SECTION --- */}
 
-      {/* Stats Grid */}
+      {/* --- STATS GRID SECTION --- */}
+      {/* Tailwind classes: grid grid-cols-2 lg:grid-cols-4 sets a responsive layout with 2 columns on small screens and 4 columns on large screens. gap sizes ensure consistent spacing between cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 lg:gap-6">
         {dailyCards.map((card, i) => (
           <MotionDiv key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
+            {/* Card component acts as the layout container with custom group states and pulse indicator badges */}
             <Card className="relative overflow-hidden group border-slate-100 p-3.5 sm:p-5 md:p-6 min-h-[124px] sm:min-h-[150px] h-full">
               {card.action && (
                 <button type="button" onClick={card.action} className="absolute inset-0 z-10" aria-label={card.label} />
@@ -187,10 +225,13 @@ export default function AdminDashboard() {
           </MotionDiv>
         ))}
       </div>
+      {/* --- END STATS GRID SECTION --- */}
 
-      {/* Charts Section */}
+      {/* --- CHARTS SECTION --- */}
+      {/* Tailwind classes: grid grid-cols-1 lg:grid-cols-2 changes layouts from 1 column on screens below 'lg' breakpoint to 2 columns on larger screens */}
       <div className="mt-8 md:mt-10 grid grid-cols-1 lg:grid-cols-2 gap-5 md:gap-8">
-        {/* Revenue Chart */}
+        
+        {/* --- MONTHLY REVENUE CHART --- */}
         <MotionDiv initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
           <Card className="p-5 md:p-8 border-slate-100 h-full">
             <h2 className="text-base md:text-xl font-bold text-slate-900 dark:text-white mb-4 md:mb-6 flex items-center gap-2">
@@ -225,8 +266,9 @@ export default function AdminDashboard() {
             </div>
           </Card>
         </MotionDiv>
+        {/* --- END MONTHLY REVENUE CHART --- */}
 
-        {/* Orders Chart */}
+        {/* --- DAILY ORDERS CHART --- */}
         <MotionDiv initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }}>
           <Card className="p-5 md:p-8 border-slate-100 h-full">
             <h2 className="text-base md:text-xl font-bold text-slate-900 dark:text-white mb-4 md:mb-6 flex items-center gap-2">
@@ -255,8 +297,13 @@ export default function AdminDashboard() {
             </div>
           </Card>
         </MotionDiv>
-      </div>
+        {/* --- END DAILY ORDERS CHART --- */}
 
+      </div>
+      {/* --- END CHARTS SECTION --- */}
+
+      {/* --- ACTIVE DELIVERY BOYS MODAL --- */}
+      {/* Modal is displayed contextually overlaying screen using 'fixed' and high z-index 'z-[3000]' */}
       {showDeliveryBoys && (
         <div className="fixed inset-0 z-[3000] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
           <div className="w-full max-w-2xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-950">
@@ -309,6 +356,7 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+      {/* --- END ACTIVE DELIVERY BOYS MODAL --- */}
       
     </div>
   );

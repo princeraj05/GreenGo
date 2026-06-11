@@ -6,17 +6,43 @@ import Card from "../../components/ui/Card";
 import Input from "../../components/ui/Input";
 import { Edit3, Trash2, Megaphone, Calendar, X, AlertTriangle, Bell, CheckCircle } from "lucide-react";
 
+/**
+ * ManageNotifications Component
+ * Notification dispatch and administration hub. Allows admins to broadcast global alerts
+ * or promotional deals, manage active expiration schedules, update configurations, and 
+ * review live system-level admin notifications (such as new orders or contact requests).
+ */
 export default function ManageNotifications() {
   const navigate = useNavigate();
+
+  // ==========================================
+  // STATE DECLARATIONS
+  // ==========================================
+
+  // Array of alerts and announcements fetched from DB
   const [notifications, setNotifications] = useState([]);
+
+  // Form input field variables for drafting a notification
   const [form, setForm] = useState({ title: "", message: "", type: "info", expiresAt: "" });
+
+  // Holds the notification ID being edited, or null if creating new
   const [editingId, setEditingId] = useState(null);
+
+  // loading indicator for write operations
   const [loading, setLoading] = useState(false);
 
+  // ==========================================
+  // DATA FETCHING & EVENT HANDLERS
+  // ==========================================
+
+  // Fetch all alerts on mount
   useEffect(() => {
     loadNotifications();
   }, []);
 
+  /**
+   * Fetches all global announcements and system alerts from the database.
+   */
   const loadNotifications = async () => {
     try {
       const token = await getToken();
@@ -30,6 +56,9 @@ export default function ManageNotifications() {
     }
   };
 
+  /**
+   * Populates the form fields to edit a selected broadcast.
+   */
   const handleStartEdit = (n) => {
     setEditingId(n._id);
     setForm({
@@ -40,11 +69,17 @@ export default function ManageNotifications() {
     });
   };
 
+  /**
+   * Clears form inputs and exits edit mode.
+   */
   const handleCancelEdit = () => {
     setEditingId(null);
     setForm({ title: "", message: "", type: "info", expiresAt: "" });
   };
 
+  /**
+   * Handles form submission to create or edit a broadcast notification.
+   */
   const handleSend = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -85,6 +120,9 @@ export default function ManageNotifications() {
     }
   };
 
+  /**
+   * Deletes a broadcast notification.
+   */
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this broadcast?")) return;
     try {
@@ -105,6 +143,9 @@ export default function ManageNotifications() {
     }
   };
 
+  /**
+   * Opens/reads a notification, marking it as read and routing if needed.
+   */
   const handleOpenNotification = async (notification) => {
     try {
       const token = await getToken();
@@ -127,19 +168,27 @@ export default function ManageNotifications() {
   };
 
   return (
+    // Outer wrap container with bottom margins and animations
     <div className="animate-fade-in pb-10">
+      
+      {/* --- HEADER SECTION --- */}
       <div className="mb-6 md:mb-10">
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3 md:gap-4">
-          <div className="w-10 h-10 md:w-12 md:h-12 bg-emerald-50 dark:bg-emerald-950/30 rounded-2xl flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+          <div className="w-10 h-10 md:w-12 md:h-12 bg-emerald-50 dark:bg-emerald-950/30 rounded-2xl flex items-center justify-center text-emerald-600 dark:text-emerald-450 shrink-0">
             <Megaphone size={22} className="md:w-[26px] md:h-[26px]" />
           </div>
           Notification Center
         </h1>
         <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm sm:text-base md:text-lg font-medium">Broadcast offers and track live admin alerts for orders, messages, users, and birthdays.</p>
       </div>
+      {/* --- END HEADER SECTION --- */}
 
+      {/* --- SPLIT GRID PANELS --- */}
+      {/* Responsive layout containers: 1 column on mobile, changes to 2 unequal columns on desktop lg screens */}
       <div className="grid grid-cols-1 lg:grid-cols-[450px_1fr] gap-5 md:gap-8">
-        {/* Form panel */}
+        
+        {/* --- GLOBAL BROADCAST FORM PANEL --- */}
+        {/* Uses sticky top alignment constraints to remain anchored when scrolling lists */}
         <div>
           <Card className="p-6 md:p-8 border-slate-100 dark:border-slate-800/60 sticky top-24">
             <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6 border-b border-slate-100 dark:border-slate-800 pb-4">
@@ -212,8 +261,9 @@ export default function ManageNotifications() {
             </form>
           </Card>
         </div>
+        {/* --- END GLOBAL BROADCAST FORM PANEL --- */}
 
-        {/* List panel */}
+        {/* --- RECENT NOTIFICATIONS LIST PANEL --- */}
         <div>
           <Card className="p-6 md:p-8 border-slate-100 dark:border-slate-800/60 h-full flex flex-col">
             <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6 border-b border-slate-100 dark:border-slate-800 pb-4">
@@ -254,7 +304,7 @@ export default function ManageNotifications() {
                       </div>
                       <div className="flex flex-col items-end gap-2">
                         <span className={`text-[10px] px-2.5 py-0.5 rounded-full border font-black uppercase tracking-wider shrink-0 ${
-                          n.type === 'success' ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/30' :
+                          n.type === 'success' ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-450 border-emerald-100 dark:border-emerald-900/30' :
                           n.type === 'warning' ? 'bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-900/30' :
                           'bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-900/30'
                         }`}>{n.type}</span>
@@ -320,6 +370,8 @@ export default function ManageNotifications() {
             </div>
           </Card>
         </div>
+        {/* --- END RECENT NOTIFICATIONS LIST PANEL --- */}
+
       </div>
     </div>
   );

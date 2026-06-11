@@ -1,12 +1,35 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getToken } from "../../utils/getToken";
 
+/**
+ * FoodAnalytics Component
+ * Monitors menu item metrics, orders counts, revenue generated, and popularity scores.
+ * Provides features to dynamically toggle items as 'Featured' directly from the data.
+ */
 export default function FoodAnalytics() {
+  // Constant pagination page size increment
   const PAGE_SIZE = 30;
+
+  // ==========================================
+  // STATE DECLARATIONS
+  // ==========================================
+
+  // Array of food item analytical records
   const [foods, setFoods] = useState([]);
+
+  // Flag denoting active loading phase
   const [loading, setLoading] = useState(true);
+
+  // Number of items displayed in the list/table currently (pagination limit)
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
+  // ==========================================
+  // DATA FETCHING & EVENT HANDLERS
+  // ==========================================
+
+  /**
+   * Fetches analytical food metrics from backend.
+   */
   const loadFoodAnalytics = useCallback(async () => {
     try {
       const token = await getToken();
@@ -22,10 +45,14 @@ export default function FoodAnalytics() {
     }
   }, []);
 
+  // Triggers analytical data load on render
   useEffect(() => {
     loadFoodAnalytics();
   }, [loadFoodAnalytics]);
 
+  /**
+   * Toggles the featured (Today's Special) boolean on the given food item.
+   */
   const toggleFeatured = async (food) => {
     try {
       const token = await getToken();
@@ -42,21 +69,34 @@ export default function FoodAnalytics() {
       console.error(err);
     }
   };
+
+  // Memoized subset array containing items filtered by visibility limit
   const visibleFoods = useMemo(() => foods.slice(0, visibleCount), [foods, visibleCount]);
+
+  // Boolean state denoting if additional hidden list records are available
   const hasMoreFoods = visibleFoods.length < foods.length;
 
   return (
+    // Styling: Renders container fade-in transition
     <div className="animate-fade-in">
+      
+      {/* --- HEADER SECTION --- */}
       <div className="mb-8">
         <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Food Analytics</h1>
         <p className="text-slate-500 dark:text-slate-400 mt-1">Detailed performance metrics for your menu items.</p>
       </div>
+      {/* --- END HEADER SECTION --- */}
 
+      {/* --- ANALYTICS TABLE/LIST SECTION --- */}
+      {/* Responsive layout containers toggle table format vs grid items via breakpoints md:block / md:hidden */}
       <div className="bg-white dark:bg-slate-950 rounded-3xl border border-slate-100 dark:border-slate-800/60 shadow-sm overflow-hidden">
         {loading ? (
           <div className="p-8 text-center text-slate-500 dark:text-slate-400">Loading metrics...</div>
         ) : (
           <>
+          
+          {/* --- MOBILE DISPLAY LIST --- */}
+          {/* Displays as a responsive grid list on mobile screens (hidden above md breakpoint) */}
           <div className="grid gap-3 p-4 md:hidden">
             {visibleFoods.map((food) => (
               <div key={food._id} className="rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4">
@@ -83,6 +123,10 @@ export default function FoodAnalytics() {
               </div>
             ))}
           </div>
+          {/* --- END MOBILE DISPLAY LIST --- */}
+
+          {/* --- DESKTOP TABLE VIEW --- */}
+          {/* Visible starting from md breakpoint */}
           <div className="hidden overflow-x-auto md:block">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -122,6 +166,9 @@ export default function FoodAnalytics() {
               </tbody>
             </table>
           </div>
+          {/* --- END DESKTOP TABLE VIEW --- */}
+
+          {/* --- SHOW MORE FOOTER PAGINATION --- */}
           {hasMoreFoods && (
             <div className="border-t border-slate-100 dark:border-slate-800/60 p-4 text-center">
               <button
@@ -133,13 +180,21 @@ export default function FoodAnalytics() {
               </button>
             </div>
           )}
+          {/* --- END SHOW MORE FOOTER PAGINATION --- */}
+
           </>
         )}
       </div>
+      {/* --- END ANALYTICS TABLE/LIST SECTION --- */}
+
     </div>
   );
 }
 
+/**
+ * Metric Helper Component
+ * Simply displays analytical value summaries in grid boxes
+ */
 function Metric({ label, value }) {
   return (
     <div className="rounded-xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 p-3">

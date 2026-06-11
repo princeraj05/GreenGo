@@ -8,16 +8,40 @@ import Input from "../../components/ui/Input";
 import Badge from "../../components/ui/Badge";
 import Button from "../../components/ui/Button";
 
+/**
+ * ManageUsers Component
+ * Moderation and membership controls interface. Facilitates filtering registered 
+ * accounts by roles (customers vs delivery boys), blocking/unblocking accounts, 
+ * promoting accounts, and searching members by profile data fields.
+ */
 export default function ManageUsers({
   roleFilter = "all",
   title = "Manage Users",
   subtitle = "View and manage all registered users"
 }) {
+  // Pagination page size limit configuration
   const PAGE_SIZE = 30;
+
+  // ==========================================
+  // STATE DECLARATIONS
+  // ==========================================
+
+  // Array of user accounts retrieved from DB
   const [users, setUsers] = useState([]);
+
+  // Search filter query string input state
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Visible users count for pagination
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
+  // ==========================================
+  // DATA FETCHING & EVENT HANDLERS
+  // ==========================================
+
+  /**
+   * Fetches user accounts data.
+   */
   const loadUsers = useCallback(async () => {
     try {
       const token = await getToken();
@@ -26,8 +50,12 @@ export default function ManageUsers({
     } catch (err) { console.log(err); }
   }, []);
 
+  // Fetch users on component mount
   useEffect(() => { Promise.resolve().then(loadUsers); }, [loadUsers]);
 
+  /**
+   * Toggles the block/unblock status of a user.
+   */
   const toggleBlock = async (id, currentBlocked) => {
     try {
       const token = await getToken();
@@ -36,6 +64,9 @@ export default function ManageUsers({
     } catch (err) { console.log(err); }
   };
 
+  /**
+   * Modifies authorization role variables on the target user.
+   */
   const setUserRole = async (id, role) => {
     try {
       const token = await getToken();
@@ -44,6 +75,7 @@ export default function ManageUsers({
     } catch (err) { console.log(err); }
   };
 
+  // Memoized search-and-filter logic to compute user lists without unnecessary re-renders
   const filteredUsers = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     const roleFiltered = users.filter((user) => {
@@ -58,13 +90,19 @@ export default function ManageUsers({
       (u.email || u.phone || "").toLowerCase().includes(query)
     );
   }, [roleFilter, searchQuery, users]);
+
+  // Slices filtered list to match pagination visibleCount limit
   const visibleUsers = useMemo(() => filteredUsers.slice(0, visibleCount), [filteredUsers, visibleCount]);
+
+  // Denotes if more unrendered user rows exist
   const hasMoreUsers = visibleUsers.length < filteredUsers.length;
 
   return (
+    // Outer layout container
     <div className="w-full pb-10">
 
-      {/* Header */}
+      {/* --- HEADER & SEARCH BAR SECTION --- */}
+      {/* Responsive layout containers: layouts adjust from flex-col to sm:flex-row */}
       <div className="mb-6 md:mb-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
         <div className="flex items-center gap-3 sm:gap-4 min-w-0">
           <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center shadow-sm shrink-0">
@@ -92,7 +130,9 @@ export default function ManageUsers({
           />
         </div>
       </div>
+      {/* --- END HEADER & SEARCH BAR SECTION --- */}
 
+      {/* --- SUB-NAVIGATION BUTTONS --- */}
       <div className="mb-5 flex flex-wrap gap-2">
         <NavLink
           to="/admin/users/customers"
@@ -115,9 +155,13 @@ export default function ManageUsers({
           Delivery Boys
         </NavLink>
       </div>
+      {/* --- END SUB-NAVIGATION BUTTONS --- */}
 
-      {/* Table Card */}
+      {/* --- USERS MODERATION DATA SECTION --- */}
       <div>
+        
+        {/* --- MOBILE ONLY CARDS VIEW LIST --- */}
+        {/* Class 'md:hidden' hides this panel container on viewports wider than mobile screens */}
         <div className="grid gap-3 md:hidden">
           {visibleUsers.map((u) => {
             const isBlocked = u.blocked || u.status === "Blocked";
@@ -196,7 +240,10 @@ export default function ManageUsers({
             </Card>
           )}
         </div>
+        {/* --- END MOBILE CARDS VIEW LIST --- */}
 
+        {/* --- DESKTOP GRID TABLE VIEW --- */}
+        {/* Class 'hidden md:block' ensures table displays exclusively on desktop dimensions */}
         <Card className="border-slate-100 dark:border-slate-800/60 overflow-hidden p-0 bg-white dark:bg-slate-950">
           <div className="hidden overflow-x-auto md:block">
             <table className="min-w-[720px] md:min-w-full text-xs sm:text-sm">
@@ -306,6 +353,9 @@ export default function ManageUsers({
             )}
           </div>
         </Card>
+        {/* --- END DESKTOP GRID TABLE VIEW --- */}
+
+        {/* Dynamic Pagination Loading control */}
         {hasMoreUsers && (
           <div className="mt-5 flex justify-center">
             <Button
@@ -323,6 +373,10 @@ export default function ManageUsers({
   );
 }
 
+// ==========================================
+// TABLE PILL HELPER COMPONENT
+// ==========================================
+
 function InfoPill({ label, value }) {
   return (
     <div className="rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-3">
@@ -331,4 +385,3 @@ function InfoPill({ label, value }) {
     </div>
   );
 }
-

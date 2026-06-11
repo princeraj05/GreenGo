@@ -6,12 +6,20 @@ import { getApiUrl, getImageUrl } from "../../utils/getApiUrl";
 
 const API = getApiUrl();
 
+// Quick suggestions tags displayed underneath the search box when empty
 const quickPrompts = ["Light meals", "Need coffee ASAP", "Breakfast in bed", "Pizza cravings"];
 
+/* --- HELPERS & UTILITIES --- */
+
+// Lowercases and trims text to simplify search matches
 function normalize(value = "") {
   return String(value).toLowerCase().trim();
 }
 
+/**
+ * distanceRank: Scores how close a food item's text matches the search query.
+ * Lower scores denote closer matches (e.g. 0 for exact match, up to 5 for no prefix match).
+ */
 function distanceRank(food, query) {
   const name = normalize(food.name);
   const category = normalize(food.category);
@@ -25,28 +33,50 @@ function distanceRank(food, query) {
   return 5;
 }
 
+/**
+ * FoodSearch Component
+ * 
+ * Provides interactive search input and smart distance ranking for dishes, including autocomplete dropdown lists,
+ * category shortcut selection, veg filters, and a bottom floating cart preview toolbar.
+ */
 export default function FoodSearch() {
   const navigate = useNavigate();
+
+  /* --- STATE DECLARATIONS --- */
+  // searchParams: Controls the React Router query parameter ?q=... in the URL
   const [searchParams, setSearchParams] = useSearchParams();
+  // inputRef: Points directly to the Search Input Element for auto-focusing on mount
   const inputRef = useRef(null);
+  // foods: Array of products loaded from backend server
   const [foods, setFoods] = useState([]);
+  // cart: Array containing active checkout items from local storage
   const [cart, setCart] = useState([]);
+  // query: Current query search text in the input box
   const [query, setQuery] = useState(searchParams.get("q") || "");
+  // activeCategory: Controls the horizontal sub-category selector filters
   const [activeCategory, setActiveCategory] = useState("All");
+  // loading: Page spinner state while foods download from API
   const [loading, setLoading] = useState(true);
 
+  /* --- DATA FETCHING & EFFECTS --- */
+
+  // Runs on mount: Loads foods list, populates cart state, and focuses search input
   useEffect(() => {
     loadFoods();
     loadCart();
     setTimeout(() => inputRef.current?.focus(), 80);
   }, []);
 
+  // Syncs input query state with the browser location URL search parameter ?q=
   useEffect(() => {
     const next = query.trim();
     if (next) setSearchParams({ q: next }, { replace: true });
     else setSearchParams({}, { replace: true });
   }, [query, setSearchParams]);
 
+  /**
+   * loadFoods: Requests menu list from API.
+   */
   const loadFoods = async () => {
     try {
       const res = await fetch(`${API}/api/foods`);
@@ -58,10 +88,19 @@ export default function FoodSearch() {
     }
   };
 
+  /**
+   * loadCart: Retrieves items from LocalStorage and sets React state.
+   */
   const loadCart = () => {
     setCart(JSON.parse(localStorage.getItem("cart")) || []);
   };
 
+  /* --- EVENT HANDLERS --- */
+
+  /**
+   * updateQuantity: Modifies quantity for items in cart, saving updates in localStorage
+   * and notifying other components via the window event.
+   */
   const updateQuantity = (food, newQty) => {
     const currentCart = JSON.parse(localStorage.getItem("cart")) || [];
     const existingIndex = currentCart.findIndex((item) => item._id === food._id);
@@ -86,6 +125,9 @@ export default function FoodSearch() {
     window.dispatchEvent(new Event("cart-updated"));
   };
 
+  /* --- MEMOIZED DERIVED VALUES --- */
+
+  // Extracts unique categories list from foods for bubble representation
   const categories = useMemo(() => {
     const map = new Map();
     foods.forEach((food) => {
@@ -95,6 +137,7 @@ export default function FoodSearch() {
     return Array.from(map, ([name, image]) => ({ name, image }));
   }, [foods]);
 
+  // Builds fuzzy search suggestions sorted by distanceRank for autocomplete dropdowns
   const suggestions = useMemo(() => {
     const q = normalize(query);
     if (!q) return [];
@@ -109,6 +152,7 @@ export default function FoodSearch() {
     return [...dishSuggestions, ...categorySuggestions];
   }, [foods, categories, query]);
 
+  // Dynamically extracts categories that have dishes matching the typed query
   const matchingCategories = useMemo(() => {
     const q = normalize(query);
     const source = q
@@ -125,6 +169,7 @@ export default function FoodSearch() {
     return ["All", ...new Set([...source.map((food) => food.category || "Other"), ...derivedNames])].slice(0, 12);
   }, [foods, query]);
 
+  // Filters and sorts the foods list to show in grid based on query and selected category
   const visibleFoods = useMemo(() => {
     const q = normalize(query);
     return foods
@@ -137,12 +182,15 @@ export default function FoodSearch() {
       .sort((a, b) => distanceRank(a, query) - distanceRank(b, query) || Number(b.rating || 0) - Number(a.rating || 0));
   }, [foods, query, activeCategory]);
 
+  // If active category is excluded from new search match results, resets tag filters to "All"
   useEffect(() => {
     if (!matchingCategories.includes(activeCategory)) setActiveCategory("All");
   }, [matchingCategories, activeCategory]);
 
   const cartCount = cart.reduce((sum, item) => sum + Number(item.qty || 0), 0);
   const cartTotal = cart.reduce((sum, item) => sum + Number(item.price || 0) * Number(item.qty || 0), 0);
+
+  /* --- NAVIGATION & SELECTION HANDLERS --- */
 
   const chooseSuggestion = (item) => {
     setQuery(item.name);
@@ -159,7 +207,12 @@ export default function FoodSearch() {
   };
 
   return (
+    /* --- MAIN LAYOUT WRAPPER --- */
+    /* Tailwind: max-w-6xl sets layout threshold constraints. pb-28 gives breathing room above the fixed bottom cart checkout bar */
     <div className="mx-auto w-full max-w-6xl pb-28">
+      
+      {/* --- STICKY SEARCH BAR HEADER --- */}
+      {/* Tailwind: sticky top-0 keeps input field visible while user scrolls through large grid arrays */}
       <div className="sticky top-0 z-30 -mx-4 bg-slate-50/95 px-4 pb-4 pt-1 backdrop-blur dark:bg-slate-900/95 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
         <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-3 shadow-sm dark:border-slate-800 dark:bg-slate-950">
           <button
@@ -204,6 +257,7 @@ export default function FoodSearch() {
         </div>
       </div>
 
+      {/* --- QUICK PROMPTS INSPIRATION tags --- */}
       {!query && (
         <section className="mb-8 overflow-hidden">
           <p className="mb-4 font-serif text-2xl font-black italic text-rose-500">Think it, search it</p>
@@ -223,6 +277,7 @@ export default function FoodSearch() {
         </section>
       )}
 
+      {/* --- AUTO-COMPLETE SEARCH SUGGESTIONS POPUP --- */}
       {query && suggestions.length > 0 && (
         <section className="mb-7 rounded-3xl border border-slate-100 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-950">
           {suggestions.map((item) => (
@@ -248,6 +303,7 @@ export default function FoodSearch() {
         </section>
       )}
 
+      {/* --- CATEGORY ROUND BUBBLES GRID --- */}
       {!query && (
         <section className="mb-8">
           <h2 className="mb-5 text-sm font-black uppercase tracking-[0.35em] text-slate-400">What's on your mind?</h2>
@@ -275,6 +331,7 @@ export default function FoodSearch() {
         </section>
       )}
 
+      {/* --- DYNAMIC MATCHED CATEGORIES tags BAR --- */}
       <section className="mb-5">
         <h2 className="mb-4 text-xl font-black text-slate-900 dark:text-white">
           {query ? `Showing results for "${query}"` : "All Food"}
@@ -288,7 +345,7 @@ export default function FoodSearch() {
               className={`shrink-0 rounded-2xl border px-4 py-2.5 text-sm font-black transition-all ${
                 activeCategory === cat
                   ? "border-brand-500 bg-brand-500 text-white shadow-lg shadow-brand-500/20"
-                  : "border-slate-200 bg-white text-slate-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
+                  : "border-slate-200 bg-white text-slate-700 dark:border-slate-800/60 dark:bg-slate-950 dark:text-slate-200"
               }`}
             >
               {cat}
@@ -297,6 +354,7 @@ export default function FoodSearch() {
         </div>
       </section>
 
+      {/* --- EXTRA FILTERS SCROLL ROW --- */}
       <section className="mb-6 flex gap-3 overflow-x-auto pb-1 no-scrollbar">
         <button type="button" className="shrink-0 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-black text-slate-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200">
           <SlidersHorizontal size={17} className="mr-2 inline" /> Filters
@@ -312,6 +370,8 @@ export default function FoodSearch() {
         </button>
       </section>
 
+      {/* --- SEARCH RESULTS DISHES GRID --- */}
+      {/* Tailwind: grid-cols-1 on small monitors, sm:grid-cols-2, and lg:grid-cols-3 handles responsive grid sizing */}
       <section>
         <h2 className="mb-4 text-sm font-black uppercase tracking-[0.35em] text-slate-400">
           {query ? "Recommended for you" : "Recommended with deals"}
@@ -335,6 +395,8 @@ export default function FoodSearch() {
         )}
       </section>
 
+      {/* --- FLOATING BOTTOM CART BAR --- */}
+      {/* Tailwind: fixed bottom-[5.5rem] on mobile viewports for custom positioning. bottom-6 on standard md: breakpoint screens */}
       {cartCount > 0 && (
         <div className="fixed bottom-[5.5rem] left-1/2 z-40 w-[94%] max-w-3xl -translate-x-1/2 rounded-3xl border border-slate-100 bg-white p-3 shadow-2xl dark:border-slate-800 dark:bg-slate-950 md:bottom-6">
           <div className="flex items-center gap-3">
@@ -352,6 +414,7 @@ export default function FoodSearch() {
         </div>
       )}
 
+      {/* Back navigation hyperlink footer */}
       <div className="mt-8 text-center">
         <Link to="/user/menu" className="text-sm font-black text-brand-600 hover:underline">Back to full menu</Link>
       </div>
@@ -359,6 +422,11 @@ export default function FoodSearch() {
   );
 }
 
+/**
+ * FoodResultCard Sub-component
+ * 
+ * Renders detail parameters for search matching food results, rating stars, and custom counter quantity buttons.
+ */
 function FoodResultCard({ food, cartItem, onQuantity }) {
   return (
     <div className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
@@ -404,3 +472,4 @@ function FoodResultCard({ food, cartItem, onQuantity }) {
     </div>
   );
 }
+

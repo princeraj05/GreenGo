@@ -1,15 +1,46 @@
 import { useEffect, useState } from "react";
 import { getToken } from "../../utils/getToken";
 
+/**
+ * ManageCoupons Component
+ * Offers administrative inputs to configure discount codes,
+ * set minimum purchase orders, handle dates constraints,
+ * and view/delete coupon codes.
+ */
 export default function ManageCoupons() {
-  const [coupons, setCoupons] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [form, setForm] = useState({ title: "", code: "", discountType: "percentage", discountValue: 0, minimumOrder: 0, expiryDate: "" });
+  
+  // ==========================================
+  // STATE DECLARATIONS
+  // ==========================================
 
+  // Array storing coupons fetched from endpoints
+  const [coupons, setCoupons] = useState([]);
+
+  // Loading indicator for fetching configurations
+  const [loading, setLoading] = useState(true);
+
+  // Form input configurations initialized with default values
+  const [form, setForm] = useState({ 
+    title: "", 
+    code: "", 
+    discountType: "percentage", 
+    discountValue: 0, 
+    minimumOrder: 0, 
+    expiryDate: "" 
+  });
+
+  // ==========================================
+  // DATA FETCHING & EVENT HANDLERS
+  // ==========================================
+
+  // Load all coupons on rendering
   useEffect(() => {
     loadCoupons();
   }, []);
 
+  /**
+   * Loads all discount coupons from the backend.
+   */
   const loadCoupons = async () => {
     try {
       const token = await getToken();
@@ -25,6 +56,9 @@ export default function ManageCoupons() {
     }
   };
 
+  /**
+   * Handles submission of the new coupon registration form.
+   */
   const handleCreate = async (e) => {
     e.preventDefault();
     try {
@@ -44,6 +78,9 @@ export default function ManageCoupons() {
     }
   };
 
+  /**
+   * Request deletion of a specific coupon item.
+   */
   const handleDelete = async (id) => {
     if (!confirm("Delete this coupon?")) return;
     try {
@@ -58,6 +95,9 @@ export default function ManageCoupons() {
     }
   };
 
+  /**
+   * Toggles the active status of a coupon.
+   */
   const toggleActive = async (coupon) => {
     try {
       const token = await getToken();
@@ -76,14 +116,22 @@ export default function ManageCoupons() {
   };
 
   return (
+    // Outer wrap container with fade-in animation
     <div className="animate-fade-in">
+      
+      {/* --- HEADER SECTION --- */}
       <div className="mb-8 animate-slide-in">
         <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Manage Coupons</h1>
         <p className="text-slate-500 dark:text-slate-400 mt-1">Create and manage discount codes.</p>
       </div>
+      {/* --- END HEADER SECTION --- */}
 
+      {/* --- SPLIT GRID PANELS --- */}
+      {/* Uses 1 column on smaller viewport screens and 3 columns on desktop 'lg' screens */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Create Form */}
+        
+        {/* --- FORM PANEL SECTION --- */}
+        {/* Col span 1 handles creation form layout dimensions */}
         <div className="lg:col-span-1 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm h-fit transition-colors">
           <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">New Coupon</h2>
           <form onSubmit={handleCreate} className="flex flex-col gap-4">
@@ -125,8 +173,10 @@ export default function ManageCoupons() {
             <button type="submit" className="w-full py-3 bg-slate-900 dark:bg-slate-800 text-white rounded-xl font-bold mt-2 hover:bg-emerald-600 dark:hover:bg-emerald-600 transition-colors">Create Coupon</button>
           </form>
         </div>
+        {/* --- END FORM PANEL SECTION --- */}
 
-        {/* Coupon List */}
+        {/* --- COUPON CARD LIST PANEL --- */}
+        {/* Col span 2 displays lists dynamically in a responsive grid layout */}
         <div className="lg:col-span-2">
           {loading ? (
             <p>Loading...</p>
@@ -157,6 +207,8 @@ export default function ManageCoupons() {
             </div>
           )}
         </div>
+        {/* --- END COUPON CARD LIST PANEL --- */}
+
       </div>
     </div>
   );

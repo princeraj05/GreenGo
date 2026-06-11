@@ -6,14 +6,32 @@ import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
 
 export default function DeliveryOrders() {
+  // --- REACT STATE, REFS & ROUTER HOOKS ---
+  
+  // React Router navigate hook for switching paths
   const navigate = useNavigate();
+  
+  // State storing the list of all orders currently assigned to the rider
   const [orders, setOrders] = useState([]);
+  
+  // Main loader flag indicating whether background order lists are fetching
   const [loading, setLoading] = useState(true);
+  
+  // Validation status indicator enforcing user profile setup
   const [profileRequired, setProfileRequired] = useState(false);
+  
+  // Flag indicating which action is running (contains formatted string `${orderId}-${action}`) to disable buttons during requests
   const [actionLoading, setActionLoading] = useState("");
+  
+  // Object mapping order IDs to boolean flags checking if location sharing is active
   const [sharingOrders, setSharingOrders] = useState({});
+  
+  // Mutable reference holding active intervals for geolocation sharing timers
   const shareTimers = useRef({});
 
+  // --- DATA FETCHING & SIDE EFFECTS ---
+
+  // Fetches assigned delivery orders list from the backend
   const loadOrders = useCallback(async () => {
     setLoading(true);
     try {
@@ -30,14 +48,19 @@ export default function DeliveryOrders() {
     }
   }, []);
 
+  // Initializes assigned orders list and triggers cleanup of active intervals on unmount
   useEffect(() => {
     loadOrders();
     return () => {
+      // Cleanup all active timers to prevent memory leaks when navigating away
       Object.values(shareTimers.current).forEach((timer) => clearInterval(timer));
       shareTimers.current = {};
     };
   }, [loadOrders]);
 
+  // --- ORDER WORKFLOW HANDLERS (PUT REQUESTS) ---
+
+  // Executes order transitions (e.g. "accept", "reject", "delivered")
   const runAction = useCallback(async (orderId, action, body = {}) => {
     setActionLoading(`${orderId}-${action}`);
     try {
@@ -52,6 +75,9 @@ export default function DeliveryOrders() {
     }
   }, [loadOrders]);
 
+  // --- LIVE GEOLOCATION SHARING CONTROLLERS ---
+
+  // Optimistically updates rider coordinate values directly inside the React state
   const updateLocalRiderLocation = useCallback((orderId, coords) => {
     setOrders((current) => current.map((order) => (
       order._id === orderId
@@ -70,6 +96,7 @@ export default function DeliveryOrders() {
     )));
   }, []);
 
+  // Stops location sharing for a specific order and clears its interval timer
   const stopSharing = useCallback((orderId) => {
     if (shareTimers.current[orderId]) {
       clearInterval(shareTimers.current[orderId]);
@@ -78,6 +105,7 @@ export default function DeliveryOrders() {
     setSharingOrders((current) => ({ ...current, [orderId]: false }));
   }, []);
 
+  // Grabs browser geolocation and posts coordinates to the tracking API
   const sendLocation = useCallback((orderId) => {
     if (!navigator.geolocation) {
       alert("Geolocation is not supported by this browser.");
@@ -93,6 +121,7 @@ export default function DeliveryOrders() {
         };
         try {
           await API.post(`/api/orders/${orderId}/location`, coords);
+          // Locally store rider coordinate metrics to recalculate distance dynamically
           updateLocalRiderLocation(orderId, coords);
         } catch (err) {
           console.error("Failed to share location:", err);
@@ -103,6 +132,7 @@ export default function DeliveryOrders() {
     );
   }, [stopSharing, updateLocalRiderLocation]);
 
+  // Launches recurring intervals (every 10 seconds) to stream GPS coordinates to the server
   const startSharing = useCallback((orderId) => {
     if (shareTimers.current[orderId]) return;
     setSharingOrders((current) => ({ ...current, [orderId]: true }));
@@ -110,16 +140,21 @@ export default function DeliveryOrders() {
     shareTimers.current[orderId] = setInterval(() => sendLocation(orderId), 10000);
   }, [sendLocation]);
 
+  // Accepts order and initiates active location streaming
   const acceptAndShare = async (order) => {
     const updated = await runAction(order._id, "accept");
     if (updated) startSharing(order._id);
   };
 
+  // Stops active tracking broadcasts and triggers delivery resolution state
   const markDelivered = async (orderId) => {
     stopSharing(orderId);
     await runAction(orderId, "delivered");
   };
 
+  // --- MAPS & HAVERSINE DISTANCE MATH UTILITIES ---
+
+  // Opens coordinates on external OpenStreetMap provider or searches for text queries
   const openMaps = (order) => {
     if (order.latitude != null && order.longitude != null) {
       window.open(`https://www.openstreetmap.org/?mlat=${order.latitude}&mlon=${order.longitude}#map=16/${order.latitude}/${order.longitude}`, "_blank", "noopener,noreferrer");
@@ -128,10 +163,11 @@ export default function DeliveryOrders() {
     window.open(`https://www.openstreetmap.org/search?query=${encodeURIComponent(order.address || "")}`, "_blank", "noopener,noreferrer");
   };
 
+  // Calculates the physical distance between user location coordinates and the customer's coordinates (in km)
   const distanceToCustomer = useCallback((order) => {
     const rider = order.tracking?.riderLocation;
     if (!rider || order.latitude == null || order.longitude == null) return null;
-    const R = 6371;
+    const R = 6371; // Earth's radius in km
     const dLat = (Number(order.latitude) - Number(rider.lat)) * Math.PI / 180;
     const dLng = (Number(order.longitude) - Number(rider.lng)) * Math.PI / 180;
     const lat1 = Number(rider.lat) * Math.PI / 180;
@@ -141,7 +177,11 @@ export default function DeliveryOrders() {
   }, []);
 
   return (
+    // Responsive root layer container
     <div className="space-y-5 sm:space-y-6">
+      
+      {/* --- HEADER & REFRESH ACTION --- */}
+      {/* Title bar content side-by-side with manual refresh button */}
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight leading-tight">Assigned Orders</h2>
@@ -153,6 +193,8 @@ export default function DeliveryOrders() {
       </div>
 
       {profileRequired ? (
+        /* --- PROFILE COMPLETION ALERT SECTION --- */
+        /* Prompts when basic profile attributes are not configured */
         <div className="rounded-2xl bg-white dark:bg-slate-950 border border-amber-100 dark:border-amber-900/40 p-6 sm:p-10 text-center shadow-sm">
           <User className="mx-auto text-amber-500" size={36} />
           <h3 className="mt-4 text-xl font-black">Complete delivery profile first</h3>
@@ -160,21 +202,29 @@ export default function DeliveryOrders() {
           <Button onClick={() => navigate("/delivery/profile")} className="mt-5 rounded-2xl">Complete Profile</Button>
         </div>
       ) : loading ? (
+        /* --- LOADING SKELETON CARDS SECTION --- */
+        /* Flex grid loading fallback using CSS pulse effects */
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
           {[1, 2].map((item) => <div key={item} className="h-72 rounded-2xl bg-slate-100 dark:bg-slate-900 animate-pulse" />)}
         </div>
       ) : orders.length === 0 ? (
+        /* --- NO ASSIGNED ORDERS EMPTY STATE --- */
+        /* Placeholder container displayed when zero orders are currently assigned */
         <div className="rounded-2xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 p-6 sm:p-10 text-center shadow-sm">
           <Package className="mx-auto text-slate-400" size={36} />
           <h3 className="mt-4 text-xl font-black">No assigned orders</h3>
           <p className="mt-1 text-sm font-semibold text-slate-500 dark:text-slate-400">New assignments will appear here.</p>
         </div>
       ) : (
+        /* --- ASSIGNED ORDERS GRID LIST --- */
+        /* 2-column grid layout on extra large screens, falling back to 1-column layout on smaller screen widths */
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
           {orders.map((order) => {
             const distance = distanceToCustomer(order);
             return (
             <div key={order._id} className="rounded-2xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 p-4 sm:p-5 shadow-sm space-y-4">
+              
+              {/* Order identifier header featuring order status Badge */}
               <div className="flex items-start justify-between gap-3">
                 <h3 className="text-lg font-black break-all">#{String(order._id).slice(-6).toUpperCase()}</h3>
                 <Badge variant={order.status === "Delivered" ? "success" : order.status === "RejectedByDeliveryBoy" ? "danger" : "warning"}>
@@ -182,6 +232,7 @@ export default function DeliveryOrders() {
                 </Badge>
               </div>
 
+              {/* Grid block displaying metadata indicators */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm font-semibold text-slate-600 dark:text-slate-300">
                 <InfoLine label="Customer" value={order.customerName || "GreenGo Customer"} />
                 <InfoLine label="Amount" value={`Rs. ${order.total || 0}`} />
@@ -189,6 +240,7 @@ export default function DeliveryOrders() {
                 <InfoLine label="Order Time" value={new Date(order.createdAt).toLocaleString()} />
               </div>
 
+              {/* Highlights target destination profile details (Phone, Address, Distance metrics) */}
               <div className="rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4 space-y-2">
                 <p className="text-sm font-bold flex items-center gap-2">
                   <Phone size={15} className="text-brand-500" />
@@ -204,6 +256,7 @@ export default function DeliveryOrders() {
                 </p>
               </div>
 
+              {/* Items listing details displaying names, quantity counts and price calculations */}
               <div className="space-y-2">
                 {order.items?.map((item, index) => (
                   <div key={index} className="flex justify-between gap-3 text-xs font-bold text-slate-500 dark:text-slate-400">
@@ -213,6 +266,8 @@ export default function DeliveryOrders() {
                 ))}
               </div>
 
+              {/* --- CARD ACTIONS GRID / FLEX WRAPPER --- */}
+              {/* Context-aware buttons rendering state-specific transition actions */}
               <div className="grid grid-cols-1 sm:flex sm:flex-wrap gap-2 pt-2">
                 {order.assignmentStatus === "Assigned" && (
                   <>
@@ -253,6 +308,7 @@ export default function DeliveryOrders() {
   );
 }
 
+// Memoized helper component showing metadata categories paired with corresponding values
 const InfoLine = memo(function InfoLine({ label, value }) {
   return (
     <div>
@@ -261,4 +317,3 @@ const InfoLine = memo(function InfoLine({ label, value }) {
     </div>
   );
 });
-

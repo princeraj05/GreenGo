@@ -5,10 +5,21 @@ import { getApiUrl } from "../../utils/getApiUrl";
 
 const API = getApiUrl();
 
+/**
+ * BudgetAssistantPage Component
+ * 
+ * Provides a dedicated page for the Budget Assistant helper, loading food products
+ * and handling addition of calculated items to the shopping cart.
+ */
 export default function BudgetAssistantPage() {
   const navigate = useNavigate();
+
+  /* --- STATE DECLARATIONS --- */
+  // foods: Stores the list of food items loaded from the backend API for the budget calculator
   const [foods, setFoods] = useState([]);
 
+  /* --- DATA FETCHING & EFFECTS --- */
+  // Loads available food items from the backend server on component mount
   useEffect(() => {
     let mounted = true;
 
@@ -29,6 +40,14 @@ export default function BudgetAssistantPage() {
     };
   }, []);
 
+  /* --- EVENT HANDLERS --- */
+  /**
+   * addToCart: Saves or updates a food item and its chosen quantity in localStorage,
+   * then fires a custom 'cart-updated' window event to notify other UI components.
+   * 
+   * @param {Object} food - The food item object
+   * @param {number} newQty - The new quantity desired for this item
+   */
   const addToCart = (food, newQty = 1) => {
     const currentCart = JSON.parse(localStorage.getItem("cart")) || [];
     const existingIndex = currentCart.findIndex((item) => item._id === food._id);
@@ -52,13 +71,19 @@ export default function BudgetAssistantPage() {
   };
 
   return (
+    /* --- MAIN CONTAINER --- */
+    /* Tailwind: min-h-[70vh] guarantees that the budget assistant container fills at least 70% of the viewport height */
     <div className="min-h-[70vh]">
+      
+      {/* --- BUDGET ASSISTANT INTERFACE --- */}
       <BudgetAssistant
         isOpen
         onClose={() => navigate("/user/menu")}
         foods={foods}
         onAddToCart={addToCart}
       />
+      
     </div>
   );
 }
+

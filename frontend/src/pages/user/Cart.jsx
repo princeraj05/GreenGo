@@ -8,18 +8,37 @@ import Card from "../../components/ui/Card";
 import Input from "../../components/ui/Input";
 import { getApiUrl, getImageUrl } from "../../utils/getApiUrl";
 
+/**
+ * Cart Component
+ * 
+ * Manages the shopping cart lifecycle, allowing users to modify item quantities,
+ * remove items, apply promotional coupon codes, and see order cost summaries before checking out.
+ */
 export default function Cart() {
   const navigate = useNavigate();
+
+  /* --- STATE DECLARATIONS --- */
+  // cart: Holds the current array of products, quantities, prices, etc. from localStorage
   const [cart, setCart] = useState([]);
+  // promo: Tracks the text input for the promotional discount code
   const [promo, setPromo] = useState("");
+  // discount: Stores the discount ratio/multiplier applied to the subtotal
   const [discount, setDiscount] = useState(0);
+  // promoLoading: Controls the loader state during API validation of a promo coupon
   const [promoLoading, setPromoLoading] = useState(false);
 
+  /* --- DATA FETCHING & EFFECTS --- */
+  // Reads and populates the cart from local storage on component mount
   useEffect(() => {
     const data = JSON.parse(localStorage.getItem("cart")) || [];
     setCart(data);
   }, []);
 
+  /* --- EVENT HANDLERS & HELPERS --- */
+  /**
+   * updateQty: Increments or decrements quantity for a specific item,
+   * updates the local state and localStorage, and triggers a window synchronizing event.
+   */
   const updateQty = (id, type) => {
     const updated = cart.map((item) =>
       item._id === id
@@ -31,6 +50,10 @@ export default function Cart() {
     window.dispatchEvent(new Event("cart-updated"));
   };
 
+  /**
+   * removeItem: Deletes a specific item ID from the cart list,
+   * updates localStorage, and notifies other components via the window event.
+   */
   const removeItem = (id) => {
     const updated = cart.filter((item) => item._id !== id);
     setCart(updated);
@@ -38,6 +61,9 @@ export default function Cart() {
     window.dispatchEvent(new Event("cart-updated"));
   };
 
+  /**
+   * applyPromo: Contacts the API to validate the discount code based on current cart subtotal
+   */
   const applyPromo = async () => {
     if (!promo) return;
     setPromoLoading(true);
@@ -73,6 +99,7 @@ export default function Cart() {
     }
   };
 
+  /* --- PRICE CALCULATION COMPUTATIONS --- */
   const subtotal = cart.reduce((sum, item) => sum + Number(item.price || 0) * item.qty, 0);
   const packingCharges = cart.reduce((sum, item) => sum + Number(item.packingCharge || 0) * item.qty, 0);
   const discountAmount = subtotal * discount;
@@ -80,7 +107,11 @@ export default function Cart() {
   const total = subtotal + packingCharges - discountAmount + delivery;
 
   return (
+    /* --- MAIN PAGE CONTAINER --- */
+    /* Tailwind: max-w-6xl mx-auto sets standard content width limits with horizontal centering. pb-24 handles padding for mobile viewports */
     <div className="max-w-6xl mx-auto w-full pb-24 md:pb-10 px-1 sm:px-0">
+      
+      {/* --- CART HEADER SECTION --- */}
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6 md:mb-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 md:gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
@@ -95,7 +126,10 @@ export default function Cart() {
         )}
       </motion.div>
 
+      {/* --- CART CONTENT CONDITION --- */}
       {cart.length === 0 ? (
+        
+        /* --- EMPTY CART VIEW --- */
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
           <Card className="p-8 sm:p-12 md:p-16 text-center flex flex-col items-center border-slate-100 dark:border-slate-800/60 rounded-3xl md:rounded-[2.5rem]">
             <div className="w-20 h-20 sm:w-28 sm:h-28 bg-slate-50 dark:bg-slate-900 text-slate-300 dark:text-slate-600 rounded-full flex items-center justify-center mb-6 md:mb-8">
@@ -109,9 +143,12 @@ export default function Cart() {
           </Card>
         </motion.div>
       ) : (
+        
+        /* --- ACTIVE CART VIEW --- */
+        /* Tailwind: flex-col on mobile, flex-row on desktop (lg breakpoint) allows layout transition with customizable side gutter gaps */
         <div className="flex flex-col lg:flex-row gap-6 md:gap-8">
           
-          {/* Cart Items */}
+          {/* --- CART ITEMS LIST SECTION --- */}
           <div className="flex-1 space-y-4">
             <AnimatePresence>
               {cart.map((item) => (
@@ -135,6 +172,7 @@ export default function Cart() {
                       <h3 className="text-base sm:text-lg md:text-xl font-bold text-slate-900 dark:text-white mb-0.5 md:mb-1 group-hover:text-brand-600 transition-colors line-clamp-2 leading-tight">{item.name}</h3>
                       <p className="text-slate-900 dark:text-white font-black text-sm sm:text-lg md:text-xl mb-2 md:mb-4">₹{item.price}</p>
                       
+                      {/* --- ITEM QUANTITY CONTROL INNER PANEL --- */}
                       <div className="flex items-center justify-start gap-2 sm:gap-4">
                         <div className="flex items-center bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-0.5 md:p-1 shadow-sm">
                           <button onClick={() => updateQty(item._id, "dec")} className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 flex items-center justify-center rounded-lg hover:bg-white dark:hover:bg-slate-800 hover:shadow-sm text-slate-700 dark:text-slate-300 font-bold transition-all"><Minus size={14} /></button>
@@ -146,6 +184,7 @@ export default function Cart() {
 
                     </div>
 
+                    {/* --- TOTAL PRICE & REMOVE ITEM ACTION --- */}
                     <div className="shrink-0 flex sm:flex-col justify-between sm:justify-center items-center gap-3 border-t sm:border-t-0 sm:border-l border-slate-100 dark:border-slate-800 pt-3 sm:pt-0 sm:pl-4">
                       <span className="text-base sm:text-lg font-black text-slate-950 dark:text-white tabular-nums">₹{item.price * item.qty}</span>
                       <button onClick={() => removeItem(item._id)} className="w-9 h-9 md:w-12 md:h-12 flex items-center justify-center text-red-500 hover:text-white bg-red-50 dark:bg-red-950/30 hover:bg-red-500 dark:hover:bg-red-600 rounded-xl md:rounded-2xl transition-all shadow-sm" title="Remove">
@@ -158,10 +197,12 @@ export default function Cart() {
             </AnimatePresence>
           </div>
 
-          {/* Checkout Summary */}
+          {/* --- CHECKOUT SIDEBAR SUMMARY PANEL --- */}
+          {/* Tailwind: sticky top-24 makes this summary card stick to top when scrolling down on larger viewports */}
           <div className="w-full lg:w-[400px] shrink-0 sticky top-24 h-fit">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
               
+              {/* --- PROMO CODE CARD --- */}
               <Card className="p-4 md:p-6 mb-4 md:mb-6 border-slate-100 dark:border-slate-800/60 rounded-2xl">
                 <h3 className="font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2 text-sm md:text-base"><Ticket size={18} className="text-brand-500" /> Have a Promo Code?</h3>
                 <div className="flex gap-2">
@@ -178,6 +219,7 @@ export default function Cart() {
                 </div>
               </Card>
 
+              {/* --- RECEIPT CALCULATOR CARD --- */}
               <Card className="p-5 md:p-8 relative overflow-hidden border-slate-100 dark:border-slate-800/60 rounded-3xl md:rounded-[2rem]">
                 <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-brand-400 to-brand-600"></div>
                 
@@ -227,3 +269,4 @@ export default function Cart() {
     </div>
   );
 }
+

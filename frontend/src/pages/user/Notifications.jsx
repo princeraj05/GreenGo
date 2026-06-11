@@ -4,6 +4,11 @@ import Card from "../../components/ui/Card";
 import Button from "../../components/ui/Button";
 import { getToken } from "../../utils/getToken";
 
+/* --- HELPER FUNCTIONS --- */
+
+/**
+ * getTypeIcon: Selects Lucide icon based on matching patterns inside title/message fields.
+ */
 const getTypeIcon = (notification) => {
   const title = `${notification.title || ""} ${notification.message || ""}`.toLowerCase();
   if (title.includes("coupon") || title.includes("promo")) return <Gift size={20} />;
@@ -12,6 +17,9 @@ const getTypeIcon = (notification) => {
   return <Bell size={20} />;
 };
 
+/**
+ * cleanMessage: Scrubs raw order hashes and cleans double spacing to render legible notices.
+ */
 const cleanMessage = (msg) => {
   if (!msg) return "";
   let cleaned = msg.replace(/your\s+order\s+#\w+/gi, "your order");
@@ -20,16 +28,34 @@ const cleanMessage = (msg) => {
   return cleaned.replace(/\s+/g, " ").trim();
 };
 
+/**
+ * getAccentClass: Determines color themes for notification category badges.
+ */
 const getAccentClass = (type) => {
   if (type === "success") return "bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-950/25 dark:text-emerald-300 dark:border-emerald-900/40";
   if (type === "warning") return "bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-950/25 dark:text-amber-300 dark:border-amber-900/40";
   return "bg-blue-50 text-blue-600 border-blue-100 dark:bg-blue-950/25 dark:text-blue-300 dark:border-blue-900/40";
 };
 
+/**
+ * Notifications Component
+ * 
+ * Lists order status notifications, discount campaign notices, and support feedback.
+ * Includes interactive mark-as-read buttons that sync instantly with backend resources.
+ */
 export default function Notifications() {
+  
+  /* --- STATE DECLARATIONS --- */
+  // notifications: Array of client notice objects downloaded from DB
   const [notifications, setNotifications] = useState([]);
+  // loading: Manages spinner placeholder visibility
   const [loading, setLoading] = useState(true);
 
+  /* --- DATA FETCHING & EFFECTS --- */
+
+  /**
+   * loadNotifications: Retrieves notifications associated with the current user.
+   */
   const loadNotifications = async () => {
     setLoading(true);
     try {
@@ -52,15 +78,23 @@ export default function Notifications() {
     }
   };
 
+  // Triggers loading sequence on page load
   useEffect(() => {
     loadNotifications();
   }, []);
 
+  /* --- DERIVED VALUES --- */
+  // unreadCount: Calculates quantity of unread notices to manage top notification badges
   const unreadCount = useMemo(
     () => notifications.filter((item) => !(item.isRead || item.read)).length,
     [notifications]
   );
 
+  /* --- EVENT HANDLERS --- */
+
+  /**
+   * markAsRead: Calls server to flag single notification ID as read, modifying local state.
+   */
   const markAsRead = async (id) => {
     try {
       const token = await getToken();
@@ -77,13 +111,20 @@ export default function Notifications() {
     }
   };
 
+  /**
+   * markAllAsRead: Iterates through all current unread messages to update their server state.
+   */
   const markAllAsRead = async () => {
     const unread = notifications.filter((item) => !(item.isRead || item.read));
     await Promise.all(unread.map((item) => markAsRead(item._id)));
   };
 
   return (
+    /* --- MAIN CONTAINER --- */
     <div className="animate-fade-in pb-10">
+      
+      {/* --- HEADER BAR --- */}
+      {/* Tailwind: flex-col on mobile switches to flex-row at sm: breakpoint for aligning control buttons */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
@@ -109,12 +150,14 @@ export default function Notifications() {
         </div>
       </div>
 
+      {/* --- NOTIFICATIONS CARD STREAM --- */}
       <Card className="p-4 md:p-6 border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-950">
         {loading ? (
           <div className="py-20 flex justify-center">
             <div className="w-10 h-10 border-4 border-brand-100 border-t-brand-500 rounded-full animate-spin" />
           </div>
         ) : notifications.length === 0 ? (
+          /* Empty placeholder card overlay */
           <div className="py-20 text-center">
             <div className="w-16 h-16 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-slate-400 flex items-center justify-center mx-auto mb-4">
               <Bell size={28} />
@@ -165,3 +208,4 @@ export default function Notifications() {
     </div>
   );
 }
+

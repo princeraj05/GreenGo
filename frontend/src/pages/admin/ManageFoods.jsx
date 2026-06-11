@@ -6,8 +6,10 @@ import { getToken } from "../../utils/getToken";
 import Button from "../../components/ui/Button";
 import Card from "../../components/ui/Card";
 
+// Framer Motion helper for animated layouts
 const MotionDiv = motion.div;
 
+// Pre-defined menu category labels
 const CATEGORY_OPTIONS = [
   "Starter",
   "Combo",
@@ -60,10 +62,16 @@ const CATEGORY_OPTIONS = [
   "Drinks",
 ];
 
+// Pre-defined variant size labels
 const VARIANT_OPTIONS = ["Full Plate", "Half Plate", "Regular", "Large", "Small"];
+
+// Pre-defined spice indicators
 const SPICE_LEVELS = ["Mild", "Medium", "Hot", "Extra Hot"];
+
+// Pre-defined preparation range choices
 const PREP_TIME_OPTIONS = ["5 - 10 min", "10 - 15 min", "15 - 20 min", "20 - 30 min", "30 - 45 min", "45+ min"];
 
+// Default form shape for menu additions/edits
 const INITIAL_FORM = {
   name: "",
   price: "",
@@ -87,19 +95,52 @@ const INITIAL_FORM = {
   categoryImageFile: null,
 };
 
+// Styling helper for reuse across input parameters
 const inputCls = "w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 outline-none text-slate-900 dark:text-white font-medium text-sm transition-all placeholder:text-slate-400";
 
+/**
+ * ManageFoods Component
+ * Comprehensive product catalog CRUD manager. Enables admins to register food items,
+ * assign multiple categories, toggle dietary classifications (veg/non-veg/egg), configure variants
+ * with independent prices, and build customized combos.
+ */
 export default function ManageFoods() {
+  
+  // ==========================================
+  // STATE DECLARATIONS
+  // ==========================================
+
+  // Catalog items list retrieved from the endpoint
   const [foods, setFoods] = useState([]);
+
+  // Active form state model tracking all input details
   const [form, setForm] = useState(INITIAL_FORM);
+
+  // Stores base64 or object-url representation of food image preview
   const [preview, setPreview] = useState(null);
+
+  // Targets current food item ID being edited, or null if creating new
   const [editingId, setEditingId] = useState(null);
+
+  // Global loading state during write operations
   const [loading, setLoading] = useState(false);
+
+  // Boolean state denoting if custom variant input box is visible
   const [showCustomVariant, setShowCustomVariant] = useState(false);
+
+  // Active filter category selection string for bottom list
   const [filterCategory, setFilterCategory] = useState("All");
 
+  // ==========================================
+  // DATA FETCHING & EVENT HANDLERS
+  // ==========================================
+
+  // Automatically fetch catalog items on mount
   useEffect(() => { loadFoods(); }, []);
 
+  /**
+   * Loads list of food items from API.
+   */
   const loadFoods = async () => {
     try {
       const res = await API.get("/api/foods");
@@ -107,6 +148,10 @@ export default function ManageFoods() {
     } catch (err) { console.log(err); }
   };
 
+  /**
+   * Standardized input form field changes handler.
+   * Special case for handling binary uploads.
+   */
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     if (name === "image") {
@@ -118,6 +163,9 @@ export default function ManageFoods() {
     }
   };
 
+  /**
+   * Toggles the presence of a selected category tags.
+   */
   const toggleCategory = (cat) => {
     setForm(f => {
       const next = f.categories.includes(cat)
@@ -127,6 +175,9 @@ export default function ManageFoods() {
     });
   };
 
+  /**
+   * Handles toggle changes inside the variant selection list.
+   */
   const toggleVariant = (variant) => {
     setForm(f => ({
       ...f,
@@ -137,6 +188,9 @@ export default function ManageFoods() {
     }));
   };
 
+  /**
+   * Submits a custom variant addition into the selected variants pool.
+   */
   const addCustomVariant = () => {
     const name = form.customVariant.trim();
     if (!name) return;
@@ -149,10 +203,16 @@ export default function ManageFoods() {
     setShowCustomVariant(false);
   };
 
+  /**
+   * Binds independent pricing strings onto unique size/variant combinations.
+   */
   const handleVariantPrice = (variant, value) => {
     setForm(f => ({ ...f, variantPrices: { ...f.variantPrices, [variant]: value } }));
   };
 
+  /**
+   * Modifies dynamic details inside the dynamic combo list grid rows.
+   */
   const updateComboItem = (index, field, value) => {
     setForm(f => ({
       ...f,
@@ -160,16 +220,21 @@ export default function ManageFoods() {
     }));
   };
 
+  // Appends an empty row item template structure onto the combo items array
   const addComboRow = () => setForm(f => ({ ...f, comboItems: [...f.comboItems, { name: "", price: "" }] }));
+
+  // Removes a specified row index item from the current combo setup layout
   const removeComboRow = (index) => setForm(f => ({
     ...f,
     comboItems: f.comboItems.length > 1 ? f.comboItems.filter((_, i) => i !== index) : [{ name: "", price: "" }],
   }));
 
+  // Compiles and cleans raw UI inputs inside combo records into uniform database schemas
   const parseComboItems = () => form.comboItems
     .map(item => ({ name: String(item.name || "").trim(), price: Number(item.price || 0) }))
     .filter(item => item.name);
 
+  // Memoized pricing statistics output summaries for combo items configuration
   const comboSummary = useMemo(() => {
     const items = form.comboItems
       .map(item => ({ name: String(item.name || "").trim(), price: Number(item.price || 0) }))
@@ -181,6 +246,10 @@ export default function ManageFoods() {
     return { items, totalPrice, comboPrice, saving, savingPercent };
   }, [form.comboItems, form.price]);
 
+  /**
+   * Finalizes item creation or update procedures.
+   * Compiles data payload into Form Data format to deliver uploads.
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name || !form.price || !form.description || (!form.image && !editingId)) {
@@ -226,6 +295,7 @@ export default function ManageFoods() {
     } catch (err) { console.log(err); } finally { setLoading(false); }
   };
 
+  // Flushes temporary parameters out of form inputs back to clean defaults
   const resetForm = () => {
     setForm(INITIAL_FORM);
     setPreview(null);
@@ -234,6 +304,9 @@ export default function ManageFoods() {
     if (inp) inp.value = "";
   };
 
+  /**
+   * Initializes editing actions by loading parameters from an item index.
+   */
   const startEdit = (food) => {
     setForm({
       ...INITIAL_FORM,
@@ -272,6 +345,9 @@ export default function ManageFoods() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  /**
+   * Submits a deletion request for a catalog record.
+   */
   const deleteFood = async (id) => {
     if (!window.confirm("Delete this food item?")) return;
     try {
@@ -281,19 +357,23 @@ export default function ManageFoods() {
     } catch (err) { console.log(err); }
   };
 
+  // Compiles all dynamically configured category filters in bottom menu selections list
   const allCategoryFilters = ["All", ...new Set(foods.flatMap(f =>
     Array.isArray(f.categories) && f.categories.length ? f.categories : [f.category || "Starter"]
   ))];
 
+  // Filters list of items rendered inside current menu container based on selected category tags
   const displayedFoods = filterCategory === "All" ? foods : foods.filter(f => {
     const cats = Array.isArray(f.categories) && f.categories.length ? f.categories : [f.category || ""];
     return cats.includes(filterCategory);
   });
 
   return (
+    // Outer page structure with bottom padding margins
     <div className="w-full pb-16">
 
-      {/* Page Header */}
+      {/* --- HEADER SECTION --- */}
+      {/* Tailwind classes: flex layouts wrap items on smaller viewports; tracking-tight aligns font spacings */}
       <MotionDiv initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} className="mb-8 flex items-start justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
@@ -314,11 +394,14 @@ export default function ManageFoods() {
           </Button>
         </div>
       </MotionDiv>
+      {/* --- END HEADER SECTION --- */}
 
+      {/* --- CRUD FORM LAYOUT --- */}
+      {/* Uses a 2-column layout on extra large viewports ('xl:grid-cols-[1fr_300px]') to separate form content and media previews */}
       <form id="food-form" onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_300px] gap-6">
 
-          {/* ── LEFT COLUMN ── */}
+          {/* ── LEFT COLUMN: FORM SECTIONS ── */}
           <div className="space-y-5">
 
             {/* Section 1: Basic Info */}
@@ -590,7 +673,7 @@ export default function ManageFoods() {
                   <input name="price" type="number" value={form.price} onChange={handleChange} placeholder="Enter combo price" className={inputCls + " mt-1"} />
                 </div>
 
-                {/* Summary */}
+                {/* Summary Box */}
                 <div className="rounded-xl border border-emerald-200 dark:border-emerald-900/40 bg-white dark:bg-slate-950 overflow-hidden">
                   <div className="px-4 py-2.5 bg-emerald-50 dark:bg-emerald-950/20 border-b border-emerald-100 dark:border-emerald-900/30">
                     <span className="text-xs font-black text-emerald-700 dark:text-emerald-300 uppercase tracking-wide">Combo Summary</span>
@@ -633,7 +716,8 @@ export default function ManageFoods() {
 
           </div>
 
-          {/* ── RIGHT COLUMN ── */}
+          {/* ── RIGHT COLUMN: DYNAMIC UPLOAD CONTROL CARD ── */}
+          {/* Card is locked sticky relative to scrolling boundaries */}
           <div>
             <Card className="p-6 border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-950 sticky top-20">
               <h2 className="text-sm font-black text-slate-900 dark:text-white mb-1">
@@ -685,8 +769,9 @@ export default function ManageFoods() {
 
         </div>
       </form>
+      {/* --- END CRUD FORM LAYOUT --- */}
 
-      {/* Current Menu */}
+      {/* --- BOTTOM SECTION: CATALOG ITEMS DISPLAY & SEARCH/FILTER --- */}
       <div className="mt-14 mb-6">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <h2 className="text-xl font-black text-slate-900 dark:text-white">Current Menu ({foods.length})</h2>
@@ -705,6 +790,7 @@ export default function ManageFoods() {
         </div>
       </div>
 
+      {/* Catalog items Grid rendering */}
       <MotionDiv layout className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         <AnimatePresence>
           {displayedFoods.map((f, i) => (
@@ -750,6 +836,7 @@ export default function ManageFoods() {
           ))}
         </AnimatePresence>
 
+        {/* Empty catalog fallback interface */}
         {displayedFoods.length === 0 && (
           <div className="col-span-full py-16 text-center bg-white dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800/60">
             <UtensilsCrossed size={28} className="text-slate-300 dark:text-slate-700 mx-auto mb-3" />
@@ -758,12 +845,16 @@ export default function ManageFoods() {
           </div>
         )}
       </MotionDiv>
+      {/* --- END BOTTOM CATALOG SECTION --- */}
 
     </div>
   );
 }
 
-// Small helper components
+// ==========================================
+// FORM HELPER COMPONENTS
+// ==========================================
+
 function SectionTitle({ num, title, sub }) {
   return (
     <div className="mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">

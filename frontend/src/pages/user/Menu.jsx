@@ -16,10 +16,16 @@ import BudgetAssistant from "../../components/dashboard/BudgetAssistant";
 const API = getApiUrl();
 const MotionDiv = motion.div;
 
+/**
+ * ComboItemsTicker Sub-component
+ * 
+ * Alternates display of items included in a food combo pack using a timed interval and framer-motion transitions.
+ */
 function ComboItemsTicker({ items = [] }) {
   const comboItems = items.filter((item) => item?.name);
   const [activeIndex, setActiveIndex] = useState(0);
 
+  // Rotate through combo components every 3 seconds
   useEffect(() => {
     if (comboItems.length <= 1) return undefined;
     const timer = setInterval(() => {
@@ -55,42 +61,70 @@ function ComboItemsTicker({ items = [] }) {
   );
 }
 
+/**
+ * Menu Component
+ * 
+ * The main storefront dashboard page. Contains custom search inputs, auto-sliding deal banners,
+ * horizontal category lists, popular/recommended lists, comprehensive details modal with variant customization/review lists,
+ * and a floating cart summary drawer.
+ */
 export default function Menu() {
   const navigate = useNavigate();
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
 
-  // FOOD DATA & STATES
+  /* --- STATE DECLARATIONS --- */
+  
+  // foods: Full inventory downloaded from API
   const [foods, setFoods] = useState([]);
+  // search: Raw input text matching product labels
   const [search, setSearch] = useState("");
+  // category: Active filtering tag category ("All", "Pizza", "Favorites", etc.)
   const [category, setCategory] = useState("All");
+  // vegMode: Boolean filter to exclude non-veg dishes
   const [vegMode, setVegMode] = useState(false);
+  // vegModeNotice: Floating notification message for veg toggle action
   const [vegModeNotice, setVegModeNotice] = useState("");
+  // showAllCategories: Controls see-all overlay modal for categories
   const [showAllCategories, setShowAllCategories] = useState(false);
+  // showAllFoods: Expands items section lists
   const [showAllFoods, setShowAllFoods] = useState(false);
+  // loading: Spinner visibility tracker
   const [loading, setLoading] = useState(true);
+  
+  // selectedFood: Food item object actively opened in Details modal
   const [selectedFood, setSelectedFood] = useState(null);
+  // selectedVariant: Active customization sub-option chosen (e.g. Regular, Medium, Large)
   const [selectedVariant, setSelectedVariant] = useState(null);
+  // selectedFoodQty: Custom increment counter for active modal card
   const [selectedFoodQty, setSelectedFoodQty] = useState(1);
+  // activeFoodCollection: Details list overlay for "See All" triggers on card grids
   const [activeFoodCollection, setActiveFoodCollection] = useState(null);
+  // foodReviews: Downloaded review threads for selected modal product
   const [foodReviews, setFoodReviews] = useState([]);
+  // favorites: Array of food identifiers liked by user
   const [favorites, setFavorites] = useState([]);
+  // cart: Array containing quantities and names of checkout products
   const [cart, setCart] = useState([]);
   
-  // BUDGET ASSISTANT STATE
+  // isBudgetOpen: Controls state visibility for BudgetAssistant component
   const [isBudgetOpen, setIsBudgetOpen] = useState(false);
 
-  // NOTIFICATIONS & PROFILE
+  // notifications: Alerts sent to customer
   const [notifications, setNotifications] = useState([]);
+  // user: Primary profile details, including address book list
   const [user, setUser] = useState({});
+  // showAddressPicker: Toggles location chooser dropdown in navigation bar
   const [showAddressPicker, setShowAddressPicker] = useState(false);
+  // newAddress: Temporary form inputs for adding shipping locations
   const [newAddress, setNewAddress] = useState({ label: "Home", details: "", city: "", state: "" });
 
-  // BANNERS STATE
+  // banners: Deals and promos list from backend
   const [banners, setBanners] = useState([]);
+  // currentBannerIdx: Slide position of the hero offer banner
   const [currentBannerIdx, setCurrentBannerIdx] = useState(0);
 
-  // Fallback banners if none exist in the database
+  // defaultBanners: Fallbacks in case database banners are empty
   const defaultBanners = [
     {
       _id: "default-1",
@@ -121,7 +155,7 @@ export default function Menu() {
     }
   ];
 
-  // CATEGORIES LIST (Requested category mapping)
+  // categoriesList: Hardcoded mapping array representing supported food taxonomies
   const categoriesList = [
     { id: "All", name: "All", icon: "All" },
     { id: "Starter", name: "Starter", icon: "ST" },
@@ -175,6 +209,9 @@ export default function Menu() {
     { id: "Drinks", name: "Drinks", icon: "DR" }
   ];
 
+  /* --- DATA FETCHING & EFFECTS --- */
+
+  // Synchronizes category selection from location query string changes
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const catParam = params.get("category");
@@ -183,12 +220,14 @@ export default function Menu() {
     }
   }, [location.search]);
 
+  // Clears veg mode bubble alert after a short duration
   useEffect(() => {
     if (!vegModeNotice) return;
     const timer = setTimeout(() => setVegModeNotice(""), 2800);
     return () => clearTimeout(timer);
   }, [vegModeNotice]);
 
+  // Load menu assets and customer configs on initialization
   useEffect(() => {
     loadFoods();
     loadFavorites();
@@ -198,7 +237,7 @@ export default function Menu() {
     loadUser();
   }, []);
 
-  // AUTO BANNER INTERVAL
+  // Sets up slideshow timers for rotating hero discount banners
   useEffect(() => {
     const bannerCount = banners.length > 0 ? banners.length : defaultBanners.length;
     const timer = setInterval(() => {
@@ -207,6 +246,9 @@ export default function Menu() {
     return () => clearInterval(timer);
   }, [banners, defaultBanners.length]);
 
+  /**
+   * loadUser: Fetches current customer profile and normalizes addresses array.
+   */
   const loadUser = async () => {
     try {
       const token = await getToken();
@@ -228,6 +270,9 @@ export default function Menu() {
     }
   };
 
+  /**
+   * loadNotifications: Retrieves system notices.
+   */
   const loadNotifications = async () => {
     try {
       const token = await getToken();
@@ -243,6 +288,9 @@ export default function Menu() {
     }
   };
 
+  /**
+   * loadBanners: Downloads home banners.
+   */
   const loadBanners = async () => {
     try {
       const res = await fetch(`${API}/api/banners`);
@@ -255,11 +303,17 @@ export default function Menu() {
     }
   };
 
+  /**
+   * loadCart: Retrieves items from LocalStorage and sets React state.
+   */
   const loadCart = () => {
     const data = JSON.parse(localStorage.getItem("cart")) || [];
     setCart(data);
   };
 
+  /**
+   * loadFavorites: Syncs loved menu list identifiers.
+   */
   const loadFavorites = async () => {
     try {
       const token = await getToken();
@@ -276,6 +330,11 @@ export default function Menu() {
     }
   };
 
+  /* --- EVENT HANDLERS & HELPERS --- */
+
+  /**
+   * toggleFavoriteFood: Requests server toggle favorite dish status.
+   */
   const toggleFavoriteFood = async (foodId) => {
     if (!requireLogin("/user/wishlist")) return;
     try {
@@ -301,6 +360,9 @@ export default function Menu() {
     return favorites.includes(foodId);
   }, [favorites]);
 
+  /**
+   * loadFoods: Requests food items database.
+   */
   const loadFoods = async () => {
     try {
       const res = await fetch(`${API}/api/foods`);
@@ -314,6 +376,9 @@ export default function Menu() {
     }
   };
 
+  /**
+   * getVariantOptions: Formats list of pricing choices inside complex dish records.
+   */
   const getVariantOptions = useCallback((food) => {
     const variants = Array.isArray(food?.variants) ? food.variants : [];
     return variants
@@ -331,6 +396,9 @@ export default function Menu() {
 
   const hasVariantChoices = useCallback((food) => getVariantOptions(food).length > 0, [getVariantOptions]);
 
+  /**
+   * getFoodCategories: Collects categories list associated with a dish.
+   */
   const getFoodCategories = useCallback((food) => {
     const categories = Array.isArray(food?.categories) && food.categories.length
       ? food.categories
@@ -352,6 +420,9 @@ export default function Menu() {
     return next >= 4 ? "4+ Person" : `${next} Person`;
   };
 
+  /**
+   * withSelectedVariant: Enhances cart keys for variant-customized items to prevent overlap.
+   */
   const withSelectedVariant = (food, variant = null) => {
     const selected = variant || getVariantOptions(food)[0] || null;
     if (!selected) return food;
@@ -364,6 +435,9 @@ export default function Menu() {
     };
   };
 
+  /**
+   * updateQuantity: Syncs item choices into local storage and fires sync events.
+   */
   const updateQuantity = (food, newQty) => {
     let currentCart = JSON.parse(localStorage.getItem("cart")) || [];
     const cartId = food._cartId || food._id;
@@ -399,6 +473,9 @@ export default function Menu() {
     window.dispatchEvent(new Event("cart-updated"));
   };
 
+  /**
+   * selectFoodDetails: Selects dish for displaying deep descriptions and downloads critiques.
+   */
   const selectFoodDetails = async (food) => {
     setSelectedFood(food);
     setSelectedVariant(getVariantOptions(food)[0] || null);
@@ -417,16 +494,17 @@ export default function Menu() {
   const isNonVegFood = useCallback((food) => {
     const cat = getFoodCategories(food).join(" ").toLowerCase();
     const name = String(food.name || "").toLowerCase();
-    // "egg" is its own type — show in veg mode unless explicitly non-veg
-    if (food.veg === "egg") return false; // egg shows in veg mode
+    if (food.veg === "egg") return false;
     return food.veg === false || food.veg === "false" || cat.includes("non-veg") || cat.includes("chicken") || name.includes("chicken") || name.includes("mutton");
   }, [getFoodCategories]);
 
   const isVegFood = useCallback((food) => !isNonVegFood(food), [isNonVegFood]);
 
-  // RECOMMENDATION & FILTER LOGIC
   const matchesVegMode = useCallback((food) => !vegMode || isVegFood(food), [isVegFood, vegMode]);
 
+  /* --- MEMOIZED DERIVED VALUES --- */
+
+  // Performs searching, category filtering, and veg mode checking
   const filteredFoods = useMemo(() => {
     const searchText = search.trim().toLowerCase();
     const selectedCategory = category.toLowerCase();
@@ -462,13 +540,11 @@ export default function Menu() {
     });
   }, [category, foods, getFoodCategories, isFavorite, matchesVegMode, search]);
 
-  // POPULAR DISHES (Ranked by highest rating)
   const popularDishes = useMemo(() => foods
     .filter(matchesVegMode)
     .filter(f => Number(f.rating || 0) >= 2.5)
     .sort((a, b) => b.rating - a.rating), [foods, matchesVegMode]);
 
-  // RECOMMENDED FOR YOU (Ranked by popularity or recent updates, filtered by active meal category time-to-time)
   const recommendedFoods = useMemo(() => {
     const hour = new Date().getHours();
     let activeCategory = "";
@@ -490,6 +566,7 @@ export default function Menu() {
       })
       .sort((a, b) => b.ratingCount - a.ratingCount || new Date(b.updatedAt) - new Date(a.updatedAt));
   }, [foods, matchesVegMode]);
+
   const allProductFoods = useMemo(() => foods.filter(matchesVegMode), [foods, matchesVegMode]);
   const visibleCategories = categoriesList.slice(0, 8);
 
@@ -504,6 +581,7 @@ export default function Menu() {
       name: item.name || foodDetails?.name,
     };
   }), [cart, foodById]);
+
   const cartTotal = useMemo(() => cart.reduce((sum, item) => sum + ((Number(item.price || 0) + Number(item.packingCharge || 0)) * item.qty), 0), [cart]);
   const cartCount = useMemo(() => cart.reduce((sum, item) => sum + item.qty, 0), [cart]);
   const cartPreviewItem = cartItemsWithDetails[0];
@@ -513,6 +591,9 @@ export default function Menu() {
   const unreadNotificationCount = useMemo(() => notifications.filter((item) => !(item.isRead || item.read)).length, [notifications]);
   const isLoggedIn = Boolean(localStorage.getItem("token") && localStorage.getItem("auth_state") === "logged_in");
 
+  /**
+   * requireLogin: Restricts account actions to logged-in customers.
+   */
   const requireLogin = (from = "/user/menu") => {
     if (isLoggedIn) return true;
     navigate("/", {
@@ -533,20 +614,26 @@ export default function Menu() {
       ? cart.find((item) => item._id === selectedFood._id || item.foodId === selectedFood._id)
       : null;
   const selectedFoodPrice = selectedVariant?.price || Number(selectedFood?.price || 0);
+
   const cleanAddressPart = (value = "") => String(value)
     .replace(/\b(?:Khagaria|)\b/gi, "")
     .replace(/\s*,\s*,/g, ",")
     .replace(/^[\s,.-]+|[\s,.-]+$/g, "")
     .trim();
+
   const formatAddressLine = (addr) => {
     if (!addr) return "";
     return [addr.details, addr.city, addr.state].map(cleanAddressPart).filter(Boolean).join(", ");
   };
+
   const primaryAddress = (user.addresses || []).find(addr => addr.isPrimary) || (user.addresses || [])[0];
   const primaryAddressText = primaryAddress
     ? [primaryAddress.label, formatAddressLine(primaryAddress)].filter(Boolean).join(" - ")
     : "Select address";
 
+  /**
+   * getCategoryImage: Assigns images based on matches within the dynamic food list.
+   */
   const getCategoryImage = (cat) => {
     if (cat.id === "All") return "/greengo-logo.svg";
     const selected = cat.id.toLowerCase();
@@ -578,6 +665,9 @@ export default function Menu() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  /**
+   * renderCartAction: Render standard Add/Subtract increment counters on cards.
+   */
   const renderCartAction = (food) => {
     const cartItem = getCartItem(food);
     if (!cartItem) {
@@ -624,6 +714,9 @@ export default function Menu() {
     setActiveFoodCollection({ title, items });
   };
 
+  /**
+   * renderFoodCard: Render individual product elements inside scrolling streams.
+   */
   const renderFoodCard = (food, options = {}) => {
     const {
       className = "",
@@ -711,6 +804,9 @@ export default function Menu() {
     );
   };
 
+  /**
+   * saveAddresses: Saves address updates on servers.
+   */
   const saveAddresses = async (addresses) => {
     const token = await getToken();
     const res = await fetch(`${API}/api/users/profile`, {
@@ -740,9 +836,10 @@ export default function Menu() {
   return (
     <div className="max-w-7xl mx-auto w-full pb-10 px-2 sm:px-4 relative animate-fade-in transition-colors">
       
-      {/* 1. HEADER SECTION */}
+      {/* --- 1. HEADER SECTION --- */}
+      {/* Tailwind: sticky top-0 keeps dashboard header pinned. z-[9999] floats it above scroll elements */}
       <div className="sticky top-0 z-[9999] flex items-center justify-between gap-3 py-2.5 mb-2 border-b border-slate-100 dark:border-slate-800/60 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-xl shadow-[0_2px_12px_rgba(0,0,0,0.08)]">
-        {/* Left: Branding & Location */}
+        {/* Left: Branding logo & clickable Shipping Address popover */}
         <div className="flex flex-1 items-center gap-3 min-w-0">
           <div className="w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center shadow-lg shadow-brand-500/20 overflow-hidden border border-brand-100 dark:border-brand-900 bg-white [&>span]:hidden">
             <img src="/greengo-logo.svg" alt="GreenGo" className="w-full h-full object-cover" />
@@ -765,6 +862,7 @@ export default function Menu() {
               <span className="truncate">{primaryAddressText}</span>
               <ChevronDown size={12} className="shrink-0" />
             </button>
+            {/* Popover selector modal overlay for registered address labels */}
             {showAddressPicker && (
               <div className="absolute left-0 top-full mt-3 w-[300px] max-w-[calc(100vw-2rem)] bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-2xl z-[100] p-3">
                 <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
@@ -793,9 +891,8 @@ export default function Menu() {
           </div>
         </div>
 
-        {/* Right Actions */}
+        {/* Right Actions: Theme Toggle, Notifications, User Profile Avatar */}
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2.5">
-          {/* Theme Switcher */}
           <button
             onClick={toggleTheme}
             className="w-9 h-11 sm:w-10 sm:h-12 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800"
@@ -804,7 +901,6 @@ export default function Menu() {
             {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
           </button>
 
-          {/* Notifications Icon with unread badge */}
           <button
             onClick={() => requireLogin("/user/notifications") && navigate("/user/notifications")}
             className="w-9 h-11 sm:w-10 sm:h-12 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800 relative"
@@ -817,7 +913,6 @@ export default function Menu() {
             )}
           </button>
 
-          {/* User Avatar */}
           <div 
             onClick={() => requireLogin("/user/profile") && navigate("/user/profile")}
             className="w-9 h-11 sm:w-10 sm:h-12 rounded-xl bg-brand-500 text-white flex items-center justify-center text-sm font-extrabold cursor-pointer hover:scale-105 transition-transform"
@@ -827,7 +922,7 @@ export default function Menu() {
         </div>
       </div>
 
-      {/* 2. SEARCH BAR */}
+      {/* --- 2. SEARCH BAR SECTION --- */}
       <div className="mb-3.5 flex items-stretch gap-2 sm:gap-3">
         <div className="relative flex-1 min-w-0 h-14">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -854,6 +949,8 @@ export default function Menu() {
             <Mic size={20} />
           </button>
         </div>
+        
+        {/* Toggle vegMode with animated slider switch */}
         <button
           type="button"
           onClick={() => {
@@ -877,6 +974,7 @@ export default function Menu() {
         </button>
       </div>
 
+      {/* Floating alert for Veg Mode changes */}
       <AnimatePresence>
         {vegModeNotice && (
           <MotionDiv
@@ -890,7 +988,7 @@ export default function Menu() {
         )}
       </AnimatePresence>
 
-      {/* 3. AUTO SLIDING OFFER BANNER */}
+      {/* --- 3. AUTO SLIDING OFFER HERO BANNER --- */}
       {currentBanner && (
         <div className="relative h-56 sm:h-64 md:h-72 lg:h-80 rounded-3xl overflow-hidden mb-4 shadow-md shadow-brand-500/5 transition-all animate-fade-in group bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950">
           <img
@@ -920,7 +1018,6 @@ export default function Menu() {
             </button>
           </div>
           
-          {/* Slides dots */}
           <div className="absolute bottom-4 right-6 flex gap-1.5 z-10">
             {activeBannersList.map((_, i) => (
               <div 
@@ -934,7 +1031,7 @@ export default function Menu() {
         </div>
       )}
 
-      {/* 4. BUDGET ASSISTANT CARD */}
+      {/* --- 4. BUDGET ASSISTANT CARD SECTION --- */}
       <div className="mb-4 rounded-2xl sm:rounded-3xl border border-brand-100 dark:border-brand-900/60 bg-white dark:bg-slate-900 shadow-sm px-3 py-6 sm:px-5 sm:py-8 flex items-center gap-3 sm:gap-5">
         <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full bg-green-600 text-white flex items-center justify-center shrink-0 shadow-lg shadow-green-600/20">
           <Wallet size={23} className="sm:w-8 sm:h-8" />
@@ -956,7 +1053,7 @@ export default function Menu() {
         </button>
       </div>
 
-      {/* 5. FOOD CATEGORIES HORIZONTAL SLIDER */}
+      {/* --- 5. FOOD CATEGORIES HORIZONTAL SLIDER --- */}
       <div className="mb-5">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Food Categories</h3>
@@ -1013,6 +1110,7 @@ export default function Menu() {
         </div>
       </div>
 
+      {/* Categories modal listing overlay */}
       <AnimatePresence>
         {showAllCategories && (
           <div className="fixed inset-0 z-[1800] flex items-end justify-center bg-slate-950/55 backdrop-blur-sm">
@@ -1081,7 +1179,7 @@ export default function Menu() {
         )}
       </AnimatePresence>
 
-      {/* 6. POPULAR DISHES SECTION */}
+      {/* --- 6. POPULAR DISHES GRID --- */}
       {category === "All" && (
         <div className="mb-6">
           <div className="flex items-center justify-between mb-3">
@@ -1098,7 +1196,7 @@ export default function Menu() {
         </div>
       )}
 
-      {/* 7. RECOMMENDED FOR YOU */}
+      {/* --- 7. RECOMMENDED FOR YOU GRID --- */}
       {category === "All" && (
         <div className="mb-6">
           <div className="flex items-center justify-between mb-3">
@@ -1115,7 +1213,7 @@ export default function Menu() {
         </div>
       )}
 
-      {/* 8. ALL PRODUCTS SECTION */}
+      {/* --- 8. ALL PRODUCTS LIST SECTION --- */}
       {category === "All" && search === "" && (
         <div className="mb-6">
           <div className="flex items-center justify-between mb-3">
@@ -1142,7 +1240,7 @@ export default function Menu() {
         </div>
       )}
 
-      {/* DYNAMIC PRODUCTS BY SELECTED CATEGORY OR SEARCH */}
+      {/* --- 9. DYNAMIC PRODUCTS FILTER LIST --- */}
       {(category !== "All" || search !== "") && (
         <div className="mb-10">
           <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight mb-4.5">
@@ -1241,6 +1339,7 @@ export default function Menu() {
         </div>
       )}
 
+      {/* --- 10. PRODUCT COLLECTION POPUP --- */}
       <AnimatePresence>
         {activeFoodCollection && (
           <div className="fixed inset-0 z-[1900] flex items-end justify-center bg-slate-950/60 backdrop-blur-sm sm:items-center sm:p-4">
@@ -1294,7 +1393,7 @@ export default function Menu() {
         )}
       </AnimatePresence>
 
-      {/* ── FOOD DETAILS MODAL ── */}
+      {/* --- 11. FOOD DETAILS & CUSTOMISATION MODAL --- */}
       <AnimatePresence>
         {selectedFood && (
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[2000] flex items-center justify-center p-4">
@@ -1304,6 +1403,7 @@ export default function Menu() {
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="bg-white dark:bg-slate-950 rounded-[2.5rem] shadow-2xl border border-slate-100 dark:border-slate-800/60 w-full max-w-2xl overflow-hidden flex flex-col max-h-[85vh]"
             >
+              {/* Modal Banner Image */}
               <div className="relative h-64 sm:h-80 bg-slate-50 dark:bg-slate-900 shrink-0 flex items-center justify-center p-4">
                 <img 
                   src={getImageUrl(selectedFood.image)} 
@@ -1328,6 +1428,7 @@ export default function Menu() {
                 </button>
               </div>
 
+              {/* Scrollable details contents */}
               <div className="p-6 sm:p-8 flex-1 overflow-y-auto space-y-6">
                 <div>
                   <div className="flex justify-between items-start gap-4 mb-3">
@@ -1361,6 +1462,7 @@ export default function Menu() {
                   <p className="text-slate-600 dark:text-slate-300 leading-relaxed font-medium">{selectedFood.description || "No description available."}</p>
                 </div>
 
+                {/* Combo detail items checklist */}
                 {selectedFood.foodType === "combo" && getComboItems(selectedFood).length > 0 && (
                   <div className="rounded-3xl border border-emerald-100 bg-emerald-50/70 p-4 dark:border-emerald-900/40 dark:bg-emerald-950/20">
                     <div className="mb-4 flex items-center justify-between gap-3">
@@ -1386,6 +1488,7 @@ export default function Menu() {
                   </div>
                 )}
 
+                {/* Variant choice picker */}
                 {selectedFoodVariantOptions.length > 0 && (
                   <div>
                     <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">Customisation</h3>
@@ -1423,7 +1526,7 @@ export default function Menu() {
 
                 <hr className="border-slate-100 dark:border-slate-800/60" />
 
-                {/* Reviews List */}
+                {/* Customer Review Logs */}
                 <div>
                   <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight mb-4">Customer Reviews</h3>
                   {foodReviews.length === 0 ? (
@@ -1463,6 +1566,7 @@ export default function Menu() {
                 </div>
               </div>
 
+              {/* Action Add/Update Toolbar */}
               <div className="p-6 border-t border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-950">
                 <div className="flex items-center gap-4">
                   <div className="flex h-14 shrink-0 items-center rounded-2xl border border-slate-200 bg-white p-1 dark:border-slate-800 dark:bg-slate-900">
@@ -1495,7 +1599,7 @@ export default function Menu() {
                 </div>
               </div>
 
-              {/* Add to Cart button */}
+              {/* Add to Cart fallback action panel */}
               <div className="hidden p-6 border-t border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-950">
                 {cart.find(i => i._id === selectedFood._id) ? (
                   <div className="flex items-center justify-between w-full bg-brand-50 dark:bg-brand-950/30 border border-brand-100 dark:border-brand-900 rounded-2xl p-2 shadow-sm">
@@ -1536,7 +1640,8 @@ export default function Menu() {
         )}
       </AnimatePresence>
 
-      {/* Floating Cart Strip */}
+      {/* --- 12. FLOATING BOTTOM CART PREVIEW BAR --- */}
+      {/* Tailwind: fixed bottom-[5.25rem] pins it right above bottom navigation tab bars on mobile viewports */}
       {cartCount > 0 && (
         <div className="fixed bottom-[5.25rem] left-1/2 z-[999] w-[94%] max-w-3xl -translate-x-1/2 animate-fade-in overflow-hidden rounded-2xl sm:rounded-3xl border border-slate-100 bg-white shadow-2xl shadow-slate-950/15 dark:border-slate-800 dark:bg-slate-950 sm:bottom-20 md:bottom-6">
           <div className="flex items-center gap-2 p-2.5 sm:gap-4 sm:p-4">
@@ -1600,7 +1705,7 @@ export default function Menu() {
         </div>
       )}
 
-      {/* BUDGET ASSISTANT MODAL FLOW */}
+      {/* --- 13. BUDGET ASSISTANT POPUP FLOW --- */}
       <BudgetAssistant
         isOpen={isBudgetOpen}
         onClose={() => setIsBudgetOpen(false)}

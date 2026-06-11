@@ -6,13 +6,40 @@ import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
 import { getApiUrl } from "../../utils/getApiUrl";
 
+/**
+ * ManageReviews Component
+ * Review moderation dashboard page. Allows admin users to search through
+ * user reviews, filter by rating score, toggle review hiding options,
+ * and permanently delete malicious or incorrect review entries.
+ */
 export default function ManageReviews() {
+  
+  // ==========================================
+  // STATE DECLARATIONS
+  // ==========================================
+
+  // Array of customer review logs fetched from database
   const [reviews, setReviews] = useState([]);
+
+  // Loading indicator for async fetch operations
   const [loading, setLoading] = useState(true);
+
+  // Search keyword string input state
   const [search, setSearch] = useState("");
+
+  // Select rating filters (All ratings vs specific star counts: 1-5)
   const [ratingFilter, setRatingFilter] = useState("All");
+
+  // General state container for operational warnings
   const [error, setError] = useState("");
 
+  // ==========================================
+  // DATA FETCHING & EVENT HANDLERS
+  // ==========================================
+
+  /**
+   * Fetches review list based on rating filter and search query parameters.
+   */
   const loadReviews = async () => {
     try {
       const token = await getToken();
@@ -43,15 +70,22 @@ export default function ManageReviews() {
     }
   };
 
+  // Re-fetch reviews whenever rating filter selections changes
   useEffect(() => {
     loadReviews();
   }, [ratingFilter]);
 
+  /**
+   * Submits a text keyword search request.
+   */
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     loadReviews();
   };
 
+  /**
+   * Updates hidden visibility states on reviews.
+   */
   const handleToggleVisibility = async (id, currentHidden) => {
     const isHidden = !!currentHidden;
     try {
@@ -76,6 +110,9 @@ export default function ManageReviews() {
     }
   };
 
+  /**
+   * Requests permanent deletion of a review entry.
+   */
   const handleDeleteReview = async (id) => {
     if (!window.confirm("Are you sure you want to permanently delete this review?")) return;
     try {
@@ -96,12 +133,15 @@ export default function ManageReviews() {
   };
 
   return (
+    // Outer layouts structure with margin alignments
     <div className="space-y-8">
-      {/* Title */}
+      
+      {/* --- HEADER SECTION --- */}
       <div>
         <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Manage Reviews</h1>
         <p className="text-slate-500 dark:text-slate-400 mt-2 text-base font-medium">Moderate customer ratings and review comments.</p>
       </div>
+      {/* --- END HEADER SECTION --- */}
 
       {error && (
         <div className="rounded-2xl border border-red-100 dark:border-red-950/50 bg-red-50 dark:bg-red-950/20 px-4 py-3 text-sm font-semibold text-red-600 dark:text-red-400">
@@ -109,7 +149,8 @@ export default function ManageReviews() {
         </div>
       )}
 
-      {/* Controls */}
+      {/* --- CONTROLS / FILTERS BAR --- */}
+      {/* Tailwind classes: flex-col with md:flex-row handles alignment from vertical to horizontal block layouts */}
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white dark:bg-slate-950 p-6 rounded-3xl border border-slate-100 dark:border-slate-800/60 shadow-sm">
         <form onSubmit={handleSearchSubmit} className="relative w-full md:w-80">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -125,6 +166,7 @@ export default function ManageReviews() {
           <button type="submit" className="hidden">Search</button>
         </form>
 
+        {/* Dynamic Ratings Star Filter Badges list */}
         <div className="flex flex-wrap gap-2 w-full md:w-auto">
           {["All", "5", "4", "3", "2", "1"].map((val) => (
             <button
@@ -141,7 +183,10 @@ export default function ManageReviews() {
           ))}
         </div>
       </div>
+      {/* --- END CONTROLS / FILTERS BAR --- */}
 
+      {/* --- REVIEWS DISPLAY LIST GRID --- */}
+      {/* Uses a 3-column layouts layout via grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 */}
       {loading ? (
         <div className="flex justify-center items-center py-20">
           <div className="w-12 h-12 border-4 border-brand-100 border-t-brand-500 rounded-full animate-spin" />
@@ -167,7 +212,7 @@ export default function ManageReviews() {
                   </span>
                 </div>
 
-                {/* Rating stars */}
+                {/* Rating stars badge rendering */}
                 <div className="flex gap-0.5 text-yellow-400 mb-4 bg-slate-50 dark:bg-slate-900 p-2 rounded-xl w-fit border border-slate-100 dark:border-slate-800/60">
                   {[...Array(r.rating)].map((_, idx) => (
                     <Star key={idx} size={14} fill="currentColor" className="text-yellow-400" />
@@ -180,7 +225,7 @@ export default function ManageReviews() {
                 <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed font-medium mb-6">"{r.reviewText}"</p>
               </div>
 
-              {/* Actions */}
+              {/* Review card Action Moderation options */}
               <div className="flex gap-2 pt-4 border-t border-slate-100/60 dark:border-slate-800/60">
                 <Button
                   variant="secondary"
@@ -210,6 +255,8 @@ export default function ManageReviews() {
           ))}
         </div>
       )}
+      {/* --- END REVIEWS DISPLAY LIST GRID --- */}
+
     </div>
   );
 }
