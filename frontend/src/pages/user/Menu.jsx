@@ -586,7 +586,7 @@ export default function Menu() {
           onClick={() => {
             hasVariantChoices(food) ? selectFoodDetails(food) : updateQuantity(food, 1);
           }}
-          className="px-3.5 py-2 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs shadow-md shadow-brand-500/20 active:scale-95 transition-all"
+          className="px-2.5 py-1.5 rounded-lg bg-brand-500 hover:bg-brand-600 text-white font-black text-[9px] sm:text-xs shadow-md shadow-brand-500/20 active:scale-95 transition-all shrink-0"
         >
           + Add
         </button>
@@ -594,31 +594,24 @@ export default function Menu() {
     }
 
     return (
-      <div className="flex items-center justify-end gap-1.5">
-        <button
-          type="button"
-          onClick={() => requireLogin("/user/cart") && navigate("/user/cart")}
-          className="px-2.5 py-2 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-950 text-[10px] font-black shadow-sm"
-        >
-          Cart
-        </button>
-        <div className="flex items-center bg-brand-50 dark:bg-brand-950/40 border border-brand-100 dark:border-brand-800 rounded-xl p-0.5">
+      <div className="flex items-center gap-1 shrink-0">
+        <div className="flex items-center bg-brand-50 dark:bg-brand-950/40 border border-brand-100 dark:border-brand-800 rounded-lg p-0.5">
           <button
             onClick={() => {
               hasVariantChoices(food) ? selectFoodDetails(food) : updateQuantity(food, cartItem.qty - 1);
             }}
-            className="w-8 h-8 rounded-lg bg-white dark:bg-slate-900 text-brand-600 dark:text-brand-300 font-extrabold flex items-center justify-center border border-slate-100 dark:border-slate-800"
+            className="w-5 h-5 rounded-md bg-white dark:bg-slate-900 text-brand-600 dark:text-brand-300 font-extrabold flex items-center justify-center border border-slate-100 dark:border-slate-800 text-[9px]"
           >
             -
           </button>
-          <span className="font-black text-slate-800 dark:text-white px-2 text-xs min-w-7 text-center">
+          <span className="font-black text-slate-800 dark:text-white px-1 text-[10px] min-w-4 text-center">
             {cartItem.qty}
           </span>
           <button
             onClick={() => {
               hasVariantChoices(food) ? selectFoodDetails(food) : updateQuantity(food, cartItem.qty + 1);
             }}
-            className="w-8 h-8 rounded-lg bg-brand-500 text-white font-extrabold flex items-center justify-center shadow-md shadow-brand-500/20"
+            className="w-5 h-5 rounded-md bg-brand-500 text-white font-extrabold flex items-center justify-center shadow-sm text-[9px]"
           >
             +
           </button>
@@ -634,94 +627,85 @@ export default function Menu() {
   const renderFoodCard = (food, options = {}) => {
     const {
       className = "",
-      deliveryTime = "20-25 min",
-      oldPriceFactor = 1.2,
-      categoryPrefix = "In Category:",
+      deliveryTime = "15-20 min",
+      oldPriceFactor = 1.25,
+      categoryPrefix = "Category:",
     } = options;
-    const comboItems = getComboItems(food);
-    const isCombo = food.foodType === "combo" && comboItems.length > 0;
-    const comboTotal = getComboTotalPrice(food);
-    const comboSaving = Math.max(0, comboTotal - Number(food.price || 0));
     const preparationTime = food.preparationTime || deliveryTime;
 
     return (
       <div
         key={food._id}
-        className={`min-w-[240px] sm:min-w-[260px] lg:min-w-[280px] snap-start bg-white dark:bg-slate-900 rounded-3xl p-4.5 pb-5 border border-slate-100 dark:border-slate-800/60 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col group relative overflow-hidden min-h-[410px] h-full ${className}`}
+        className={`min-w-0 bg-white dark:bg-slate-900 rounded-2xl p-2 pb-2.5 border border-slate-100 dark:border-slate-800/60 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex flex-col group relative overflow-hidden h-full ${className}`}
       >
+        {/* Favorite & Rating overlays */}
+        <div className="absolute top-1.5 left-1.5 z-10 flex items-center gap-1">
+          <button
+            onClick={() => toggleFavoriteFood(food._id)}
+            className="w-6 h-6 flex items-center justify-center rounded-full bg-white/95 dark:bg-slate-950/95 backdrop-blur-sm border border-slate-100 dark:border-slate-800/50 text-slate-500 hover:text-red-500 transition-colors shadow-sm"
+          >
+            <Heart size={10} className={isFavorite(food._id) ? "fill-red-500 text-red-500" : ""} />
+          </button>
+        </div>
+
+        <div className="absolute top-1.5 right-1.5 z-10 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm px-1.5 py-0.5 rounded-md text-[8px] font-black text-slate-800 dark:text-slate-100 flex items-center gap-0.5 shadow-sm">
+          <Star size={8} className="text-amber-500 fill-amber-500 shrink-0" />
+          <span>{food.rating ? food.rating.toFixed(1) : "5.0"}</span>
+        </div>
+
+        {/* Food Image */}
         <div
           onClick={() => selectFoodDetails(food)}
-          className="relative h-40 w-full rounded-2xl overflow-hidden mb-4 bg-slate-50 dark:bg-slate-950 p-2 cursor-pointer flex items-center justify-center"
+          className="relative h-20 sm:h-24 w-full rounded-xl overflow-hidden mb-2 bg-slate-50 dark:bg-slate-950 p-1 cursor-pointer flex items-center justify-center"
         >
           <img
             src={getImageUrl(food.image)}
             alt={food.name}
-            className="max-w-full max-h-full object-contain rounded-xl transition-transform duration-500 group-hover:scale-105"
+            className="max-w-full max-h-full object-contain rounded-lg transition-transform duration-500 group-hover:scale-105"
             onError={(e) => { e.target.src = 'https://placehold.co/400x300?text=Food'; }}
           />
-          <div className="absolute bottom-2 left-2 bg-slate-950/95 dark:bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-black text-white dark:text-slate-950 flex items-center gap-1 shadow-sm">
-            <Clock size={10} className="text-brand-400" />
+        </div>
+
+        {/* Title & Category info */}
+        <div className="px-0.5 flex-1 flex flex-col">
+          <h4
+            onClick={() => selectFoodDetails(food)}
+            className="font-black text-slate-900 dark:text-white text-[11px] sm:text-xs md:text-sm group-hover:text-brand-500 transition-colors line-clamp-1 mb-0.5 cursor-pointer leading-tight"
+            title={food.name}
+          >
+            {food.name}
+          </h4>
+
+          <div className="flex items-center gap-1 mb-1.5">
+            <span className={`w-2.5 h-2.5 flex items-center justify-center border ${food.isVeg ? "border-emerald-500" : "border-red-500"} p-0.5 rounded-sm shrink-0`}>
+              <span className={`w-1 h-1 rounded-full ${food.isVeg ? "bg-emerald-500" : "bg-red-500"}`} />
+            </span>
+            <span className="text-[8px] text-slate-400 dark:text-slate-500 font-extrabold truncate">
+              {getFoodCategoryLabel(food)}
+            </span>
+          </div>
+
+          {/* Prep time badge */}
+          <div className="flex items-center gap-0.5 mb-2 bg-slate-50 dark:bg-slate-950 px-1.5 py-0.5 rounded-md w-fit text-[8px] sm:text-[9px] font-black text-slate-500 dark:text-slate-400 leading-none">
+            <Clock size={8} className="text-brand-500 shrink-0" />
             <span>{preparationTime}</span>
           </div>
-          <div className="absolute top-2 right-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm px-2 py-0.5 rounded-lg text-[10px] font-black text-slate-800 dark:text-slate-100 flex items-center gap-1 shadow-sm">
-            <Star size={10} className="text-amber-500 fill-amber-500 shrink-0" />
-            <span>{food.rating ? food.rating.toFixed(1) : "4.2"}</span>
-          </div>
         </div>
 
-        <h4
-          onClick={() => selectFoodDetails(food)}
-          className="font-bold text-slate-900 dark:text-white text-base group-hover:text-brand-500 transition-colors line-clamp-1 mb-1 cursor-pointer"
-        >
-          {food.name}
-        </h4>
-        <p className="text-[11px] text-slate-500 dark:text-slate-300 font-bold uppercase tracking-wider mb-2.5">
-          {categoryPrefix} {getFoodCategoryLabel(food)}
-        </p>
-        <div className="mb-3 flex flex-wrap gap-1.5">
-          <span className="inline-flex items-center gap-1 rounded-full bg-slate-50 px-2 py-1 text-[10px] font-black text-slate-600 ring-1 ring-slate-100 dark:bg-slate-950 dark:text-slate-300 dark:ring-slate-800">
-            <Users size={10} /> {getServingLabel(food.servingSize)}
-          </span>
-          <span className="inline-flex items-center gap-1 rounded-full bg-orange-50 px-2 py-1 text-[10px] font-black text-orange-700 ring-1 ring-orange-100 dark:bg-orange-950/20 dark:text-orange-300 dark:ring-orange-900/40">
-            <Flame size={10} /> {food.spiceLevel || "Medium"}
-          </span>
-          <span className="rounded-full bg-indigo-50 px-2 py-1 text-[10px] font-black text-indigo-700 ring-1 ring-indigo-100 dark:bg-indigo-950/20 dark:text-indigo-300 dark:ring-indigo-900/40">
-            {food.sizeLevel || "Medium"}
-          </span>
-        </div>
-        {isCombo && (
-          <div className="mb-3 space-y-2">
-            <ComboItemsTicker items={comboItems} />
-            <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2 text-[10px] font-black text-slate-600 dark:bg-slate-950 dark:text-slate-300">
-              <span>{comboItems.length} items total ₹{comboTotal}</span>
-              {comboSaving > 0 && <span className="text-emerald-600 dark:text-emerald-300">Save ₹{comboSaving}</span>}
-            </div>
-          </div>
-        )}
-        <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed mb-4.5 font-medium flex-1">
-          {food.description}
-        </p>
-
-        <div className="flex items-center justify-between gap-3 mt-auto pt-3 border-t border-slate-100 dark:border-slate-800/50">
+        {/* Price & Action button */}
+        <div className="flex items-center justify-between gap-1 mt-auto pt-1.5 border-t border-slate-100 dark:border-slate-800/50 px-0.5">
           <div className="flex flex-col">
-            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-300 line-through leading-none">
-              ₹{Math.round(food.price * oldPriceFactor)}
-            </span>
-            <span className="text-lg font-black text-slate-950 dark:text-white leading-none pt-1 tabular-nums">
+            {food.price && (
+              <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 line-through leading-none mb-0.5">
+                ₹{Math.round(food.price * oldPriceFactor)}
+              </span>
+            )}
+            <span className="text-xs sm:text-sm font-black text-slate-950 dark:text-white leading-none tabular-nums">
               ₹{food.price}
             </span>
           </div>
 
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={() => toggleFavoriteFood(food._id)}
-              className="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 text-slate-500 dark:text-slate-400 hover:text-red-500 transition-colors"
-            >
-              <Heart size={14} className={isFavorite(food._id) ? "fill-red-500 text-red-500" : ""} />
-            </button>
-
-            {renderCartAction(food)}
-          </div>
+          {renderCartAction(food)}
         </div>
       </div>
     );
@@ -1107,8 +1091,8 @@ export default function Menu() {
             <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Popular Dishes</h3>
             <button type="button" onClick={() => openFoodCollection("Popular Dishes", popularDishes)} className="text-xs font-black text-brand-600 dark:text-brand-300">See All</button>
           </div>
-          <div className="flex gap-4 sm:gap-5 overflow-x-auto no-scrollbar snap-x pb-2">
-            {popularDishes.map((food) => renderFoodCard(food, { deliveryTime: "25-30 min", oldPriceFactor: 1.25 }))}
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 lg:gap-6">
+            {popularDishes.slice(0, 3).map((food) => renderFoodCard(food, { deliveryTime: "25-30 min", oldPriceFactor: 1.25 }))}
           </div>
         </div>
       )}
@@ -1120,18 +1104,18 @@ export default function Menu() {
             <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Recommended For You</h3>
             <button type="button" onClick={() => openFoodCollection("Recommended For You", recommendedFoods)} className="text-xs font-black text-brand-600 dark:text-brand-300">See All</button>
           </div>
-          <div className="flex gap-4 sm:gap-5 overflow-x-auto no-scrollbar snap-x pb-2">
-            {recommendedFoods.map((food) => renderFoodCard(food, { deliveryTime: "20-25 min", oldPriceFactor: 1.2 }))}
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 lg:gap-6">
+            {recommendedFoods.slice(0, 3).map((food) => renderFoodCard(food, { deliveryTime: "20-25 min", oldPriceFactor: 1.2 }))}
           </div>
         </div>
       )}
 
-      {/* 8. ALL PRODUCTS HORIZONTAL SLIDER */}
+      {/* 8. ALL PRODUCTS SECTION */}
       {category === "All" && search === "" && (
         <div className="mb-10">
           <div className="flex items-center justify-between mb-4.5">
             <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">All Products</h3>
-            <button type="button" onClick={() => openFoodCollection("All Products", allProductFoods)} className="text-xs font-black text-brand-600 dark:text-brand-300">View All Products</button>
+            <button type="button" onClick={() => openFoodCollection("All Products", allProductFoods)} className="text-xs font-black text-brand-600 dark:text-brand-300">See All</button>
           </div>
           {loading ? (
             <div className="flex justify-center items-center py-12">
@@ -1142,8 +1126,8 @@ export default function Menu() {
               <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">No products available right now.</p>
             </div>
           ) : (
-            <div className="flex gap-4 sm:gap-5 overflow-x-auto no-scrollbar snap-x pb-2">
-              {allProductFoods.map((food) => renderFoodCard(food, { deliveryTime: "20-30 min", oldPriceFactor: 1.15, categoryPrefix: "Category:" }))}
+            <div className="grid grid-cols-3 gap-2 sm:gap-4 lg:gap-6">
+              {allProductFoods.slice(0, 3).map((food) => renderFoodCard(food, { deliveryTime: "20-30 min", oldPriceFactor: 1.15, categoryPrefix: "Category:" }))}
             </div>
           )}
         </div>
