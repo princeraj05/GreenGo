@@ -182,16 +182,12 @@ export default function AuthPage() {
         await signInWithRedirect(auth, googleProvider);
       } else {
         console.log("[GOOGLE DEBUG] Using popup");
-        let result;
         try {
           result = await signInWithPopup(auth, googleProvider);
         } catch (popupErr) {
-          if (popupErr.code === "auth/popup-blocked") {
-            console.log("[GOOGLE DEBUG] Popup blocked, falling back to redirect...");
-            await signInWithRedirect(auth, googleProvider);
-            return;
-          }
-          throw popupErr;
+          console.log("[GOOGLE DEBUG] Popup failed or blocked, falling back to redirect...", popupErr);
+          await signInWithRedirect(auth, googleProvider);
+          return;
         }
         const user = result.user;
         console.log("[GOOGLE DEBUG] Firebase user received:", user.email);

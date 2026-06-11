@@ -159,16 +159,12 @@ export default function Login() {
       if (window.Capacitor || isMobile) {
         await signInWithRedirect(auth, googleProvider);
       } else {
-        let result;
         try {
           result = await signInWithPopup(auth, googleProvider);
         } catch (popupErr) {
-          if (popupErr.code === "auth/popup-blocked") {
-            console.log("[GOOGLE AUTH] Popup blocked, falling back to redirect...");
-            await signInWithRedirect(auth, googleProvider);
-            return;
-          }
-          throw popupErr;
+          console.log("[GOOGLE AUTH] Popup failed or blocked, falling back to redirect...", popupErr);
+          await signInWithRedirect(auth, googleProvider);
+          return;
         }
         const user = result.user;
         
