@@ -1,10 +1,18 @@
-import nodemailer from "nodemailer";
 import dns from "dns";
 
 // Force IPv4 DNS resolution first (fixes ENETUNREACH IPv6 issues on Render/Heroku)
 if (dns.setDefaultResultOrder) {
   dns.setDefaultResultOrder("ipv4first");
 }
+
+let nodemailerInstance = null;
+const getNodemailer = async () => {
+  if (!nodemailerInstance) {
+    const mod = await import("nodemailer");
+    nodemailerInstance = mod.default || mod;
+  }
+  return nodemailerInstance;
+};
 
 const escapeHtml = (value) =>
   String(value || "")
@@ -29,6 +37,7 @@ const isPublicEmailDomain = (email) => {
 };
 
 const getTransporter = async () => {
+  const nodemailer = await getNodemailer();
   const host = process.env.SMTP_HOST;
   const service = process.env.SMTP_SERVICE || process.env.EMAIL_SERVICE || "gmail";
   const user = process.env.SMTP_USER || process.env.EMAIL_USER || process.env.MAIL_USER;
@@ -95,6 +104,7 @@ const getTransporter = async () => {
 };
 
 const sendMailViaNodemailer = async ({ from, to, replyTo, subject, text, html }) => {
+  const nodemailer = await getNodemailer();
   const { transporter, host: activeHost, port: activePort } = await getTransporter();
 
   try {
@@ -346,9 +356,11 @@ export const sendEmail = async ({ to, subject, text, html }) => {
         return resData;
       } else {
         console.error("Resend API failed with status:", response.status, resData);
+        throw new Error(resData?.message || `Resend API error: ${response.statusText || response.status}`);
       }
     } catch (err) {
       console.error("Resend sendEmail failed:", err);
+      throw err;
     }
   }
 
