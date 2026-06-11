@@ -1,10 +1,13 @@
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useCallback, useEffect, useState } from "react";
-import { Bell, ClipboardList, Home, LogOut, Moon, Sun, User, Wallet } from "lucide-react";
+import { Bell, ClipboardList, Home, LogOut, Moon, Sun, User, Wallet, MoreHorizontal, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { clearSession } from "../../utils/authStorage";
 import { useTheme } from "../../context/ThemeContext";
 import { cn } from "../../utils/cn";
 import API from "../../api/axios";
+
+const MotionDiv = motion.div;
 
 // Helper utility to evaluate whether the delivery boy's profile contains all essential credentials.
 const isDeliveryProfileComplete = (user = {}) => Boolean(
@@ -31,6 +34,9 @@ export default function DeliveryLayout() {
   
   // State mapping the count of unread alert notifications
   const [unreadCount, setUnreadCount] = useState(0);
+
+  // State to control visibility of More drawer in mobile viewport
+  const [open, setOpen] = useState(false);
 
   // --- BUSINESS LOGIC & DATA FETCHING ---
 
@@ -99,6 +105,17 @@ export default function DeliveryLayout() {
     { to: "/delivery/orders", label: "Orders", icon: <ClipboardList size={20} /> },
     { to: "/delivery/earnings", label: "Earnings", icon: <Wallet size={20} /> },
     { to: "/delivery/profile", label: "Profile", icon: <User size={20} /> },
+  ];
+
+  const bottomLinks = [
+    { to: "/delivery", end: true, label: "Home", icon: <Home size={20} /> },
+    { to: "/delivery/orders", label: "Orders", icon: <ClipboardList size={20} /> },
+    { to: "/delivery/earnings", label: "Earnings", icon: <Wallet size={20} /> },
+  ];
+
+  const moreLinks = [
+    { to: "/delivery/profile", label: "Profile", icon: <User size={20} /> },
+    { label: "Sign Out", icon: <LogOut size={20} />, action: () => { setOpen(false); logout(); }, danger: true },
   ];
 
   const profileComplete = isDeliveryProfileComplete(profile);
@@ -221,7 +238,7 @@ export default function DeliveryLayout() {
       {/* --- MOBILE TAB NAVIGATION BAR --- */}
       {/* Displayed only on screens smaller than medium width ('md:hidden') fixed at bottom screen border */}
       <nav className="fixed bottom-4 left-4 right-4 z-50 md:hidden bg-white/85 dark:bg-slate-950/90 backdrop-blur-xl border border-white/40 dark:border-slate-800/70 shadow-[0_8px_32px_rgba(15,23,42,0.16)] rounded-2xl flex items-center justify-around px-2 py-2.5">
-        {links.map(({ to, end, label, icon }) => {
+        {bottomLinks.map(({ to, end, label, icon }) => {
           const locked = !profileComplete && to !== "/delivery/profile";
           return (
           <NavLink
@@ -240,7 +257,96 @@ export default function DeliveryLayout() {
           </NavLink>
           );
         })}
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="flex min-w-[58px] flex-col items-center justify-center relative py-1.5 px-2 rounded-xl text-slate-500 dark:text-slate-300 font-black transition-all active:scale-95"
+        >
+          <MoreHorizontal size={20} />
+          <span className="text-[10px] mt-1 tracking-tight select-none">More</span>
+        </button>
       </nav>
+
+      {/* --- MOBILE MORE OPTIONS DRAWER / BOTTOM SHEET --- */}
+      <AnimatePresence>
+        {open && (
+          <>
+            {/* Dark sheet background mask overlay */}
+            <MotionDiv
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setOpen(false)}
+              className="fixed inset-0 bg-slate-950/65 backdrop-blur-sm z-[900] md:hidden"
+            />
+
+            {/* Slide up panel sheet container */}
+            <MotionDiv
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 220 }}
+              className="fixed bottom-0 left-0 right-0 bg-slate-950 border-t border-slate-800 rounded-t-[2rem] z-[1000] p-6 pb-12 shadow-2xl md:hidden text-white"
+            >
+              {/* Drag Handle Decoration */}
+              <div className="w-12 h-1 bg-slate-800 rounded-full mx-auto mb-6" />
+
+              {/* Header inside drawer */}
+              <div className="flex items-center justify-between mb-8 px-2">
+                <h3 className="text-lg font-black tracking-tight flex items-center gap-2">
+                  <span className="text-brand-400">⚡</span> More Functions
+                </h3>
+                <button
+                  onClick={() => setOpen(false)}
+                  className="w-8 h-8 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              {/* Grid content displaying links in a 3-column layout */}
+              <div className="grid grid-cols-3 gap-y-8 gap-x-4 mb-4">
+                {moreLinks.map(({ label, icon, to, action, danger }) => {
+                  const content = (
+                    <div className="flex flex-col items-center justify-center relative p-3 rounded-2xl bg-slate-900/60 border border-slate-900/80 hover:border-slate-800 hover:bg-slate-900 active:scale-95 transition-all text-center">
+                      <div className="relative text-slate-300">
+                        {icon}
+                      </div>
+                      <span className={cn(
+                        "text-[11px] font-semibold mt-2 tracking-tight select-none truncate w-full",
+                        danger ? "text-red-400" : "text-slate-200"
+                      )}>
+                        {label}
+                      </span>
+                    </div>
+                  );
+
+                  if (action) {
+                    return (
+                      <button key={label} onClick={action} className="w-full">
+                        {content}
+                      </button>
+                    );
+                  }
+
+                  const locked = !profileComplete && to !== "/delivery/profile";
+
+                  return (
+                    <NavLink
+                      key={to}
+                      to={locked ? "/delivery/profile" : to}
+                      onClick={() => setOpen(false)}
+                      className="w-full block"
+                    >
+                      {content}
+                    </NavLink>
+                  );
+                })}
+              </div>
+            </MotionDiv>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

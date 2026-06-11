@@ -814,10 +814,10 @@ export default function ManageFoods() {
                   <div className={`absolute bottom-2 left-2 w-2.5 h-2.5 rounded-full border-2 ${f.veg === false ? "border-red-500 bg-red-500" : "border-emerald-500 bg-emerald-500"}`} />
                 </div>
                 <div className="p-4 flex-1 flex flex-col">
-                  <h3 className="font-bold text-slate-900 dark:text-white text-base leading-tight mb-1.5 group-hover:text-emerald-600 transition-colors">{f.name}</h3>
+                  <h3 className="font-black text-slate-950 dark:text-white text-base leading-tight mb-1.5 group-hover:text-emerald-600 transition-colors">{f.name}</h3>
                   <div className="flex gap-1.5 flex-wrap mb-2">
                     {(Array.isArray(f.categories) && f.categories.length ? f.categories : [f.category || "Food"]).slice(0, 2).map(c => (
-                      <span key={c} className="px-2 py-0.5 text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 rounded-md">{c}</span>
+                      <span key={c} className="px-2 py-0.5 text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-450 rounded-md">{c}</span>
                     ))}
                     <span className={`px-2 py-0.5 text-[10px] font-bold rounded-md ${f.veg === false ? "bg-red-50 text-red-600 dark:bg-red-950/20 dark:text-red-400" : "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/20 dark:text-emerald-400"}`}>
                       {f.veg === false ? "Non-Veg" : "Veg"}
@@ -840,7 +840,7 @@ export default function ManageFoods() {
         {displayedFoods.length === 0 && (
           <div className="col-span-full py-16 text-center bg-white dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800/60">
             <UtensilsCrossed size={28} className="text-slate-300 dark:text-slate-700 mx-auto mb-3" />
-            <h3 className="text-lg font-black text-slate-900 dark:text-white mb-1">No foods found</h3>
+            <h3 className="text-lg font-black text-slate-950 dark:text-white mb-1">No foods found</h3>
             <p className="text-slate-400 font-medium text-sm">Your menu is empty. Add a new item above.</p>
           </div>
         )}

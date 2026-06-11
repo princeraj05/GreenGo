@@ -109,7 +109,7 @@ export default function ManageUsers({
             <Users size={22} className="text-blue-600 dark:text-blue-400 sm:w-7 sm:h-7" />
           </div>
           <div className="min-w-0">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">{title}</h1>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-950 dark:text-white tracking-tight leading-tight">{title}</h1>
             <p className="text-slate-500 dark:text-slate-400 mt-1 font-medium text-sm sm:text-base md:text-lg leading-snug">{subtitle}</p>
           </div>
         </div>
@@ -270,7 +270,7 @@ export default function ManageUsers({
                             {(u.name || u.email || u.phone || "U").charAt(0).toUpperCase()}
                           </div>
                           <div className="min-w-0">
-                            <div className="font-bold text-slate-900 dark:text-white text-sm md:text-base truncate max-w-[210px]">{u.name || "GreenGo User"}</div>
+                            <div className="font-bold text-slate-950 dark:text-white text-sm md:text-base truncate max-w-[210px]">{u.name || "GreenGo User"}</div>
                             <div className="text-slate-500 dark:text-slate-400 font-medium truncate max-w-[230px]">{u.email || u.phone || "No contact"}</div>
                             {u.role === "deliveryBoy" && (
                               <div className="mt-2 space-y-1 text-[11px] font-bold text-slate-500 dark:text-slate-400">
@@ -291,7 +291,7 @@ export default function ManageUsers({
                         </div>
                       </td>
                       <td className="px-4 md:px-8 py-4 md:py-5">
-                        <span className="font-black text-slate-900 dark:text-white text-base">₹{u.totalSpent || 0}</span>
+                        <span className="font-black text-slate-950 dark:text-white text-base">₹{u.totalSpent || 0}</span>
                       </td>
                       <td className="px-4 md:px-8 py-4 md:py-5">
                         <span className="font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-900 px-3 py-1 rounded-lg">{u.totalOrders || 0}</span>

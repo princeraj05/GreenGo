@@ -190,13 +190,13 @@ export default function AdminDashboard() {
 
   return (
     // Main Container styling: Full width with bottom padding
-    <div className="w-full pb-10">
+    <div className="w-full pt-6 md:pt-0 pb-10">
       
       {/* --- HEADER SECTION --- */}
       {/* Tailwind classes: mb-6 md:mb-10 controls bottom margin spacing; tracking-tight enhances text aesthetics */}
       <MotionDiv initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6 md:mb-10">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight">Overview</h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-1.5 md:mt-2 text-sm sm:text-base md:text-lg font-medium max-w-xl">Here is the latest snapshot of your business today.</p>
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-950 dark:text-white tracking-tight">Overview</h1>
+        <p className="text-slate-500 dark:text-slate-400 mt-1.5 md:mt-2 text-sm sm:text-base md:text-lg font-semibold max-w-xl">Here is the latest snapshot of your business today.</p>
       </MotionDiv>
       {/* --- END HEADER SECTION --- */}
 
@@ -217,8 +217,8 @@ export default function AdminDashboard() {
                 <div className={`w-2 h-2 rounded-full bg-gradient-to-br ${card.accent} animate-pulse`}></div>
               </div>
               <div>
-                <p className="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide md:tracking-widest mb-1 leading-tight">{card.label}</p>
-                <p className="text-xl sm:text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight break-words leading-tight">{card.value}</p>
+                <p className="text-[10px] sm:text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-wide md:tracking-widest mb-1 leading-tight">{card.label}</p>
+                <p className="text-xl sm:text-3xl md:text-4xl font-black text-slate-950 dark:text-white tracking-tight break-words leading-tight">{card.value}</p>
               </div>
               <div className={`absolute bottom-0 left-0 h-1 w-0 bg-gradient-to-r ${card.accent} group-hover:w-full transition-all duration-500`}></div>
             </Card>
@@ -234,7 +234,7 @@ export default function AdminDashboard() {
         {/* --- MONTHLY REVENUE CHART --- */}
         <MotionDiv initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
           <Card className="p-5 md:p-8 border-slate-100 h-full">
-            <h2 className="text-base md:text-xl font-bold text-slate-900 dark:text-white mb-4 md:mb-6 flex items-center gap-2">
+            <h2 className="text-base md:text-xl font-black text-slate-950 dark:text-white mb-4 md:mb-6 flex items-center gap-2">
               <IndianRupee size={20} className="text-purple-500" /> Monthly Revenue
             </h2>
             <div className="h-72">
@@ -271,7 +271,7 @@ export default function AdminDashboard() {
         {/* --- DAILY ORDERS CHART --- */}
         <MotionDiv initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }}>
           <Card className="p-5 md:p-8 border-slate-100 h-full">
-            <h2 className="text-base md:text-xl font-bold text-slate-900 dark:text-white mb-4 md:mb-6 flex items-center gap-2">
+            <h2 className="text-base md:text-xl font-black text-slate-950 dark:text-white mb-4 md:mb-6 flex items-center gap-2">
               <Package size={20} className="text-emerald-500" /> Orders Per Day
             </h2>
             <div className="h-72">

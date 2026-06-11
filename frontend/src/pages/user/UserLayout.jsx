@@ -4,10 +4,13 @@ import {
   LayoutDashboard, UtensilsCrossed, ShoppingCart, 
   Clock, User, Phone, LogOut, X, Home, Sun, Moon, Heart, MessageCircle, Bell, MoreHorizontal
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { getToken } from "../../utils/getToken";
 import { clearSession } from "../../utils/authStorage";
 import { cn } from "../../utils/cn";
 import { useTheme } from "../../context/ThemeContext";
+
+const MotionDiv = motion.div;
 
 /**
  * UserLayout Component
@@ -188,6 +191,7 @@ export default function UserLayout() {
     { to: "/user/wishlist", label: "Wishlist", icon: <Heart size={20} /> },
     { to: "/user/notifications", label: "Notifications", icon: <Bell size={20} /> },
     { to: "/user/contact", label: "Support", icon: <MessageCircle size={20} /> },
+    ...(isLoggedIn ? [{ label: "Sign Out", icon: <LogOut size={20} />, action: () => { setOpen(false); setShowLogoutConfirm(true); }, danger: true }] : [])
   ];
 
   return (
@@ -349,38 +353,83 @@ export default function UserLayout() {
       </div>
 
       {/* --- 4. MORE NAV LINKS SLIDE UP PANEL --- */}
-      {open && (
-        <div className="fixed inset-0 z-[900] md:hidden">
-          <button
-            type="button"
-            aria-label="Close more menu"
-            className="absolute inset-0 bg-slate-950/55 backdrop-blur-sm"
-            onClick={() => setOpen(false)}
-          />
-          <div className="absolute inset-x-0 bottom-0 rounded-t-[2rem] bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800 p-5 pb-8 shadow-2xl">
-            <div className="mx-auto mb-5 h-1 w-12 rounded-full bg-slate-200 dark:bg-slate-800" />
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="text-lg font-black text-slate-950 dark:text-white">More</h3>
-              <button type="button" onClick={() => setOpen(false)} className="w-11 h-11 rounded-2xl bg-slate-100 dark:bg-slate-900 flex items-center justify-center">
-                <X size={18} />
-              </button>
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-              {moreLinks.map(({ to, label, icon }) => (
-                <NavLink
-                  key={to}
-                  to={to}
+      <AnimatePresence>
+        {open && (
+          <>
+            {/* Dark sheet background mask overlay */}
+            <MotionDiv
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setOpen(false)}
+              className="fixed inset-0 bg-slate-950/65 backdrop-blur-sm z-[900] md:hidden"
+            />
+
+            {/* Slide up panel sheet container */}
+            <MotionDiv
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 220 }}
+              className="fixed bottom-0 left-0 right-0 bg-slate-950 border-t border-slate-800 rounded-t-[2rem] z-[1000] p-6 pb-12 shadow-2xl md:hidden text-white"
+            >
+              {/* Drag Handle Decoration */}
+              <div className="w-12 h-1 bg-slate-800 rounded-full mx-auto mb-6" />
+
+              {/* Header inside drawer */}
+              <div className="flex items-center justify-between mb-8 px-2">
+                <h3 className="text-lg font-black tracking-tight flex items-center gap-2">
+                  <span className="text-brand-400">⚡</span> More Functions
+                </h3>
+                <button
                   onClick={() => setOpen(false)}
-                  className="min-h-[92px] rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex flex-col items-center justify-center gap-2 text-center text-xs font-black text-slate-700 dark:text-slate-200"
+                  className="w-8 h-8 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
                 >
-                  {icon}
-                  {label}
-                </NavLink>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+                  <X size={16} />
+                </button>
+              </div>
+
+              {/* Grid content displaying links in a 3-column layout */}
+              <div className="grid grid-cols-3 gap-y-8 gap-x-4 mb-4">
+                {moreLinks.map(({ label, icon, to, action, danger }) => {
+                  const content = (
+                    <div className="flex flex-col items-center justify-center relative p-3 rounded-2xl bg-slate-900/60 border border-slate-900/80 hover:border-slate-800 hover:bg-slate-900 active:scale-95 transition-all text-center">
+                      <div className="relative text-slate-300">
+                        {icon}
+                      </div>
+                      <span className={cn(
+                        "text-[11px] font-semibold mt-2 tracking-tight select-none truncate w-full",
+                        danger ? "text-red-400" : "text-slate-200"
+                      )}>
+                        {label}
+                      </span>
+                    </div>
+                  );
+
+                  if (action) {
+                    return (
+                      <button key={label} onClick={action} className="w-full">
+                        {content}
+                      </button>
+                    );
+                  }
+
+                  return (
+                    <NavLink
+                      key={to}
+                      to={to}
+                      onClick={() => setOpen(false)}
+                      className="w-full block"
+                    >
+                      {content}
+                    </NavLink>
+                  );
+                })}
+              </div>
+            </MotionDiv>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* --- 5. LOGOUT CONFIRMATION DIALOG MODAL --- */}
       {showLogoutConfirm && (

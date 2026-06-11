@@ -284,7 +284,7 @@ export default function AdminLayout() {
             <div className="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center shadow-md shrink-0">
               <span className="text-white text-sm font-black">G</span>
             </div>
-            <span className="font-extrabold text-slate-900 dark:text-white text-base sm:text-lg truncate">GreenGo Admin</span>
+            <span className="font-black text-slate-950 dark:text-white text-base sm:text-lg truncate">GreenGo Admin</span>
           </div>
           <div className="flex items-center gap-2">
             <button
