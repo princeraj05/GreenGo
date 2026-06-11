@@ -336,9 +336,8 @@ export const updateRiderLocation = async (req, res) => {
 
 /* ================= UPDATE STATUS ================= */
 
-export const updateOrderStatus = async (req,res)=>{
-
-  const {status,etaMinutes} = req.body;
+export const updateOrderStatus = async (req, res) => {
+  const { status } = req.body;
   const orderId = req.params.id;
 
   try {
@@ -355,13 +354,7 @@ export const updateOrderStatus = async (req,res)=>{
     }
 
     const update = {status};
-    if(status!=="Delivered" && etaMinutes){
-      update.etaMinutes = etaMinutes;
-      update.etaSetAt = new Date();
-    }
     if(status==="Delivered"){
-      update.etaMinutes = null;
-      update.etaSetAt = null;
       update.deliveredAt = new Date();
       update.assignmentStatus = order.assignedDeliveryBoy ? "Delivered" : order.assignmentStatus;
     }
@@ -568,8 +561,6 @@ export const markAssignedOrderDelivered = async (req, res) => {
     order.status = "Delivered";
     order.assignmentStatus = "Delivered";
     order.deliveredAt = new Date();
-    order.etaMinutes = null;
-    order.etaSetAt = null;
     await order.save();
 
     await Notification.create({

@@ -163,7 +163,7 @@ export default function ManageBanners() {
 
   return (
     // Outer wrap containing entry anim parameters
-    <div className="animate-fade-in">
+    <div className="animate-fade-in pt-6 md:pt-0">
       
       {/* --- HEADER SECTION --- */}
       <div className="mb-8 animate-slide-in">

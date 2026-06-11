@@ -169,7 +169,7 @@ export default function ManageNotifications() {
 
   return (
     // Outer wrap container with bottom margins and animations
-    <div className="animate-fade-in pb-10">
+    <div className="animate-fade-in pt-6 md:pt-0 pb-10">
       
       {/* --- HEADER SECTION --- */}
       <div className="mb-6 md:mb-10">

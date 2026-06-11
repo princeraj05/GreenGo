@@ -27,14 +27,8 @@ export default function ManageOrders() {
   // Array of active delivery riders profiles loaded for assignment options
   const [deliveryBoys, setDeliveryBoys] = useState([]);
 
-  // Map tracking custom ETA minute input drafts mapped by Order ID
-  const [etaInput, setEtaInput] = useState({});
-
   // Map tracking rider assignment selections mapped by Order ID
   const [assignInput, setAssignInput] = useState({});
-
-  // Local timestamp counter for calculating live countdown timers
-  const [now, setNow] = useState(0);
 
   // Pagination count limit indicator
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
@@ -65,14 +59,12 @@ export default function ManageOrders() {
     } catch (err) { console.log(err); }
   }, []);
 
-  // Poll setup and mount loading callbacks
+  // Mount loading callbacks
   useEffect(() => {
     Promise.resolve().then(() => {
       loadOrders();
       loadDeliveryBoys();
     });
-    const timer = setInterval(() => setNow(() => Date.now()), 1000);
-    return () => clearInterval(timer);
   }, [loadDeliveryBoys, loadOrders]);
 
   /**
@@ -87,34 +79,6 @@ export default function ManageOrders() {
       setAssignInput({});
       loadOrders();
     } catch (err) { console.log(err); }
-  };
-
-  /**
-   * Updates preparation and transit ETA estimates.
-   */
-  const setETA = async (id, status) => {
-    try {
-      const token = await getToken();
-      await API.put(`/api/orders/${id}/status`,
-        { status, etaMinutes: Number(etaInput[id]) || 0 },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setEtaInput({});
-      loadOrders();
-    } catch (err) { console.log(err); }
-  };
-
-  /**
-   * Evaluates the remaining time countdown relative to delivery goals.
-   */
-  const remaining = (o) => {
-    if (o.status === "Delivered") return "Delivered";
-    if (!o.etaMinutes || !o.etaSetAt) return "Not Set";
-    const diff = o.etaMinutes * 60000 - (now - new Date(o.etaSetAt).getTime());
-    if (diff <= 0) return "Delivered Soon";
-    const m = Math.floor(diff / 60000);
-    const s = Math.floor((diff % 60000) / 1000);
-    return `${m}m ${s}s`;
   };
 
   // Slice orders array down to current pagination limits
@@ -188,7 +152,7 @@ export default function ManageOrders() {
                   </div>
                 </div>
 
-                {/* --- ADDRESS & ETA LOGISTICS DETAIL --- */}
+                {/* --- ADDRESS DETAIL --- */}
                 <div className="bg-slate-50 dark:bg-slate-900/60 rounded-2xl p-3 md:p-4 border border-slate-100 dark:border-slate-800/50 space-y-2.5 md:space-y-3 mb-4 md:mb-6">
                   <p className="text-xs md:text-sm font-medium text-slate-600 dark:text-slate-300 flex items-start gap-2 leading-snug break-words">
                     <MapPin size={16} className="text-emerald-500 shrink-0 mt-0.5" /> 
@@ -205,10 +169,6 @@ export default function ManageOrders() {
                       )}
                     </p>
                   )}
-                  <p className="text-xs md:text-sm font-medium text-slate-600 dark:text-slate-300 flex flex-wrap items-center gap-1.5 md:gap-2">
-                    <Clock size={16} className="text-emerald-500 shrink-0" /> 
-                    Remaining: <span className="font-bold text-slate-900 dark:text-white">{remaining(o)}</span>
-                  </p>
                   {o.customMessage && (
                     <p className="text-xs md:text-sm font-medium text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/30 p-2.5 rounded-xl border border-amber-100 dark:border-amber-900/30 flex items-start gap-1.5 leading-tight break-words">
                       <span className="shrink-0 mt-0.5">📝</span> 
@@ -217,18 +177,6 @@ export default function ManageOrders() {
                   )}
                 </div>
 
-                {/* --- ETA UPDATE CONTROLS --- */}
-                {o.status !== "Delivered" && (
-                  <div className="flex gap-2 mb-4 md:mb-6">
-                    <input type="number" placeholder="ETA (min)"
-                      value={etaInput[o._id] || ""}
-                      onChange={(e) => setEtaInput({ ...etaInput, [o._id]: e.target.value })}
-                      className="min-w-0 flex-1 px-3 md:px-4 py-2.5 md:py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 font-medium text-sm md:text-base focus:outline-none focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all focus:bg-white dark:focus:bg-slate-950" />
-                    <Button onClick={() => setETA(o._id, o.status)} className="rounded-xl px-4 md:px-6 bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20 text-sm">
-                      Set
-                    </Button>
-                  </div>
-                )}
 
                 <Link to={`/admin/orders/${o._id}/tracking`} className="mb-4 md:mb-6 inline-flex">
                   <Button variant="secondary" className="rounded-xl gap-2 text-sm">

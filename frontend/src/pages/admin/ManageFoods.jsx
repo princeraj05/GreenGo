@@ -370,7 +370,7 @@ export default function ManageFoods() {
 
   return (
     // Outer page structure with bottom padding margins
-    <div className="w-full pb-16">
+    <div className="w-full pt-6 md:pt-0 pb-16">
 
       {/* --- HEADER SECTION --- */}
       {/* Tailwind classes: flex layouts wrap items on smaller viewports; tracking-tight aligns font spacings */}

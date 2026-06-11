@@ -178,7 +178,7 @@ export default function ManageSettings() {
 
   return (
     // Outer layouts wrap with fade-in animations
-    <div className="w-full h-full animate-fade-in pb-10 pt-8">
+    <div className="w-full h-full animate-fade-in pb-10 pt-14 md:pt-8">
       
       {/* --- HEADER SECTION --- */}
       <div className="mb-10">

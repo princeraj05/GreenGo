@@ -134,7 +134,7 @@ export default function ManageReviews() {
 
   return (
     // Outer layouts structure with margin alignments
-    <div className="space-y-8">
+    <div className="space-y-8 pt-6 md:pt-0">
       
       {/* --- HEADER SECTION --- */}
       <div>

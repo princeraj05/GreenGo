@@ -194,7 +194,7 @@ export default function Contacts() {
 
   return (
     // Main layouts wrapper. Employs responsive horizontal-to-vertical layout logic: flex-col with lg:flex-row
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 pb-10 lg:flex-row lg:gap-8">
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 pt-6 md:pt-0 pb-10 lg:flex-row lg:gap-8">
       
       {/* --- LEFT HAND: COMPOSE REPLY FORM --- */}
       {/* Tailwind details: flex-1 allows sharing horizontal screen space evenly on desktop */}

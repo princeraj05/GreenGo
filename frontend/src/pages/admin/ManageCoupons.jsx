@@ -117,7 +117,7 @@ export default function ManageCoupons() {
 
   return (
     // Outer wrap container with fade-in animation
-    <div className="animate-fade-in">
+    <div className="animate-fade-in pt-6 md:pt-0">
       
       {/* --- HEADER SECTION --- */}
       <div className="mb-8 animate-slide-in">
