@@ -160,25 +160,25 @@ export default function AdminLayout() {
 
   // Sidebar Links config (Desktop layout views)
   const desktopNavLinks = [
-    { to: "/admin", end: true, label: "Dashboard", icon: <LayoutDashboard size={20} /> },
+    { to: "/admin", end: true, label: "Admin Dashboard", icon: <LayoutDashboard size={20} /> },
     { to: "/admin/foods", label: "Manage Foods", icon: <UtensilsCrossed size={20} /> },
-    { to: "/admin/orders", label: "Orders", icon: <Package size={20} /> },
-    { to: "/admin/users", label: "Users", icon: <Users size={20} /> },
-    { to: "/admin/contacts", label: "Messages", icon: <MessageSquare size={20} /> },
-    { to: "/admin/coupons", label: "Coupons", icon: <Ticket size={20} /> },
-    { to: "/admin/banners", label: "Banners", icon: <Image size={20} /> },
-    { to: "/admin/notifications", label: "Notifications", icon: <Bell size={20} /> },
-    { to: "/admin/analytics", label: "Analytics", icon: <LineChart size={20} /> },
-    { to: "/admin/reviews", label: "Reviews", icon: <Star size={20} /> },
-    { to: "/admin/settings", label: "Settings", icon: <Settings size={20} /> },
+    { to: "/admin/orders", label: "Manage Orders", icon: <Package size={20} /> },
+    { to: "/admin/users", label: "Manage Users", icon: <Users size={20} /> },
+    { to: "/admin/contacts", label: "Contacts", icon: <MessageSquare size={20} /> },
+    { to: "/admin/coupons", label: "Manage Coupons", icon: <Ticket size={20} /> },
+    { to: "/admin/banners", label: "Manage Banners", icon: <Image size={20} /> },
+    { to: "/admin/notifications", label: "Manage Notifications", icon: <Bell size={20} /> },
+    { to: "/admin/analytics", label: "Food Analytics", icon: <LineChart size={20} /> },
+    { to: "/admin/reviews", label: "Manage Reviews", icon: <Star size={20} /> },
+    { to: "/admin/settings", label: "Manage Settings", icon: <Settings size={20} /> },
   ];
 
   // Primary bottom navigation links config (Mobile viewport)
   const mobileNavLinks = [
-    { to: "/admin", end: true, label: "Dashboard", icon: <LayoutDashboard size={20} /> },
-    { to: "/admin/orders", label: "Orders", icon: <Package size={20} /> },
-    { to: "/admin/analytics", label: "Analytics", icon: <LineChart size={20} /> },
-    { to: "/admin/users", label: "Users", icon: <Users size={20} /> },
+    { to: "/admin", end: true, label: "Admin Dashboard", icon: <LayoutDashboard size={20} /> },
+    { to: "/admin/orders", label: "Manage Orders", icon: <Package size={20} /> },
+    { to: "/admin/analytics", label: "Food Analytics", icon: <LineChart size={20} /> },
+    { to: "/admin/users", label: "Manage Users", icon: <Users size={20} /> },
   ];
 
   // Helper trigger to handle logging out from the interface
@@ -189,13 +189,13 @@ export default function AdminLayout() {
 
   // Additional drawer sheet options list configuration for mobile viewport overflow
   const moreSheetLinks = [
-    { to: "/admin/contacts", label: "Messages", icon: <MessageSquare size={20} />, badge: unreadCount },
-    { to: "/admin/notifications", label: "Notifications", icon: <Bell size={20} />, badge: unreadCount },
-    { to: "/admin/foods", label: "Products", icon: <UtensilsCrossed size={20} /> },
-    { to: "/admin/coupons", label: "Coupons", icon: <Ticket size={20} /> },
-    { to: "/admin/banners", label: "Banners", icon: <Image size={20} /> },
-    { to: "/admin/reviews", label: "Reviews", icon: <Star size={20} /> },
-    { to: "/admin/settings", label: "Settings", icon: <Settings size={20} /> },
+    { to: "/admin/contacts", label: "Contacts", icon: <MessageSquare size={20} />, badge: unreadCount },
+    { to: "/admin/notifications", label: "Manage Notifications", icon: <Bell size={20} />, badge: unreadCount },
+    { to: "/admin/foods", label: "Manage Foods", icon: <UtensilsCrossed size={20} /> },
+    { to: "/admin/coupons", label: "Manage Coupons", icon: <Ticket size={20} /> },
+    { to: "/admin/banners", label: "Manage Banners", icon: <Image size={20} /> },
+    { to: "/admin/reviews", label: "Manage Reviews", icon: <Star size={20} /> },
+    { to: "/admin/settings", label: "Manage Settings", icon: <Settings size={20} /> },
     { label: "Sign Out", icon: <LogOut size={20} />, action: handleLogout, danger: true },
   ];
 

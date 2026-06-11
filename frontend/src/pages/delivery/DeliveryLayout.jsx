@@ -101,20 +101,20 @@ export default function DeliveryLayout() {
 
   // Sidebar and mobile tab bar navigation items configuration
   const links = [
-    { to: "/delivery", end: true, label: "Home", icon: <Home size={20} /> },
-    { to: "/delivery/orders", label: "Orders", icon: <ClipboardList size={20} /> },
-    { to: "/delivery/earnings", label: "Earnings", icon: <Wallet size={20} /> },
-    { to: "/delivery/profile", label: "Profile", icon: <User size={20} /> },
+    { to: "/delivery", end: true, label: "Delivery Dashboard", icon: <Home size={20} /> },
+    { to: "/delivery/orders", label: "Delivery Orders", icon: <ClipboardList size={20} /> },
+    { to: "/delivery/earnings", label: "Delivery Earnings", icon: <Wallet size={20} /> },
+    { to: "/delivery/profile", label: "Delivery Profile", icon: <User size={20} /> },
   ];
 
   const bottomLinks = [
-    { to: "/delivery", end: true, label: "Home", icon: <Home size={20} /> },
-    { to: "/delivery/orders", label: "Orders", icon: <ClipboardList size={20} /> },
-    { to: "/delivery/earnings", label: "Earnings", icon: <Wallet size={20} /> },
+    { to: "/delivery", end: true, label: "Delivery Dashboard", icon: <Home size={20} /> },
+    { to: "/delivery/orders", label: "Delivery Orders", icon: <ClipboardList size={20} /> },
+    { to: "/delivery/earnings", label: "Delivery Earnings", icon: <Wallet size={20} /> },
   ];
 
   const moreLinks = [
-    { to: "/delivery/profile", label: "Profile", icon: <User size={20} /> },
+    { to: "/delivery/profile", label: "Delivery Profile", icon: <User size={20} /> },
     { label: "Sign Out", icon: <LogOut size={20} />, action: () => { setOpen(false); logout(); }, danger: true },
   ];
 

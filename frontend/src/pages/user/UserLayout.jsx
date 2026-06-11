@@ -197,16 +197,16 @@ export default function UserLayout() {
 
   /* --- NAVIGATION LINKS CONFIGS --- */
   const desktopNavLinks = [
-    { to: "/user/menu", label: "Home", icon: <Home size={20} /> },
+    { to: "/user/menu", label: "Menu", icon: <Home size={20} /> },
     { to: "/user/wishlist", label: "Wishlist", icon: <Heart size={20} /> },
     { to: "/user/cart", label: "Cart", icon: <ShoppingCart size={20} /> },
     { to: "/user/orders", label: "Orders", icon: <Clock size={20} /> },
     { to: "/user/notifications", label: "Notifications", icon: <Bell size={20} /> },
-    { to: "/user/contact", label: "Support", icon: <MessageCircle size={20} /> },
+    { to: "/user/contact", label: "Contact", icon: <MessageCircle size={20} /> },
   ];
 
   const bottomNavLinks = [
-    { to: "/user/menu", label: "Home", icon: <Home size={20} /> },
+    { to: "/user/menu", label: "Menu", icon: <Home size={20} /> },
     { to: "/user/orders", label: "Orders", icon: <Clock size={20} />, badge: pendingCount },
     { to: "/user/cart", label: "Cart", icon: <ShoppingCart size={20} />, badge: cartCount },
     { to: "/user/profile", label: "Profile", icon: <User size={20} /> },
@@ -215,7 +215,7 @@ export default function UserLayout() {
   const moreLinks = [
     { to: "/user/wishlist", label: "Wishlist", icon: <Heart size={20} /> },
     { to: "/user/notifications", label: "Notifications", icon: <Bell size={20} /> },
-    { to: "/user/contact", label: "Support", icon: <MessageCircle size={20} /> },
+    { to: "/user/contact", label: "Contact", icon: <MessageCircle size={20} /> },
     ...(isLoggedIn ? [{ label: "Sign Out", icon: <LogOut size={20} />, action: () => { setOpen(false); setShowLogoutConfirm(true); }, danger: true }] : [])
   ];
 
