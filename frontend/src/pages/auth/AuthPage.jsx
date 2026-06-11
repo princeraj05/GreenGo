@@ -472,39 +472,39 @@ export default function AuthPage() {
       </div>
 
       {/* Right Column - Authentication Card */}
-      <div className="w-full lg:w-1/2 xl:w-2/5 flex flex-col justify-center items-center p-4 sm:p-6 md:p-12 relative overflow-y-auto min-h-screen">
+      <div className="w-full lg:w-1/2 xl:w-2/5 flex flex-col justify-center items-center p-3 xs:p-4 sm:p-6 md:p-12 relative overflow-y-auto max-sm:overflow-y-hidden min-h-screen">
         {/* Glow Effects */}
         <div className="absolute top-1/4 left-1/4 w-[300px] h-[300px] bg-brand-500/10 dark:bg-brand-500/5 rounded-full blur-[80px] pointer-events-none -z-10 animate-pulse" />
         <div className="absolute bottom-1/4 right-1/4 w-[300px] h-[300px] bg-brand-600/10 dark:bg-brand-600/5 rounded-full blur-[80px] pointer-events-none -z-10 animate-pulse" />
 
         {/* Auth Card Container */}
-        <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800/80 shadow-[0_12px_40px_rgba(0,0,0,0.03)] dark:shadow-none p-5 sm:p-8 transition-all duration-300 z-10 flex flex-col">
+        <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl border border-slate-100 dark:border-slate-800/80 shadow-[0_12px_40px_rgba(0,0,0,0.03)] dark:shadow-none p-4 sm:p-8 transition-all duration-300 z-10 flex flex-col">
           
           {/* Box 1: App logo + app name + Skip button + theme icon */}
-          <div className="w-full flex items-center justify-between mb-5">
-            <div className="flex items-center gap-2">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center shadow-md shadow-brand-500/20">
-                <span className="text-xl text-white">🍔</span>
+          <div className="w-full flex items-center justify-between mb-3 sm:mb-5">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center shadow-md shadow-brand-500/20">
+                <span className="text-lg sm:text-xl">🍔</span>
               </div>
-              <span className="text-xl font-black text-gray-900 dark:text-white tracking-tight">GreenGo</span>
+              <span className="text-lg sm:text-xl font-black text-gray-900 dark:text-white tracking-tight">GreenGo</span>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2">
               {/* Theme Toggle Icon */}
               <button
                 type="button"
                 onClick={toggleTheme}
-                className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-200 transition-all active:scale-95 border border-slate-200/50 dark:border-slate-800/50"
+                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-200 transition-all active:scale-95 border border-slate-200/50 dark:border-slate-800/50"
                 title="Toggle Theme"
               >
-                {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+                {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
               </button>
 
               {/* Skip Button */}
               <button
                 type="button"
                 onClick={() => navigate("/user/menu", { replace: true })}
-                className="rounded-full bg-brand-600 hover:bg-brand-700 px-4 py-2 text-xs font-black text-white shadow-md shadow-brand-500/25 transition-all active:scale-95"
+                className="rounded-full bg-brand-600 hover:bg-brand-700 px-3 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-xs font-black text-white shadow-md shadow-brand-500/25 transition-all active:scale-95"
               >
                 Skip
               </button>
@@ -512,7 +512,7 @@ export default function AuthPage() {
           </div>
 
           {/* Box 2: Hero/banner image slider */}
-          <div className="w-full overflow-hidden rounded-2xl h-40 relative bg-slate-100 dark:bg-slate-950 border border-slate-200/50 dark:border-slate-800/80 mb-5 shadow-sm">
+          <div className="w-full overflow-hidden rounded-xl sm:rounded-2xl h-24 sm:h-40 relative bg-slate-100 dark:bg-slate-950 border border-slate-200/50 dark:border-slate-800/80 mb-3 sm:mb-5 shadow-sm">
             <AnimatePresence mode="wait">
               <MotionImg
                 key={currentHeroSlide}
@@ -526,17 +526,17 @@ export default function AuthPage() {
               />
             </AnimatePresence>
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/30 to-transparent" />
-            <div className="absolute bottom-3 left-4 right-4 text-left">
-              <p className="text-white text-base font-black tracking-tight drop-shadow-md">
+            <div className="absolute bottom-2 sm:bottom-3 left-3 sm:left-4 right-3 sm:right-4 text-left">
+              <p className="text-white text-xs sm:text-base font-black tracking-tight drop-shadow-md">
                 {slideContent[currentHeroSlide].title}
               </p>
-              <div className="flex gap-1.5 mt-2">
+              <div className="flex gap-1 sm:gap-1.5 mt-1 sm:mt-2">
                 {loginSlides.map((_, index) => (
                   <button
                     key={index}
                     onClick={() => setCurrentHeroSlide(index)}
-                    className={`h-1.5 rounded-full transition-all ${
-                      currentHeroSlide === index ? "w-6 bg-brand-500" : "w-1.5 bg-white/60 hover:bg-white"
+                    className={`h-1 sm:h-1.5 rounded-full transition-all ${
+                      currentHeroSlide === index ? "w-4 sm:w-6 bg-brand-500" : "w-1 sm:w-1.5 bg-white/60 hover:bg-white"
                     }`}
                     aria-label={`Go to slide ${index + 1}`}
                   />
@@ -546,29 +546,24 @@ export default function AuthPage() {
           </div>
 
           {/* Box 3: Tagline / error/info section */}
-          <div className="w-full space-y-3 mb-5">
-            <div className="flex items-center justify-center gap-1.5 text-[10px] font-black text-brand-600 dark:text-brand-400 tracking-widest uppercase">
-              <Sparkles className="w-3.5 h-3.5 animate-pulse" />
+          <div className="w-full space-y-1.5 sm:space-y-3 mb-3 sm:mb-5">
+            <div className="flex items-center justify-center gap-1 text-[9px] sm:text-[10px] font-black text-brand-600 dark:text-brand-400 tracking-widest uppercase">
+              <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 animate-pulse" />
               Delivering Happiness
             </div>
 
-            {/* Info Section */}
-            <div className="rounded-2xl border border-brand-200 bg-brand-50/50 p-4 text-xs font-bold leading-relaxed text-brand-700 dark:border-brand-900/50 dark:bg-brand-950/20 dark:text-brand-300 text-center">
-              Sign in to securely access your orders and personal details.
-            </div>
-
-            {/* Error Section */}
+            {/* Error Section is shown only when error occurs. Otherwise, the box is hidden. */}
             {error && (
-              <div className="p-4 rounded-2xl bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/40 text-red-600 dark:text-red-400 text-xs font-bold leading-relaxed text-center animate-fade-in">
+              <div className="p-2.5 sm:p-4 rounded-xl sm:rounded-2xl bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/40 text-red-600 dark:text-red-400 text-[11px] sm:text-xs font-bold leading-relaxed text-center animate-fade-in">
                 {error}
               </div>
             )}
           </div>
 
           {/* Box 4: Sign In / Create Account heading */}
-          <div className="w-full text-left mb-5">
-            <h2 className="text-xl font-extrabold text-gray-900 dark:text-white">Sign in or create account</h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed font-medium">
+          <div className="w-full text-left mb-3 sm:mb-5">
+            <h2 className="text-lg sm:text-xl font-extrabold text-gray-900 dark:text-white">Sign in or create account</h2>
+            <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-1 leading-relaxed font-medium">
               {step === 1 ? (
                 authMethod === "phone" 
                   ? "Enter your phone number and password to log in." 
@@ -581,20 +576,20 @@ export default function AuthPage() {
 
           {/* Box 5: Email / Phone toggle */}
           {step === 1 && (
-            <div className="w-full flex bg-slate-100 dark:bg-slate-950 rounded-2xl p-1.5 mb-5 border border-slate-200/50 dark:border-slate-800/50">
+            <div className="w-full flex bg-slate-100 dark:bg-slate-950 rounded-xl sm:rounded-2xl p-1 mb-3 sm:mb-5 border border-slate-200/50 dark:border-slate-800/50">
               <button
                 type="button"
                 onClick={() => {
                   setAuthMethod("email");
                   setError("");
                 }}
-                className={`flex-1 py-3 rounded-xl text-xs font-extrabold transition-all duration-300 flex items-center justify-center gap-2 ${
+                className={`flex-1 py-2 sm:py-3 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-extrabold transition-all duration-300 flex items-center justify-center gap-1.5 sm:gap-2 ${
                   authMethod === "email"
                     ? "bg-white dark:bg-slate-800 text-brand-600 dark:text-brand-400 shadow-sm border border-slate-200/30 dark:border-slate-700/30"
                     : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                 }`}
               >
-                <Mail className={`w-4 h-4 transition-colors ${authMethod === "email" ? "text-brand-500" : "text-slate-400"}`} /> 
+                <Mail className={`w-3.5 h-3.5 sm:w-4 sm:h-4 transition-colors ${authMethod === "email" ? "text-brand-500" : "text-slate-400"}`} /> 
                 Email Address
               </button>
               <button
@@ -603,51 +598,51 @@ export default function AuthPage() {
                   setAuthMethod("phone");
                   setError("");
                 }}
-                className={`flex-1 py-3 rounded-xl text-xs font-extrabold transition-all duration-300 flex items-center justify-center gap-2 ${
+                className={`flex-1 py-2 sm:py-3 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-extrabold transition-all duration-300 flex items-center justify-center gap-1.5 sm:gap-2 ${
                   authMethod === "phone"
                     ? "bg-white dark:bg-slate-800 text-brand-600 dark:text-brand-400 shadow-sm border border-slate-200/30 dark:border-slate-700/30"
                     : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                 }`}
               >
-                <Phone className={`w-4 h-4 transition-colors ${authMethod === "phone" ? "text-brand-500" : "text-slate-400"}`} /> 
+                <Phone className={`w-3.5 h-3.5 sm:w-4 sm:h-4 transition-colors ${authMethod === "phone" ? "text-brand-500" : "text-slate-400"}`} /> 
                 Phone Number
               </button>
             </div>
           )}
 
           {/* Form container */}
-          <form onSubmit={step === 1 ? handleSendOtp : handleVerifyOtp} className="w-full space-y-4">
+          <form onSubmit={step === 1 ? handleSendOtp : handleVerifyOtp} className="w-full space-y-2.5 sm:space-y-4">
             {step === 1 ? (
               <>
                 {/* Box 6: Input field */}
                 {authMethod === "email" ? (
-                  <div className="space-y-2">
-                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  <div className="space-y-1 sm:space-y-2">
+                    <label className="block text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                       Email Address
                     </label>
                     <div className="relative flex items-center">
-                      <Mail className="absolute left-4 w-4.5 h-4.5 text-slate-400 dark:text-slate-500 transition-colors pointer-events-none" />
+                      <Mail className="absolute left-3.5 w-4 h-4 text-slate-400 dark:text-slate-500 transition-colors pointer-events-none" />
                       <input
                         type="email"
                         placeholder="you@example.com"
                         value={email}
                         required
                         onChange={(e) => setEmail(e.target.value)}
-                        className="w-full pl-11 pr-5 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 transition-all font-medium text-slate-900 dark:text-white text-sm"
+                        className="w-full pl-10 pr-4 py-2 sm:py-3 rounded-xl sm:rounded-2xl border border-slate-200 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 transition-all font-medium text-slate-900 dark:text-white text-xs sm:text-sm"
                       />
                     </div>
                   </div>
                 ) : (
-                  <div className="space-y-2">
-                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  <div className="space-y-1 sm:space-y-2">
+                    <label className="block text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                       Phone Number
                     </label>
-                    <div className="flex gap-2.5 items-center">
-                      <div className="px-4 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-sm font-extrabold text-slate-700 dark:text-slate-300 select-none flex items-center shrink-0">
+                    <div className="flex gap-1.5 sm:gap-2.5 items-center">
+                      <div className="px-3 py-2 sm:px-4 sm:py-3 rounded-xl sm:rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs sm:text-sm font-extrabold text-slate-700 dark:text-slate-300 select-none flex items-center shrink-0">
                         🇮🇳 +91
                       </div>
                       <div className="relative flex-1 flex items-center">
-                        <Phone className="absolute left-4 w-4.5 h-4.5 text-slate-400 dark:text-slate-500 transition-colors pointer-events-none" />
+                        <Phone className="absolute left-3.5 w-4 h-4 text-slate-400 dark:text-slate-500 transition-colors pointer-events-none" />
                         <input
                           type="tel"
                           placeholder="10-digit number"
@@ -656,7 +651,7 @@ export default function AuthPage() {
                           pattern="^[0-9]{10}$"
                           title="Please enter a valid 10-digit phone number"
                           onChange={(e) => setPhone(e.target.value)}
-                          className="w-full pl-11 pr-5 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 transition-all font-bold tracking-wide text-slate-900 dark:text-white text-sm"
+                          className="w-full pl-10 pr-4 py-2 sm:py-3 rounded-xl sm:rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 transition-all font-bold tracking-wide text-slate-900 dark:text-white text-xs sm:text-sm"
                         />
                       </div>
                     </div>
@@ -665,19 +660,19 @@ export default function AuthPage() {
 
                 {/* Box 7: Password field (if phone auth) */}
                 {authMethod === "phone" && (
-                  <div className="space-y-2 animate-fade-in">
-                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  <div className="space-y-1 sm:space-y-2 animate-fade-in">
+                    <label className="block text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                       Password
                     </label>
                     <div className="relative flex items-center">
-                      <Lock className="absolute left-4 w-4.5 h-4.5 text-slate-400 dark:text-slate-500 transition-colors pointer-events-none" />
+                      <Lock className="absolute left-3.5 w-4 h-4 text-slate-400 dark:text-slate-500 transition-colors pointer-events-none" />
                       <input
                         type="password"
                         placeholder="••••••••"
                         value={phonePassword}
                         required
                         onChange={(e) => setPhonePassword(e.target.value)}
-                        className="w-full pl-11 pr-5 py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 transition-all font-medium text-slate-900 dark:text-white text-sm"
+                        className="w-full pl-10 pr-4 py-2 sm:py-3 rounded-xl sm:rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 transition-all font-medium text-slate-900 dark:text-white text-xs sm:text-sm"
                       />
                     </div>
                   </div>
@@ -686,23 +681,23 @@ export default function AuthPage() {
             ) : (
               <>
                 {/* Box 7: OTP fields (if verifying code) */}
-                <div className="space-y-4 animate-fade-in">
+                <div className="space-y-2 sm:space-y-4 animate-fade-in">
                   <button
                     type="button"
                     onClick={() => {
                       setStep(1);
                       setError("");
                     }}
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors"
+                    className="inline-flex items-center gap-1.5 text-[10px] sm:text-xs font-bold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors"
                   >
-                    <ArrowLeft className="w-3.5 h-3.5" /> Back
+                    <ArrowLeft className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> Back
                   </button>
 
-                  <div className="space-y-2">
-                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <label className="block text-[10px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                       Verification Code (OTP)
                     </label>
-                    <div className="flex justify-between gap-2" onPaste={handleOtpPaste}>
+                    <div className="flex justify-between gap-1.5 sm:gap-2" onPaste={handleOtpPaste}>
                       {otpValues.map((value, idx) => (
                         <input
                           key={idx}
@@ -713,7 +708,7 @@ export default function AuthPage() {
                           maxLength={1}
                           onChange={(e) => handleOtpChange(idx, e.target.value)}
                           onKeyDown={(e) => handleOtpKeyDown(idx, e)}
-                          className="w-11 h-13 md:w-12 md:h-14 text-center text-2xl font-black rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 transition-all text-slate-900 dark:text-white shadow-sm"
+                          className="w-9 h-11 sm:w-11 sm:h-13 md:w-12 md:h-14 text-center text-lg sm:text-2xl font-black rounded-lg sm:rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 transition-all text-slate-900 dark:text-white shadow-sm"
                         />
                       ))}
                     </div>
@@ -726,11 +721,11 @@ export default function AuthPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-4 mt-2 rounded-2xl bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 text-white font-extrabold text-sm shadow-lg shadow-brand-500/20 active:scale-[0.98] transition-all disabled:opacity-75 flex items-center justify-center gap-2"
+              className="w-full py-2.5 sm:py-4 mt-1 sm:mt-2 rounded-xl sm:rounded-2xl bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-brand-500/20 active:scale-[0.98] transition-all disabled:opacity-75 flex items-center justify-center gap-1.5 sm:gap-2"
             >
               {loading ? (
                 <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
                   {step === 2 ? "Verifying..." : authMethod === "phone" ? "Signing In..." : "Sending OTP..."}
                 </>
               ) : (
@@ -738,14 +733,14 @@ export default function AuthPage() {
                   {step === 2 
                     ? "Verify & Proceed" 
                     : authMethod === "phone" ? "Sign In" : "Send OTP"} 
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </>
               )}
             </button>
 
             {/* Resend OTP button */}
             {step === 2 && (
-              <div className="text-center text-xs font-semibold text-slate-500 dark:text-slate-400 pt-2">
+              <div className="text-center text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 pt-1 sm:pt-2">
                 Didn't receive code?{" "}
                 {canResend ? (
                   <button
@@ -767,11 +762,11 @@ export default function AuthPage() {
           {/* Box 9: Google Login button */}
           {step === 1 && (
             <>
-              <div className="relative my-6 w-full">
+              <div className="relative my-3 sm:my-6 w-full">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-slate-200 dark:border-slate-800"></div>
                 </div>
-                <div className="relative flex justify-center text-[10px] uppercase font-extrabold text-slate-400 dark:text-slate-500">
+                <div className="relative flex justify-center text-[9px] sm:text-[10px] uppercase font-extrabold text-slate-400 dark:text-slate-500">
                   <span className="bg-white dark:bg-slate-900 px-3">or continue with</span>
                 </div>
               </div>
@@ -780,9 +775,9 @@ export default function AuthPage() {
                 type="button"
                 onClick={handleGoogleSignIn}
                 disabled={loading}
-                className="w-full py-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-slate-900/40 text-slate-700 dark:text-slate-200 font-bold text-sm shadow-sm flex items-center justify-center gap-3 transition-all active:scale-[0.98] disabled:opacity-75"
+                className="w-full py-2.5 sm:py-3.5 rounded-xl sm:rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-slate-900/40 text-slate-700 dark:text-slate-200 font-bold text-xs sm:text-sm shadow-sm flex items-center justify-center gap-2 sm:gap-3 transition-all active:scale-[0.98] disabled:opacity-75"
               >
-                <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+                <svg className="w-4.5 h-4.5 sm:w-5 sm:h-5 shrink-0" viewBox="0 0 24 24">
                   <path
                     fill="#4285F4"
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -805,7 +800,7 @@ export default function AuthPage() {
             </>
           )}
 
-          <p className="text-center text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-8 leading-relaxed px-4">
+          <p className="text-center text-[9px] sm:text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-4 sm:mt-8 leading-relaxed px-4">
             By continuing, you agree to our Terms of Service & Privacy Policy.
           </p>
         </div>

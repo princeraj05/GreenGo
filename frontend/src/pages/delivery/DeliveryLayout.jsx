@@ -202,9 +202,8 @@ export default function DeliveryLayout() {
         <header className="sticky top-0 z-40 h-auto min-h-16 md:min-h-20 bg-white/85 dark:bg-slate-950/85 backdrop-blur-xl border-b border-slate-200/70 dark:border-slate-800 transition-colors">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 md:py-4 flex items-center justify-between gap-3">
             <div className="min-w-0 flex items-center gap-3">
-              <div className="md:hidden w-9 h-9 rounded-xl bg-white border border-brand-100 dark:border-brand-900 overflow-hidden shadow-sm flex items-center justify-center [&>span]:hidden">
-                <img src="/greengo-logo.svg" alt="GreenGo" className="w-full h-full object-cover" />
-                <span className="font-black text-brand-500">G</span>
+              <div className="md:hidden w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center shadow-md shrink-0">
+                <span className="text-white text-sm font-black">G</span>
               </div>
               <div className="min-w-0">
                 <p className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-brand-600 dark:text-brand-400">Delivery Panel</p>
@@ -215,12 +214,17 @@ export default function DeliveryLayout() {
               <p className="hidden sm:block text-[10px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-300">Complete profile first</p>
             )}
             <div className="flex items-center gap-2">
-            <button type="button" onClick={toggleTheme} className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-900 hover:bg-brand-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 flex items-center justify-center transition-colors" aria-label="Toggle theme">
-              {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
+            <button type="button" onClick={toggleTheme} className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors border border-slate-100 dark:border-slate-800 shadow-sm" aria-label="Toggle theme">
+              {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
             </button>
-            <button type="button" onClick={() => navigate("/delivery/orders")} className="relative w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-900 hover:bg-brand-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 flex items-center justify-center transition-colors" aria-label="Open orders">
-              <Bell size={17} />
-              {unreadCount > 0 && <span className="absolute -top-1 -right-1 h-5 min-w-5 px-1 rounded-full bg-brand-500 text-white text-[10px] font-black flex items-center justify-center">{unreadCount}</span>}
+            <button type="button" onClick={() => navigate("/delivery/orders")} className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors border border-slate-100 dark:border-slate-800 shadow-sm relative" aria-label="Open orders">
+              <Bell size={18} />
+              {unreadCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-brand-500 rounded-full border-2 border-white animate-pulse" />
+              )}
+            </button>
+            <button type="button" onClick={() => navigate("/delivery/profile")} className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors border border-slate-100 dark:border-slate-800 shadow-sm" aria-label="Open profile">
+              <User size={18} />
             </button>
             <button type="button" onClick={logout} className="hidden sm:flex h-10 px-4 rounded-xl bg-red-50 hover:bg-red-100 dark:bg-red-950/20 dark:hover:bg-red-950/30 text-red-600 dark:text-red-400 font-bold items-center gap-2 transition-colors">
               <LogOut size={16} /> Logout
