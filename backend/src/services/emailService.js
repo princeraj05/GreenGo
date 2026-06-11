@@ -112,7 +112,7 @@ const sendMailViaNodemailer = async ({ from, to, replyTo, subject, text, html })
 
     const isDefaultPort587 = Number(activePort) === 587;
     const fallbackPort = isDefaultPort587 ? 465 : 587;
-    const fallbackSecure = !isDefaultPort587;
+    const fallbackSecure = fallbackPort === 465;
 
     console.log(`Attempting SMTP fallback to port ${fallbackPort} (secure: ${fallbackSecure})...`);
 
