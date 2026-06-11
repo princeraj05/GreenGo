@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { createElement, useEffect, useState } from "react";
 import { Package, User, Wallet } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import API from "../../api/axios";
@@ -47,11 +47,11 @@ export default function DeliveryEarnings() {
   // --- STATIC METRIC CARD CONFIGURATIONS ---
   // Mapping the fetched earnings data to array key-value pairs for render mapping
   const cards = [
-    ["Total COD Orders", data?.totalCodOrders || 0],
-    ["Delivery Amount", `Rs. ${data?.totalDeliveryBoyAmount || 0}`],
-    ["Total COD Amount", `Rs. ${data?.totalCodAmount || 0}`],
-    ["Delivered COD Orders", data?.deliveredCodOrders || 0],
-    ["Current Credit", `Rs. ${data?.currentCredit || 0}`],
+    { label: "Total COD Orders", value: data?.totalCodOrders || 0, icon: Package, color: "text-blue-600 bg-blue-100 dark:bg-blue-950/30", accent: "from-blue-500 to-blue-600" },
+    { label: "Delivery Pay", value: `Rs. ${data?.totalDeliveryBoyAmount || 0}`, icon: Wallet, color: "text-cyan-600 bg-cyan-100 dark:bg-cyan-950/30", accent: "from-cyan-500 to-cyan-600" },
+    { label: "Total COD Amount", value: `Rs. ${data?.totalCodAmount || 0}`, icon: Wallet, color: "text-amber-600 bg-amber-100 dark:bg-amber-950/30", accent: "from-amber-500 to-amber-600" },
+    { label: "Delivered COD Orders", value: data?.deliveredCodOrders || 0, icon: Package, color: "text-emerald-600 bg-emerald-100 dark:bg-emerald-950/30", accent: "from-emerald-500 to-emerald-600" },
+    { label: "Current Credit", value: `Rs. ${data?.currentCredit || 0}`, icon: Wallet, color: "text-brand-600 bg-brand-100 dark:bg-brand-950/30", accent: "from-brand-500 to-brand-600" },
   ];
 
   return (
@@ -82,13 +82,19 @@ export default function DeliveryEarnings() {
           {/* --- EARNING METRIC CARDS SECTION --- */}
           {/* Grid layout with dynamic columns: 1 on mobile, 2 on min-420px, 3 on large screens, 5 on wide desktops */}
           <div className="grid grid-cols-1 min-[420px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
-            {cards.map(([label, value]) => (
-              <div key={label} className="rounded-2xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 p-4 sm:p-5 shadow-sm min-h-[132px] flex flex-col justify-between">
-                <Wallet size={23} className="text-brand-600" />
-                <div className="mt-4 min-w-0">
-                  <p className="text-xl sm:text-2xl font-black break-words leading-tight">{value}</p>
-                  <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 leading-tight">{label}</p>
+            {cards.map(({ label, value, icon, color, accent }) => (
+              <div key={label} className="relative overflow-hidden group rounded-2xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 p-4 sm:p-5 shadow-sm min-h-[132px] sm:min-h-[142px] flex flex-col justify-between transition-all duration-300 hover:shadow-md">
+                <div className="flex items-center justify-between mb-3">
+                  <span className={`w-11 h-11 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110 ${color}`}>
+                    {createElement(icon, { size: 22 })}
+                  </span>
+                  <div className={`w-2 h-2 rounded-full bg-gradient-to-br ${accent} animate-pulse`}></div>
                 </div>
+                <div className="min-w-0">
+                  <p className="text-xl sm:text-2xl font-black break-words leading-tight tracking-tight">{value}</p>
+                  <p className="mt-1 text-[10px] font-black uppercase tracking-wide text-slate-500 dark:text-slate-400 leading-tight">{label}</p>
+                </div>
+                <div className={`absolute bottom-0 left-0 h-1 w-0 bg-gradient-to-r ${accent} group-hover:w-full transition-all duration-500`}></div>
               </div>
             ))}
           </div>

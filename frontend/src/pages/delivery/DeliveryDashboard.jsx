@@ -50,11 +50,11 @@ export default function DeliveryDashboard() {
   // --- STATIC METRIC CARD CONFIGURATIONS ---
   // Mapping the fetched stats data to individual metric configurations (labels, values, icons, and theme classes)
   const cards = [
-    { label: "Total Assigned Orders", value: stats?.totalAssignedOrders || 0, icon: Package, color: "text-blue-600 bg-blue-50 dark:bg-blue-950/30" },
-    { label: "Pending Orders", value: stats?.pendingOrders || 0, icon: Clock, color: "text-amber-600 bg-amber-50 dark:bg-amber-950/30" },
-    { label: "Delivered Orders", value: stats?.deliveredOrders || 0, icon: CheckCircle, color: "text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30" },
-    { label: "COD Earnings", value: `Rs. ${stats?.codEarnings || 0}`, icon: Wallet, color: "text-brand-600 bg-brand-50 dark:bg-brand-950/30" },
-    { label: "UPI/Banking Orders", value: `${stats?.onlinePaidOrders || 0} | Rs. ${stats?.onlinePaymentAmount || 0}`, icon: CreditCard, color: "text-cyan-600 bg-cyan-50 dark:bg-cyan-950/30" },
+    { label: "Total Assigned Orders", value: stats?.totalAssignedOrders || 0, icon: Package, color: "text-blue-600 bg-blue-100 dark:bg-blue-950/30", accent: "from-blue-500 to-blue-600" },
+    { label: "Pending Orders", value: stats?.pendingOrders || 0, icon: Clock, color: "text-amber-600 bg-amber-100 dark:bg-amber-950/30", accent: "from-amber-500 to-amber-600" },
+    { label: "Delivered Orders", value: stats?.deliveredOrders || 0, icon: CheckCircle, color: "text-emerald-600 bg-emerald-100 dark:bg-emerald-950/30", accent: "from-emerald-500 to-emerald-600" },
+    { label: "COD Earnings", value: `Rs. ${stats?.codEarnings || 0}`, icon: Wallet, color: "text-brand-600 bg-brand-100 dark:bg-brand-950/30", accent: "from-brand-500 to-brand-600" },
+    { label: "UPI/Banking Orders", value: `${stats?.onlinePaidOrders || 0} | Rs. ${stats?.onlinePaymentAmount || 0}`, icon: CreditCard, color: "text-cyan-600 bg-cyan-100 dark:bg-cyan-950/30", accent: "from-cyan-500 to-cyan-600" },
   ];
 
   return (
@@ -87,16 +87,20 @@ export default function DeliveryDashboard() {
         /* --- STATISTICS CARDS SECTION --- */
         /* Main metric cards. Employs a responsive grid ('grid-cols-1 min-[420px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5') */
         <div className="grid grid-cols-1 min-[420px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
-          {cards.map(({ label, value, icon, color }) => (
+          {cards.map(({ label, value, icon, color, accent }) => (
             /* Individual Metric Card: flex column configuration with 'justify-between' for top-bottom alignment */
-            <div key={label} className={`${cardClass} min-h-[132px] sm:min-h-[142px] flex flex-col justify-between`}>
-              <span className={`w-12 h-12 rounded-2xl flex items-center justify-center ${color}`}>
-                {createElement(icon, { size: 23 })}
-              </span>
-              <div className="mt-4 min-w-0">
-                <p className="text-xl sm:text-2xl font-black text-slate-950 dark:text-white break-words leading-tight">{value}</p>
+            <div key={label} className="relative overflow-hidden group rounded-2xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 p-4 sm:p-5 shadow-sm min-h-[132px] sm:min-h-[142px] flex flex-col justify-between transition-all duration-300 hover:shadow-md">
+              <div className="flex items-center justify-between mb-3">
+                <span className={`w-11 h-11 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110 ${color}`}>
+                  {createElement(icon, { size: 22 })}
+                </span>
+                <div className={`w-2 h-2 rounded-full bg-gradient-to-br ${accent} animate-pulse`}></div>
+              </div>
+              <div className="min-w-0">
+                <p className="text-xl sm:text-2xl font-black text-slate-950 dark:text-white break-words leading-tight tracking-tight">{value}</p>
                 <p className="mt-1 text-[10px] sm:text-xs font-black uppercase tracking-wide text-slate-500 dark:text-slate-400 leading-tight">{label}</p>
               </div>
+              <div className={`absolute bottom-0 left-0 h-1 w-0 bg-gradient-to-r ${accent} group-hover:w-full transition-all duration-500`}></div>
             </div>
           ))}
         </div>
