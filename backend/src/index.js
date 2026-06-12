@@ -84,7 +84,14 @@ app.options("*", cors(corsOptions));
 
 app.use(express.json());
 
-app.use("/api", (req, res, next) => {
+app.use((req, res, next) => {
+  // Security Headers
+  res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
+  res.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https:; frame-ancestors 'none';");
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  
   res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
   res.setHeader("Pragma", "no-cache");
   res.setHeader("Expires", "0");
@@ -135,9 +142,18 @@ app.use((err, req, res, next) => {
 });
 
 /* ================= SERVER ================= */
+import { runDatabaseBackup } from "./services/backupService.js";
+import { runPrivacyCleanupJob } from "./services/privacyService.js";
 
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
+  
+  // Run tasks immediately on startup, then every 24 hours
+  setTimeout(runDatabaseBackup, 5000);
+  setTimeout(runPrivacyCleanupJob, 8000);
+  
+  setInterval(runDatabaseBackup, 24 * 60 * 60 * 1000);
+  setInterval(runPrivacyCleanupJob, 24 * 60 * 60 * 1000);
 });

@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { encryptText, decryptText } from "../config/cryptoHelper.js";
 
 const contactSchema = new mongoose.Schema(
   {
@@ -34,6 +35,27 @@ const contactSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Mongoose hooks for automatic encryption and decryption
+contactSchema.pre("save", function (next) {
+  if (this.isModified("message") && this.message) {
+    this.message = encryptText(this.message);
+  }
+  if (this.isModified("reply") && this.reply) {
+    this.reply = encryptText(this.reply);
+  }
+  next();
+});
+
+// Decrypt fields after querying
+contactSchema.post("init", function (doc) {
+  if (doc.message) {
+    doc.message = decryptText(doc.message);
+  }
+  if (doc.reply) {
+    doc.reply = decryptText(doc.reply);
+  }
+});
 
 contactSchema.index({ uid: 1, createdAt: 1 });
 contactSchema.index({ email: 1, createdAt: -1 });

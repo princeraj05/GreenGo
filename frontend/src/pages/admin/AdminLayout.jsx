@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   LayoutDashboard, UtensilsCrossed, Package, Users, 
   MessageSquare, Ticket, Bell, LineChart, Settings, 
-  LogOut, Menu, X, Star, Plus, MoreHorizontal, Sun, Moon, Image
+  LogOut, Menu, X, Star, Plus, MoreHorizontal, Sun, Moon, Image, ShieldCheck
 } from "lucide-react";
 import { getToken } from "../../utils/getToken";
 import { clearSession } from "../../utils/authStorage";
@@ -171,6 +171,7 @@ export default function AdminLayout() {
     { to: "/admin/analytics", label: "Food Analytics", icon: <LineChart size={20} /> },
     { to: "/admin/reviews", label: "Manage Reviews", icon: <Star size={20} /> },
     { to: "/admin/settings", label: "Manage Settings", icon: <Settings size={20} /> },
+    { to: "/admin/security-logs", label: "Security Logs", icon: <ShieldCheck size={20} /> },
   ];
 
   // Primary bottom navigation links config (Mobile viewport)

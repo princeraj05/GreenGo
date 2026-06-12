@@ -3,6 +3,7 @@ import Settings from "../models/Settings.js";
 import Notification from "../models/Notification.js";
 import User from "../models/User.js";
 import Food from "../models/Food.js";
+import SecurityLog from "../models/SecurityLog.js";
 import { createAdminNotification, formatPaymentMethod, orderCode } from "../services/adminNotificationService.js";
 
 const isAdmin = (user) => user?.role === "admin";
@@ -640,16 +641,40 @@ export const cancelOrder = async (req, res) => {
     // Check if 5 minutes have passed
     const timeDiff = Date.now() - new Date(order.createdAt).getTime();
     if (timeDiff > 5 * 60 * 1000) {
+      // Log cancellation attempt
+      await SecurityLog.create({
+        userId: req.user.id,
+        action: "order_cancellation_failed",
+        details: `Failed attempt to cancel Order ID: ${order._id}. Reason: Timeout (time elapsed: ${(timeDiff/1000).toFixed(0)}s).`,
+        ipAddress: req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress,
+        userAgent: req.headers['user-agent'] || ""
+      });
       return res.status(400).json({ message: "Cannot cancel order. 5 minutes have already passed." });
     }
     
-    // Check status constraints
-    if (["Delivered", "Out for Delivery", "Cancelled"].includes(order.status)) {
-      return res.status(400).json({ message: `Cannot cancel order with status: ${order.status}` });
+    // ENFORCE ORDER STATUS = PENDING ONLY
+    if (order.status !== "Pending") {
+      await SecurityLog.create({
+        userId: req.user.id,
+        action: "order_cancellation_failed",
+        details: `Failed attempt to cancel Order ID: ${order._id}. Reason: Order status is '${order.status}' (only 'Pending' allowed).`,
+        ipAddress: req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress,
+        userAgent: req.headers['user-agent'] || ""
+      });
+      return res.status(400).json({ message: `Cancellation blocked: Order status is '${order.status}' and is already being processed.` });
     }
     
     order.status = "Cancelled";
     await order.save();
+
+    // Log successful cancellation
+    await SecurityLog.create({
+      userId: req.user.id,
+      action: "order_cancellation",
+      details: `Successfully cancelled Order ID: ${order._id}.`,
+      ipAddress: req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress,
+      userAgent: req.headers['user-agent'] || ""
+    });
     
     // Create notification for user
     await Notification.create({

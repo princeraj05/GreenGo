@@ -1,6 +1,9 @@
 import User from "../models/User.js";
 import Otp from "../models/Otp.js";
 import Food from "../models/Food.js";
+import Session from "../models/Session.js";
+import SecurityLog from "../models/SecurityLog.js";
+import { encryptText, decryptText, hashText } from "../config/cryptoHelper.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import admin from "../config/firebase.js";
@@ -174,19 +177,31 @@ const logDeliveryChange = (user, field, oldValue, newValue) => {
 
 export const registerUser = async (req, res) => {
   try {
-
-    const { name, email, password, phone, address } = req.body;
+    const { name, email, password, phone, address, privacyPolicyAccepted, termsAccepted } = req.body;
 
     if (!isStrongPassword(password)) {
       return res.status(400).json({ message: PASSWORD_RULE_MESSAGE });
     }
 
     const existingUser = await User.findOne({ email });
-
     if (existingUser) {
       return res.status(400).json({
         message: "User already exists"
       });
+    }
+
+    let pHash = undefined;
+    let pEncrypted = "";
+    if (phone) {
+      pHash = hashText(phone);
+      pEncrypted = encryptText(phone);
+      
+      const existingPhone = await User.findOne({ phoneHash: pHash, isDeleted: false });
+      if (existingPhone) {
+        return res.status(400).json({
+          message: "mobile number already used plz enter another phone number"
+        });
+      }
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -195,12 +210,26 @@ export const registerUser = async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      phone,
-      address
+      phoneEncrypted: pEncrypted,
+      phoneHash: pHash,
+      phone: phone || "",
+      address,
+      privacyPolicyAcceptedAt: privacyPolicyAccepted ? new Date() : null,
+      termsAcceptedAt: termsAccepted ? new Date() : null,
+      privacyPolicyVersion: privacyPolicyAccepted ? "1.0.0" : "",
+      termsVersion: termsAccepted ? "1.0.0" : ""
     });
 
     normalizeUserCompletion(user);
     await user.save();
+
+    await SecurityLog.create({
+      userId: user._id,
+      action: "user_registered",
+      details: `User registered successfully with email: ${email}`,
+      ipAddress: req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress,
+      userAgent: req.headers['user-agent'] || ""
+    });
 
     await notifyAdminUserEvent("New User Registered", user, "success");
 
@@ -210,6 +239,7 @@ export const registerUser = async (req, res) => {
     });
 
   } catch (err) {
+    console.error("Register error:", err);
     res.status(500).json({
       message: "Server error"
     });
@@ -221,83 +251,104 @@ export const registerUser = async (req, res) => {
 
 export const loginUser = async (req, res) => {
   let email = "unknown";
-
   try {
-
     const { password } = req.body;
     email = req.body?.email || "unknown";
-    console.log("[AUTH DEBUG] Login request body received:", sanitizeBody(req.body));
 
-    const user = await User.findOne({ email });
-    console.log("[AUTH DEBUG] User lookup result:", user ? {
-      id: user._id,
-      email: user.email,
-      role: user.role,
-      provider: user.provider,
-      hasPassword: Boolean(user.password),
-    } : "not found");
-
+    const user = await User.findOne({ email, isDeleted: false });
     if (!user) {
-      console.log(`[AUTH ERROR] User login failed: User not found (${email})`);
-      console.log("[AUTH DEBUG] Final response status: 400");
-      return res.status(400).json({
-        message: "User not found"
-      });
+      return res.status(400).json({ message: "User not found" });
+    }
+
+    // Check account lockout status
+    if (user.lockoutUntil && user.lockoutUntil > new Date()) {
+      const waitTime = Math.ceil((new Date(user.lockoutUntil).getTime() - Date.now()) / (60 * 1000));
+      return res.status(403).json({ message: `Account temporarily locked due to excessive failed attempts. Try again in ${waitTime} minutes.` });
     }
 
     if (!user.password) {
-      console.log(`[AUTH ERROR] User login failed: No password hash exists for ${email}; provider=${user.provider}`);
-      console.log("[AUTH DEBUG] Final response status: 400");
-      return res.status(400).json({
-        message: "This account is registered using Google. Please login with Google."
-      });
+      return res.status(400).json({ message: "This account is registered using Google. Please login with Google." });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    console.log("[AUTH DEBUG] Password validation result:", isMatch);
-
     if (!isMatch) {
-      console.log(`[AUTH ERROR] User login failed: Invalid password for ${email}`);
-      console.log("[AUTH DEBUG] Final response status: 400");
-      return res.status(400).json({
-        message: "Invalid password"
+      user.failedLoginAttempts += 1;
+      if (user.failedLoginAttempts >= 5) {
+        user.lockoutUntil = new Date(Date.now() + 15 * 60 * 1000); // 15 mins lock
+        user.failedLoginAttempts = 0;
+        await user.save();
+        await SecurityLog.create({
+          userId: user._id,
+          action: "account_locked",
+          details: `User locked out temporarily due to 5 consecutive failed login attempts.`,
+          ipAddress: req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress,
+          userAgent: req.headers['user-agent'] || ""
+        });
+      } else {
+        await user.save();
+      }
+
+      await SecurityLog.create({
+        userId: user._id,
+        action: "failed_login_attempt",
+        details: `Invalid password entry for user: ${email}`,
+        ipAddress: req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress,
+        userAgent: req.headers['user-agent'] || ""
       });
+
+      return res.status(400).json({ message: "Invalid password" });
     }
 
+    // Reset failed login stats on success
+    user.failedLoginAttempts = 0;
+    user.lockoutUntil = null;
     user.lastLogin = new Date();
+    user.lastActivity = new Date();
     normalizeUserCompletion(user);
     await user.save();
-    await notifyAdminUserEvent("User Logged In", user, "info");
 
-    const jwtPayload = {
-      id: user._id,
-      email: user.email,
-      role: normalizeRole(user.role)
-    };
-    console.log("[AUTH DEBUG] JWT payload:", jwtPayload);
+    await SecurityLog.create({
+      userId: user._id,
+      action: "login_success",
+      details: `Successful login for email: ${email}`,
+      ipAddress: req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress,
+      userAgent: req.headers['user-agent'] || ""
+    });
 
+    // JWT Security: generate 15 min access token, 30 day refresh rotation session
     const token = jwt.sign(
-      jwtPayload,
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
+      { id: user._id, email: user.email, role: normalizeRole(user.role) },
+      process.env.JWT_SECRET || "SECRET123",
+      { expiresIn: "15m" }
     );
-    console.log("[AUTH DEBUG] JWT creation success:", maskToken(token));
+    const refreshToken = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET || "SECRET123",
+      { expiresIn: "30d" }
+    );
 
-    console.log(`[AUTH SUCCESS] User logged in: ${email} | Role: ${user.role}`);
-    console.log("[AUTH DEBUG] Final response status: 200");
+    // Save active session record
+    const userAgent = req.headers['user-agent'] || "";
+    await Session.create({
+      userId: user._id,
+      token,
+      deviceName: userAgent.includes("Mobi") ? "Mobile Device" : "Desktop Device",
+      browser: userAgent.includes("Chrome") ? "Chrome" : userAgent.includes("Firefox") ? "Firefox" : "Browser",
+      os: userAgent.includes("Windows") ? "Windows" : userAgent.includes("Android") ? "Android" : "OS",
+      ipAddress: req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress,
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+    });
+
     res.json({
       success: true,
       token,
+      refreshToken,
       role: normalizeRole(user.role)
     });
 
   } catch (err) {
-    console.log(`[AUTH ERROR] User login server error for ${email}: ${err.message}`);
-    console.log("[AUTH DEBUG] JWT creation/password validation failure stack:", err.stack);
-    console.log("[AUTH DEBUG] Final response status: 500");
-    res.status(500).json({
-      message: "Server error"
-    });
+    console.error("Login user error:", err);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -308,38 +359,86 @@ export const loginWithPhonePassword = async (req, res) => {
       return res.status(400).json({ message: "Phone number and password are required" });
     }
 
-    // Validate phone number format (must be 10 digits)
     const phoneRegex = /^[0-9]{10}$/;
     if (!phoneRegex.test(phone)) {
       return res.status(400).json({ message: "Invalid phone number or password" });
     }
 
-    const user = await User.findOne({ phone });
+    const pHash = hashText(phone);
+    const user = await User.findOne({ phoneHash: pHash, isDeleted: false });
     if (!user) {
       return res.status(400).json({ message: "Invalid phone number or password" });
     }
+
+    // Check account lockout status
+    if (user.lockoutUntil && user.lockoutUntil > new Date()) {
+      const waitTime = Math.ceil((new Date(user.lockoutUntil).getTime() - Date.now()) / (60 * 1000));
+      return res.status(403).json({ message: `Account temporarily locked due to excessive failed attempts. Try again in ${waitTime} minutes.` });
+    }
+
     if (!user.password) {
       return res.status(400).json({ message: "Invalid phone number or password" });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
+      user.failedLoginAttempts += 1;
+      if (user.failedLoginAttempts >= 5) {
+        user.lockoutUntil = new Date(Date.now() + 15 * 60 * 1000);
+        user.failedLoginAttempts = 0;
+      }
+      await user.save();
+
+      await SecurityLog.create({
+        userId: user._id,
+        action: "failed_login_attempt",
+        details: `Invalid password entry for phone: ${phone}`,
+        ipAddress: req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress,
+        userAgent: req.headers['user-agent'] || ""
+      });
+
       return res.status(400).json({ message: "Invalid phone number or password" });
     }
 
+    user.failedLoginAttempts = 0;
+    user.lockoutUntil = null;
     user.lastLogin = new Date();
+    user.lastActivity = new Date();
     normalizeUserCompletion(user);
     await user.save();
-    await notifyAdminUserEvent("User Logged In", user, "info");
+
+    await SecurityLog.create({
+      userId: user._id,
+      action: "login_success",
+      details: `Successful phone login for: ${phone}`,
+      ipAddress: req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress,
+      userAgent: req.headers['user-agent'] || ""
+    });
 
     const role = normalizeRole(user.role);
     const token = jwt.sign(
-      { id: user._id, phone: user.phone, role },
+      { id: user._id, role },
       process.env.JWT_SECRET || "SECRET123",
-      { expiresIn: "7d" }
+      { expiresIn: "15m" }
+    );
+    const refreshToken = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET || "SECRET123",
+      { expiresIn: "30d" }
     );
 
-    res.json({ success: true, token, role });
+    const userAgent = req.headers['user-agent'] || "";
+    await Session.create({
+      userId: user._id,
+      token,
+      deviceName: userAgent.includes("Mobi") ? "Mobile Device" : "Desktop Device",
+      browser: userAgent.includes("Chrome") ? "Chrome" : "Browser",
+      os: userAgent.includes("Windows") ? "Windows" : "OS",
+      ipAddress: req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress,
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+    });
+
+    res.json({ success: true, token, refreshToken, role });
   } catch (err) {
     console.error("Phone password login error:", err);
     res.status(500).json({ message: "Server error" });
@@ -411,7 +510,20 @@ export const updateProfile = async (req, res) => {
     const previousLongitude = user.deliveryDetails?.longitude;
 
     user.name = name || user.name;
-    user.phone = phone !== undefined ? phone : user.phone;
+    
+    if (phone !== undefined && phone !== user.phone) {
+      const pHash = hashText(phone);
+      const existingPhone = await User.findOne({ phoneHash: pHash, isDeleted: false, _id: { $ne: user._id } });
+      if (existingPhone) {
+        return res.status(400).json({
+          message: "mobile number already used plz enter another phone number"
+        });
+      }
+      user.phone = phone;
+      user.phoneHash = pHash;
+      user.phoneEncrypted = encryptText(phone);
+    }
+
     if (addresses !== undefined) {
       const nextAddresses = normalizeAddresses(addresses, address || user.address);
       if (nextAddresses.length > 0) {
@@ -442,11 +554,20 @@ export const updateProfile = async (req, res) => {
     user.deliveryTime = deliveryTime !== undefined ? deliveryTime : user.deliveryTime;
     user.notifications = notifications !== undefined ? notifications : user.notifications;
     user.birthDate = birthDate !== undefined && birthDate !== "" ? new Date(birthDate) : user.birthDate;
+    
     if (password !== undefined && password !== "") {
       if (!isStrongPassword(password)) {
         return res.status(400).json({ message: PASSWORD_RULE_MESSAGE });
       }
       user.password = await bcrypt.hash(password, 10);
+      
+      await SecurityLog.create({
+        userId: user._id,
+        action: "password_change",
+        details: `Password changed successfully.`,
+        ipAddress: req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress,
+        userAgent: req.headers['user-agent'] || ""
+      });
     }
 
     if (user.role === "deliveryBoy") {
@@ -474,10 +595,19 @@ export const updateProfile = async (req, res) => {
     normalizeUserCompletion(user);
     await user.save();
 
+    await SecurityLog.create({
+      userId: user._id,
+      action: "profile_update",
+      details: `Profile fields updated successfully.`,
+      ipAddress: req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress,
+      userAgent: req.headers['user-agent'] || ""
+    });
+
     const safeUser = user.toObject();
     delete safeUser.password;
     res.json({ success: true, message: "Profile updated successfully", user: safeUser });
   } catch (err) {
+    console.error("Update profile error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -1124,4 +1254,147 @@ export const verifyOtpPhone = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+/* ================= PRIVACY CENTER - DOWNLOAD MY DATA ================= */
+export const downloadUserData = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("-password -twoFactorSecret");
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const [orders, sessions] = await Promise.all([
+      Order.find({ userId: req.user.id }).lean(),
+      Session.find({ userId: req.user.id }).select("-token").lean()
+    ]);
+
+    const exportedData = {
+      profile: {
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        provider: user.provider,
+        role: user.role,
+        birthDate: user.birthDate,
+        createdAt: user.createdAt,
+        privacyPolicyAcceptedAt: user.privacyPolicyAcceptedAt,
+        termsAcceptedAt: user.termsAcceptedAt
+      },
+      addresses: user.addresses || [],
+      orders: orders.map(o => ({
+        orderId: o._id,
+        total: o.total,
+        status: o.status,
+        createdAt: o.createdAt,
+        paymentMethod: o.paymentMethod
+      })),
+      sessions: sessions.map(s => ({
+        deviceName: s.deviceName,
+        browser: s.browser,
+        os: s.os,
+        ipAddress: s.ipAddress,
+        loginTime: s.loginTime,
+        lastActivity: s.lastActivity
+      }))
+    };
+
+    res.setHeader("Content-Disposition", `attachment; filename=greengo_user_data_${req.user.id}.json`);
+    res.setHeader("Content-Type", "application/json");
+    res.json(exportedData);
+
+  } catch (err) {
+    console.error("Download user data error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+/* ================= PRIVACY CENTER - REQUEST ACCOUNT DELETION ================= */
+export const requestAccountDeletion = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    user.isDeleted = true;
+    user.deletedAt = new Date();
+    user.phoneHash = undefined; // Avoid duplicate phone lockout for future registers
+    await user.save();
+
+    // Kill all sessions
+    await Session.deleteMany({ userId: req.user.id });
+
+    // Audit logs
+    await SecurityLog.create({
+      userId: user._id,
+      action: "user_requested_deletion",
+      details: `User requested account deletion. Soft delete period initiated (7 days recovery window).`,
+      ipAddress: req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress,
+      userAgent: req.headers['user-agent'] || ""
+    });
+
+    res.json({ success: true, message: "Account scheduled for deletion. You have 7 days to log back in to recover it." });
+  } catch (err) {
+    console.error("Request account deletion error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+/* ================= DEVICE / SESSIONS MANAGEMENT ================= */
+export const getActiveSessions = async (req, res) => {
+  try {
+    const sessions = await Session.find({ userId: req.user.id }).select("-token").sort({ lastActivity: -1 });
+    res.json(sessions);
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const revokeSession = async (req, res) => {
+  try {
+    const session = await Session.findOne({ _id: req.params.sessionId, userId: req.user.id });
+    if (!session) return res.status(404).json({ message: "Session not found" });
+
+    await Session.deleteOne({ _id: req.params.sessionId });
+
+    await SecurityLog.create({
+      userId: req.user.id,
+      action: "session_revoked",
+      details: `User revoked session ID: ${req.params.sessionId}`,
+      ipAddress: req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress,
+      userAgent: req.headers['user-agent'] || ""
+    });
+
+    res.json({ success: true, message: "Device session logged out successfully" });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const revokeAllSessions = async (req, res) => {
+  try {
+    await Session.deleteMany({ userId: req.user.id });
+
+    await SecurityLog.create({
+      userId: req.user.id,
+      action: "all_sessions_revoked",
+      details: `User logged out from all active device sessions.`,
+      ipAddress: req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress,
+      userAgent: req.headers['user-agent'] || ""
+    });
+
+    res.json({ success: true, message: "Successfully logged out from all devices" });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+/* ================= SECURITY AUDIT LOGS (ADMIN ONLY) ================= */
+export const getSecurityLogs = async (req, res) => {
+  try {
+    if (req.user.role !== "admin") return res.status(403).json({ message: "Forbidden" });
+
+    const logs = await SecurityLog.find().sort({ timestamp: -1 }).limit(200);
+    res.json(logs);
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 

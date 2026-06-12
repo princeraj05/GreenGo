@@ -42,6 +42,17 @@ const userSchema = new mongoose.Schema(
     type: Date
   },
 
+  phoneEncrypted: {
+    type: String,
+    default: ""
+  },
+
+  phoneHash: {
+    type: String,
+    sparse: true,
+    index: { unique: true, partialFilterExpression: { phoneHash: { $exists: true, $ne: null } } }
+  },
+
   phone: {
     type: String,
     default: ""
@@ -120,6 +131,61 @@ const userSchema = new mongoose.Schema(
     type: Date
   },
 
+  lastActivity: {
+    type: Date,
+    default: Date.now
+  },
+
+  failedLoginAttempts: {
+    type: Number,
+    default: 0
+  },
+
+  lockoutUntil: {
+    type: Date,
+    default: null
+  },
+
+  isDeleted: {
+    type: Boolean,
+    default: false
+  },
+
+  deletedAt: {
+    type: Date,
+    default: null
+  },
+
+  twoFactorSecret: {
+    type: String,
+    default: ""
+  },
+
+  twoFactorEnabled: {
+    type: Boolean,
+    default: false
+  },
+
+  privacyPolicyAcceptedAt: {
+    type: Date,
+    default: null
+  },
+
+  termsAcceptedAt: {
+    type: Date,
+    default: null
+  },
+
+  privacyPolicyVersion: {
+    type: String,
+    default: ""
+  },
+
+  termsVersion: {
+    type: String,
+    default: ""
+  },
+
   role: {
     type: String,
     enum: ["customer", "deliveryBoy", "admin"],
@@ -133,5 +199,7 @@ userSchema.index({ role: 1, blocked: 1, createdAt: -1 });
 userSchema.index({ uid: 1 }, { sparse: true });
 userSchema.index({ birthDate: 1 });
 userSchema.index({ "deliveryDetails.profileCompleted": 1, role: 1 });
+userSchema.index({ isDeleted: 1 });
+userSchema.index({ lastActivity: 1 });
 
 export default mongoose.model("User", userSchema);

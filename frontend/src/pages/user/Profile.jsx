@@ -27,6 +27,11 @@ import {
   Users,
   X,
   XCircle,
+  ShieldAlert,
+  Smartphone,
+  ShieldCheck,
+  Download,
+  Trash2
 } from "lucide-react";
 import { getToken } from "../../utils/getToken";
 import { clearSession } from "../../utils/authStorage";
@@ -40,19 +45,10 @@ const MotionDiv = motion.div;
 
 const emptyAddress = { label: "Home", details: "", city: "", state: "", isPrimary: true };
 
-/**
- * Profile Component
- * 
- * Manages user accounts details, addresses, favorite food lists, refer-a-friend links, active discount coupons,
- * support contact tickets, and developer bio profiles.
- */
 export default function Profile() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  /* --- STATE DECLARATIONS --- */
-  
-  // form: Local form input controls mapping current customer info
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -65,37 +61,29 @@ export default function Profile() {
     password: "",
     hasPassword: false,
   });
-  // foods: Catalog of items matching favorites list IDs
   const [foods, setFoods] = useState([]);
-  // favorites: List of user liked items IDs
   const [favorites, setFavorites] = useState([]);
-  // coupons: Active coupon entities retrieved from backend
   const [coupons, setCoupons] = useState([]);
-  // contacts: Client message tickets log history
   const [contacts, setContacts] = useState([]);
-  // activeSection: Selected settings tab opened in slider overlay modal
   const [activeSection, setActiveSection] = useState(null);
-  // suggestion: Feedback ticket fields
   const [suggestion, setSuggestion] = useState({ subject: "", message: "" });
   
-  // loaders & toggles
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [locationLoading, setLocationLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   
-  // developer profile variables
   const [developerPhotoIndex, setDeveloperPhotoIndex] = useState(0);
   const [developerFailedPhotos, setDeveloperFailedPhotos] = useState(() => new Set());
   
-  // screen warnings & notifications
   const [message, setMessage] = useState("");
   const [msgType, setMsgType] = useState("");
 
-  /* --- MEMOIZED DERIVED VALUES --- */
+  // Sessions and deletion center states
+  const [sessions, setSessions] = useState([]);
+  const [sessionsLoading, setSessionsLoading] = useState(false);
 
-  // Candidate image paths for developer carousel slideshow (exactly the 2 available photos)
   const developerPhotoCandidates = useMemo(() => {
     return [
       "/developerPhoto/activeDeveloperPhoto1.jpg",
@@ -103,7 +91,6 @@ export default function Profile() {
     ];
   }, []);
 
-  // Returns first available developer image that loaded successfully
   const activeDeveloperPhoto = useMemo(() => {
     if (developerFailedPhotos.size >= developerPhotoCandidates.length) return "";
     for (let offset = 0; offset < developerPhotoCandidates.length; offset += 1) {
@@ -114,14 +101,10 @@ export default function Profile() {
     return "";
   }, [developerFailedPhotos, developerPhotoCandidates, developerPhotoIndex]);
 
-  /* --- DATA FETCHING & LIFECYCLE --- */
-
-  // Load backend configurations on component mount
   useEffect(() => {
     loadProfileData();
   }, []);
 
-  // Sets up automatic photo rotations for developer profile slide deck
   useEffect(() => {
     const timer = setInterval(() => {
       setDeveloperPhotoIndex((current) => (current + 1) % developerPhotoCandidates.length);
@@ -129,11 +112,6 @@ export default function Profile() {
     return () => clearInterval(timer);
   }, [developerPhotoCandidates.length]);
 
-  /* --- ACTIONS & HANDLERS --- */
-
-  /**
-   * showMessage: Renders floating top alerts on forms.
-   */
   const showMessage = (text, type = "success") => {
     setMessage(text);
     setMsgType(type);
@@ -174,9 +152,6 @@ export default function Profile() {
     }));
   };
 
-  /**
-   * loadProfileData: Retrieves profile fields, food references, active coupons, and support requests.
-   */
   const loadProfileData = async () => {
     try {
       const token = await getToken();
@@ -220,6 +195,96 @@ export default function Profile() {
       setLoading(false);
     }
   };
+
+  const fetchActiveSessions = async () => {
+    setSessionsLoading(true);
+    try {
+      const token = await getToken();
+      const res = await fetch(`${API}/api/users/sessions`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setSessions(await res.json());
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSessionsLoading(false);
+    }
+  };
+
+  const handleRevokeSession = async (sessionId) => {
+    try {
+      const token = await getToken();
+      const res = await fetch(`${API}/api/users/sessions/${sessionId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        showMessage("Device session logged out successfully");
+        fetchActiveSessions();
+      }
+    } catch (err) {
+      showMessage("Failed to log out device session", "error");
+    }
+  };
+
+  const handleRevokeAllSessions = async () => {
+    try {
+      const token = await getToken();
+      const res = await fetch(`${API}/api/users/sessions`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        showMessage("All device sessions logged out successfully");
+        setShowLogoutConfirm(false);
+        await confirmLogout();
+      }
+    } catch (err) {
+      showMessage("Failed to revoke all sessions", "error");
+    }
+  };
+
+  const handleDownloadUserData = async () => {
+    try {
+      const token = await getToken();
+      window.open(`${API}/api/users/download-data?token=${token}`, "_blank");
+      showMessage("Your data download request initiated.");
+    } catch (err) {
+      showMessage("Failed to download data", "error");
+    }
+  };
+
+  const handleRequestAccountDeletion = async () => {
+    if (!window.confirm("Are you sure you want to request account deletion? Your data will be permanently scrubbed after a 7-day recovery period.")) {
+      return;
+    }
+    try {
+      const token = await getToken();
+      const res = await fetch(`${API}/api/users/request-delete`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        showMessage("Account deletion scheduled. Logging out in 7 days window...", "success");
+        setTimeout(async () => {
+          await confirmLogout();
+        }, 3000);
+      } else {
+        const data = await res.json();
+        showMessage(data.message || "Request failed", "error");
+      }
+    } catch (err) {
+      showMessage("Request failed", "error");
+    }
+  };
+
+  useEffect(() => {
+    if (activeSection === "sessions") {
+      fetchActiveSessions();
+    }
+  }, [activeSection]);
 
   const cleanAddressPart = (value = "") =>
     String(value)
@@ -275,9 +340,6 @@ export default function Profile() {
     });
   };
 
-  /**
-   * useCurrentLocation: Fetches browser coordinates and requests OpenStreetMap reverse lookup.
-   */
   const useCurrentLocation = () => {
     if (!navigator.geolocation) {
       showMessage("Location is not supported on this device.", "error");
@@ -332,9 +394,6 @@ export default function Profile() {
     /[^A-Za-z0-9]/.test(password)
   );
 
-  /**
-   * saveProfile: Syncs updated user settings and address updates to the server.
-   */
   const saveProfile = async (override = {}, options = {}) => {
     if (options.requirePassword && !form.hasPassword && !form.password) {
       showMessage("Please set password to complete profile.", "error");
@@ -391,9 +450,6 @@ export default function Profile() {
     }
   };
 
-  /**
-   * toggleFavoriteFood: Syncs dynamic food liking toggles.
-   */
   const toggleFavoriteFood = async (foodId) => {
     try {
       const token = await getToken();
@@ -413,9 +469,6 @@ export default function Profile() {
     }
   };
 
-  /**
-   * submitSuggestion: Submits contact message fields to admin inbox.
-   */
   const submitSuggestion = async () => {
     if (!suggestion.message.trim()) {
       showMessage("Please write your suggestion.", "error");
@@ -442,9 +495,6 @@ export default function Profile() {
     }
   };
 
-  /**
-   * confirmLogout: Removes session identifiers and redirects to auth portal.
-   */
   const confirmLogout = async () => {
     setShowLogoutConfirm(false);
     await clearSession();
@@ -455,6 +505,8 @@ export default function Profile() {
     { id: "edit", label: "Edit Profile", icon: UserPen },
     { id: "addresses", label: "Saved Addresses", icon: MapPin },
     { id: "favorites", label: "My Favorite Foods", icon: Heart },
+    { id: "privacy", label: "Privacy & Security", icon: ShieldCheck },
+    { id: "sessions", label: "Session Management", icon: Smartphone },
     { id: "refer", label: "Refer & Earn", icon: Users },
     { id: "coupons", label: "Coupons", icon: TicketPercent },
     { id: "suggestions", label: "Suggestions", icon: MessageSquare },
@@ -463,11 +515,9 @@ export default function Profile() {
     { id: "developer", label: "About Developer", icon: User },
   ];
 
-  /* --- RENDER SECTION ROUTER --- */
   const renderSection = () => {
     if (!activeSection) return null;
 
-    // Edit Profile Modal Section
     if (activeSection === "edit") {
       return (
         <Section title="Edit Profile" onClose={() => setActiveSection(null)}>
@@ -479,7 +529,7 @@ export default function Profile() {
               <Input value={form.email} disabled readOnly className="bg-slate-100 dark:bg-slate-900 cursor-not-allowed" />
             </Field>
             <Field label="Mobile Number">
-              <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+91 98765 43210" />
+              <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="9876543210" />
             </Field>
             <Field label={form.hasPassword ? "Set New Password" : "Set Password"}>
               <div className="relative">
@@ -518,7 +568,6 @@ export default function Profile() {
       );
     }
 
-    // Saved Addresses Modal Section
     if (activeSection === "addresses") {
       return (
         <Section title="Saved Addresses" onClose={() => setActiveSection(null)}>
@@ -562,7 +611,6 @@ export default function Profile() {
       );
     }
 
-    // Favorite Foods Modal Section
     if (activeSection === "favorites") {
       return (
         <Section title="My Favorite Foods" onClose={() => setActiveSection(null)}>
@@ -590,7 +638,152 @@ export default function Profile() {
       );
     }
 
-    // Refer & Earn Modal Section
+    if (activeSection === "privacy") {
+      return (
+        <Section title="Privacy & Security Center" onClose={() => setActiveSection(null)}>
+          <div className="space-y-6">
+            <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/40 text-amber-800 dark:text-amber-300 space-y-2">
+              <div className="flex items-center gap-2 font-black text-sm">
+                <ShieldAlert size={18} />
+                <span>Automatic Account & Data Deletion</span>
+              </div>
+              <p className="text-xs font-semibold leading-relaxed">
+                Your account and personal data will be automatically deleted if you do not use the app for 30 consecutive days. Order records required for financial reporting and revenue calculations will be retained.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <h4 className="text-sm font-black text-slate-900 dark:text-white">Compliance & Security Checklist</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-bold text-slate-600 dark:text-slate-300">
+                <div className="flex items-center gap-2 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800">
+                  <CheckCircle size={15} className="text-emerald-500" />
+                  <span>Encrypted Messages</span>
+                </div>
+                <div className="flex items-center gap-2 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800">
+                  <CheckCircle size={15} className="text-emerald-500" />
+                  <span>Secure Password Storage</span>
+                </div>
+                <div className="flex items-center gap-2 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800">
+                  <CheckCircle size={15} className="text-emerald-500" />
+                  <span>OTP Protected Login</span>
+                </div>
+                <div className="flex items-center gap-2 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800">
+                  <CheckCircle size={15} className="text-emerald-500" />
+                  <span>Device Monitoring</span>
+                </div>
+                <div className="flex items-center gap-2 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800">
+                  <CheckCircle size={15} className="text-emerald-500" />
+                  <span>Suspicious Login Detection</span>
+                </div>
+                <div className="flex items-center gap-2 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800">
+                  <CheckCircle size={15} className="text-emerald-500" />
+                  <span>Auto Data Deletion</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-3">
+              <h4 className="text-sm font-black text-slate-900 dark:text-white">Your Data Portability & Rights</h4>
+              <button
+                type="button"
+                onClick={handleDownloadUserData}
+                className="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 hover:bg-brand-50 dark:hover:bg-brand-950/20 border border-slate-100 dark:border-slate-800 transition-all group"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="w-9 h-9 rounded-xl bg-brand-50 dark:bg-brand-950/30 text-brand-700 dark:text-brand-300 flex items-center justify-center shrink-0">
+                    <Download size={18} />
+                  </span>
+                  <div className="text-left">
+                    <p className="text-xs font-black text-slate-900 dark:text-white">Download My Data (JSON)</p>
+                    <p className="text-[10px] font-semibold text-slate-400 mt-0.5">Export profile, addresses, orders & active sessions</p>
+                  </div>
+                </div>
+                <ChevronRight size={16} className="text-slate-400 group-hover:text-brand-600" />
+              </button>
+
+              <button
+                type="button"
+                onClick={handleRequestAccountDeletion}
+                className="w-full flex items-center justify-between p-3 rounded-2xl bg-red-50/30 dark:bg-red-950/10 hover:bg-red-50 dark:hover:bg-red-950/20 border border-red-100/40 dark:border-red-900/30 transition-all group"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="w-9 h-9 rounded-xl bg-red-50 dark:bg-red-950/30 text-red-600 flex items-center justify-center shrink-0">
+                    <Trash2 size={18} />
+                  </span>
+                  <div className="text-left">
+                    <p className="text-xs font-black text-red-600 dark:text-red-400">Request Account Deletion</p>
+                    <p className="text-[10px] font-semibold text-red-400 mt-0.5">Start 7-day recovery period before permanent deletion</p>
+                  </div>
+                </div>
+                <ChevronRight size={16} className="text-red-400 group-hover:text-red-600" />
+              </button>
+            </div>
+          </div>
+        </Section>
+      );
+    }
+
+    if (activeSection === "sessions") {
+      return (
+        <Section title="Session Management" onClose={() => setActiveSection(null)}>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-xs font-black text-slate-500 dark:text-slate-400">Active Devices & Login History</span>
+              <button
+                type="button"
+                onClick={handleRevokeAllSessions}
+                className="text-xs font-black text-red-600 bg-red-50 dark:bg-red-950/20 px-3 py-1.5 rounded-xl"
+              >
+                Logout From All Devices
+              </button>
+            </div>
+
+            {sessionsLoading ? (
+              <div className="flex justify-center p-8">
+                <div className="w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : sessions.length === 0 ? (
+              <EmptyText text="No other active sessions found." />
+            ) : (
+              <div className="space-y-3">
+                {sessions.map((session) => (
+                  <div
+                    key={session._id}
+                    className="flex items-start justify-between gap-3 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-green-50 dark:bg-green-950/20 text-green-700 dark:text-green-300 flex items-center justify-center shrink-0 mt-0.5">
+                        <Smartphone size={20} />
+                      </div>
+                      <div className="text-left">
+                        <h5 className="text-xs font-black text-slate-950 dark:text-white">
+                          {session.deviceName} ({session.os})
+                        </h5>
+                        <p className="text-[10px] font-bold text-slate-500 mt-1">
+                          Browser: {session.browser} | IP: {session.ipAddress}
+                        </p>
+                        <p className="text-[9px] font-semibold text-slate-400 mt-0.5">
+                          Logged in: {new Date(session.loginTime).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleRevokeSession(session._id)}
+                      className="text-[10px] font-black text-red-600 hover:bg-red-50 p-2 rounded-xl"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </Section>
+      );
+    }
+
     if (activeSection === "refer") {
       return (
         <Section title="Refer & Earn" onClose={() => setActiveSection(null)}>
@@ -616,7 +809,6 @@ export default function Profile() {
       );
     }
 
-    // Coupons Modal Section
     if (activeSection === "coupons") {
       return (
         <Section title="Coupons" onClose={() => setActiveSection(null)}>
@@ -640,7 +832,6 @@ export default function Profile() {
       );
     }
 
-    // Suggestions Modal Section
     if (activeSection === "suggestions") {
       return (
         <Section title="Suggestions" onClose={() => setActiveSection(null)}>
@@ -657,7 +848,7 @@ export default function Profile() {
                 <h4 className="text-sm font-black text-slate-950 dark:text-white mb-3">Your Messages</h4>
                 <div className="space-y-2">
                   {contacts.slice(-3).reverse().map((item) => (
-                    <div key={item._id} className="rounded-xl bg-slate-50 dark:bg-slate-900 p-3">
+                     <div key={item._id} className="rounded-xl bg-slate-50 dark:bg-slate-900 p-3">
                       <p className="text-xs font-black text-slate-900 dark:text-white">{item.subject || "Suggestion"}</p>
                       <p className="text-xs font-semibold text-slate-500 dark:text-slate-300 line-clamp-2 mt-1">{item.message}</p>
                     </div>
@@ -670,7 +861,6 @@ export default function Profile() {
       );
     }
 
-    // Help & Support Modal Section
     if (activeSection === "support") {
       return (
         <Section title="Help & Support" onClose={() => setActiveSection(null)}>
@@ -683,7 +873,6 @@ export default function Profile() {
       );
     }
 
-    // About GreenGo Modal Section
     if (activeSection === "about") {
       return (
         <Section title="About GreenGo" onClose={() => setActiveSection(null)}>
@@ -696,7 +885,6 @@ export default function Profile() {
       );
     }
 
-    // Developer Profile Section
     if (activeSection === "developer") {
       return (
         <Section title="About Developer" onClose={() => setActiveSection(null)}>
@@ -759,10 +947,8 @@ export default function Profile() {
   return (
     <div className="w-full max-w-5xl mx-auto pb-10 px-0 sm:px-4">
       
-      {/* --- PROFILE CARD CONTAINER --- */}
       <div className="relative overflow-hidden bg-white dark:bg-slate-950 sm:rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-800 min-h-[calc(100vh-7rem)]">
         
-        {/* Profile Header Details (Banner Area) */}
         <div className="bg-gradient-to-br from-emerald-50 to-white dark:from-emerald-950/20 dark:to-slate-950 px-5 pt-6 pb-7">
           <div className="flex items-center gap-4">
             <div className="w-20 h-20 rounded-full bg-green-500 text-white flex items-center justify-center text-4xl font-black shadow-lg shadow-green-500/20">
@@ -782,7 +968,6 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* Validation Feedback Alert Messages */}
         {message && (
           <div className={`mx-5 mt-4 p-3 rounded-2xl flex items-center gap-2 font-bold text-sm ${msgType === "error" ? "bg-red-50 text-red-700 dark:bg-red-950/20 dark:text-red-300" : "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-300"}`}>
             {msgType === "error" ? <XCircle size={18} /> : <CheckCircle size={18} />}
@@ -790,7 +975,6 @@ export default function Profile() {
           </div>
         )}
 
-        {/* PROFILE COMPLETION PERCENT BAR */}
         <div className="mx-5 mt-3 rounded-2xl border border-emerald-100 bg-emerald-50/70 p-3.5 dark:border-emerald-900/40 dark:bg-emerald-950/20">
           {location.state?.profileRequired && (
             <p className="mb-2 text-xs font-bold text-emerald-700 dark:text-emerald-300">
@@ -823,7 +1007,6 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* SETTINGS OPTION BUTTON LIST */}
         <div className="px-5 py-4">
           <div className="divide-y divide-slate-100 dark:divide-slate-800">
             {menuItems.map((item) => (
@@ -855,10 +1038,8 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* --- OVERLAY DETAILED VIEWS --- */}
       <AnimatePresence>{renderSection()}</AnimatePresence>
 
-      {/* --- LOGOUT CONFIRMATION POPUP --- */}
       {showLogoutConfirm && (
         <div className="fixed inset-0 z-[2200] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-950/65 backdrop-blur-sm" onClick={() => setShowLogoutConfirm(false)} />
@@ -883,7 +1064,6 @@ export default function Profile() {
   );
 }
 
-/* --- REUSABLE CARD OVERLAY MODAL WRAPPER --- */
 function Section({ title, children, onClose }) {
   return (
     <div className="fixed inset-0 z-[2100] flex items-end sm:items-center justify-center bg-slate-950/55 backdrop-blur-sm p-0 sm:p-4">
@@ -905,7 +1085,6 @@ function Section({ title, children, onClose }) {
   );
 }
 
-/* --- REUSABLE FORM FIELD WRAPPER --- */
 function Field({ label, children }) {
   return (
     <label className="block">
@@ -915,7 +1094,6 @@ function Field({ label, children }) {
   );
 }
 
-/* --- REUSABLE EMPTY STATE COMPONENT --- */
 function EmptyText({ text }) {
   return (
     <div className="rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 p-8 text-center">
@@ -924,7 +1102,6 @@ function EmptyText({ text }) {
   );
 }
 
-/* --- REUSABLE DEVELOPER INFORMATION CARD --- */
 function DeveloperInfo({ label, value }) {
   return (
     <div className="rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 p-4">
@@ -934,7 +1111,6 @@ function DeveloperInfo({ label, value }) {
   );
 }
 
-/* --- REUSABLE SUPPORT DETAIL ROW --- */
 function SupportRow({ icon: Icon, title, detail }) {
   const RowIcon = Icon;
   return (

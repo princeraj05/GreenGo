@@ -12,7 +12,13 @@ import {
   resetPassword,
   sendOtpEmail,
   verifyOtpEmail,
-  getBudgetRecommendations
+  getBudgetRecommendations,
+  downloadUserData,
+  requestAccountDeletion,
+  getActiveSessions,
+  revokeSession,
+  revokeAllSessions,
+  getSecurityLogs
 } from "../controllers/userController.js";
 
 import { protect } from "../middleware/authMiddleware.js";
@@ -34,5 +40,15 @@ router.post("/reset-password/:token", resetPassword);
 
 router.post("/send-otp-email", sendOtpEmail);
 router.post("/verify-otp-email", verifyOtpEmail);
+
+// Privacy Center & Sessions Management
+router.get("/download-data", protect, downloadUserData);
+router.post("/request-delete", protect, requestAccountDeletion);
+router.get("/sessions", protect, getActiveSessions);
+router.delete("/sessions/:sessionId", protect, revokeSession);
+router.delete("/sessions", protect, revokeAllSessions);
+
+// Security logs (Admin Only)
+router.get("/security-logs", protect, getSecurityLogs);
 
 export default router;

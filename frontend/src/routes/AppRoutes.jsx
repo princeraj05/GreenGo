@@ -48,6 +48,7 @@ const ManageNotifications = lazy(() => import("../pages/admin/ManageNotification
 const FoodAnalytics = lazy(() => import("../pages/admin/FoodAnalytics"));
 const ManageReviews = lazy(() => import("../pages/admin/ManageReviews"));
 const ManageBanners = lazy(() => import("../pages/admin/ManageBanners"));
+const SecurityLogs = lazy(() => import("../pages/admin/SecurityAuditLogs"));
 
 const SuspenseLoader = () => (
   <div className="min-h-[60vh] px-4 py-6 sm:px-8">
@@ -135,6 +136,7 @@ export default function AppRoutes() {
           <Route path="analytics" element={<FoodAnalytics />} />
           <Route path="reviews" element={<ManageReviews />} />
           <Route path="banners" element={<ManageBanners />} />
+          <Route path="security-logs" element={<SecurityLogs />} />
         </Route>
 
         {/* FALLBACK */}
