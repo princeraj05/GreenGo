@@ -522,7 +522,4 @@ function FoodResultCard({ food, cartItem, onQuantity }) {
       </div>
     </div>
   );
-}>
-  );
 }
-
