@@ -7,6 +7,7 @@ import Card from "../../components/ui/Card";
 import Badge from "../../components/ui/Badge";
 import { getApiUrl, getImageUrl } from "../../utils/getApiUrl";
 import Button from "../../components/ui/Button";
+import { playOrderConfirmationVoice } from "../../utils/ttsService";
 
 /**
  * Orders Component
@@ -56,6 +57,21 @@ export default function Orders() {
     }, 10000);
     return () => clearInterval(t);
   }, []);
+
+  // AUTOMATIC VOICE CONFIRMATION TRIGGER:
+  // When the orders list changes (either on initial load or during polling updates), 
+  // check for any order that is confirmed (i.e. 'Pending' or 'Preparing' status) 
+  // and trigger the TTS voice announcement. Duplicate playback prevention is managed 
+  // internally within playOrderConfirmationVoice using persistent preferences.
+  useEffect(() => {
+    if (orders && orders.length > 0) {
+      orders.forEach((order) => {
+        if (order.status === "Preparing" || order.status === "Pending") {
+          playOrderConfirmationVoice(order._id, order.status);
+        }
+      });
+    }
+  }, [orders]);
 
   /* --- ACTIONS, HELPERS & SERVICE FLOWS --- */
 

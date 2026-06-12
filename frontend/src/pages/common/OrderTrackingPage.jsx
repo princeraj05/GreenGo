@@ -5,6 +5,7 @@ import API from "../../api/axios";
 import Button from "../../components/ui/Button";
 import Card from "../../components/ui/Card";
 import TrackingMap from "../../components/tracking/TrackingMap";
+import { playOrderConfirmationVoice } from "../../utils/ttsService";
 
 const steps = [
   { key: "placed", label: "Order Placed", icon: Package },
@@ -64,6 +65,18 @@ export default function OrderTrackingPage({ role = "user" }) {
     const timer = setInterval(loadTracking, 10000);
     return () => clearInterval(timer);
   }, [loadTracking]);
+
+  // AUTOMATIC VOICE CONFIRMATION TRIGGER:
+  // When tracking data is loaded or polled, check if the order status is 
+  // confirmed ('Pending' or 'Preparing') and trigger the voice message.
+  // Capacitor preferences ensure it plays only once per order ID.
+  useEffect(() => {
+    if (tracking && tracking.status) {
+      if (tracking.status === "Preparing" || tracking.status === "Pending") {
+        playOrderConfirmationVoice(id, tracking.status);
+      }
+    }
+  }, [tracking, id]);
 
   const active = useMemo(
     () => activeSteps(tracking?.status, tracking?.riderLocation),
