@@ -208,22 +208,20 @@ export default function FoodSearch() {
 
   return (
     /* --- MAIN LAYOUT WRAPPER --- */
-    /* Tailwind: max-w-6xl sets layout threshold constraints. pb-28 gives breathing room above the fixed bottom cart checkout bar */
-    <div className="mx-auto w-full max-w-6xl pb-28">
+    <div className="mx-auto w-full max-w-6xl px-4 pb-28 md:px-6">
       
       {/* --- STICKY SEARCH BAR HEADER --- */}
-      {/* Tailwind: sticky top-16 on mobile keeps input field visible while user scrolls through large grid arrays */}
-      <div className="sticky top-16 md:top-0 z-30 -mx-4 bg-slate-50/95 px-4 pb-4 pt-1 backdrop-blur dark:bg-slate-900/95 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-        <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-3 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+      <div className="sticky top-16 md:top-0 z-30 -mx-4 bg-slate-50/95 px-4 pb-4 pt-1.5 backdrop-blur-md dark:bg-slate-900/95 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+        <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-2.5 shadow-sm transition-all focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/25 dark:border-slate-800 dark:bg-slate-950">
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-900"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-700 hover:bg-slate-100 transition-colors dark:text-slate-200 dark:hover:bg-slate-900"
             aria-label="Back"
           >
-            <ArrowLeft size={24} />
+            <ArrowLeft size={22} />
           </button>
-          <Search size={22} className="shrink-0 text-slate-400" />
+          <Search size={20} className="shrink-0 text-slate-400" />
           <input
             ref={inputRef}
             value={query}
@@ -231,8 +229,8 @@ export default function FoodSearch() {
               setQuery(event.target.value);
               setActiveCategory("All");
             }}
-            placeholder="Search food..."
-            className="min-w-0 flex-1 bg-transparent text-base font-bold text-slate-900 outline-none placeholder:text-slate-400 dark:text-white sm:text-lg"
+            placeholder="Search delicious food..."
+            className="min-w-0 flex-1 bg-transparent text-base font-extrabold text-slate-900 outline-none placeholder:text-slate-400 dark:text-white sm:text-lg"
           />
           {query && (
             <button
@@ -241,34 +239,34 @@ export default function FoodSearch() {
                 setQuery("");
                 setActiveCategory("All");
               }}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-100 transition-colors dark:hover:bg-slate-900"
               aria-label="Clear search"
             >
-              <X size={20} />
+              <X size={18} />
             </button>
           )}
           <button
             type="button"
-            className="flex h-10 w-10 shrink-0 items-center justify-center border-l border-slate-100 pl-3 text-brand-500 dark:border-slate-800"
+            className="flex h-10 w-10 shrink-0 items-center justify-center border-l border-slate-100 pl-3 text-brand-500 dark:border-slate-800 hover:text-brand-600 transition-colors"
             title="Voice search"
           >
-            <Mic size={22} />
+            <Mic size={20} />
           </button>
         </div>
       </div>
 
-      {/* --- QUICK PROMPTS INSPIRATION tags --- */}
+      {/* --- QUICK PROMPTS INSPIRATION TAGS --- */}
       {!query && (
         <section className="mb-8 overflow-hidden">
-          <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
+          <div className="flex gap-2.5 overflow-x-auto pb-2 no-scrollbar scroll-smooth">
             {quickPrompts.map((prompt) => (
               <button
                 key={prompt}
                 type="button"
                 onClick={() => setQuery(prompt)}
-                className="shrink-0 rounded-full border border-brand-200 hover:border-brand-300 bg-white px-4 py-2.5 text-sm font-black text-slate-700 shadow-sm dark:border-brand-900/50 dark:bg-slate-950 dark:text-slate-200"
+                className="shrink-0 rounded-full border border-brand-100 hover:border-brand-300 bg-white px-4 py-2 text-sm font-black text-slate-700 shadow-sm transition-all hover:bg-brand-50/30 dark:border-brand-900/40 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-brand-950/20"
               >
-                <Sparkles size={15} className="mr-2 inline text-brand-500" />
+                <Sparkles size={14} className="mr-1.5 inline text-brand-500" />
                 {prompt}
               </button>
             ))}
@@ -278,25 +276,27 @@ export default function FoodSearch() {
 
       {/* --- AUTO-COMPLETE SEARCH SUGGESTIONS POPUP --- */}
       {query && suggestions.length > 0 && (
-        <section className="mb-7 rounded-3xl border border-slate-100 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+        <section className="mb-8 rounded-3xl border border-slate-100 bg-white p-2 shadow-lg dark:border-slate-800/80 dark:bg-slate-950">
           {suggestions.map((item) => (
             <button
               key={item._id}
               type="button"
               onClick={() => chooseSuggestion(item)}
-              className="flex w-full items-center gap-3 rounded-2xl p-2.5 text-left transition-colors hover:bg-slate-50 dark:hover:bg-slate-900"
+              className="flex w-full items-center gap-3.5 rounded-2xl p-2.5 text-left transition-colors hover:bg-slate-50 dark:hover:bg-slate-905/70"
             >
-              <img
-                src={getImageUrl(item.image)}
-                alt={item.name}
-                className="h-14 w-14 rounded-full bg-slate-100 object-contain p-1 dark:bg-slate-900"
-                onError={(e) => { e.target.src = "https://placehold.co/120x120?text=Food"; }}
-              />
+              <div className="h-12 w-12 shrink-0 overflow-hidden rounded-full border border-slate-100 bg-slate-50 dark:border-slate-800 dark:bg-slate-900">
+                <img
+                  src={getImageUrl(item.image)}
+                  alt={item.name}
+                  className="h-full w-full object-cover rounded-full"
+                  onError={(e) => { e.target.src = "https://placehold.co/120x120?text=Food"; }}
+                />
+              </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-base font-black text-slate-900 dark:text-white">{item.name}</p>
-                <p className="text-sm font-bold text-slate-400">{item.isCategory ? "Category" : "Dish"}</p>
+                <p className="text-xs font-bold text-slate-405 dark:text-slate-400">{item.isCategory ? "Category" : "Dish"}</p>
               </div>
-              <ChevronRight size={18} className="text-slate-300" />
+              <ChevronRight size={18} className="text-slate-300 dark:text-slate-700" />
             </button>
           ))}
         </section>
@@ -305,24 +305,34 @@ export default function FoodSearch() {
       {/* --- CATEGORY ROUND BUBBLES GRID --- */}
       {!query && (
         <section className="mb-8">
-          <h2 className="mb-5 text-sm font-black uppercase tracking-[0.35em] text-slate-400">What's on your mind?</h2>
+          <h2 className="mb-5 text-xs font-black uppercase tracking-[0.25em] text-slate-400 dark:text-slate-500">What's on your mind?</h2>
           {loading ? (
-            <div className="grid grid-cols-3 gap-5">
-              {[...Array(12)].map((_, index) => <div key={index} className="h-32 rounded-3xl bg-slate-100 animate-pulse dark:bg-slate-800" />)}
+            <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar sm:grid sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
+              {[...Array(8)].map((_, index) => (
+                <div key={index} className="flex shrink-0 flex-col items-center gap-2">
+                  <div className="h-20 w-20 rounded-full bg-slate-150 animate-pulse dark:bg-slate-800 sm:h-24 sm:w-24" />
+                  <div className="h-3 w-14 rounded bg-slate-150 animate-pulse dark:bg-slate-800" />
+                </div>
+              ))}
             </div>
           ) : (
-            <div className="grid grid-cols-3 gap-x-4 gap-y-7 sm:grid-cols-4 md:grid-cols-5">
+            <div className="flex gap-4 overflow-x-auto pb-4 pt-1 no-scrollbar sm:grid sm:grid-cols-4 sm:gap-x-4 sm:gap-y-6 md:grid-cols-6 lg:grid-cols-8">
               {categories.slice(0, 18).map((cat) => (
-                <button key={cat.name} type="button" onClick={() => chooseCategory(cat.name)} className="group text-center">
-                  <div className="mx-auto mb-2 flex h-24 w-24 items-center justify-center rounded-full bg-white p-2 shadow-sm transition-transform group-hover:scale-105 dark:bg-slate-950 sm:h-28 sm:w-28">
+                <button 
+                  key={cat.name} 
+                  type="button" 
+                  onClick={() => chooseCategory(cat.name)} 
+                  className="group flex shrink-0 flex-col items-center text-center sm:w-auto"
+                >
+                  <div className="mx-auto mb-2 flex h-20 w-20 items-center justify-center rounded-full border border-slate-100/80 bg-white shadow-sm transition-all duration-300 group-hover:scale-105 group-hover:shadow-md dark:border-slate-800 dark:bg-slate-950 sm:h-24 sm:w-24 overflow-hidden">
                     <img
                       src={getImageUrl(cat.image)}
                       alt={cat.name}
-                      className="h-full w-full object-contain"
+                      className="h-full w-full object-cover rounded-full"
                       onError={(e) => { e.target.src = "https://placehold.co/160x160?text=Food"; }}
                     />
                   </div>
-                  <p className="line-clamp-1 text-sm font-black text-slate-900 dark:text-white">{cat.name}</p>
+                  <p className="line-clamp-1 text-xs font-black text-slate-800 dark:text-slate-200 w-20 sm:w-full">{cat.name}</p>
                 </button>
               ))}
             </div>
@@ -330,21 +340,21 @@ export default function FoodSearch() {
         </section>
       )}
 
-      {/* --- DYNAMIC MATCHED CATEGORIES tags BAR --- */}
+      {/* --- DYNAMIC MATCHED CATEGORIES TAGS BAR --- */}
       <section className="mb-5">
         <h2 className="mb-4 text-xl font-black text-slate-900 dark:text-white">
           {query ? `Showing results for "${query}"` : "All Food"}
         </h2>
-        <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
+        <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar scroll-smooth">
           {matchingCategories.map((cat) => (
             <button
               key={cat}
               type="button"
               onClick={() => setActiveCategory(cat)}
-              className={`shrink-0 rounded-2xl border px-4 py-2.5 text-sm font-black transition-all ${
+              className={`shrink-0 rounded-2xl border px-4.5 py-2.5 text-xs font-black transition-all duration-200 ${
                 activeCategory === cat
-                  ? "border-brand-500 bg-brand-500 text-white shadow-lg shadow-brand-500/20"
-                  : "border-slate-200 bg-white text-slate-700 dark:border-slate-800/60 dark:bg-slate-950 dark:text-slate-200"
+                  ? "border-brand-500 bg-brand-500 text-white shadow-md shadow-brand-500/25"
+                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-800/60 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900/50"
               }`}
             >
               {cat}
@@ -354,25 +364,24 @@ export default function FoodSearch() {
       </section>
 
       {/* --- EXTRA FILTERS SCROLL ROW --- */}
-      <section className="mb-6 flex gap-3 overflow-x-auto pb-1 no-scrollbar">
-        <button type="button" className="shrink-0 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-black text-slate-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200">
-          <SlidersHorizontal size={17} className="mr-2 inline" /> Filters
+      <section className="mb-6 flex gap-2 overflow-x-auto pb-1 no-scrollbar scroll-smooth">
+        <button type="button" className="shrink-0 rounded-2xl border border-slate-200 bg-white px-4 py-2 text-xs font-black text-slate-700 hover:bg-slate-50 transition-colors dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900/50">
+          <SlidersHorizontal size={14} className="mr-1.5 inline" /> Filters
         </button>
-        <button type="button" className="shrink-0 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-black text-slate-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200">
+        <button type="button" className="shrink-0 rounded-2xl border border-slate-200 bg-white px-4 py-2 text-xs font-black text-slate-700 hover:bg-slate-50 transition-colors dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900/50">
           Under ₹250
         </button>
-        <button type="button" className="shrink-0 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-black text-slate-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200">
+        <button type="button" className="shrink-0 rounded-2xl border border-slate-200 bg-white px-4 py-2 text-xs font-black text-slate-700 hover:bg-slate-50 transition-colors dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900/50">
           Great offers
         </button>
-        <button type="button" className="shrink-0 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-black text-slate-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200">
+        <button type="button" className="shrink-0 rounded-2xl border border-slate-200 bg-white px-4 py-2 text-xs font-black text-slate-700 hover:bg-slate-50 transition-colors dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900/50">
           Pure Veg
         </button>
       </section>
 
       {/* --- SEARCH RESULTS DISHES GRID --- */}
-      {/* Tailwind: grid-cols-1 on small monitors, sm:grid-cols-2, and lg:grid-cols-3 handles responsive grid sizing */}
       <section>
-        <h2 className="mb-4 text-sm font-black uppercase tracking-[0.35em] text-slate-400">
+        <h2 className="mb-4 text-xs font-black uppercase tracking-[0.25em] text-slate-400 dark:text-slate-500">
           {query ? "Recommended for you" : "Recommended with deals"}
         </h2>
         {loading ? (
@@ -380,13 +389,13 @@ export default function FoodSearch() {
             {[...Array(6)].map((_, index) => <div key={index} className="h-56 rounded-3xl bg-slate-100 animate-pulse dark:bg-slate-800" />)}
           </div>
         ) : visibleFoods.length === 0 ? (
-          <div className="rounded-3xl border border-slate-100 bg-white p-10 text-center dark:border-slate-800 dark:bg-slate-950">
-            <Search className="mx-auto text-slate-300" size={36} />
-            <h3 className="mt-4 text-xl font-black text-slate-900 dark:text-white">No matching food found</h3>
-            <p className="mt-1 text-sm font-bold text-slate-500">Try another dish name or category.</p>
+          <div className="rounded-3xl border border-slate-150/70 bg-white p-10 text-center dark:border-slate-800 dark:bg-slate-950">
+            <Search className="mx-auto text-slate-300 dark:text-slate-700" size={32} />
+            <h3 className="mt-4 text-lg font-black text-slate-900 dark:text-white">No matching food found</h3>
+            <p className="mt-1 text-sm font-semibold text-slate-450 dark:text-slate-500">Try another dish name or category.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4.5 sm:grid-cols-2 lg:grid-cols-3">
             {visibleFoods.map((food) => (
               <FoodResultCard key={food._id} food={food} cartItem={cart.find((item) => item._id === food._id)} onQuantity={updateQuantity} />
             ))}
@@ -395,27 +404,26 @@ export default function FoodSearch() {
       </section>
 
       {/* --- FLOATING BOTTOM CART BAR --- */}
-      {/* Tailwind: fixed bottom-[5.5rem] on mobile viewports for custom positioning. bottom-6 on standard md: breakpoint screens */}
       {cartCount > 0 && (
-        <div className="fixed bottom-[5.5rem] left-1/2 z-40 w-[94%] max-w-3xl -translate-x-1/2 rounded-3xl border border-slate-100 bg-white p-3 shadow-2xl dark:border-slate-800 dark:bg-slate-950 md:bottom-6">
+        <div className="fixed bottom-[5.5rem] left-1/2 z-40 w-[92%] max-w-3xl -translate-x-1/2 rounded-2xl border border-slate-100 bg-white p-2.5 shadow-2xl dark:border-slate-800 dark:bg-slate-950/95 backdrop-blur-md md:bottom-6">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand-50 text-brand-600 dark:bg-brand-950/40 dark:text-brand-300">
-              <ShoppingCart size={22} />
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-650 dark:bg-brand-950/40 dark:text-brand-300">
+              <ShoppingCart size={20} />
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-black text-slate-900 dark:text-white">{cartCount} {cartCount === 1 ? "item" : "items"} selected</p>
-              <p className="text-xs font-bold text-slate-500">Total ₹{cartTotal}</p>
+              <p className="text-xs font-bold text-slate-500 dark:text-slate-400">Total ₹{cartTotal}</p>
             </div>
-            <Button onClick={goCheckout} className="rounded-2xl px-5">
-              Next <ChevronRight size={17} />
+            <Button onClick={goCheckout} className="rounded-xl px-5 h-10 text-sm font-black">
+              Next <ChevronRight size={16} />
             </Button>
           </div>
         </div>
       )}
 
       {/* Back navigation hyperlink footer */}
-      <div className="mt-8 text-center">
-        <Link to="/user/menu" className="text-sm font-black text-brand-600 hover:underline">Back to full menu</Link>
+      <div className="mt-10 text-center">
+        <Link to="/user/menu" className="text-sm font-black text-brand-600 hover:underline dark:text-brand-405">Back to full menu</Link>
       </div>
     </div>
   );
@@ -428,15 +436,15 @@ export default function FoodSearch() {
  */
 function FoodResultCard({ food, cartItem, onQuantity }) {
   return (
-    <div className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
-      <div className="relative h-44 bg-slate-50 p-3 dark:bg-slate-900">
+    <div className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm transition-all hover:shadow-md dark:border-slate-800/80 dark:bg-slate-950">
+      <div className="relative h-44 bg-slate-50 p-2.5 dark:bg-slate-900">
         <img
           src={getImageUrl(food.image)}
           alt={food.name}
-          className="h-full w-full rounded-2xl object-contain"
+          className="h-full w-full rounded-2xl object-cover"
           onError={(e) => { e.target.src = "https://placehold.co/400x300?text=Food"; }}
         />
-        <span className="absolute left-5 top-5 rounded-lg bg-slate-950/85 px-2 py-1 text-xs font-black text-white">
+        <span className="absolute left-5 top-5 rounded-lg bg-slate-950/80 backdrop-blur-sm px-2 py-1 text-[10px] font-black text-white">
           10% OFF select items
         </span>
       </div>
@@ -444,31 +452,33 @@ function FoodResultCard({ food, cartItem, onQuantity }) {
         <div className="mb-2 flex items-start justify-between gap-3">
           <div className="min-w-0">
             <h3 className="line-clamp-1 text-lg font-black text-slate-900 dark:text-white">{food.name}</h3>
-            <p className="text-xs font-bold uppercase tracking-wide text-slate-400">{food.category || "Dish"}</p>
+            <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">{food.category || "Dish"}</p>
           </div>
-          <span className="rounded-full bg-emerald-600 px-2 py-1 text-xs font-black text-white">{food.rating ? food.rating.toFixed(1) : "4.3"} ★</span>
+          <span className="shrink-0 rounded-full bg-emerald-600 px-2 py-0.5 text-xs font-black text-white">{food.rating ? food.rating.toFixed(1) : "4.3"} ★</span>
         </div>
         <p className="mb-4 line-clamp-2 min-h-10 text-sm font-semibold text-slate-500 dark:text-slate-400">{food.description || "Freshly prepared and ready to order."}</p>
         <div className="flex items-center justify-between gap-3 border-t border-slate-100 pt-3 dark:border-slate-800">
-          <span className="text-xl font-black text-slate-950 dark:text-white">₹{food.price}</span>
+          <span className="text-lg font-black text-slate-950 dark:text-white">₹{food.price}</span>
           {!cartItem ? (
             <button
               type="button"
               onClick={() => onQuantity(food, 1)}
-              className="rounded-xl bg-brand-500 px-4 py-2 text-sm font-black text-white shadow-lg shadow-brand-500/20 transition-all hover:bg-brand-600 active:scale-95"
+              className="rounded-xl bg-brand-500 px-4 py-2 text-xs font-black text-white shadow-md shadow-brand-500/20 transition-all hover:bg-brand-600 active:scale-95"
             >
               Add
             </button>
           ) : (
-            <div className="flex items-center rounded-xl border border-brand-100 bg-brand-50 p-1 dark:border-brand-800 dark:bg-brand-950/40">
-              <button type="button" onClick={() => onQuantity(food, cartItem.qty - 1)} className="h-9 w-9 rounded-lg bg-white text-lg font-black text-brand-600 dark:bg-slate-900 dark:text-brand-300">-</button>
-              <span className="min-w-9 px-2 text-center text-sm font-black text-slate-900 dark:text-white">{cartItem.qty}</span>
-              <button type="button" onClick={() => onQuantity(food, cartItem.qty + 1)} className="h-9 w-9 rounded-lg bg-brand-500 text-lg font-black text-white">+</button>
+            <div className="flex items-center rounded-xl border border-brand-100 bg-brand-50 p-1 dark:border-brand-800/40 dark:bg-brand-950/30">
+              <button type="button" onClick={() => onQuantity(food, cartItem.qty - 1)} className="h-8 w-8 rounded-lg bg-white text-base font-black text-brand-600 dark:bg-slate-900 dark:text-brand-350 shadow-sm">-</button>
+              <span className="min-w-8 px-1 text-center text-xs font-black text-slate-900 dark:text-white">{cartItem.qty}</span>
+              <button type="button" onClick={() => onQuantity(food, cartItem.qty + 1)} className="h-8 w-8 rounded-lg bg-brand-500 text-base font-black text-white">+</button>
             </div>
           )}
         </div>
       </div>
     </div>
+  );
+}>
   );
 }
 

@@ -38,6 +38,9 @@ export default function DeliveryLayout() {
   // State to control visibility of More drawer in mobile viewport
   const [open, setOpen] = useState(false);
 
+  // State to toggle logout confirmation modal
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
   // --- BUSINESS LOGIC & DATA FETCHING ---
 
   // Fetches authenticated delivery agent user profile
@@ -115,7 +118,7 @@ export default function DeliveryLayout() {
 
   const moreLinks = [
     { to: "/delivery/profile", label: "Profile", icon: <User size={20} /> },
-    { label: "Sign Out", icon: <LogOut size={20} />, action: () => { setOpen(false); logout(); }, danger: true },
+    { label: "Sign Out", icon: <LogOut size={20} />, action: () => { setOpen(false); setShowLogoutConfirm(true); }, danger: true },
   ];
 
   const profileComplete = isDeliveryProfileComplete(profile);
@@ -185,7 +188,7 @@ export default function DeliveryLayout() {
         <div className="p-4 border-t border-slate-800/70">
           <button
             type="button"
-            onClick={logout}
+            onClick={() => setShowLogoutConfirm(true)}
             className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-slate-900/70 hover:bg-red-500/10 border border-slate-800 hover:border-red-500/30 text-slate-300 hover:text-red-400 font-bold transition-colors"
           >
             <LogOut size={18} /> Logout
@@ -226,7 +229,7 @@ export default function DeliveryLayout() {
             <button type="button" onClick={() => navigate("/delivery/profile")} className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors border border-slate-100 dark:border-slate-800 shadow-sm" aria-label="Open profile">
               <User size={18} />
             </button>
-            <button type="button" onClick={logout} className="hidden sm:flex h-10 px-4 rounded-xl bg-red-50 hover:bg-red-100 dark:bg-red-950/20 dark:hover:bg-red-950/30 text-red-600 dark:text-red-400 font-bold items-center gap-2 transition-colors">
+            <button type="button" onClick={() => setShowLogoutConfirm(true)} className="hidden sm:flex h-10 px-4 rounded-xl bg-red-50 hover:bg-red-100 dark:bg-red-950/20 dark:hover:bg-red-950/30 text-red-600 dark:text-red-400 font-bold items-center gap-2 transition-colors">
               <LogOut size={16} /> Logout
             </button>
           </div>
@@ -349,6 +352,64 @@ export default function DeliveryLayout() {
               </div>
             </MotionDiv>
           </>
+        )}
+      </AnimatePresence>
+
+      {/* Premium Logout Confirmation Dialog */}
+      <AnimatePresence>
+        {showLogoutConfirm && (
+          <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[99999] flex items-center justify-center p-4 font-sans">
+            {/* Backdrop Mask */}
+            <MotionDiv
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowLogoutConfirm(false)}
+              className="absolute inset-0"
+            />
+            
+            {/* Modal Card */}
+            <MotionDiv
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ type: "spring", damping: 25, stiffness: 250 }}
+              className="relative bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 w-full max-w-sm shadow-2xl flex flex-col items-center text-center text-slate-950 dark:text-white"
+            >
+              {/* Warning/Door Icon Container */}
+              <div className="w-16 h-16 rounded-2xl bg-red-50 dark:bg-red-950/30 text-red-650 dark:text-red-400 border border-red-100 dark:border-red-900/30 flex items-center justify-center text-3xl mb-4 shadow-inner">
+                🚪
+              </div>
+              
+              {/* Title */}
+              <h3 className="text-xl font-black tracking-tight mb-2">
+                Confirm Logout
+              </h3>
+              
+              {/* Message */}
+              <p className="text-slate-500 dark:text-slate-400 text-sm font-semibold leading-relaxed mb-6">
+                Aap confirm hain ki logout karna chahte hain?
+              </p>
+              
+              {/* Action Buttons */}
+              <div className="grid grid-cols-2 gap-3 w-full">
+                <button
+                  type="button"
+                  onClick={() => setShowLogoutConfirm(false)}
+                  className="w-full py-3 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-sm transition-all outline-none"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={logout}
+                  className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-bold text-sm shadow-lg shadow-red-500/20 transition-all outline-none"
+                >
+                  Yes, Logout
+                </button>
+              </div>
+            </MotionDiv>
+          </div>
         )}
       </AnimatePresence>
     </div>

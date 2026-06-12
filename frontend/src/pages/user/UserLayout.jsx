@@ -307,17 +307,17 @@ export default function UserLayout() {
         </div>
 
         {/* Desktop navigation link block */}
-        <nav className="flex-1 px-4 py-6 flex flex-col gap-2 overflow-y-auto custom-scrollbar">
+        <nav className="flex-1 px-4 py-6 flex flex-col gap-1.5 overflow-y-auto custom-scrollbar">
           {desktopNavLinks.map(({ to, end, label, icon }) => (
             <NavLink
               key={to}
               to={to}
               end={end}
               className={({ isActive }) => cn(
-                "flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-bold transition-all duration-300",
+                "flex items-center gap-3 px-4.5 py-3 rounded-xl text-sm font-bold transition-all duration-300",
                 isActive
-                  ? "bg-brand-500 text-white shadow-md shadow-brand-500/25"
-                  : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-white"
+                  ? "bg-gradient-to-r from-brand-500 to-brand-600 text-white shadow-md shadow-brand-500/20"
+                  : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/50 hover:text-slate-900 dark:hover:text-white hover:pl-6"
               )}
             >
               {icon}
@@ -331,17 +331,17 @@ export default function UserLayout() {
           {isLoggedIn ? (
             <button
               onClick={() => setShowLogoutConfirm(true)}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-950/30 text-red-600 dark:text-red-400 font-bold transition-colors"
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-red-50 dark:bg-red-950/20 hover:bg-red-100/80 dark:hover:bg-red-950/30 text-red-650 dark:text-red-400 font-bold transition-colors"
             >
-              <LogOut size={18} />
+              <LogOut size={16} />
               Logout
             </button>
           ) : (
             <button
               onClick={() => navigate("/", { state: { loginRequired: true, from: { pathname: "/user/menu" } } })}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-brand-500 hover:bg-brand-600 text-white font-bold transition-colors shadow-md shadow-brand-500/20"
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold transition-colors shadow-md shadow-brand-500/20"
             >
-              <User size={18} />
+              <User size={16} />
               Login
             </button>
           )}

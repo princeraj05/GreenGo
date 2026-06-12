@@ -968,8 +968,24 @@ export default function Profile() {
           </div>
         </div>
 
+        {/* Quick Statistics Bar */}
+        <div className="px-5 pb-5 grid grid-cols-3 gap-3">
+          <div className="rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 p-3 text-center">
+            <p className="text-xs font-bold text-slate-500 dark:text-slate-400">Favorites</p>
+            <p className="mt-1 text-lg font-black text-slate-900 dark:text-white">{favorites.length || 0}</p>
+          </div>
+          <div className="rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 p-3 text-center">
+            <p className="text-xs font-bold text-slate-500 dark:text-slate-400">Coupons</p>
+            <p className="mt-1 text-lg font-black text-slate-900 dark:text-white">{coupons.length || 0}</p>
+          </div>
+          <div className="rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 p-3 text-center">
+            <p className="text-xs font-bold text-slate-500 dark:text-slate-400">Support</p>
+            <p className="mt-1 text-lg font-black text-slate-900 dark:text-white">{contacts.length || 0}</p>
+          </div>
+        </div>
+
         {message && (
-          <div className={`mx-5 mt-4 p-3 rounded-2xl flex items-center gap-2 font-bold text-sm ${msgType === "error" ? "bg-red-50 text-red-700 dark:bg-red-950/20 dark:text-red-300" : "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-300"}`}>
+          <div className={`mx-5 mt-2 p-3 rounded-2xl flex items-center gap-2 font-bold text-sm ${msgType === "error" ? "bg-red-50 text-red-700 dark:bg-red-950/20 dark:text-red-300" : "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-300"}`}>
             {msgType === "error" ? <XCircle size={18} /> : <CheckCircle size={18} />}
             {message}
           </div>
@@ -1007,28 +1023,31 @@ export default function Profile() {
           </div>
         </div>
 
-        <div className="px-5 py-4">
-          <div className="divide-y divide-slate-100 dark:divide-slate-800">
+        <div className="px-5 py-5 pb-14">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {menuItems.map((item) => (
               <button
                 key={item.id}
                 type="button"
                 onClick={() => setActiveSection(item.id)}
-                className="w-full flex items-center gap-4 py-3 text-left group"
+                className="group relative flex flex-col items-center justify-center p-4 rounded-3xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800/80 text-center transition-all duration-350 hover:shadow-md active:scale-[0.97] min-h-[110px]"
               >
-                <span className="w-10 h-10 rounded-2xl bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-300 flex items-center justify-center shrink-0">
-                  <item.icon size={20} />
+                <span className="w-11 h-11 rounded-2xl bg-green-500/10 text-green-700 dark:text-green-400 flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform duration-300 shrink-0">
+                  <item.icon size={22} />
                 </span>
-                <span className="flex-1 font-bold text-slate-900 dark:text-white text-sm sm:text-base">{item.label}</span>
-                <ChevronRight size={18} className="text-slate-400 group-hover:text-green-600 transition-colors" />
+                <span className="font-bold text-slate-800 dark:text-slate-200 text-xs sm:text-sm tracking-tight">{item.label}</span>
               </button>
             ))}
 
-            <button type="button" onClick={() => setShowLogoutConfirm(true)} className="w-full flex items-center gap-4 py-3 text-left group">
-              <span className="w-10 h-10 rounded-2xl bg-red-50 dark:bg-red-950/20 text-red-500 flex items-center justify-center shrink-0">
-                <LogOut size={20} />
+            <button
+              type="button"
+              onClick={() => setShowLogoutConfirm(true)}
+              className="group flex flex-col items-center justify-center p-4 rounded-3xl bg-red-500/5 hover:bg-red-500/10 border border-red-500/10 dark:border-red-550/20 text-center transition-all duration-350 active:scale-[0.97] min-h-[110px]"
+            >
+              <span className="w-11 h-11 rounded-2xl bg-red-500/10 text-red-600 dark:text-red-400 flex items-center justify-center mb-2.5 shrink-0">
+                <LogOut size={22} />
               </span>
-              <span className="flex-1 font-bold text-red-600 dark:text-red-400 text-sm sm:text-base">Logout</span>
+              <span className="font-bold text-red-650 dark:text-red-400 text-xs sm:text-sm tracking-tight">Logout</span>
             </button>
           </div>
         </div>

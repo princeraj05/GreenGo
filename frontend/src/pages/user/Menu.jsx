@@ -976,15 +976,19 @@ export default function Menu() {
             setVegModeNotice(nextVegMode ? "Veg mode is ON" : "Veg mode is OFF");
             if (nextVegMode && ["Non-Veg", "Chicken", "Kebabs"].includes(category)) setCategory("All");
           }}
-          className={`w-[68px] sm:w-[82px] h-14 rounded-2xl border shadow-sm flex flex-col items-center justify-center gap-0.5 px-1 transition-all duration-300 ${
+          className={`relative overflow-hidden w-[72px] sm:w-[86px] h-14 rounded-2xl border shadow-sm flex flex-col items-center justify-center gap-1.5 px-1 transition-all duration-300 ${
             vegMode
-              ? "border-emerald-200 bg-emerald-50 text-emerald-700 shadow-emerald-500/10 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300"
-              : "border-slate-200 bg-white text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+              ? "border-emerald-300 bg-emerald-500/10 text-emerald-700 shadow-sm shadow-emerald-500/5 dark:border-emerald-800/80 dark:bg-emerald-950/40 dark:text-emerald-400"
+              : "border-slate-200 bg-white text-slate-650 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-350"
           }`}
           aria-pressed={vegMode}
         >
-          <span className="text-[10px] sm:text-[11px] font-black leading-none">VEG</span>
-          <span className="text-[8px] sm:text-[9px] font-black leading-none opacity-80">MODE</span>
+          <div className="flex items-center gap-1">
+            <span className={`w-3.5 h-3.5 border flex items-center justify-center rounded-sm p-0.5 transition-colors ${vegMode ? "border-emerald-600 dark:border-emerald-500" : "border-slate-400 dark:border-slate-600"}`}>
+              <span className={`w-1.5 h-1.5 rounded-full transition-all ${vegMode ? "bg-emerald-600 dark:bg-emerald-500 scale-100" : "bg-slate-400 dark:bg-slate-600 scale-75"}`} />
+            </span>
+            <span className="text-[10px] sm:text-[11px] font-black tracking-wider leading-none">VEG</span>
+          </div>
           <span className={`relative h-4.5 w-9 rounded-full transition-colors duration-300 ${vegMode ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-700"}`}>
             <span className={`absolute top-0.5 h-3.5 w-3.5 rounded-full bg-white shadow-md transition-transform duration-300 flex items-center justify-center ${vegMode ? "translate-x-[18px]" : "translate-x-0.5"}`}>
               {vegMode && <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />}

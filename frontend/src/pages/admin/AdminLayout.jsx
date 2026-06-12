@@ -220,7 +220,7 @@ export default function AdminLayout() {
         {/* Brand */}
         <div className="px-8 pt-8 pb-6 border-b border-slate-800/50">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center shadow-lg shadow-brand-500/20">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center shadow-lg shadow-brand-500/25">
               <span className="text-white text-xl font-black">G</span>
             </div>
             <span className="text-white font-black text-2xl tracking-tight">GreenGo</span>
@@ -230,9 +230,9 @@ export default function AdminLayout() {
         {/* Admin Profile */}
         <div className="px-8 py-6 border-b border-slate-800/50">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-slate-800 border-2 border-brand-500/50 flex items-center justify-center relative">
+            <div className="w-12 h-12 rounded-full bg-slate-900 border-2 border-brand-500/50 flex items-center justify-center relative shadow-inner">
               <UserAvatar name={name} />
-              <div className="absolute bottom-0 right-0 w-3 h-3 bg-brand-500 rounded-full border-2 border-slate-950"></div>
+              <div className="absolute bottom-0 right-0 w-3 h-3 bg-brand-400 rounded-full border-2 border-slate-950"></div>
             </div>
             <div>
               <p className="text-white text-sm font-bold truncate w-32">{name || "Admin"}</p>
@@ -242,7 +242,7 @@ export default function AdminLayout() {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-4 py-6 flex flex-col gap-2 overflow-y-auto">
+        <nav className="flex-1 px-3 py-6 flex flex-col gap-1.5 overflow-y-auto">
           {desktopNavLinks.map(({ to, end, label, icon }) => (
             <NavLink
               key={to}
@@ -250,10 +250,10 @@ export default function AdminLayout() {
               end={end}
               className={({ isActive }) =>
                 cn(
-                  "flex items-center gap-4 px-4 py-3.5 rounded-2xl text-sm font-bold transition-all duration-200",
+                  "flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200 border-l-4",
                   isActive
-                    ? "bg-brand-500/10 text-brand-400 shadow-sm"
-                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
+                    ? "bg-brand-500/10 text-brand-400 border-brand-500 shadow-sm pl-4"
+                    : "text-slate-400 border-transparent hover:text-slate-200 hover:bg-slate-800/40 hover:pl-5"
                 )
               }
             >
@@ -264,12 +264,12 @@ export default function AdminLayout() {
         </nav>
 
         {/* Logout button at bottom of Sidebar */}
-        <div className="px-6 pb-8 pt-4">
+        <div className="px-5 pb-8 pt-4">
           <button
             onClick={() => setShowLogoutConfirm(true)}
-            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-slate-800/30 hover:bg-red-500/10 border border-slate-800 hover:border-red-500/30 text-slate-400 hover:text-red-400 font-bold text-sm transition-all duration-200 group"
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-slate-800/20 hover:bg-red-500/10 border border-slate-800/80 hover:border-red-500/20 text-slate-400 hover:text-red-400 font-bold text-sm transition-all duration-200 group"
           >
-            <LogOut size={18} className="transition-transform group-hover:-translate-x-1" />
+            <LogOut size={16} className="transition-transform group-hover:-translate-x-1" />
             Sign Out
           </button>
         </div>
