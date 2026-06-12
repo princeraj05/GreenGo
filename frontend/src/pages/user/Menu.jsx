@@ -573,6 +573,7 @@ export default function Menu() {
   }, [foods, matchesVegMode]);
 
   const allProductFoods = useMemo(() => foods.filter(matchesVegMode), [foods, matchesVegMode]);
+  const comboFoods = useMemo(() => foods.filter(matchesVegMode).filter(f => f.foodType === "combo"), [foods, matchesVegMode]);
   const visibleCategories = categoriesList.slice(0, 8);
 
   const foodById = useMemo(() => new Map(foods.map((food) => [food._id, food])), [foods]);
@@ -1232,7 +1233,24 @@ export default function Menu() {
         </div>
       )}
 
-      {/* --- 8. ALL PRODUCTS LIST SECTION --- */}
+      {/* --- 8. COMBO ITEMS SECTION --- */}
+      {category === "All" && search === "" && comboFoods.length > 0 && (
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Combo Items</h3>
+            <button type="button" onClick={() => openFoodCollection("Combo Items", comboFoods)} className="text-xs font-black text-brand-600 dark:text-brand-300">See All</button>
+          </div>
+          <div className="flex gap-3 sm:gap-4 lg:gap-6 overflow-x-auto no-scrollbar py-2 flex-nowrap">
+            {comboFoods.slice(0, 8).map((food) => (
+              <div key={food._id} className="w-[180px] sm:w-[220px] md:w-[260px] shrink-0">
+                {renderFoodCard(food, { deliveryTime: "25-35 min", oldPriceFactor: 1.2 })}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* --- 9. ALL PRODUCTS LIST SECTION --- */}
       {category === "All" && search === "" && (
         <div className="mb-6">
           <div className="flex items-center justify-between mb-3">
@@ -1248,8 +1266,8 @@ export default function Menu() {
               <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">No products available right now.</p>
             </div>
           ) : (
-            <div className="flex gap-3 sm:gap-4 lg:gap-6 overflow-x-auto no-scrollbar py-2 flex-nowrap">
-              {allProductFoods.slice(0, 10).map((food) => (
+            <div className="flex flex-wrap gap-3 sm:gap-4 lg:gap-6 py-2">
+              {allProductFoods.slice(0, 12).map((food) => (
                 <div key={food._id} className="w-[180px] sm:w-[220px] md:w-[260px] shrink-0">
                   {renderFoodCard(food, { deliveryTime: "20-30 min", oldPriceFactor: 1.15, categoryPrefix: "Category:" })}
                 </div>
@@ -1703,7 +1721,7 @@ export default function Menu() {
             <button
               type="button"
               onClick={() => requireLogin("/user/checkout") && navigate("/user/checkout")}
-              className="shrink-0 rounded-2xl bg-emerald-500 px-3 py-2.5 text-center font-black text-white shadow-lg shadow-emerald-500/25 transition-all hover:bg-emerald-600 active:scale-95 sm:min-w-[170px] sm:px-6 sm:py-3"
+              className="shrink-0 rounded-2xl bg-brand-500 px-3 py-2.5 text-center font-black text-white shadow-lg shadow-brand-500/25 transition-all hover:bg-brand-600 active:scale-95 sm:min-w-[170px] sm:px-6 sm:py-3"
             >
               <span className="block text-[10px] sm:text-sm">
                 {cartCount} {cartCount === 1 ? "item" : "items"} | ₹{cartTotal}
