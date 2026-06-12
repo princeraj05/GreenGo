@@ -1,3 +1,12 @@
+function withOpacity(variableName) {
+  return ({ opacityValue }) => {
+    if (opacityValue !== undefined) {
+      return `rgba(var(${variableName}), ${opacityValue})`;
+    }
+    return `rgb(var(${variableName}))`;
+  };
+}
+
 /** @type {import('tailwindcss').Config} */
 export default {
   darkMode: 'class',
@@ -12,43 +21,43 @@ export default {
       },
       colors: {
         brand: {
-          50: 'var(--brand-50)',
-          100: 'var(--brand-100)',
-          200: 'var(--brand-200)',
-          300: 'var(--brand-300)',
-          400: 'var(--brand-400)',
-          500: 'var(--brand-500)',
-          600: 'var(--brand-600)',
-          700: 'var(--brand-700)',
-          800: 'var(--brand-800)',
-          900: 'var(--brand-900)',
-          950: 'var(--brand-950)',
+          50: withOpacity('--brand-50'),
+          100: withOpacity('--brand-100'),
+          200: withOpacity('--brand-200'),
+          300: withOpacity('--brand-300'),
+          400: withOpacity('--brand-400'),
+          500: withOpacity('--brand-500'),
+          600: withOpacity('--brand-600'),
+          700: withOpacity('--brand-700'),
+          800: withOpacity('--brand-800'),
+          900: withOpacity('--brand-900'),
+          950: withOpacity('--brand-950'),
         },
         slate: {
-          50: 'var(--slate-50)',
-          100: 'var(--slate-100)',
-          200: 'var(--slate-200)',
-          300: 'var(--slate-300)',
-          400: 'var(--slate-400)',
-          500: 'var(--slate-500)',
-          600: 'var(--slate-600)',
-          700: 'var(--slate-700)',
-          800: 'var(--slate-800)',
-          900: 'var(--slate-900)',
-          950: 'var(--slate-950)',
+          50: withOpacity('--slate-50'),
+          100: withOpacity('--slate-100'),
+          200: withOpacity('--slate-200'),
+          300: withOpacity('--slate-300'),
+          400: withOpacity('--slate-400'),
+          500: withOpacity('--slate-500'),
+          600: withOpacity('--slate-600'),
+          700: withOpacity('--slate-700'),
+          800: withOpacity('--slate-800'),
+          900: withOpacity('--slate-900'),
+          950: withOpacity('--slate-950'),
         },
         orange: {
-          50: 'var(--brand-50)',
-          100: 'var(--brand-100)',
-          200: 'var(--brand-200)',
-          300: 'var(--brand-300)',
-          400: 'var(--brand-400)',
-          500: 'var(--brand-500)',
-          600: 'var(--brand-600)',
-          700: 'var(--brand-700)',
-          800: 'var(--brand-800)',
-          900: 'var(--brand-900)',
-          950: 'var(--brand-950)',
+          50: withOpacity('--brand-50'),
+          100: withOpacity('--brand-100'),
+          200: withOpacity('--brand-200'),
+          300: withOpacity('--brand-300'),
+          400: withOpacity('--brand-400'),
+          500: withOpacity('--brand-500'),
+          600: withOpacity('--brand-600'),
+          700: withOpacity('--brand-700'),
+          800: withOpacity('--brand-800'),
+          900: withOpacity('--brand-900'),
+          950: withOpacity('--brand-950'),
         },
       },
       animation: {
