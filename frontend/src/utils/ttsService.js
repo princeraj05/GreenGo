@@ -8,7 +8,7 @@ import { Preferences } from "@capacitor/preferences";
 
 // Voice configuration for order statuses
 export const ORDER_STATUS_VOICES = {
-  Confirmed: "GreenGo chunne ke liye dhanyavaad! Aapka order safaltapoorvak confirm ho gaya hai. Restaurant aapke order ki taiyari kar raha hai. Aap app me order tracking karke apne order ki live sthiti dekh sakte hain."
+  Confirmed: "Thank you for choosing GreenGo! Your order has been successfully confirmed. The restaurant is now preparing your order. You can track your order and view its live status in the app."
 };
 
 /**
