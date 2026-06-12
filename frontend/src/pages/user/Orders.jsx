@@ -42,6 +42,7 @@ export default function Orders() {
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [cancellingOrderId, setCancellingOrderId] = useState(null);
   const [selectedReasons, setSelectedReasons] = useState([]);
+  const [cancelCustomMessage, setCancelCustomMessage] = useState("");
 
   /* --- EFFECTS & LIFECYCLE --- */
 
@@ -63,7 +64,7 @@ export default function Orders() {
    * less than 5 minutes ago and has not reached preparation or delivery stages.
    */
   const canCancel = (o) => {
-    if (["Delivered", "Out for Delivery", "Cancelled"].includes(o.status)) return false;
+    if (["Delivered", "Out for Delivery", "Cancelled", "CancellationRequested"].includes(o.status)) return false;
     const timeDiff = Date.now() - new Date(o.createdAt).getTime();
     return timeDiff <= 5 * 60 * 1000;
   };
@@ -74,6 +75,7 @@ export default function Orders() {
   const openCancelDialog = (orderId) => {
     setCancellingOrderId(orderId);
     setSelectedReasons([]);
+    setCancelCustomMessage("");
     setCancelModalOpen(true);
   };
 
@@ -87,18 +89,21 @@ export default function Orders() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}` 
         },
-        body: JSON.stringify({ reason: selectedReasons.join(", ") })
+        body: JSON.stringify({ 
+          reason: selectedReasons.join(", "), 
+          customMessage: cancelCustomMessage 
+        })
       });
       const data = await res.json();
       if (res.ok) {
         setCancelModalOpen(false);
         loadOrders();
-        alert(data.refundMessage || "Order cancelled successfully.");
+        alert(data.message || "Cancellation request sent successfully.");
       } else {
-        alert(data.message || "Failed to cancel order");
+        alert(data.message || "Failed to submit cancellation request");
       }
     } catch (err) {
-      console.error("Failed to cancel order:", err);
+      console.error("Failed to submit cancellation request:", err);
     }
   };
 
@@ -563,6 +568,19 @@ export default function Orders() {
                       </label>
                     );
                   })}
+                </div>
+                
+                <div className="mt-4">
+                  <p className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400 mb-1.5 font-bold">
+                    Custom message (explain why you cancelled):
+                  </p>
+                  <textarea
+                    placeholder="Type your explanation here..."
+                    value={cancelCustomMessage}
+                    onChange={(e) => setCancelCustomMessage(e.target.value)}
+                    rows={3}
+                    className="w-full resize-none rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3 py-2.5 text-xs sm:text-sm font-medium outline-none transition focus:border-brand-400 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-brand-100/10 text-slate-900 dark:text-white placeholder:text-slate-400"
+                  />
                 </div>
               </div>
 

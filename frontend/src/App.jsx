@@ -14,6 +14,15 @@ export default function App() {
   const location = useLocation();
   const [isConnected, setIsConnected] = useState(true);
   const [checkingAuth, setCheckingAuth] = useState(true);
+  const [customAlert, setCustomAlert] = useState(null);
+  
+  // Override window.alert globally
+  useEffect(() => {
+    window.alert = (message) => {
+      setCustomAlert({ message });
+    };
+  }, []);
+
   const guestUserPaths = new Set([
     "/user",
     "/user/menu",
@@ -171,6 +180,66 @@ export default function App() {
     <>
       <AppRoutes />
       
+      {/* Premium Custom Alert Modal */}
+      {customAlert && (() => {
+        const details = (() => {
+          const text = (customAlert.message || "").toLowerCase();
+          if (text.includes("success") || text.includes("approved") || text.includes("applied") || text.includes("copied") || text.includes("sent") || text.includes("completed")) {
+            return {
+              icon: "🎉",
+              title: "Success",
+              gradient: "from-emerald-500/10 to-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+              btnGradient: "from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 shadow-emerald-500/25 active:scale-[0.98]"
+            };
+          }
+          if (text.includes("fail") || text.includes("error") || text.includes("unable") || text.includes("exceeds") || text.includes("invalid") || text.includes("not supported") || text.includes("required") || text.includes("empty") || text.includes("exceed")) {
+            return {
+              icon: "⚠️",
+              title: "Alert",
+              gradient: "from-rose-500/10 to-rose-500/20 text-rose-600 dark:text-rose-400 border-rose-500/20",
+              btnGradient: "from-rose-600 to-rose-500 hover:from-rose-500 hover:to-rose-400 shadow-rose-500/25 active:scale-[0.98]"
+            };
+          }
+          return {
+            icon: "🔔",
+            title: "Notification",
+            gradient: "from-brand-500/10 to-brand-500/20 text-brand-600 dark:text-brand-400 border-brand-500/20",
+            btnGradient: "from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-400 shadow-brand-500/25 active:scale-[0.98]"
+          };
+        })();
+
+        return (
+          <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[99999] flex items-center justify-center p-4 font-sans animate-fade-in">
+            <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 w-full max-w-sm shadow-2xl flex flex-col items-center text-center transform scale-100 transition-all duration-300">
+              {/* Animated Header Icon container */}
+              <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${details.gradient} border flex items-center justify-center text-3xl mb-4 shadow-inner animate-bounce`}>
+                {details.icon}
+              </div>
+              
+              {/* Title */}
+              <h3 className="text-xl font-black tracking-tight text-slate-900 dark:text-white mb-2">
+                {details.title}
+              </h3>
+              
+              {/* Message */}
+              <div className="max-h-[300px] overflow-y-auto px-1 mb-6">
+                <p className="text-slate-600 dark:text-slate-400 text-sm font-semibold leading-relaxed whitespace-pre-line">
+                  {customAlert.message}
+                </p>
+              </div>
+              
+              {/* Action Button */}
+              <button
+                onClick={() => setCustomAlert(null)}
+                className={`w-full py-3.5 px-6 rounded-xl bg-gradient-to-r ${details.btnGradient} text-white font-black text-sm tracking-wide shadow-lg transition-all duration-200 outline-none`}
+              >
+                Okay
+              </button>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Premium Offline blocking UI */}
       {!isConnected && (
         <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-lg z-[9999] flex flex-col items-center justify-center p-6 text-center text-white animate-fade-in">

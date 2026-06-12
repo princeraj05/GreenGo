@@ -16,7 +16,9 @@ import {
   rejectAssignedOrder,
   updateRiderLocation,
   updateOrderStatus,
-  cancelOrder
+  cancelOrder,
+  approveCancelOrder,
+  rejectCancelOrder
 } from "../controllers/orderController.js";
 
 const router = express.Router();
@@ -31,6 +33,8 @@ router.get("/delivery-boys",protect,getDeliveryBoys);
 router.get("/",protect,getAllOrders);
 router.put("/:id/assign-delivery",protect,assignDeliveryBoy);
 router.put("/:id/status",protect,updateOrderStatus);
+router.put("/:id/approve-cancel",protect,approveCancelOrder);
+router.put("/:id/reject-cancel",protect,rejectCancelOrder);
 
 /* DELIVERY BOY */
 router.get("/delivery/dashboard",protect,getDeliveryDashboard);

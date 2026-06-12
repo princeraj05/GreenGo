@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { X, User, Mail, Phone, Calendar, Clock, DollarSign, HelpCircle, FileText, CheckCircle, AlertTriangle } from "lucide-react";
+import { X, User, Mail, Phone, Calendar, Clock, DollarSign, HelpCircle, FileText, CheckCircle, AlertTriangle, Check, AlertOctagon } from "lucide-react";
 import API from "../../api/axios";
 import { getToken } from "../../utils/getToken";
 import Card from "../../components/ui/Card";
@@ -12,31 +12,63 @@ import { getImageUrl } from "../../utils/getApiUrl";
  * Lists cancelled orders categorised into two separate tables:
  * - UPI / Online Payments
  * - Cash on Delivery (COD)
- * Displays detailed information about customer, items, cancellation reason, date/time, and refund status.
+ * Also lists pending cancellation requests from customers where Admin can Approve or Reject them.
  */
 export default function CancelledOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const loadCancelledOrders = useCallback(async () => {
+  const loadAllOrders = useCallback(async () => {
     try {
       const token = await getToken();
       const res = await API.get("/api/orders", { headers: { Authorization: `Bearer ${token}` } });
-      const cancelled = (res.data || []).filter((o) => o.status === "Cancelled");
-      setOrders(cancelled);
+      setOrders(res.data || []);
     } catch (err) {
-      console.error("Failed to load cancelled orders:", err);
+      console.error("Failed to load orders:", err);
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    loadCancelledOrders();
-  }, [loadCancelledOrders]);
+    loadAllOrders();
+  }, [loadAllOrders]);
 
-  const upiCancelledOrders = useMemo(() => orders.filter((o) => o.paymentMethod !== "COD"), [orders]);
-  const codCancelledOrders = useMemo(() => orders.filter((o) => o.paymentMethod === "COD"), [orders]);
+  const cancellationRequests = useMemo(() => orders.filter((o) => o.status === "CancellationRequested"), [orders]);
+  const upiCancelledOrders = useMemo(() => orders.filter((o) => o.status === "Cancelled" && o.paymentMethod !== "COD"), [orders]);
+  const codCancelledOrders = useMemo(() => orders.filter((o) => o.status === "Cancelled" && o.paymentMethod === "COD"), [orders]);
+
+  const handleApproveCancellation = async (orderId) => {
+    if (!window.confirm("Are you sure you want to APPROVE this cancellation request? This will cancel the order and process refund if paid online.")) return;
+    try {
+      setLoading(true);
+      const token = await getToken();
+      const res = await API.put(`/api/orders/${orderId}/approve-cancel`, {}, { headers: { Authorization: `Bearer ${token}` } });
+      alert(res.data.message || "Cancellation approved.");
+      loadAllOrders();
+    } catch (err) {
+      console.error("Approve cancel error:", err);
+      alert(err.response?.data?.message || "Failed to approve cancellation");
+      setLoading(false);
+    }
+  };
+
+  const handleRejectCancellation = async (orderId) => {
+    const defaultMsg = "Order cancel nahi kr skte h food prepsered ho gya";
+    const message = window.prompt("Enter rejection reason for customer:", defaultMsg);
+    if (message === null) return; // cancelled prompt
+    try {
+      setLoading(true);
+      const token = await getToken();
+      const res = await API.put(`/api/orders/${orderId}/reject-cancel`, { message: message || defaultMsg }, { headers: { Authorization: `Bearer ${token}` } });
+      alert(res.data.message || "Cancellation rejected.");
+      loadAllOrders();
+    } catch (err) {
+      console.error("Reject cancel error:", err);
+      alert(err.response?.data?.message || "Failed to reject cancellation");
+      setLoading(false);
+    }
+  };
 
   const renderTable = (data, isOnline = false) => {
     if (data.length === 0) {
@@ -109,7 +141,7 @@ export default function CancelledOrders() {
                             e.target.src = "https://placehold.co/80x80?text=Food";
                           }}
                         />
-                        <span className="text-xs font-bold text-slate-700 dark:text-slate-350 leading-tight">
+                        <span className="text-xs font-bold text-slate-700 dark:text-slate-355 leading-tight">
                           {item.name} <span className="text-brand-500 dark:text-brand-400 font-black">×{item.qty}</span>
                         </span>
                       </div>
@@ -121,11 +153,17 @@ export default function CancelledOrders() {
                 <td className="px-4 py-4 align-top max-w-[250px]">
                   <span className="text-xs font-black text-red-600 dark:text-red-400 flex items-center gap-1.5 leading-snug">
                     <HelpCircle size={12} className="shrink-0" />
-                    Reason:
+                    Reasons:
                   </span>
-                  <p className="mt-1 text-xs font-bold text-slate-700 dark:text-slate-355 leading-relaxed bg-red-50/50 dark:bg-red-950/10 border border-red-100/60 dark:border-red-900/20 rounded-xl p-2">
+                  <p className="mt-1 text-xs font-bold text-slate-700 dark:text-slate-350 leading-relaxed bg-red-50/50 dark:bg-red-950/10 border border-red-100/60 dark:border-red-900/20 rounded-xl p-2">
                     {o.cancellationReason || "No reasons selected"}
                   </p>
+                  {o.cancellationCustomMessage && (
+                    <div className="mt-2 text-xs border-t border-slate-150 dark:border-slate-800 pt-1">
+                      <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest block">Custom Explanation:</span>
+                      <p className="mt-0.5 font-bold italic text-slate-600 dark:text-slate-400 leading-snug">{o.cancellationCustomMessage}</p>
+                    </div>
+                  )}
                 </td>
 
                 {/* Total */}
@@ -181,17 +219,131 @@ export default function CancelledOrders() {
           <div className="w-10 h-10 md:w-12 md:h-12 bg-red-50 dark:bg-red-950/30 rounded-2xl flex items-center justify-center text-red-500 shrink-0">
             <X size={22} className="md:w-7 md:h-7" />
           </div>
-          Cancelled Orders
+          Cancellation Center
         </h1>
         <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm sm:text-base md:text-lg font-medium">
-          View all food orders cancelled by users.
+          Manage pending cancellation requests and view approved cancellations.
         </p>
+      </div>
+
+      {/* Cancellation Requests (Actionable List) */}
+      <div className="space-y-4 mb-10">
+        <h2 className="text-lg md:text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+          <span className="text-brand-500">⏳</span> Pending Cancellation Requests
+          <span className="rounded-full bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-950/60 text-xs font-black text-amber-600 dark:text-amber-450 px-2.5 py-0.5">
+            {cancellationRequests.length}
+          </span>
+        </h2>
+        
+        {cancellationRequests.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/20 p-8 text-center">
+            <CheckCircle className="mx-auto text-emerald-400 dark:text-emerald-600" size={30} />
+            <h3 className="mt-3 text-sm font-black text-slate-700 dark:text-slate-300">All caught up!</h3>
+            <p className="mt-1 text-xs font-semibold text-slate-500 dark:text-slate-400">There are no pending order cancellation requests.</p>
+          </div>
+        ) : (
+          <div className="w-full overflow-x-auto rounded-2xl border border-slate-100 dark:border-slate-850 bg-white dark:bg-slate-950 shadow-sm">
+            <table className="w-full border-collapse text-left text-xs sm:text-sm">
+              <thead>
+                <tr className="border-b border-slate-100 dark:border-slate-850 bg-slate-50/70 dark:bg-slate-900/30 text-[10px] sm:text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  <th className="px-4 py-3">Order Details</th>
+                  <th className="px-4 py-3">Customer info</th>
+                  <th className="px-4 py-3">Items Ordered</th>
+                  <th className="px-4 py-3">Reasons & custom text</th>
+                  <th className="px-4 py-3 text-right">Total</th>
+                  <th className="px-4 py-3 text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-850">
+                {cancellationRequests.map((o) => (
+                  <tr key={o._id} className="hover:bg-slate-50/40 dark:hover:bg-slate-900/10 transition-colors">
+                    <td className="px-4 py-4 align-top whitespace-nowrap">
+                      <span className="font-extrabold text-slate-900 dark:text-white block text-sm">
+                        #{o._id.slice(-6).toUpperCase()}
+                      </span>
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold block mt-1">
+                        Placed: {new Date(o.createdAt).toLocaleString()}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 align-top">
+                      <span className="text-xs font-black text-slate-900 dark:text-white block leading-snug">
+                        {o.phone || "Customer"}
+                      </span>
+                      <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block mt-1 leading-snug">
+                        {o.userId}
+                      </span>
+                      <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block mt-0.5 leading-snug">
+                        {o.phone || "N/A"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 align-top">
+                      <div className="flex flex-col gap-2">
+                        {o.items.map((item, idx) => (
+                          <div key={idx} className="flex items-center gap-2">
+                            <img
+                              src={getImageUrl(item.image)}
+                              alt={item.name}
+                              className="h-8 w-8 rounded-lg object-contain bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-0.5 shrink-0"
+                              onError={(e) => { e.target.src = "https://placehold.co/80x80?text=Food"; }}
+                            />
+                            <span className="text-xs font-bold text-slate-700 dark:text-slate-355 leading-tight">
+                              {item.name} <span className="text-brand-500 dark:text-brand-400 font-black">×{item.qty}</span>
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 align-top max-w-[250px]">
+                      <span className="text-xs font-black text-amber-600 dark:text-amber-450 block leading-snug">
+                        Reasons Selected:
+                      </span>
+                      <p className="mt-1 text-xs font-bold text-slate-700 dark:text-slate-350 leading-relaxed bg-amber-50/50 dark:bg-amber-950/10 border border-amber-100/60 dark:border-amber-900/20 rounded-xl p-2">
+                        {o.cancellationReason || "No reasons selected"}
+                      </p>
+                      {o.cancellationCustomMessage && (
+                        <div className="mt-2 text-xs border-t border-slate-150 dark:border-slate-800 pt-1">
+                          <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest block">Customer Custom Message:</span>
+                          <p className="mt-0.5 font-bold italic text-slate-600 dark:text-slate-400 leading-snug break-words">{o.cancellationCustomMessage}</p>
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-4 py-4 align-top text-right whitespace-nowrap">
+                      <span className="font-black text-slate-900 dark:text-white text-base">
+                        ₹{o.total}
+                      </span>
+                      <span className="text-[9px] text-slate-400 dark:text-slate-550 font-black uppercase tracking-wider block mt-1">
+                        {o.paymentMethod || "COD"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 align-top text-center">
+                      <div className="flex flex-col sm:flex-row justify-center gap-2">
+                        <Button
+                          onClick={() => handleApproveCancellation(o._id)}
+                          className="bg-emerald-600 hover:bg-emerald-700 text-xs py-1.5 px-3 rounded-xl gap-1 shrink-0"
+                        >
+                          <Check size={12} /> Approve
+                        </Button>
+                        <Button
+                          onClick={() => handleRejectCancellation(o._id)}
+                          variant="danger"
+                          className="text-xs py-1.5 px-3 rounded-xl gap-1 shrink-0"
+                        >
+                          <AlertOctagon size={12} /> Reject
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Online Payments Table */}
       <div className="space-y-4 mb-8">
         <h2 className="text-lg md:text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
-          <span className="text-brand-500">💳</span> UPI / Online Payment Cancellations
+          <span className="text-brand-500">💳</span> UPI / Online Payment Cancellations (Approved)
           <span className="rounded-full bg-red-50 dark:bg-red-950/30 border border-red-100 dark:border-red-950/60 text-xs font-black text-red-600 dark:text-red-400 px-2.5 py-0.5">
             {upiCancelledOrders.length}
           </span>
@@ -202,7 +354,7 @@ export default function CancelledOrders() {
       {/* COD Table */}
       <div className="space-y-4">
         <h2 className="text-lg md:text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
-          <span className="text-brand-500">💵</span> Cash on Delivery (COD) Cancellations
+          <span className="text-brand-500">💵</span> Cash on Delivery (COD) Cancellations (Approved)
           <span className="rounded-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-black text-slate-700 dark:text-slate-300 px-2.5 py-0.5">
             {codCancelledOrders.length}
           </span>

@@ -39,7 +39,7 @@ const orderSchema = new mongoose.Schema(
 
   status:{
     type:String,
-    enum:["Pending","Preparing","Out for Delivery","AcceptedByDeliveryBoy","RejectedByDeliveryBoy","Delivered","Cancelled"],
+    enum:["Pending","Preparing","Out for Delivery","AcceptedByDeliveryBoy","RejectedByDeliveryBoy","Delivered","Cancelled","CancellationRequested"],
     default:"Pending"
   },
 
@@ -62,6 +62,8 @@ const orderSchema = new mongoose.Schema(
   rejectionReason: { type: String, default: "" },
   transactionId: { type: String, default: "" },
   cancellationReason: { type: String, default: "" },
+  cancellationCustomMessage: { type: String, default: "" },
+  cancellationStatus: { type: String, enum: ["None", "Pending", "Approved", "Rejected"], default: "None" },
   cancelledAt: Date,
   distance:Number,
   latitude:Number,

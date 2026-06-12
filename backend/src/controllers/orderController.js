@@ -668,10 +668,74 @@ export const cancelOrder = async (req, res) => {
     }
 
     const reason = req.body.reason || "No reason specified";
-    order.status = "Cancelled";
-    order.cancellationReason = reason;
-    order.cancelledAt = new Date();
+    const customMessage = req.body.customMessage || "";
     
+    order.status = "CancellationRequested";
+    order.cancellationReason = reason;
+    order.cancellationCustomMessage = customMessage;
+    order.cancellationStatus = "Pending";
+    await order.save();
+
+    // Log cancellation request
+    await SecurityLog.create({
+      userId: req.user.id,
+      action: "order_cancellation_requested",
+      details: `Cancellation requested for Order ID: ${order._id}. Reason: ${reason}. Custom Message: ${customMessage}`,
+      ipAddress: req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress,
+      userAgent: req.headers['user-agent'] || ""
+    });
+    
+    // Create notification for user
+    await Notification.create({
+      userId: req.user.id,
+      title: "Cancellation Requested",
+      message: `Your cancellation request for order #${orderCode(order._id)} has been sent to the admin.`,
+      type: "info",
+    });
+    
+    // Create admin notification
+    const customer = await User.findById(req.user.id).select("name email phone");
+    await createAdminNotification({
+      title: "Cancellation Request Received",
+      message: `Cancellation requested for Order #${orderCode(order._id)} | Paid via: ${formatPaymentMethod(order.paymentMethod)} | Total: ₹${order.total} | User: ${customer?.name || "N/A"} | Email: ${customer?.email || "N/A"} | Phone: ${order.phone || customer?.phone || "N/A"} | Reasons: ${reason} | Message: ${customMessage}`,
+      type: "warning",
+      actionPath: "/admin/cancelled-orders",
+      data: {
+        event: "order_cancellation_requested",
+        orderId: String(order._id),
+        userId: String(req.user.id),
+        userName: customer?.name || "N/A",
+        userEmail: customer?.email || "N/A",
+        userPhone: order.phone || customer?.phone || "N/A",
+        total: order.total,
+        paymentMethod: order.paymentMethod,
+        cancellationReason: reason,
+        cancellationCustomMessage: customMessage,
+        requestedAt: new Date()
+      },
+    });
+    
+    res.json({ success: true, message: "Cancellation request sent successfully", order });
+  } catch (err) {
+    console.error("Cancel order error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const approveCancelOrder = async (req, res) => {
+  try {
+    if (!isAdmin(req.user)) return res.status(403).json({ message: "Not admin" });
+    
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ message: "Order not found" });
+    if (order.status !== "CancellationRequested") {
+      return res.status(400).json({ message: "No active cancellation request for this order" });
+    }
+
+    order.status = "Cancelled";
+    order.cancellationStatus = "Approved";
+    order.cancelledAt = new Date();
+
     let isRefunded = false;
     let refundErrorMsg = "";
 
@@ -688,60 +752,77 @@ export const cancelOrder = async (req, res) => {
         });
         isRefunded = true;
       } catch (refundErr) {
-        console.error("Razorpay refund failed:", refundErr);
+        console.error("Razorpay refund failed during approval:", refundErr);
         refundErrorMsg = refundErr.message || "Refund API call failed";
       }
     }
 
     await order.save();
 
-    // Log successful cancellation
+    // Log approval
     await SecurityLog.create({
       userId: req.user.id,
-      action: "order_cancellation",
-      details: `Successfully cancelled Order ID: ${order._id}. Reason: ${reason}. Refund processed: ${isRefunded}.`,
+      action: "order_cancellation_approved",
+      details: `Admin approved cancellation for Order ID: ${order._id}. Refund processed: ${isRefunded}.`,
       ipAddress: req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress,
       userAgent: req.headers['user-agent'] || ""
     });
-    
-    // Create notification for user
+
+    // Notify user
     const refundMessageText = order.paymentMethod !== "COD"
       ? `Your refund of ₹${order.total} has been initiated and will be credited to your bank account within 5-7 business days.`
       : "Your order has been cancelled successfully.";
 
     await Notification.create({
-      userId: req.user.id,
+      userId: order.userId,
       title: "Order Cancelled",
-      message: `Your order #${orderCode(order._id)} has been cancelled successfully. ${refundMessageText}`,
-      type: "warning",
+      message: `Your order #${orderCode(order._id)} has been cancelled by admin. ${refundMessageText}`,
+      type: "success",
     });
-    
-    // Create admin notification
-    const customer = await User.findById(req.user.id).select("name email phone");
-    await createAdminNotification({
-      title: "Order Cancelled by User",
-      message: `Order #${orderCode(order._id)} cancelled | Paid via: ${formatPaymentMethod(order.paymentMethod)} | Total: ₹${order.total} | User: ${customer?.name || "N/A"} | Email: ${customer?.email || "N/A"} | Phone: ${order.phone || customer?.phone || "N/A"} | Reason: ${reason} | Date: ${new Date().toLocaleString()}`,
-      type: "danger",
-      actionPath: "/admin/orders",
-      data: {
-        event: "order_cancelled",
-        orderId: String(order._id),
-        userId: String(req.user.id),
-        userName: customer?.name || "N/A",
-        userEmail: customer?.email || "N/A",
-        userPhone: order.phone || customer?.phone || "N/A",
-        total: order.total,
-        paymentMethod: order.paymentMethod,
-        cancellationReason: reason,
-        cancelledAt: order.cancelledAt,
-        isRefunded,
-        refundError: refundErrorMsg
-      },
-    });
-    
-    res.json({ success: true, message: "Order cancelled successfully", order, refundMessage: refundMessageText });
+
+    res.json({ success: true, message: "Order cancellation approved successfully", order, refundMessage: refundMessageText });
   } catch (err) {
-    console.error("Cancel order error:", err);
+    console.error("Approve cancel error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const rejectCancelOrder = async (req, res) => {
+  try {
+    if (!isAdmin(req.user)) return res.status(403).json({ message: "Not admin" });
+    
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ message: "Order not found" });
+    if (order.status !== "CancellationRequested") {
+      return res.status(400).json({ message: "No active cancellation request for this order" });
+    }
+
+    const adminMessage = req.body.message || "Order cancel nahi kr skte h food prepsered ho gya";
+
+    order.status = "Pending"; // Restore to original active status
+    order.cancellationStatus = "Rejected";
+    await order.save();
+
+    // Log rejection
+    await SecurityLog.create({
+      userId: req.user.id,
+      action: "order_cancellation_rejected",
+      details: `Admin rejected cancellation for Order ID: ${order._id}. Message: ${adminMessage}`,
+      ipAddress: req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress,
+      userAgent: req.headers['user-agent'] || ""
+    });
+
+    // Notify user
+    await Notification.create({
+      userId: order.userId,
+      title: "Cancellation Request Rejected",
+      message: `Order #${orderCode(order._id)}: ${adminMessage}`,
+      type: "danger",
+    });
+
+    res.json({ success: true, message: "Order cancellation request rejected successfully", order });
+  } catch (err) {
+    console.error("Reject cancel error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
