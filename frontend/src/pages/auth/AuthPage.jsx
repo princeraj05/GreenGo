@@ -146,20 +146,16 @@ export default function AuthPage() {
         console.log("[GOOGLE DEBUG] Redirect result:", result);
         if (result && result.user) {
           await handleUserSession(result.user);
-        } else if (auth.currentUser) {
-          await handleUserSession(auth.currentUser);
         }
       } catch (err) {
         console.error("[GOOGLE AUTH] Google redirect sign in timed out or skipped:", err);
-        if (auth.currentUser) {
-          await handleUserSession(auth.currentUser);
-        }
       }
     };
 
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
-      console.log("[GOOGLE DEBUG] Auth state changed");
-      if (user) {
+      console.log("[GOOGLE DEBUG] Auth state changed:", user ? user.email : "null");
+      // Only trigger auto handle session if we aren't loading/authenticating already via popup
+      if (user && !window.googleAuthInProgress) {
         await handleUserSession(user);
       }
     });
@@ -172,6 +168,7 @@ export default function AuthPage() {
     console.log("[GOOGLE DEBUG] Button clicked");
     setLoading(true);
     setError("");
+    window.googleAuthInProgress = true;
     try {
       if (Capacitor.isNativePlatform()) {
         console.log("[GOOGLE DEBUG] Using redirect");
@@ -210,6 +207,8 @@ export default function AuthPage() {
     } catch (err) {
       console.error("Google sign in failed:", err);
       setError(err.response?.data?.message || err.message || "Google Sign-In failed");
+    } finally {
+      window.googleAuthInProgress = false;
       setLoading(false);
     }
   };
