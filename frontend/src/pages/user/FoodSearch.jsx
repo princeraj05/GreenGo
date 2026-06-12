@@ -139,23 +139,27 @@ export default function FoodSearch() {
       const name = food.category || "Other";
       if (!map.has(name)) map.set(name, food.categoryImage || food.image || "");
     });
-    return Array.from(map, ([name, image]) => ({ name, image }));
+    return [
+      { name: "All Food", image: "/greengo-logo.png" },
+      ...Array.from(map, ([name, image]) => ({ name, image }))
+    ];
   }, [foods]);
 
   // Builds fuzzy search suggestions sorted by distanceRank for autocomplete dropdowns
+  const [showSuggestions, setShowSuggestions] = useState(true);
   const suggestions = useMemo(() => {
     const q = normalize(query);
-    if (!q) return [];
+    if (!q || !showSuggestions) return [];
     const dishSuggestions = foods
       .filter((food) => normalize(food.name).includes(q) || normalize(food.category).includes(q))
       .sort((a, b) => distanceRank(a, query) - distanceRank(b, query))
       .slice(0, 6);
     const categorySuggestions = categories
-      .filter((cat) => normalize(cat.name).includes(q))
+      .filter((cat) => cat.name !== "All Food" && normalize(cat.name).includes(q))
       .slice(0, 3)
       .map((cat) => ({ _id: `category-${cat.name}`, name: cat.name, category: "Category", image: cat.image, isCategory: true }));
     return [...dishSuggestions, ...categorySuggestions];
-  }, [foods, categories, query]);
+  }, [foods, categories, query, showSuggestions]);
 
   // Dynamically extracts categories that have dishes matching the typed query
   const matchingCategories = useMemo(() => {
@@ -179,9 +183,9 @@ export default function FoodSearch() {
     const q = normalize(query);
     return foods
       .filter((food) => {
-        const matchesQuery = !q || normalize(food.name).includes(q) || normalize(food.category).includes(q) || normalize(food.description).includes(q);
+        const matchesQuery = !q || q === "all food" || normalize(food.name).includes(q) || normalize(food.category).includes(q) || normalize(food.description).includes(q);
         const active = normalize(activeCategory);
-        const matchesCategory = activeCategory === "All" || normalize(food.category || "Other") === active || normalize(food.name).includes(active);
+        const matchesCategory = activeCategory === "All" || activeCategory === "All Food" || normalize(food.category || "Other") === active || normalize(food.name).includes(active);
         
         // Apply rupee filter <= 100
         if (filterUnder100 && Number(food.price) > 100) {
@@ -216,11 +220,13 @@ export default function FoodSearch() {
   const chooseSuggestion = (item) => {
     setQuery(item.name);
     setActiveCategory(item.isCategory ? item.name : "All");
+    setShowSuggestions(false);
   };
 
   const chooseCategory = (name) => {
     setActiveCategory(name);
-    if (name !== "All") setQuery(name);
+    setQuery(name === "All Food" ? "" : name);
+    setShowSuggestions(false);
   };
 
   const goCheckout = () => {
@@ -249,6 +255,7 @@ export default function FoodSearch() {
             onChange={(event) => {
               setQuery(event.target.value);
               setActiveCategory("All");
+              setShowSuggestions(true);
             }}
             placeholder="Search delicious food..."
             className="min-w-0 flex-1 bg-transparent text-base font-extrabold text-slate-900 outline-none placeholder:text-slate-400 dark:text-white sm:text-lg"
@@ -259,6 +266,7 @@ export default function FoodSearch() {
               onClick={() => {
                 setQuery("");
                 setActiveCategory("All");
+                setShowSuggestions(true);
               }}
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-100 transition-colors dark:hover:bg-slate-900"
               aria-label="Clear search"
@@ -284,7 +292,10 @@ export default function FoodSearch() {
               <button
                 key={prompt}
                 type="button"
-                onClick={() => setQuery(prompt)}
+                onClick={() => {
+                  setQuery(prompt);
+                  setShowSuggestions(true);
+                }}
                 className="shrink-0 rounded-full border border-brand-100 hover:border-brand-300 bg-white px-4 py-2 text-sm font-black text-slate-700 shadow-sm transition-all hover:bg-brand-50/30 dark:border-brand-900/40 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-brand-950/20"
               >
                 <Sparkles size={14} className="mr-1.5 inline text-brand-500" />
@@ -362,27 +373,13 @@ export default function FoodSearch() {
       )}
 
       {/* --- DYNAMIC MATCHED CATEGORIES TAGS BAR --- */}
-      <section className="mb-5">
-        <h2 className="mb-4 text-xl font-black text-slate-900 dark:text-white">
-          {query ? `Showing results for "${query}"` : "All Food"}
-        </h2>
-        <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar scroll-smooth">
-          {matchingCategories.map((cat) => (
-            <button
-              key={cat}
-              type="button"
-              onClick={() => setActiveCategory(cat)}
-              className={`shrink-0 rounded-2xl border px-4.5 py-2.5 text-xs font-black transition-all duration-200 ${
-                activeCategory === cat
-                  ? "border-brand-500 bg-brand-500 text-white shadow-md shadow-brand-500/25"
-                  : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-800/60 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900/50"
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-      </section>
+      {query && (
+        <section className="mb-5">
+          <h2 className="mb-4 text-xl font-black text-slate-900 dark:text-white">
+            {query ? `Showing results for "${query}"` : "All Food"}
+          </h2>
+        </section>
+      )}
 
       {/* --- EXTRA FILTERS SCROLL ROW --- */}
       <section className="mb-6 flex gap-2 overflow-x-auto pb-1 no-scrollbar scroll-smooth">
