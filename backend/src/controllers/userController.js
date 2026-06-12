@@ -1149,12 +1149,38 @@ export const verifyOtpEmail = async (req, res) => {
         role: normalizeRole(user.role)
       },
       process.env.JWT_SECRET || "SECRET123",
-      { expiresIn: "7d" }
+      { expiresIn: "15m" }
     );
+    const refreshToken = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET || "SECRET123",
+      { expiresIn: "30d" }
+    );
+
+    // Save active session record
+    const userAgent = req.headers['user-agent'] || "";
+    await Session.create({
+      userId: user._id,
+      token,
+      deviceName: userAgent.includes("Mobi") ? "Mobile Device" : "Desktop Device",
+      browser: userAgent.includes("Chrome") ? "Chrome" : "Browser",
+      os: userAgent.includes("Windows") ? "Windows" : "OS",
+      ipAddress: req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress,
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+    });
+
+    await SecurityLog.create({
+      userId: user._id,
+      action: "login_success",
+      details: `Successful email OTP verification and session creation for email: ${email}`,
+      ipAddress: req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress,
+      userAgent
+    });
 
     res.json({
       success: true,
       token,
+      refreshToken,
       role: normalizeRole(user.role)
     });
 
@@ -1240,12 +1266,38 @@ export const verifyOtpPhone = async (req, res) => {
         role: normalizeRole(user.role)
       },
       process.env.JWT_SECRET || "SECRET123",
-      { expiresIn: "7d" }
+      { expiresIn: "15m" }
     );
+    const refreshToken = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET || "SECRET123",
+      { expiresIn: "30d" }
+    );
+
+    // Save active session record
+    const userAgent = req.headers['user-agent'] || "";
+    await Session.create({
+      userId: user._id,
+      token,
+      deviceName: userAgent.includes("Mobi") ? "Mobile Device" : "Desktop Device",
+      browser: userAgent.includes("Chrome") ? "Chrome" : "Browser",
+      os: userAgent.includes("Windows") ? "Windows" : "OS",
+      ipAddress: req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress,
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+    });
+
+    await SecurityLog.create({
+      userId: user._id,
+      action: "login_success",
+      details: `Successful phone OTP verification and session creation for phone: ${phone}`,
+      ipAddress: req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress,
+      userAgent
+    });
 
     res.json({
       success: true,
       token,
+      refreshToken,
       role: normalizeRole(user.role)
     });
 
