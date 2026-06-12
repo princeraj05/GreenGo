@@ -1690,7 +1690,7 @@ export default function Menu() {
               <img
                 src={getImageUrl(cartPreviewItem?.image)}
                 alt={cartPreviewItem?.name || "Selected food"}
-                className="h-11 w-11 shrink-0 rounded-full border border-slate-100 bg-slate-50 object-contain p-1 dark:border-slate-800 dark:bg-slate-900 sm:h-16 sm:w-16"
+                className="h-10 w-14 shrink-0 rounded-2xl border border-slate-100 bg-slate-50 object-cover dark:border-slate-800 dark:bg-slate-900 sm:h-14 sm:w-20"
                 onError={(e) => { e.target.src = "https://placehold.co/120x120?text=Food"; }}
               />
               <div className="min-w-0">
