@@ -343,7 +343,7 @@ export default function Checkout() {
 
             const verifyData = await verifyRes.json();
             if (verifyData.success) {
-              await createFinalOrder(token, lat, lon, checkoutDeliveryCharge, checkoutTotal);
+              await createFinalOrder(token, lat, lon, checkoutDeliveryCharge, checkoutTotal, response.razorpay_payment_id);
             } else {
               alert("Payment Verification Failed!");
               setLoading(false);
@@ -374,7 +374,7 @@ export default function Checkout() {
    * createFinalOrder: Places order record directly in database through backend,
    * clears local cart variables, and redirects to orders history tracker.
    */
-  const createFinalOrder = async (token, lat, lon, finalDeliveryCharge = deliveryCharge, finalTotal = total) => {
+  const createFinalOrder = async (token, lat, lon, finalDeliveryCharge = deliveryCharge, finalTotal = total, transactionId = "") => {
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/orders`, {
         method: "POST",
@@ -385,7 +385,8 @@ export default function Checkout() {
         body: JSON.stringify({
           items: cart, address, phone, paymentMethod, subtotal, deliveryCharge: finalDeliveryCharge, total: finalTotal,
           latitude: lat, longitude: lon,
-          customMessage
+          customMessage,
+          transactionId
         }),
       });
 

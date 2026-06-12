@@ -49,6 +49,7 @@ const FoodAnalytics = lazy(() => import("../pages/admin/FoodAnalytics"));
 const ManageReviews = lazy(() => import("../pages/admin/ManageReviews"));
 const ManageBanners = lazy(() => import("../pages/admin/ManageBanners"));
 const SecurityLogs = lazy(() => import("../pages/admin/SecurityAuditLogs"));
+const CancelledOrders = lazy(() => import("../pages/admin/CancelledOrders"));
 
 const SuspenseLoader = () => (
   <div className="min-h-[60vh] px-4 py-6 sm:px-8">
@@ -125,6 +126,7 @@ export default function AppRoutes() {
           <Route index element={<AdminDashboard />} />
           <Route path="foods" element={<ManageFoods />} />
           <Route path="orders" element={<ManageOrders />} />
+          <Route path="cancelled-orders" element={<CancelledOrders />} />
           <Route path="orders/:id/tracking" element={<OrderTrackingPage role="admin" />} />
           <Route path="users" element={<Navigate to="/admin/users/customers" replace />} />
           <Route path="users/customers" element={<CustomerUsers />} />

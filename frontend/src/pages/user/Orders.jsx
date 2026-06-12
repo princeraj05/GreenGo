@@ -38,6 +38,11 @@ export default function Orders() {
   // editingReviewId: Reference ID of feedback if updating existing reviews
   const [editingReviewId, setEditingReviewId] = useState(null);
 
+  // cancellation states
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  const [cancellingOrderId, setCancellingOrderId] = useState(null);
+  const [selectedReasons, setSelectedReasons] = useState([]);
+
   /* --- EFFECTS & LIFECYCLE --- */
 
   // Load orders and user reviews on initialization and poll data updates every 10 seconds
@@ -64,20 +69,32 @@ export default function Orders() {
   };
 
   /**
-   * handleCancelOrder: Submits cancellation request to server and refreshes logs.
+   * openCancelDialog: Triggers cancellation flow for orders.
    */
-  const handleCancelOrder = async (orderId) => {
-    if (!window.confirm("Are you sure you want to cancel this order?")) return;
+  const openCancelDialog = (orderId) => {
+    setCancellingOrderId(orderId);
+    setSelectedReasons([]);
+    setCancelModalOpen(true);
+  };
+
+  const handleCancelOrderSubmit = async () => {
+    if (selectedReasons.length === 0) return;
     try {
       const token = await getToken();
-      const res = await fetch(`${getApiUrl()}/api/orders/${orderId}/cancel`, {
+      const res = await fetch(`${getApiUrl()}/api/orders/${cancellingOrderId}/cancel`, {
         method: "PUT",
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}` 
+        },
+        body: JSON.stringify({ reason: selectedReasons.join(", ") })
       });
+      const data = await res.json();
       if (res.ok) {
+        setCancelModalOpen(false);
         loadOrders();
+        alert(data.refundMessage || "Order cancelled successfully.");
       } else {
-        const data = await res.json();
         alert(data.message || "Failed to cancel order");
       }
     } catch (err) {
@@ -380,7 +397,7 @@ export default function Orders() {
                     <h3 className="text-xl sm:text-2xl md:text-3xl font-black text-brand-600">₹{o.total}</h3>
                     <div className="flex gap-2 justify-end">
                       {canCancel(o) && (
-                        <Button size="sm" variant="danger" className="rounded-xl" onClick={() => handleCancelOrder(o._id)}>
+                        <Button size="sm" variant="danger" className="rounded-xl" onClick={() => openCancelDialog(o._id)}>
                           Cancel Order
                         </Button>
                       )}
@@ -479,6 +496,91 @@ export default function Orders() {
                   className="flex-1 rounded-xl py-2.5 text-sm shadow-brand-500/20"
                 >
                   Submit
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {cancelModalOpen && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[2000] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 w-full max-w-md overflow-hidden flex flex-col p-5 sm:p-7 text-slate-900 dark:text-white"
+            >
+              {/* Header */}
+              <div className="flex justify-between items-center mb-5">
+                <h3 className="text-xl md:text-2xl font-black tracking-tight">
+                  Cancel Order
+                </h3>
+                <button
+                  onClick={() => setCancelModalOpen(false)}
+                  className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="space-y-4">
+                <p className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400">
+                  Why you cancelled this food?
+                </p>
+                <div className="flex flex-col gap-2">
+                  {[
+                    "Change of mind",
+                    "Order took too long to prepare",
+                    "Placed order by mistake",
+                    "Found a better deal / price"
+                  ].map((option) => {
+                    const isChecked = selectedReasons.includes(option);
+                    return (
+                      <label
+                        key={option}
+                        className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all cursor-pointer ${
+                          isChecked
+                            ? "border-brand-500 bg-brand-500/10 text-brand-700 dark:text-brand-300"
+                            : "border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 hover:border-slate-200 dark:hover:border-slate-700"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => {
+                            if (isChecked) {
+                              setSelectedReasons(selectedReasons.filter((r) => r !== option));
+                            } else {
+                              setSelectedReasons([...selectedReasons, option]);
+                            }
+                          }}
+                          className="w-4 h-4 text-brand-500 border-slate-300 rounded focus:ring-brand-500"
+                        />
+                        <span className="text-sm font-bold">{option}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Submit CTA toolbar */}
+              <div className="mt-6 flex gap-2.5">
+                <Button
+                  variant="secondary"
+                  onClick={() => setCancelModalOpen(false)}
+                  className="flex-1 rounded-xl py-2.5 text-sm"
+                >
+                  Go Back
+                </Button>
+                <Button
+                  disabled={selectedReasons.length === 0}
+                  onClick={handleCancelOrderSubmit}
+                  className="flex-1 rounded-xl py-2.5 text-sm shadow-brand-500/20"
+                >
+                  Cancel Order
                 </Button>
               </div>
             </motion.div>

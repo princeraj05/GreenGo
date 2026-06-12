@@ -4,6 +4,7 @@ import Notification from "../models/Notification.js";
 import User from "../models/User.js";
 import Food from "../models/Food.js";
 import SecurityLog from "../models/SecurityLog.js";
+import Razorpay from "razorpay";
 import { createAdminNotification, formatPaymentMethod, orderCode } from "../services/adminNotificationService.js";
 
 const isAdmin = (user) => user?.role === "admin";
@@ -148,7 +149,8 @@ export const createOrder = async (req, res) => {
       total,
       latitude,
       longitude,
-      customMessage
+      customMessage,
+      transactionId
     } = req.body;
 
     let userLat = latitude;
@@ -217,7 +219,8 @@ export const createOrder = async (req, res) => {
       distance: distance ? Number(distance.toFixed(2)) : null,
       latitude: userLat,
       longitude: userLon,
-      customMessage: customMessage || ""
+      customMessage: customMessage || "",
+      transactionId: transactionId || ""
     });
 
     await Notification.create({
@@ -663,43 +666,80 @@ export const cancelOrder = async (req, res) => {
       });
       return res.status(400).json({ message: `Cancellation blocked: Order status is '${order.status}' and is already being processed.` });
     }
-    
+
+    const reason = req.body.reason || "No reason specified";
     order.status = "Cancelled";
+    order.cancellationReason = reason;
+    order.cancelledAt = new Date();
+    
+    let isRefunded = false;
+    let refundErrorMsg = "";
+
+    // For online payments, perform refund
+    if (order.paymentMethod !== "COD" && order.transactionId) {
+      try {
+        const razorpay = new Razorpay({
+          key_id: process.env.RAZORPAY_KEY_ID,
+          key_secret: process.env.RAZORPAY_KEY_SECRET,
+        });
+        
+        await razorpay.payments.refund(order.transactionId, {
+          amount: Math.round(order.total * 100) // in paise
+        });
+        isRefunded = true;
+      } catch (refundErr) {
+        console.error("Razorpay refund failed:", refundErr);
+        refundErrorMsg = refundErr.message || "Refund API call failed";
+      }
+    }
+
     await order.save();
 
     // Log successful cancellation
     await SecurityLog.create({
       userId: req.user.id,
       action: "order_cancellation",
-      details: `Successfully cancelled Order ID: ${order._id}.`,
+      details: `Successfully cancelled Order ID: ${order._id}. Reason: ${reason}. Refund processed: ${isRefunded}.`,
       ipAddress: req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress,
       userAgent: req.headers['user-agent'] || ""
     });
     
     // Create notification for user
+    const refundMessageText = order.paymentMethod !== "COD"
+      ? `Your refund of ₹${order.total} has been initiated and will be credited to your bank account within 5-7 business days.`
+      : "Your order has been cancelled successfully.";
+
     await Notification.create({
       userId: req.user.id,
       title: "Order Cancelled",
-      message: `Your order #${orderCode(order._id)} has been cancelled successfully.`,
+      message: `Your order #${orderCode(order._id)} has been cancelled successfully. ${refundMessageText}`,
       type: "warning",
     });
     
     // Create admin notification
-    const customer = await User.findById(req.user.id).select("name email");
+    const customer = await User.findById(req.user.id).select("name email phone");
     await createAdminNotification({
       title: "Order Cancelled by User",
-      message: `Order #${orderCode(order._id)} has been cancelled by ${customer?.name || "Customer"}.`,
+      message: `Order #${orderCode(order._id)} cancelled | Paid via: ${formatPaymentMethod(order.paymentMethod)} | Total: ₹${order.total} | User: ${customer?.name || "N/A"} | Email: ${customer?.email || "N/A"} | Phone: ${order.phone || customer?.phone || "N/A"} | Reason: ${reason} | Date: ${new Date().toLocaleString()}`,
       type: "danger",
       actionPath: "/admin/orders",
       data: {
         event: "order_cancelled",
         orderId: String(order._id),
         userId: String(req.user.id),
+        userName: customer?.name || "N/A",
+        userEmail: customer?.email || "N/A",
+        userPhone: order.phone || customer?.phone || "N/A",
         total: order.total,
+        paymentMethod: order.paymentMethod,
+        cancellationReason: reason,
+        cancelledAt: order.cancelledAt,
+        isRefunded,
+        refundError: refundErrorMsg
       },
     });
     
-    res.json({ success: true, message: "Order cancelled successfully", order });
+    res.json({ success: true, message: "Order cancelled successfully", order, refundMessage: refundMessageText });
   } catch (err) {
     console.error("Cancel order error:", err);
     res.status(500).json({ message: "Server error" });
