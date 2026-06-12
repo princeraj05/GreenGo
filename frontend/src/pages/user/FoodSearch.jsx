@@ -58,6 +58,11 @@ export default function FoodSearch() {
   // loading: Page spinner state while foods download from API
   const [loading, setLoading] = useState(true);
 
+  // Active filters states
+  const [filterUnder100, setFilterUnder100] = useState(false);
+  const [filterGreatOffers, setFilterGreatOffers] = useState(false);
+  const [filterPureVeg, setFilterPureVeg] = useState(false);
+
   /* --- DATA FETCHING & EFFECTS --- */
 
   // Runs on mount: Loads foods list, populates cart state, and focuses search input
@@ -177,10 +182,26 @@ export default function FoodSearch() {
         const matchesQuery = !q || normalize(food.name).includes(q) || normalize(food.category).includes(q) || normalize(food.description).includes(q);
         const active = normalize(activeCategory);
         const matchesCategory = activeCategory === "All" || normalize(food.category || "Other") === active || normalize(food.name).includes(active);
+        
+        // Apply rupee filter <= 100
+        if (filterUnder100 && Number(food.price) > 100) {
+          return false;
+        }
+
+        // Apply great offers filter (featured or discount)
+        if (filterGreatOffers && !food.featured) {
+          return false;
+        }
+
+        // Apply pure veg filter
+        if (filterPureVeg && food.veg !== true && food.veg !== "true") {
+          return false;
+        }
+
         return matchesQuery && matchesCategory;
       })
       .sort((a, b) => distanceRank(a, query) - distanceRank(b, query) || Number(b.rating || 0) - Number(a.rating || 0));
-  }, [foods, query, activeCategory]);
+  }, [foods, query, activeCategory, filterUnder100, filterGreatOffers, filterPureVeg]);
 
   // If active category is excluded from new search match results, resets tag filters to "All"
   useEffect(() => {
@@ -211,7 +232,7 @@ export default function FoodSearch() {
     <div className="mx-auto w-full max-w-6xl px-4 pb-28 md:px-6">
       
       {/* --- STICKY SEARCH BAR HEADER --- */}
-      <div className="sticky top-16 md:top-0 z-30 -mx-4 bg-slate-50/95 px-4 pb-4 pt-1.5 backdrop-blur-md dark:bg-slate-900/95 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+      <div className="sticky top-0 z-30 -mx-4 bg-slate-50/95 px-4 pb-4 pt-1.5 backdrop-blur-md dark:bg-slate-900/95 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
         <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-2.5 shadow-sm transition-all focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/25 dark:border-slate-800 dark:bg-slate-950">
           <button
             type="button"
@@ -284,7 +305,7 @@ export default function FoodSearch() {
               onClick={() => chooseSuggestion(item)}
               className="flex w-full items-center gap-3.5 rounded-2xl p-2.5 text-left transition-colors hover:bg-slate-50 dark:hover:bg-slate-905/70"
             >
-              <div className="h-12 w-12 shrink-0 overflow-hidden rounded-full border border-slate-100 bg-slate-50 dark:border-slate-800 dark:bg-slate-900">
+              <div className="h-12 w-12 shrink-0 overflow-hidden rounded-full border border-slate-100 bg-slate-50 dark:border-slate-800 dark:bg-slate-900 flex items-center justify-center">
                 <img
                   src={getImageUrl(item.image)}
                   alt={item.name}
@@ -328,7 +349,7 @@ export default function FoodSearch() {
                     <img
                       src={getImageUrl(cat.image)}
                       alt={cat.name}
-                      className="h-full w-full object-cover rounded-full"
+                      className="h-full w-full object-cover rounded-full aspect-square"
                       onError={(e) => { e.target.src = "https://placehold.co/160x160?text=Food"; }}
                     />
                   </div>
@@ -365,16 +386,37 @@ export default function FoodSearch() {
 
       {/* --- EXTRA FILTERS SCROLL ROW --- */}
       <section className="mb-6 flex gap-2 overflow-x-auto pb-1 no-scrollbar scroll-smooth">
-        <button type="button" className="shrink-0 rounded-2xl border border-slate-200 bg-white px-4 py-2 text-xs font-black text-slate-700 hover:bg-slate-50 transition-colors dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900/50">
-          <SlidersHorizontal size={14} className="mr-1.5 inline" /> Filters
+        <button
+          type="button"
+          onClick={() => setFilterUnder100(!filterUnder100)}
+          className={`shrink-0 rounded-2xl border px-4 py-2 text-xs font-black transition-all duration-200 ${
+            filterUnder100
+              ? "border-brand-500 bg-brand-500 text-white shadow-md shadow-brand-500/25"
+              : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900/50"
+          }`}
+        >
+          <SlidersHorizontal size={14} className="mr-1.5 inline" /> Under ₹100
         </button>
-        <button type="button" className="shrink-0 rounded-2xl border border-slate-200 bg-white px-4 py-2 text-xs font-black text-slate-700 hover:bg-slate-50 transition-colors dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900/50">
-          Under ₹250
-        </button>
-        <button type="button" className="shrink-0 rounded-2xl border border-slate-200 bg-white px-4 py-2 text-xs font-black text-slate-700 hover:bg-slate-50 transition-colors dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900/50">
+        <button
+          type="button"
+          onClick={() => setFilterGreatOffers(!filterGreatOffers)}
+          className={`shrink-0 rounded-2xl border px-4 py-2 text-xs font-black transition-all duration-200 ${
+            filterGreatOffers
+              ? "border-brand-500 bg-brand-500 text-white shadow-md shadow-brand-500/25"
+              : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900/50"
+          }`}
+        >
           Great offers
         </button>
-        <button type="button" className="shrink-0 rounded-2xl border border-slate-200 bg-white px-4 py-2 text-xs font-black text-slate-700 hover:bg-slate-50 transition-colors dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900/50">
+        <button
+          type="button"
+          onClick={() => setFilterPureVeg(!filterPureVeg)}
+          className={`shrink-0 rounded-2xl border px-4 py-2 text-xs font-black transition-all duration-200 ${
+            filterPureVeg
+              ? "border-brand-500 bg-brand-500 text-white shadow-md shadow-brand-500/25"
+              : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900/50"
+          }`}
+        >
           Pure Veg
         </button>
       </section>
@@ -444,9 +486,11 @@ function FoodResultCard({ food, cartItem, onQuantity }) {
           className="h-full w-full rounded-2xl object-cover"
           onError={(e) => { e.target.src = "https://placehold.co/400x300?text=Food"; }}
         />
-        <span className="absolute left-5 top-5 rounded-lg bg-slate-950/80 backdrop-blur-sm px-2 py-1 text-[10px] font-black text-white">
-          10% OFF select items
-        </span>
+        {food.featured && (
+          <span className="absolute left-5 top-5 rounded-lg bg-slate-950/80 backdrop-blur-sm px-2 py-1 text-[10px] font-black text-white">
+            10% OFF select items
+          </span>
+        )}
       </div>
       <div className="p-4">
         <div className="mb-2 flex items-start justify-between gap-3">

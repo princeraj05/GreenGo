@@ -947,11 +947,15 @@ export default function Profile() {
   return (
     <div className="w-full max-w-5xl mx-auto pb-10 px-0 sm:px-4">
       
-      <div className="relative overflow-hidden bg-white dark:bg-slate-950 sm:rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-800 min-h-[calc(100vh-7rem)]">
+      <div className="relative overflow-hidden bg-white dark:bg-slate-950 sm:rounded-[2rem] shadow-[0_12px_40px_rgba(0,0,0,0.06)] border border-slate-100 dark:border-slate-800 min-h-[calc(100vh-7rem)]">
         
-        <div className="bg-gradient-to-br from-emerald-50 to-white dark:from-emerald-950/20 dark:to-slate-950 px-5 pt-6 pb-7">
+        {/* Decorative background glassmorphic shapes for outstanding look */}
+        <div className="absolute top-0 right-0 w-80 h-80 bg-brand-500/10 rounded-full blur-[80px] -translate-y-1/3 translate-x-1/3 pointer-events-none" />
+        <div className="absolute top-[20%] left-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-[70px] -translate-x-1/2 pointer-events-none" />
+
+        <div className="relative z-10 bg-gradient-to-br from-emerald-50/60 via-white/80 to-transparent dark:from-emerald-950/10 dark:via-slate-950/90 dark:to-transparent backdrop-blur-md px-5 pt-6 pb-7 border-b border-slate-50 dark:border-slate-900 shadow-sm">
           <div className="flex items-center gap-4">
-            <div className="w-20 h-20 rounded-full bg-green-500 text-white flex items-center justify-center text-4xl font-black shadow-lg shadow-green-500/20">
+            <div className="w-20 h-20 rounded-full bg-green-500 text-white flex items-center justify-center text-4xl font-black shadow-lg shadow-green-500/30 ring-4 ring-green-100 dark:ring-green-950/20">
               {form.name ? form.name.charAt(0).toUpperCase() : <User size={38} />}
             </div>
             <div className="min-w-0">
@@ -960,7 +964,7 @@ export default function Profile() {
                 <Phone size={15} />
                 <span>{form.phone || "Phone not added"}</span>
               </div>
-              <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-green-100 dark:bg-green-950/40 text-green-700 dark:text-green-300 font-black text-sm">
+              <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-green-100 dark:bg-green-950/40 text-green-700 dark:text-green-300 font-black text-sm shadow-sm">
                 <BadgeCheck size={16} />
                 GreenGo Member
               </div>
@@ -969,16 +973,16 @@ export default function Profile() {
         </div>
 
         {/* Quick Statistics Bar */}
-        <div className="px-5 pb-5 grid grid-cols-3 gap-3">
-          <div className="rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 p-3 text-center">
+        <div className="relative z-10 px-5 pt-5 pb-5 grid grid-cols-3 gap-3">
+          <div className="rounded-2xl bg-white/70 dark:bg-slate-900/60 backdrop-blur-md border border-slate-100 dark:border-slate-800/80 p-3 text-center shadow-md shadow-slate-900/5 dark:shadow-black/20 hover:scale-[1.02] transition-all duration-300">
             <p className="text-xs font-bold text-slate-500 dark:text-slate-400">Favorites</p>
             <p className="mt-1 text-lg font-black text-slate-900 dark:text-white">{favorites.length || 0}</p>
           </div>
-          <div className="rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 p-3 text-center">
+          <div className="rounded-2xl bg-white/70 dark:bg-slate-900/60 backdrop-blur-md border border-slate-100 dark:border-slate-800/80 p-3 text-center shadow-md shadow-slate-900/5 dark:shadow-black/20 hover:scale-[1.02] transition-all duration-300">
             <p className="text-xs font-bold text-slate-500 dark:text-slate-400">Coupons</p>
             <p className="mt-1 text-lg font-black text-slate-900 dark:text-white">{coupons.length || 0}</p>
           </div>
-          <div className="rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 p-3 text-center">
+          <div className="rounded-2xl bg-white/70 dark:bg-slate-900/60 backdrop-blur-md border border-slate-100 dark:border-slate-800/80 p-3 text-center shadow-md shadow-slate-900/5 dark:shadow-black/20 hover:scale-[1.02] transition-all duration-300">
             <p className="text-xs font-bold text-slate-500 dark:text-slate-400">Support</p>
             <p className="mt-1 text-lg font-black text-slate-900 dark:text-white">{contacts.length || 0}</p>
           </div>

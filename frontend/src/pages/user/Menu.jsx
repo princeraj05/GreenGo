@@ -641,7 +641,7 @@ export default function Menu() {
    * getCategoryImage: Assigns images based on matches within the dynamic food list.
    */
   const getCategoryImage = (cat) => {
-    if (cat.id === "All") return "/greengo-logo.svg";
+    if (cat.id === "All") return "/greengo-logo.png";
     const selected = cat.id.toLowerCase();
     const match = foods.find((food) => {
       const foodCategories = getFoodCategories(food).map((item) => item.toLowerCase());
@@ -848,7 +848,7 @@ export default function Menu() {
         {/* Left: Branding logo & clickable Shipping Address popover */}
         <div className="flex flex-1 items-center gap-3 min-w-0">
           <div className="w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center shadow-lg shadow-brand-500/20 overflow-hidden border border-brand-100 dark:border-brand-900 bg-white [&>span]:hidden">
-            <img src="/greengo-logo.svg" alt="GreenGo" className="w-full h-full object-cover" />
+            <img src="/greengo-logo.png" alt="GreenGo" className="w-full h-full object-cover" />
             <span className="text-white text-xl">🍕</span>
           </div>
           <div className="min-w-0 relative flex-1">
