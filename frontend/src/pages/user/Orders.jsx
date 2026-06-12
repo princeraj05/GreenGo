@@ -7,7 +7,7 @@ import Card from "../../components/ui/Card";
 import Badge from "../../components/ui/Badge";
 import { getApiUrl, getImageUrl } from "../../utils/getApiUrl";
 import Button from "../../components/ui/Button";
-import { playOrderConfirmationVoice } from "../../utils/ttsService";
+import { playOrderConfirmationVoice, playOrderCancellationVoice } from "../../utils/ttsService";
 
 /**
  * Orders Component
@@ -114,6 +114,10 @@ export default function Orders() {
       if (res.ok) {
         setCancelModalOpen(false);
         loadOrders();
+        // TRIGGER ORDER CANCELLATION VOICE NOTIFICATION
+        // Plays the custom cancellation submission voice message.
+        // Handled asynchronously with persistent preferences for duplicate prevention.
+        playOrderCancellationVoice(cancellingOrderId);
         alert(data.message || "Cancellation request sent successfully.");
       } else {
         alert(data.message || "Failed to submit cancellation request");

@@ -8,7 +8,8 @@ import { Preferences } from "@capacitor/preferences";
 
 // Voice configuration for order statuses
 export const ORDER_STATUS_VOICES = {
-  Confirmed: "Thank you for choosing GreenGo! Your order has been successfully confirmed. The restaurant is now preparing your order. You can track your order and view its live status in the app."
+  Confirmed: "Thank you for choosing GreenGo! Your order has been successfully confirmed. The restaurant is now preparing your order. You can track your order and view its live status in the app.",
+  Cancelled: "Your order cancellation request has been submitted successfully. Please wait for the admin's response. We will notify you once your request has been reviewed."
 };
 
 /**
@@ -98,6 +99,40 @@ export const playOrderConfirmationVoice = async (orderId, status) => {
     // Speak the confirmation message
     const message = ORDER_STATUS_VOICES.Confirmed;
     console.log(`TTS Service: Initiating voice announcement for confirmed order ${orderId}.`);
+    await speakText(message);
+  } catch (err) {
+    // Log the error without affecting the application or order flow
+    console.error("TTS Service: Failed during duplicate check or execution:", err);
+  }
+};
+
+/**
+ * Handles playing the order cancellation voice message if it has not been played yet.
+ * Uses Capacitor Preferences to persist playback status across sessions, navigation changes, and app restarts.
+ *
+ * @param {string} orderId - The unique ID of the order.
+ */
+export const playOrderCancellationVoice = async (orderId) => {
+  if (!orderId) {
+    return;
+  }
+
+  try {
+    const key = `tts_played_cancelled_${orderId}`;
+    
+    // Check if the cancellation message has already been played for this order
+    const { value } = await Preferences.get({ key });
+    if (value === "true") {
+      console.log(`TTS Service: Cancellation message already played for order ${orderId}. Skipping duplicate playback.`);
+      return;
+    }
+
+    // Mark as played BEFORE playing to prevent race conditions during rapid component re-renders
+    await Preferences.set({ key, value: "true" });
+
+    // Speak the cancellation message
+    const message = ORDER_STATUS_VOICES.Cancelled;
+    console.log(`TTS Service: Initiating voice announcement for cancelled order ${orderId}.`);
     await speakText(message);
   } catch (err) {
     // Log the error without affecting the application or order flow
