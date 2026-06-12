@@ -1,4 +1,5 @@
 import Food from "../models/Food.js";
+import Review from "../models/Review.js";
 
 const categoryImages = {
   Pizza: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&q=80&w=600",
@@ -26,38 +27,50 @@ const categoryImages = {
 };
 
 const foods = [
-  ["Margherita Pizza", 149, "Pizza", true, "Cheesy veg pizza with tomato basil sauce.", 4.5, 320],
-  ["Veg Burger", 100, "Burger", true, "Crispy veggie patty with fresh lettuce and sauces.", 4.3, 150],
-  ["Chicken Biryani", 189, "Biryani", false, "Aromatic rice layered with spiced chicken.", 4.5, 180],
-  ["Chicken Roll", 120, "Rolls", false, "Spiced chicken wrapped in soft roomali roti.", 4.6, 320],
-  ["Masala Fries", 79, "Fries", true, "Crispy fries tossed with Indian masala.", 4.2, 130],
-  ["North Indian Platter", 229, "North Indian", true, "Dal, sabzi, roti, rice, salad, and pickle.", 4.4, 210],
-  ["Chocolate Cake", 99, "Desserts", true, "Soft chocolate pastry with rich ganache.", 4.4, 170],
-  ["Paneer Bowl", 179, "Bowl", true, "Paneer tikka, rice, veggies, and creamy dip.", 4.3, 140],
-  ["Veg Meal", 199, "Veg Meal", true, "Balanced homestyle meal with rice, dal, roti, and sabzi.", 4.5, 260],
-  ["Paneer Butter Masala", 189, "Paneer", true, "Paneer cubes in buttery tomato gravy.", 4.6, 290],
-  ["Aloo Paratha", 89, "Paratha", true, "Stuffed paratha served with curd and pickle.", 4.4, 240],
-  ["Club Sandwich", 119, "Sandwich", true, "Layered veg sandwich with cheese and chutney.", 4.2, 110],
-  ["Steamed Rice", 69, "Rice", true, "Fluffy long grain rice.", 4.1, 80],
-  ["Dal Tadka", 99, "Dal", true, "Yellow dal tempered with cumin, garlic, and ghee.", 4.4, 190],
-  ["Special Thali", 249, "Thali", true, "Complete thali with roti, rice, dal, sabzi, sweets, and salad.", 4.7, 360],
-  ["Hakka Noodles", 140, "Pasta", true, "Wok tossed noodles with crunchy vegetables.", 4.4, 210],
-  ["Cold Coffee", 89, "Drinks", true, "Chilled coffee with creamy froth.", 4.3, 160],
-  ["Chana Salad", 109, "Starter", true, "Protein rich chana salad with fresh herbs.", 4.2, 120],
-  ["Value Combo", 199, "Combo", true, "Burger, fries, and drink combo.", 4.3, 170],
-  ["Tandoori Roti", 25, "Roti", true, "Freshly baked tandoori roti.", 4.1, 90],
-  ["Butter Chicken", 229, "Non-Veg", false, "Tender chicken in creamy butter gravy.", 4.6, 280],
+  ["Margherita Pizza", 149, "Pizza", true, "Cheesy veg pizza with tomato basil sauce.", 4.5, 320, "single", []],
+  ["Veg Burger", 100, "Burger", true, "Crispy veggie patty with fresh lettuce and sauces.", 4.3, 150, "single", []],
+  ["Chicken Biryani", 189, "Biryani", false, "Aromatic rice layered with spiced chicken.", 4.5, 180, "single", []],
+  ["Chicken Roll", 120, "Rolls", false, "Spiced chicken wrapped in soft roomali roti.", 4.6, 320, "single", []],
+  ["Masala Fries", 79, "Fries", true, "Crispy fries tossed with Indian masala.", 4.2, 130, "single", []],
+  ["North Indian Platter", 229, "North Indian", true, "Dal, sabzi, roti, rice, salad, and pickle.", 4.4, 210, "single", []],
+  ["Chocolate Cake", 99, "Desserts", true, "Soft chocolate pastry with rich ganache.", 4.4, 170, "single", []],
+  ["Paneer Bowl", 179, "Bowl", true, "Paneer tikka, rice, veggies, and creamy dip.", 4.3, 140, "single", []],
+  ["Veg Meal", 199, "Veg Meal", true, "Balanced homestyle meal with rice, dal, roti, and sabzi.", 4.5, 260, "single", []],
+  ["Paneer Butter Masala", 189, "Paneer", true, "Paneer cubes in buttery tomato gravy.", 4.6, 290, "single", []],
+  ["Aloo Paratha", 89, "Paratha", true, "Stuffed paratha served with curd and pickle.", 4.4, 240, "single", []],
+  ["Club Sandwich", 119, "Sandwich", true, "Layered veg sandwich with cheese and chutney.", 4.2, 110, "single", []],
+  ["Steamed Rice", 69, "Rice", true, "Fluffy long grain rice.", 4.1, 80, "single", []],
+  ["Dal Tadka", 99, "Dal", true, "Yellow dal tempered with cumin, garlic, and ghee.", 4.4, 190, "single", []],
+  ["Special Thali", 249, "Thali", true, "Complete thali with roti, rice, dal, sabzi, sweets, and salad.", 4.7, 360, "single", []],
+  ["Hakka Noodles", 140, "Pasta", true, "Wok tossed noodles with crunchy vegetables.", 4.4, 210, "single", []],
+  ["Cold Coffee", 89, "Drinks", true, "Chilled coffee with creamy froth.", 4.3, 160, "single", []],
+  ["Chana Salad", 109, "Starter", true, "Protein rich chana salad with fresh herbs.", 4.2, 120, "single", []],
+  ["Value Combo", 199, "Combo", true, "Burger, fries, and drink combo.", 4.3, 170, "combo", [{ name: "Veg Burger", price: 100 }, { name: "Masala Fries", price: 79 }, { name: "Cold Coffee", price: 89 }]],
+  ["Tandoori Roti", 25, "Roti", true, "Freshly baked tandoori roti.", 4.1, 90, "single", []],
+  ["Butter Chicken", 229, "Non-Veg", false, "Tender chicken in creamy butter gravy.", 4.6, 280, "single", []],
+  ["Pizza Feast Combo", 299, "Combo", true, "Margherita Pizza, Masala Fries, and Cold Coffee.", 4.6, 110, "combo", [{ name: "Margherita Pizza", price: 149 }, { name: "Masala Fries", price: 79 }, { name: "Cold Coffee", price: 89 }]],
+  ["Biryani Combo (Non-Veg)", 249, "Combo", false, "Chicken Biryani, Chicken Roll, and Cold Drink.", 4.7, 95, "combo", [{ name: "Chicken Biryani", price: 189 }, { name: "Chicken Roll", price: 120 }]],
+  ["North Indian Special Combo", 329, "Combo", true, "Paneer Butter Masala, Dal Tadka, 2 Tandoori Roti, and Steamed Rice.", 4.5, 75, "combo", [{ name: "Paneer Butter Masala", price: 189 }, { name: "Dal Tadka", price: 99 }, { name: "Tandoori Roti", price: 25 }, { name: "Steamed Rice", price: 69 }]],
+  ["Burger & Roll Combo", 199, "Combo", false, "Veg Burger, Chicken Roll, and Fries.", 4.4, 88, "combo", [{ name: "Veg Burger", price: 100 }, { name: "Chicken Roll", price: 120 }, { name: "Masala Fries", price: 79 }]]
 ];
 
 export const seedInitialFoods = async () => {
   try {
     const count = await Food.countDocuments();
-    if (count > 0) {
-      console.log("Foods database already has data. Skipping seed.");
+    const comboCount = await Food.countDocuments({ foodType: "combo" });
+    
+    if (count > 0 && comboCount > 0) {
+      console.log("Foods database already has data and combos. Skipping seed.");
       return;
     }
 
-    const docs = foods.map(([name, price, category, veg, description, rating, ratingCount], index) => ({
+    if (comboCount === 0) {
+      console.log("No combo foods found or upgrading. Wiping existing foods and reviews to re-seed.");
+      await Food.deleteMany({});
+      await Review.deleteMany({});
+    }
+
+    const docs = foods.map(([name, price, category, veg, description, rating, ratingCount, foodType = "single", comboItems = []], index) => ({
       name,
       price,
       category,
@@ -70,6 +83,8 @@ export const seedInitialFoods = async () => {
       categoryImage: categoryImages[category] || categoryImages.Starter,
       image: categoryImages[category] || categoryImages.Starter,
       featured: index < 6,
+      foodType,
+      comboItems
     }));
 
     await Food.insertMany(docs);
