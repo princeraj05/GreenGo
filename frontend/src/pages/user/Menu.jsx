@@ -1266,9 +1266,9 @@ export default function Menu() {
               <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">No products available right now.</p>
             </div>
           ) : (
-            <div className="flex flex-wrap gap-3 sm:gap-4 lg:gap-6 py-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6 py-2">
               {allProductFoods.slice(0, 12).map((food) => (
-                <div key={food._id} className="w-[180px] sm:w-[220px] md:w-[260px] shrink-0">
+                <div key={food._id} className="w-full">
                   {renderFoodCard(food, { deliveryTime: "20-30 min", oldPriceFactor: 1.15, categoryPrefix: "Category:" })}
                 </div>
               ))}
