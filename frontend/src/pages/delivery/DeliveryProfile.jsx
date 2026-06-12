@@ -244,54 +244,97 @@ export default function DeliveryProfile() {
         )}
 
         {/* --- FORM CONFIGURATION INPUT FIELDS --- */}
-        {/* Layout grid configuration matching responsive dimensions (2 columns on desktops, 1 on small tablets) */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <Field label="Name" icon={User}>
-            <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Your full name" />
-          </Field>
+        {/* Modern unified layout with two main sections: Personal details & System info */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Section 1: Personal Profile */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+              <User size={18} className="text-brand-500" />
+              <h4 className="text-sm font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Personal Details</h4>
+            </div>
 
-          <Field label="Phone Number" icon={Phone}>
-            <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="9876543210" />
-          </Field>
+            <div className="space-y-3.5">
+              <div>
+                <label className="text-xs font-black uppercase tracking-wider text-slate-400 block mb-1.5">Full Name</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"><User size={16} /></span>
+                  <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Your full name" className="pl-11 rounded-xl" />
+                </div>
+              </div>
 
-          <Field label={form.hasPassword ? "Set New Password" : "Set Password"} icon={User}>
-            <Input
-              type="password"
-              value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
-              placeholder="Abc@123"
-            />
-            <p className="mt-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
-              Min 6 chars: alphabet, number, special character.
-            </p>
-          </Field>
+              <div>
+                <label className="text-xs font-black uppercase tracking-wider text-slate-400 block mb-1.5">Phone Number</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"><Phone size={16} /></span>
+                  <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="9876543210" className="pl-11 rounded-xl" />
+                </div>
+              </div>
 
-          <Field label="Email" icon={Mail}>
-            <Input value={form.email} disabled readOnly className="bg-slate-100 dark:bg-slate-900 cursor-not-allowed" />
-          </Field>
+              <div>
+                <label className="text-xs font-black uppercase tracking-wider text-slate-400 block mb-1.5">Email Address</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"><Mail size={16} /></span>
+                  <Input value={form.email} disabled readOnly className="pl-11 rounded-xl bg-slate-50 dark:bg-slate-900 cursor-not-allowed opacity-75" />
+                </div>
+              </div>
+            </div>
+          </div>
 
-          <div className="rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4 min-w-0">
-            <MapPin size={17} className="text-brand-600 mb-2" />
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Join Date</p>
-            <p className="mt-1 font-black text-slate-950 dark:text-white">
-              {profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString() : "Not available"}
-            </p>
+          {/* Section 2: Security & Coordinates */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+              <MapPin size={18} className="text-brand-500" />
+              <h4 className="text-sm font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Security & Metadata</h4>
+            </div>
+
+            <div className="space-y-3.5">
+              <div>
+                <label className="text-xs font-black uppercase tracking-wider text-slate-400 block mb-1.5">
+                  {form.hasPassword ? "Set New Password" : "Set Password"}
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"><User size={16} /></span>
+                  <Input
+                    type="password"
+                    value={form.password}
+                    onChange={(e) => setForm({ ...form, password: e.target.value })}
+                    placeholder="••••••••"
+                    className="pl-11 rounded-xl"
+                  />
+                </div>
+                <p className="mt-1.5 text-[10px] font-semibold text-slate-400 dark:text-slate-500">
+                  Min 6 chars: alphabet, number, special character.
+                </p>
+              </div>
+
+              <div className="rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-850 p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Join Date</p>
+                  <p className="mt-1 font-black text-slate-900 dark:text-white text-sm">
+                    {profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString() : "Not available"}
+                  </p>
+                </div>
+                <div className="w-10 h-10 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center">
+                  <CalendarIcon size={18} />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* --- DELIVERY LOCATION ADDRESS & TEXT AREA SECTION --- */}
         {/* Handles map geocoding controls, address descriptions, and coordinates mappings */}
-        <div className="mt-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+        <div className="mt-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4 sm:p-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
             <div className="min-w-0">
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Delivery Address</p>
-              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">Use your current location or update the address manually.</p>
+              <p className="text-xs font-black uppercase tracking-widest text-slate-400">Delivery Address</p>
+              <p className="text-xs font-bold text-slate-450 dark:text-slate-400 mt-1">Use your current location or update the address manually.</p>
             </div>
             <button
               type="button"
               onClick={useCurrentLocation}
               disabled={locationLoading}
-              className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-brand-50 dark:bg-brand-950/30 text-brand-700 dark:text-brand-300 px-4 py-2.5 text-sm font-black disabled:opacity-60"
+              className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-brand-50 dark:bg-brand-950/30 text-brand-700 dark:text-brand-300 px-4 py-2.5 text-sm font-black transition-colors hover:bg-brand-100 dark:hover:bg-brand-900/50 disabled:opacity-60"
             >
               <Navigation size={16} />
               {locationLoading ? "Detecting..." : "Use My Location"}
@@ -301,17 +344,17 @@ export default function DeliveryProfile() {
             value={form.deliveryAddress}
             onChange={(e) => setForm({ ...form, deliveryAddress: e.target.value })}
             placeholder="House/Street, Area, City, State"
-            className="w-full min-h-28 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 text-sm font-semibold text-slate-900 dark:text-white outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 resize-y break-words"
+            className="w-full min-h-24 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 text-sm font-semibold text-slate-900 dark:text-white outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 resize-y break-words"
           />
         </div>
 
         {/* --- ACTION BUTTON SECTION --- */}
         {/* Displays responsive row for updating profile attributes and logging out */}
-        <div className="mt-5 grid grid-cols-1 sm:flex sm:flex-row gap-3">
-          <Button onClick={saveProfile} disabled={saving} className="flex-1 rounded-2xl gap-2 py-3">
+        <div className="mt-6 grid grid-cols-1 sm:flex sm:flex-row gap-3">
+          <Button onClick={saveProfile} disabled={saving} className="flex-1 rounded-2xl gap-2 py-3.5 font-black">
             <Save size={18} /> {saving ? "Saving..." : completedFromServer ? "Update Profile" : "Complete Profile"}
           </Button>
-          <Button onClick={logout} variant="danger" className="rounded-2xl gap-2 py-3 sm:w-44">
+          <Button onClick={logout} variant="danger" className="rounded-2xl gap-2 py-3.5 font-black sm:w-44">
             <LogOut size={18} /> Logout
           </Button>
         </div>
@@ -320,14 +363,14 @@ export default function DeliveryProfile() {
   );
 }
 
-// Sub-component defining wrapper label fields with dynamic icon headers and titles
-function Field({ label, icon: Icon, children }) {
-  const FieldIcon = Icon;
+// CalendarIcon component for layout
+function CalendarIcon({ size = 18 }) {
   return (
-    <label className="rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4 block min-w-0">
-      <FieldIcon size={17} className="text-brand-600 mb-2" />
-      <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2 block">{label}</span>
-      {children}
-    </label>
+    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
+      <line x1="16" x2="16" y1="2" y2="6"/>
+      <line x1="8" x2="8" y1="2" y2="6"/>
+      <line x1="3" x2="21" y1="10" y2="10"/>
+    </svg>
   );
 }

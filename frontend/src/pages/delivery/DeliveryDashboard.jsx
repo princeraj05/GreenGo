@@ -85,11 +85,16 @@ export default function DeliveryDashboard() {
         </div>
       ) : (
         /* --- STATISTICS CARDS SECTION --- */
-        /* Main metric cards. Employs a responsive grid ('grid-cols-1 min-[420px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5') */
-        <div className="grid grid-cols-1 min-[420px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
-          {cards.map(({ label, value, icon, color, accent }) => (
+        /* Main metric cards. Employs a responsive grid ('grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5') */
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
+          {cards.map(({ label, value, icon, color, accent }, index) => (
             /* Individual Metric Card: flex column configuration with 'justify-between' for top-bottom alignment */
-            <div key={label} className="relative overflow-hidden group rounded-2xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 p-4 sm:p-5 shadow-sm min-h-[132px] sm:min-h-[142px] flex flex-col justify-between transition-all duration-300 hover:shadow-md">
+            <div
+              key={label}
+              className={`relative overflow-hidden group rounded-2xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 p-4 sm:p-5 shadow-sm min-h-[132px] sm:min-h-[142px] flex flex-col justify-between transition-all duration-300 hover:shadow-md ${
+                index === 4 ? "col-span-2 md:col-span-1" : ""
+              }`}
+            >
               <div className="flex items-center justify-between mb-3">
                 <span className={`w-11 h-11 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110 ${color}`}>
                   {createElement(icon, { size: 22 })}
