@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Edit2, Trash2, UploadCloud, X, LayoutGrid, Image } from "lucide-react";
+import { Plus, Edit2, Trash2, UploadCloud, X, LayoutGrid, Image, Crop } from "lucide-react";
 import API from "../../api/axios";
 import { getToken } from "../../utils/getToken";
 import Button from "../../components/ui/Button";
@@ -53,6 +53,26 @@ export default function ManageCategories() {
   const handleCropCancel = () => {
     setCropperOpen(false);
     setRawFile(null);
+  };
+
+  const handleEditExistingImage = async () => {
+    if (imageFile) {
+      setRawFile(imageFile);
+      setCropperOpen(true);
+    } else if (preview) {
+      try {
+        setLoading(true);
+        const response = await fetch(preview);
+        const blob = await response.blob();
+        const file = new File([blob], "category-image.jpg", { type: blob.type });
+        setRawFile(file);
+        setCropperOpen(true);
+      } catch (err) {
+        alert("Failed to edit image: " + err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -224,13 +244,15 @@ export default function ManageCategories() {
             <div className="border-b border-slate-100 dark:border-slate-800 mb-4" />
 
             <div className="relative mb-5">
-              <input
-                id="categoryImageInput"
-                type="file"
-                onChange={handleFileChange}
-                accept="image/*"
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-              />
+              {!preview && (
+                <input
+                  id="categoryImageInput"
+                  type="file"
+                  onChange={handleFileChange}
+                  accept="image/*"
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                />
+              )}
               <div className={`w-full aspect-square rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-3 transition-colors overflow-hidden ${
                 preview ? "border-emerald-300 dark:border-emerald-700" : "border-slate-200 dark:border-slate-700 hover:border-emerald-300"
               }`}>
@@ -249,13 +271,24 @@ export default function ManageCategories() {
                 )}
               </div>
               {preview && (
-                <button
-                  type="button"
-                  onClick={() => { setPreview(""); setImageFile(null); const inp = document.getElementById("categoryImageInput"); if (inp) inp.value = ""; }}
-                  className="absolute top-2 right-2 z-20 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center shadow-md"
-                >
-                  <X size={14} />
-                </button>
+                <div className="absolute top-2 right-2 z-20 flex gap-1.5">
+                  <button
+                    type="button"
+                    onClick={handleEditExistingImage}
+                    className="w-8 h-8 bg-emerald-500 text-white rounded-full flex items-center justify-center shadow-md hover:bg-emerald-600 transition-all"
+                    title="Crop & Rotate"
+                  >
+                    <Crop size={14} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setPreview(""); setImageFile(null); const inp = document.getElementById("categoryImageInput"); if (inp) inp.value = ""; }}
+                    className="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center shadow-md hover:bg-red-650 transition-all"
+                    title="Remove Image"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
               )}
             </div>
 
