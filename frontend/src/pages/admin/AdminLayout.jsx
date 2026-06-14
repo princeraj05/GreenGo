@@ -10,6 +10,7 @@ import { getToken } from "../../utils/getToken";
 import { clearSession } from "../../utils/authStorage";
 import { cn } from "../../utils/cn";
 import { useTheme } from "../../context/ThemeContext";
+import { speakText } from "../../utils/ttsService";
 
 // Framer Motion helper for animated layout divisions
 const MotionDiv = motion.div;
@@ -48,6 +49,10 @@ export default function AdminLayout() {
 
   // Mobile bottom-sheet 'More' options drawer toggle
   const [moreOpen, setMoreOpen] = useState(false);
+
+  // States to track new orders and cancellation requests for TTS announcements
+  const [knownOrderIds, setKnownOrderIds] = useState(new Set());
+  const [knownCancellationIds, setKnownCancellationIds] = useState(new Set());
 
   // ==========================================
   // EVENT HANDLERS & ROUTINES
@@ -143,6 +148,61 @@ export default function AdminLayout() {
     }
   }, []);
 
+  const checkNewOrdersAndCancellations = useCallback(async () => {
+    const token = await getToken();
+    if (!token) return;
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/orders`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const orders = await res.json();
+        if (!Array.isArray(orders)) return;
+
+        setKnownOrderIds((prevOrderIds) => {
+          setKnownCancellationIds((prevCancellationIds) => {
+            const isFirstLoad = prevOrderIds.size === 0;
+
+            const currentOrderIds = new Set(orders.map(o => o._id));
+            const currentCancellationIds = new Set(
+              orders.filter(o => o.status === "CancellationRequested").map(o => o._id)
+            );
+
+            if (!isFirstLoad) {
+              let hasNewCancellation = false;
+              for (const id of currentCancellationIds) {
+                if (!prevCancellationIds.has(id)) {
+                  hasNewCancellation = true;
+                  break;
+                }
+              }
+
+              let hasNewOrder = false;
+              for (const id of currentOrderIds) {
+                if (!prevOrderIds.has(id)) {
+                  hasNewOrder = true;
+                  break;
+                }
+              }
+
+              if (hasNewCancellation) {
+                speakText("New cancellation order request received.");
+              } else if (hasNewOrder) {
+                speakText("New order received.");
+              }
+            }
+
+            return currentCancellationIds;
+          });
+
+          return new Set(orders.map(o => o._id));
+        });
+      }
+    } catch (err) {
+      console.error("Failed to check new orders/cancellations:", err);
+    }
+  }, []);
+
   // Poll notifications periodically and load basic profiles on mount
   useEffect(() => { 
     if (window.diagnostics) {
@@ -153,10 +213,15 @@ export default function AdminLayout() {
     Promise.resolve().then(() => {
       loadAdmin(); 
       loadAlerts();
+      checkNewOrdersAndCancellations();
     });
     const timer = setInterval(loadAlerts, 15000);
-    return () => clearInterval(timer);
-  }, [loadAdmin, loadAlerts]);
+    const orderTimer = setInterval(checkNewOrdersAndCancellations, 10000);
+    return () => {
+      clearInterval(timer);
+      clearInterval(orderTimer);
+    };
+  }, [loadAdmin, loadAlerts, checkNewOrdersAndCancellations]);
 
   // Sidebar Links config (Desktop layout views)
   const desktopNavLinks = [

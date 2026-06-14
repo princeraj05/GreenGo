@@ -39,6 +39,7 @@ import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
 import Card from "../../components/ui/Card";
 import { getApiUrl, getImageUrl } from "../../utils/getApiUrl";
+import { speakText } from "../../utils/ttsService";
 
 const API = getApiUrl();
 const MotionDiv = motion.div;
@@ -111,6 +112,14 @@ export default function Profile() {
     }, 3500);
     return () => clearInterval(timer);
   }, [developerPhotoCandidates.length]);
+
+  useEffect(() => {
+    if (activeSection === "edit") {
+      speakText("Please complete your profile. Add your name, phone number, password, and birthday date.");
+    } else if (activeSection === "addresses") {
+      speakText("Please fill your address. Choose current location or any location.");
+    }
+  }, [activeSection]);
 
   const showMessage = (text, type = "success") => {
     setMessage(text);
