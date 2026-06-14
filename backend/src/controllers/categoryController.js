@@ -72,27 +72,3 @@ export const deleteCategory = async (req, res) => {
     res.status(500).json({ message: "Failed to delete category" });
   }
 };
-
-// SEED DEFAULT CATEGORIES
-export const seedCategories = async () => {
-  try {
-    const count = await Category.countDocuments();
-    if (count > 0) return;
-
-    const defaultCategories = [
-      "Starter", "Combo", "Roti", "Pizza", "Burger", "Biryani", "Rolls", "Fries",
-      "North Indian", "Desserts", "Bowl", "Veg Meal", "Paneer", "Paratha", "Sandwich",
-      "Rice", "Cake", "Dal", "Thali", "Aloo Paratha", "Italian", "Shawarma", "Noodles",
-      "Shake", "Pasta", "Dal Makhani", "Patty", "Paneer Biryani", "Rajma Rice",
-      "Mousse", "Milkshake", "Sweets", "Ice Cream", "Cold Coffee", "Cheesecake",
-      "Brownie", "Tea", "Gulab Jamun", "Pastry", "Chaap", "Rajma", "Kulche",
-      "Kebabs", "Maggi", "Bhurji", "Juice", "Chicken", "Non-Veg", "Drinks"
-    ];
-
-    const bulkData = defaultCategories.map(name => ({ name }));
-    await Category.insertMany(bulkData);
-    console.log("🌱 Default categories seeded successfully!");
-  } catch (err) {
-    console.error("❌ Failed to seed default categories:", err.message);
-  }
-};

@@ -45,6 +45,36 @@ export default function App() {
         if (window.diagnostics) {
           window.diagnostics.addLog("App: Stored token found, verifying with /api/users/me");
         }
+
+        // Optimistic UI: Use offline cached role/decoded token to render the page instantly
+        let offlineRole = session.userData?.role;
+        if (!offlineRole) {
+          try {
+            const decoded = jwtDecode(session.token);
+            offlineRole = decoded.role;
+          } catch (e) {
+            console.error("App: Failed to decode token offline", e);
+          }
+        }
+
+        if (offlineRole) {
+          if (
+            location.pathname === "/" ||
+            location.pathname === "/login" ||
+            location.pathname === "/register"
+          ) {
+            if (offlineRole === "admin") {
+              navigate("/admin", { replace: true });
+            } else {
+              navigate("/user/menu", { replace: true });
+            }
+          }
+          setCheckingAuth(false);
+          if (Capacitor.isNativePlatform()) {
+            SplashScreen.hide().catch((err) => console.log("Splashscreen hide error", err));
+          }
+        }
+
         try {
           const res = await API.get("/api/users/me");
           const userData = res.data;
@@ -63,6 +93,8 @@ export default function App() {
               navigate("/user/menu", { replace: true });
             }
           }
+          // Update cached user data
+          localStorage.setItem("user_data", JSON.stringify(userData));
         } catch (err) {
           console.error("App: Session verification failed:", err);
           if (window.diagnostics) {
@@ -71,32 +103,9 @@ export default function App() {
           // If server explicitly returns 401 or 403, clear the session
           if (err.response && (err.response.status === 401 || err.response.status === 403)) {
             await clearSession();
+            setCheckingAuth(true); // Show loader before redirecting
             if ((location.pathname.startsWith("/user") && !isGuestUserPath(location.pathname)) || location.pathname.startsWith("/admin")) {
               navigate("/", { replace: true, state: { from: location, loginRequired: true } });
-            }
-          } else {
-            // Network error/offline: allow offline session restoration using decoded JWT role
-            try {
-              const decoded = jwtDecode(session.token);
-              if (window.diagnostics) {
-                window.diagnostics.addLog("App: Server offline, decoded role from JWT offline");
-              }
-              if (
-                location.pathname === "/" ||
-                location.pathname === "/login" ||
-                location.pathname === "/register"
-              ) {
-                if (decoded.role === "admin") {
-                  navigate("/admin", { replace: true });
-                } else {
-                  navigate("/user/menu", { replace: true });
-                }
-              }
-            } catch {
-              await clearSession();
-              if ((location.pathname.startsWith("/user") && !isGuestUserPath(location.pathname)) || location.pathname.startsWith("/admin")) {
-                navigate("/", { replace: true, state: { from: location, loginRequired: true } });
-              }
             }
           }
         }

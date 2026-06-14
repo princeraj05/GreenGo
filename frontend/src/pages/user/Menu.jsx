@@ -128,8 +128,15 @@ export default function Menu() {
 
   /* --- STATE DECLARATIONS --- */
   
-  // foods: Full inventory downloaded from API
-  const [foods, setFoods] = useState([]);
+  // foods: Full inventory downloaded from API (restored from cache initially)
+  const [foods, setFoods] = useState(() => {
+    try {
+      const cached = localStorage.getItem("cached_foods");
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
   // search: Raw input text matching product labels
   const [search, setSearch] = useState("");
   // category: Active filtering tag category ("All", "Pizza", "Favorites", etc.)
@@ -142,8 +149,15 @@ export default function Menu() {
   const [showAllCategories, setShowAllCategories] = useState(false);
   // showAllFoods: Expands items section lists
   const [showAllFoods, setShowAllFoods] = useState(false);
-  // loading: Spinner visibility tracker
-  const [loading, setLoading] = useState(true);
+  // loading: Spinner visibility tracker (false if cache exists)
+  const [loading, setLoading] = useState(() => {
+    try {
+      const cached = localStorage.getItem("cached_foods");
+      return cached ? JSON.parse(cached).length === 0 : true;
+    } catch {
+      return true;
+    }
+  });
   
   // selectedFood: Food item object actively opened in Details modal
   const [selectedFood, setSelectedFood] = useState(null);
@@ -177,7 +191,14 @@ export default function Menu() {
   // currentBannerIdx: Slide position of the hero offer banner
   const [currentBannerIdx, setCurrentBannerIdx] = useState(0);
 
-  const [dynamicCategories, setDynamicCategories] = useState([]);
+  const [dynamicCategories, setDynamicCategories] = useState(() => {
+    try {
+      const cached = localStorage.getItem("cached_categories");
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
   const categoriesList = useMemo(() => {
     return dynamicCategories.length ? dynamicCategories : defaultCategoriesList;
   }, [dynamicCategories]);
@@ -318,7 +339,7 @@ export default function Menu() {
       const res = await fetch(`${API}/api/categories`);
       if (res.ok) {
         const data = await res.json();
-        setDynamicCategories([
+        const formatted = [
           { id: "All", name: "All", icon: "All", image: "/greengo-logo.png" },
           ...data.map(c => ({
             id: c.name,
@@ -326,7 +347,9 @@ export default function Menu() {
             icon: c.name.slice(0, 2).toUpperCase(),
             image: c.image ? (c.image.startsWith("http") ? c.image : `${API}/uploads/${c.image}`) : ""
           }))
-        ]);
+        ];
+        setDynamicCategories(formatted);
+        localStorage.setItem("cached_categories", JSON.stringify(formatted));
       }
     } catch (err) {
       console.error("Failed to load categories:", err);
@@ -397,7 +420,9 @@ export default function Menu() {
     try {
       const res = await fetch(`${API}/api/foods`);
       if (res.ok) {
-        setFoods(await res.json());
+        const data = await res.json();
+        setFoods(data);
+        localStorage.setItem("cached_foods", JSON.stringify(data));
       }
     } catch (err) {
       console.error("Failed to load foods:", err);
