@@ -15,7 +15,7 @@ export const seedInitialReviews = async () => {
     console.log("🌱 Seeding initial reviews...");
 
     // Find a user or create a default one
-    let user = await User.findOne({ role: "user" });
+    let user = await User.findOne({ role: "customer" });
     if (!user) {
       user = await User.findOne();
     }
@@ -24,7 +24,7 @@ export const seedInitialReviews = async () => {
         name: "Priya Sharma",
         email: "priya@example.com",
         password: "hashedpassword123",
-        role: "user",
+        role: "customer",
       });
     }
 

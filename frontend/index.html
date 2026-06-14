@@ -31,7 +31,16 @@
           if (window.updateDiagnosticsUI) {
             window.updateDiagnosticsUI();
           }
-          showFallbackError(err);
+          var isRoutineAuthError = err && (
+            err.indexOf("Verification failed") > -1 || 
+            err.indexOf("401") > -1 || 
+            err.indexOf("403") > -1 || 
+            err.indexOf("No token found") > -1 || 
+            err.indexOf("failed: status") > -1
+          );
+          if (!isRoutineAuthError) {
+            showFallbackError(err);
+          }
         }
       };
 

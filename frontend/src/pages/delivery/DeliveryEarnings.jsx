@@ -1,5 +1,5 @@
 import { createElement, useEffect, useState } from "react";
-import { Package, User, Wallet } from "lucide-react";
+import { Package, User, Wallet, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import API from "../../api/axios";
 import Badge from "../../components/ui/Badge";
@@ -46,12 +46,21 @@ export default function DeliveryEarnings() {
 
   // --- STATIC METRIC CARD CONFIGURATIONS ---
   // Mapping the fetched earnings data to array key-value pairs for render mapping
+  const todayStr = new Date().toDateString();
+  const todayEarnings = (data?.rows || [])
+    .filter((row) => {
+      if (row.status !== "Delivered") return false;
+      return new Date(row.date).toDateString() === todayStr;
+    })
+    .reduce((sum, row) => sum + Number(row.deliveryBoyAmount || 0), 0);
+
   const cards = [
-    { label: "Total COD Orders", value: data?.totalCodOrders || 0, icon: Package, color: "text-blue-600 bg-blue-100 dark:bg-blue-950/30", accent: "from-blue-500 to-blue-600" },
-    { label: "Delivery Pay", value: `Rs. ${data?.totalDeliveryBoyAmount || 0}`, icon: Wallet, color: "text-cyan-600 bg-cyan-100 dark:bg-cyan-950/30", accent: "from-cyan-500 to-cyan-600" },
-    { label: "Total COD Amount", value: `Rs. ${data?.totalCodAmount || 0}`, icon: Wallet, color: "text-amber-600 bg-amber-100 dark:bg-amber-950/30", accent: "from-amber-500 to-amber-600" },
-    { label: "Delivered COD Orders", value: data?.deliveredCodOrders || 0, icon: Package, color: "text-emerald-600 bg-emerald-100 dark:bg-emerald-950/30", accent: "from-emerald-500 to-emerald-600" },
-    { label: "Current Credit", value: `Rs. ${data?.currentCredit || 0}`, icon: Wallet, color: "text-brand-600 bg-brand-100 dark:bg-brand-950/30", accent: "from-brand-500 to-brand-600" },
+    { label: "Today's Earnings", value: `Rs. ${todayEarnings}`, icon: Sparkles, color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/30", accent: "from-emerald-400 to-emerald-500", highlight: true },
+    { label: "Total COD Orders", value: data?.totalCodOrders || 0, icon: Package, color: "text-blue-600 bg-blue-100 dark:bg-blue-950/30 border-slate-100 dark:border-slate-800", accent: "from-blue-500 to-blue-600" },
+    { label: "Delivery Pay", value: `Rs. ${data?.totalDeliveryBoyAmount || 0}`, icon: Wallet, color: "text-cyan-600 bg-cyan-100 dark:bg-cyan-950/30 border-slate-100 dark:border-slate-800", accent: "from-cyan-500 to-cyan-600" },
+    { label: "Total COD Amount", value: `Rs. ${data?.totalCodAmount || 0}`, icon: Wallet, color: "text-amber-600 bg-amber-100 dark:bg-amber-950/30 border-slate-100 dark:border-slate-800", accent: "from-amber-500 to-amber-600" },
+    { label: "Delivered COD Orders", value: data?.deliveredCodOrders || 0, icon: Package, color: "text-emerald-600 bg-emerald-100 dark:bg-emerald-950/30 border-slate-100 dark:border-slate-800", accent: "from-emerald-500 to-emerald-600" },
+    { label: "Current Credit", value: `Rs. ${data?.currentCredit || 0}`, icon: Wallet, color: "text-brand-600 bg-brand-100 dark:bg-brand-950/30 border-slate-100 dark:border-slate-800", accent: "from-brand-500 to-brand-600" },
   ];
 
   return (
@@ -80,13 +89,15 @@ export default function DeliveryEarnings() {
       ) : (
         <>
           {/* --- EARNING METRIC CARDS SECTION --- */}
-          {/* Grid layout with dynamic columns: 2 columns on mobile, 3 on medium, 4 on lg, 5 on wide desktops */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
-            {cards.map(({ label, value, icon, color, accent }, index) => (
+          {/* Grid layout with dynamic columns: 2 columns on mobile, 3 on medium, 4 on lg, 6 on wide desktops */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 sm:gap-4">
+            {cards.map(({ label, value, icon, color, accent, highlight }) => (
               <div
                 key={label}
-                className={`relative overflow-hidden group rounded-2xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 p-4 sm:p-5 shadow-sm min-h-[132px] sm:min-h-[142px] flex flex-col justify-between transition-all duration-300 hover:shadow-md ${
-                  index === 4 ? "col-span-2 md:col-span-1" : ""
+                className={`relative overflow-hidden group rounded-2xl border p-4 sm:p-5 shadow-sm min-h-[132px] sm:min-h-[142px] flex flex-col justify-between transition-all duration-300 hover:shadow-md ${
+                  highlight
+                    ? "bg-slate-900 dark:bg-slate-950/60 border-emerald-500/30 col-span-2 shadow-emerald-950/20 shadow-lg"
+                    : "bg-white dark:bg-slate-950 border-slate-100 dark:border-slate-800"
                 }`}
               >
                 <div className="flex items-center justify-between mb-3">

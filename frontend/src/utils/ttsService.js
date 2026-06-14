@@ -1,143 +1,130 @@
 import { Preferences } from "@capacitor/preferences";
+import { TextToSpeech } from "@capacitor-community/text-to-speech";
+import { Capacitor } from "@capacitor/core";
 
 /**
  * TTS Service for GreenGo Food Delivery Application
- * Handles speech synthesis using the device's native SpeechSynthesis (Web Speech API).
- * Works seamlessly across Web, Android, and iOS through the Capacitor web view.
+ * Uses native Capacitor TTS on Android APK and falls back to window.speechSynthesis on Web.
  */
 
 // Voice configuration for order statuses
 export const ORDER_STATUS_VOICES = {
-  Confirmed: "Thank you for choosing GreenGo! Your order has been successfully confirmed. The restaurant is now preparing your order. You can track your order and view its live status in the app.",
-  Cancelled: "Your order cancellation request has been submitted successfully. Please wait for the admin's response. We will notify you once your request has been reviewed."
+  Pending: "Your order has been placed successfully.",
+  Preparing: "Good news. Your order has been confirmed and is being prepared.",
+  CancellationRequested: "Your cancellation request has been submitted. Please wait for admin approval.",
+  Cancelled: "Your order has been cancelled."
 };
 
+let lastAnnouncement = "";
+
 /**
- * Plays a Text-to-Speech message for a specific order if Hindi is available,
- * otherwise falls back to the default device language.
+ * Plays a Text-to-Speech message.
  *
  * @param {string} text - The text message to speak.
  */
-export const speakText = (text) => {
-  return new Promise((resolve, reject) => {
-    try {
-      if (!window.speechSynthesis) {
-        console.warn("TTS Service: Web Speech API is not supported in this environment.");
-        return resolve(false);
-      }
+export const speakText = async (text) => {
+  try {
+    // Prevent duplicate announcements of the exact same text within a short timeframe
+    if (lastAnnouncement === text) {
+      console.log("TTS Service: Already announcing this message. Skipping.");
+      return;
+    }
+    lastAnnouncement = text;
+    setTimeout(() => {
+      if (lastAnnouncement === text) lastAnnouncement = "";
+    }, 4000);
 
-      // Cancel any ongoing speech before starting a new one
+    // 1. Native Platform (Android APK)
+    if (Capacitor.isNativePlatform()) {
+      console.log("TTS Service: Using Native Capacitor TTS for:", text);
+      try {
+        await TextToSpeech.stop();
+      } catch (e) {
+        console.warn("TTS Service: Error stopping native speech:", e);
+      }
+      
+      await TextToSpeech.speak({
+        text: text,
+        lang: 'en-US',
+        rate: 0.9,
+        pitch: 1.0,
+        volume: 1.0,
+        category: 'ambient',
+      });
+      return true;
+    }
+
+    // 2. Web Fallback
+    if (typeof window !== "undefined" && window.speechSynthesis) {
+      console.log("TTS Service: Using Web SpeechSynthesis Fallback for:", text);
       window.speechSynthesis.cancel();
 
       const utterance = new SpeechSynthesisUtterance(text);
-
-      // Fetch available voices on the device
-      const voices = window.speechSynthesis.getVoices();
-
-      // Find a Hindi voice (language code 'hi' or 'hi-IN')
-      const hindiVoice = voices.find(
-        (voice) => voice.lang.startsWith("hi") || voice.lang.includes("hi-IN")
-      );
-
-      if (hindiVoice) {
-        utterance.voice = hindiVoice;
-        utterance.lang = hindiVoice.lang;
-        console.log(`TTS Service: Using Hindi voice: ${hindiVoice.name}`);
-      } else {
-        console.log("TTS Service: Hindi voice not found. Falling back to default device language.");
-        // We let the browser/OS choose the default language voice by not setting utterance.voice
-      }
-
-      // Configure speech parameters for a natural announcement tone
-      utterance.rate = 0.9; // Slightly slower for better comprehension
+      utterance.rate = 0.9;
       utterance.pitch = 1.0;
 
-      utterance.onend = () => {
-        console.log("TTS Service: Playback completed successfully.");
-        resolve(true);
-      };
-
-      utterance.onerror = (event) => {
-        console.error("TTS Service: Playback error occurred:", event.error);
-        // Log the error but resolve to prevent blocking order flow
-        resolve(false);
-      };
+      // Try to use a clean English voice
+      const voices = window.speechSynthesis.getVoices();
+      const engVoice = voices.find(v => v.lang.startsWith("en"));
+      if (engVoice) utterance.voice = engVoice;
 
       window.speechSynthesis.speak(utterance);
-    } catch (err) {
-      console.error("TTS Service: Initialization or playback failed:", err);
-      resolve(false);
+      return true;
+    } else {
+      console.warn("TTS Service: Speech synthesis is not supported in this environment.");
+      return false;
     }
-  });
+  } catch (err) {
+    console.error("TTS Service: Speech synthesis failed:", err);
+    return false;
+  }
 };
 
 /**
- * Handles playing the order confirmation voice message if it has not been played yet.
- * Uses Capacitor Preferences to persist playback status across sessions, navigation changes, and app restarts.
+ * Handles playing the order confirmation or status change voice message if it has not been played yet.
+ * Uses Capacitor Preferences to persist playback status across sessions.
  *
  * @param {string} orderId - The unique ID of the order.
  * @param {string} status - The status of the order.
  */
-export const playOrderConfirmationVoice = async (orderId, status) => {
-  if (!orderId || (status !== "Preparing" && status !== "Pending")) {
-    return;
-  }
+export const playOrderStatusVoice = async (orderId, status) => {
+  if (!orderId || !status) return;
+
+  const validStatuses = ["Pending", "Preparing", "CancellationRequested", "Cancelled"];
+  if (!validStatuses.includes(status)) return;
+
+  const message = ORDER_STATUS_VOICES[status];
+  if (!message) return;
 
   try {
-    const key = `tts_played_confirmed_${orderId}`;
+    const key = `tts_played_${status}_${orderId}`;
     
-    // Check if the confirmation message has already been played for this order
+    // Check if this status message has already been played for this order
     const { value } = await Preferences.get({ key });
     if (value === "true") {
-      console.log(`TTS Service: Message already played for order ${orderId}. Skipping duplicate playback.`);
+      console.log(`TTS Service: Status ${status} message already played for order ${orderId}. Skipping.`);
       return;
     }
 
-    // Mark as played BEFORE playing to prevent race conditions during rapid component re-renders
+    // Mark as played BEFORE playing to prevent race conditions
     await Preferences.set({ key, value: "true" });
 
-    // Speak the confirmation message
-    const message = ORDER_STATUS_VOICES.Confirmed;
-    console.log(`TTS Service: Initiating voice announcement for confirmed order ${orderId}.`);
+    console.log(`TTS Service: Initiating status voice alert for ${status} (order: ${orderId}).`);
     await speakText(message);
   } catch (err) {
-    // Log the error without affecting the application or order flow
-    console.error("TTS Service: Failed during duplicate check or execution:", err);
+    console.error("TTS Service: Error in playOrderStatusVoice:", err);
   }
 };
 
-/**
- * Handles playing the order cancellation voice message if it has not been played yet.
- * Uses Capacitor Preferences to persist playback status across sessions, navigation changes, and app restarts.
- *
- * @param {string} orderId - The unique ID of the order.
- */
+// Legacy compatibility exports for index/others
+export const playOrderConfirmationVoice = async (orderId, status) => {
+  if (status === "Pending" || status === "Preparing") {
+    await playOrderStatusVoice(orderId, status);
+  }
+};
+
 export const playOrderCancellationVoice = async (orderId) => {
-  if (!orderId) {
-    return;
-  }
-
-  try {
-    const key = `tts_played_cancelled_${orderId}`;
-    
-    // Check if the cancellation message has already been played for this order
-    const { value } = await Preferences.get({ key });
-    if (value === "true") {
-      console.log(`TTS Service: Cancellation message already played for order ${orderId}. Skipping duplicate playback.`);
-      return;
-    }
-
-    // Mark as played BEFORE playing to prevent race conditions during rapid component re-renders
-    await Preferences.set({ key, value: "true" });
-
-    // Speak the cancellation message
-    const message = ORDER_STATUS_VOICES.Cancelled;
-    console.log(`TTS Service: Initiating voice announcement for cancelled order ${orderId}.`);
-    await speakText(message);
-  } catch (err) {
-    // Log the error without affecting the application or order flow
-    console.error("TTS Service: Failed during duplicate check or execution:", err);
-  }
+  await playOrderStatusVoice(orderId, "CancellationRequested");
 };
 
 // Ensure voices are loaded asynchronously in Chrome/Android WebViews

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { MessageCircle, RefreshCw, Send } from "lucide-react";
-import { getToken } from "../../utils/getToken";
+import API from "../../api/axios";
 
 /**
  * Contact Component
@@ -29,13 +29,8 @@ export default function Contact() {
    */
   async function loadUserProfile() {
     try {
-      const token = await getToken();
-      if (!token) return;
-
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/me`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const user = await res.json();
+      const res = await API.get("/api/users/me");
+      const user = res.data;
 
       setForm((prev) => ({
         ...prev,
@@ -52,13 +47,8 @@ export default function Contact() {
    */
   async function loadMyContacts() {
     try {
-      const token = await getToken();
-      if (!token) return;
-
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/contact/my`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
+      const res = await API.get("/api/contact/my");
+      const data = res.data;
       setContacts(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Failed to load messages", err);
@@ -85,24 +75,13 @@ export default function Contact() {
     event.preventDefault();
     setLoading(true);
 
-    const token = await getToken();
-    if (!token) {
-      setLoading(false);
-      return alert("Login required");
-    }
-
     try {
-      await fetch(`${import.meta.env.VITE_API_URL}/api/contact`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(form),
-      });
-
+      await API.post("/api/contact", form);
       setForm({ ...form, message: "" });
       await loadMyContacts();
+    } catch (err) {
+      console.error("Failed to submit support request:", err);
+      alert("Failed to send support message. Please try again.");
     } finally {
       setLoading(false);
     }

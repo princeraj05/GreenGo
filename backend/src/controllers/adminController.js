@@ -4,7 +4,7 @@ import Food from "../models/Food.js";
 
 export const getAdminStats = async (req, res) => {
   try {
-    const users = await User.countDocuments({ role: "user" });
+    const users = await User.countDocuments({ role: "customer" });
     const orders = await Order.countDocuments();
     const foods = await Food.countDocuments();
 

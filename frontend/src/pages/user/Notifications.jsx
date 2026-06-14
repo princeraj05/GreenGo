@@ -8,10 +8,26 @@ import { getToken } from "../../utils/getToken";
 /* --- HELPER FUNCTIONS --- */
 
 const getTypeIcon = (notification) => {
-  const title = `${notification.title || ""} ${notification.message || ""}`.toLowerCase();
-  if (title.includes("coupon") || title.includes("promo")) return <Gift size={16} />;
-  if (title.includes("support") || title.includes("reply")) return <MessageCircle size={16} />;
-  if (title.includes("order")) return <PackageCheck size={16} />;
+  const title = (notification.title || "").toLowerCase();
+  const msg = (notification.message || "").toLowerCase();
+  const fullText = `${title} ${msg}`;
+
+  if (fullText.includes("placed")) {
+    return <span className="text-base select-none leading-none">🟢</span>;
+  }
+  if (fullText.includes("cancellation requested") || fullText.includes("cancellation request received")) {
+    return <span className="text-base select-none leading-none">🟠</span>;
+  }
+  if (fullText.includes("order cancelled") || fullText.includes("cancelled")) {
+    return <span className="text-base select-none leading-none">🔴</span>;
+  }
+  if (fullText.includes("out for delivery") || fullText.includes("dispatched")) {
+    return <span className="text-base select-none leading-none">🚚</span>;
+  }
+
+  if (fullText.includes("coupon") || fullText.includes("promo")) return <Gift size={16} />;
+  if (fullText.includes("support") || fullText.includes("reply")) return <MessageCircle size={16} />;
+  if (fullText.includes("order")) return <PackageCheck size={16} />;
   return <Bell size={16} />;
 };
 
@@ -23,7 +39,25 @@ const cleanMessage = (msg) => {
   return cleaned.replace(/\s+/g, " ").trim();
 };
 
-const getAccentClass = (type) => {
+const getAccentClass = (notification) => {
+  const title = (notification.title || "").toLowerCase();
+  const msg = (notification.message || "").toLowerCase();
+  const fullText = `${title} ${msg}`;
+
+  if (fullText.includes("placed")) {
+    return "bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-950/25 dark:text-emerald-300 dark:border-emerald-900/40";
+  }
+  if (fullText.includes("cancellation requested") || fullText.includes("cancellation request received")) {
+    return "bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-950/25 dark:text-amber-300 dark:border-amber-900/40";
+  }
+  if (fullText.includes("order cancelled") || fullText.includes("cancelled")) {
+    return "bg-rose-50 text-rose-600 border-rose-100 dark:bg-rose-950/25 dark:text-rose-300 dark:border-rose-900/40";
+  }
+  if (fullText.includes("out for delivery") || fullText.includes("dispatched")) {
+    return "bg-sky-50 text-sky-600 border-sky-100 dark:bg-sky-950/25 dark:text-sky-300 dark:border-sky-900/40";
+  }
+
+  const type = notification.type;
   if (type === "success") return "bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-950/25 dark:text-emerald-300 dark:border-emerald-900/40";
   if (type === "warning") return "bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-950/25 dark:text-amber-300 dark:border-amber-900/40";
   return "bg-blue-50 text-blue-600 border-blue-100 dark:bg-blue-950/25 dark:text-blue-300 dark:border-blue-900/40";
@@ -159,7 +193,7 @@ export default function Notifications() {
                     }`}
                   >
                     <div className="flex items-start gap-3">
-                      <span className={`shrink-0 w-9 h-9 rounded-lg border flex items-center justify-center ${getAccentClass(notification.type)}`}>
+                      <span className={`shrink-0 w-9 h-9 rounded-lg border flex items-center justify-center ${getAccentClass(notification)}`}>
                         {getTypeIcon(notification)}
                       </span>
                       <span className="min-w-0 flex-1">

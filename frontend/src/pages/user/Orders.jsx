@@ -7,7 +7,7 @@ import Card from "../../components/ui/Card";
 import Badge from "../../components/ui/Badge";
 import { getApiUrl, getImageUrl } from "../../utils/getApiUrl";
 import Button from "../../components/ui/Button";
-import { playOrderConfirmationVoice, playOrderCancellationVoice } from "../../utils/ttsService";
+import { playOrderStatusVoice } from "../../utils/ttsService";
 
 /**
  * Orders Component
@@ -65,9 +65,10 @@ export default function Orders() {
   // internally within playOrderConfirmationVoice using persistent preferences.
   useEffect(() => {
     if (orders && orders.length > 0) {
+      const targetStatuses = ["Pending", "Preparing", "CancellationRequested", "Cancelled"];
       orders.forEach((order) => {
-        if (order.status === "Preparing" || order.status === "Pending") {
-          playOrderConfirmationVoice(order._id, order.status);
+        if (targetStatuses.includes(order.status)) {
+          playOrderStatusVoice(order._id, order.status);
         }
       });
     }
@@ -117,7 +118,7 @@ export default function Orders() {
         // TRIGGER ORDER CANCELLATION VOICE NOTIFICATION
         // Plays the custom cancellation submission voice message.
         // Handled asynchronously with persistent preferences for duplicate prevention.
-        playOrderCancellationVoice(cancellingOrderId);
+        playOrderStatusVoice(cancellingOrderId, "CancellationRequested");
         alert(data.message || "Cancellation request sent successfully.");
       } else {
         alert(data.message || "Failed to submit cancellation request");

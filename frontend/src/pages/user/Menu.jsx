@@ -774,10 +774,9 @@ export default function Menu() {
           >
             {food.name}
           </h4>
-
           <div className="flex items-center gap-1 mb-1.5">
-            <span className={`w-2.5 h-2.5 flex items-center justify-center border ${food.isVeg ? "border-emerald-500" : "border-red-500"} p-0.5 rounded-sm shrink-0`}>
-              <span className={`w-1 h-1 rounded-full ${food.isVeg ? "bg-emerald-500" : "bg-red-500"}`} />
+            <span className={`w-2.5 h-2.5 flex items-center justify-center border ${isVegFood(food) ? "border-emerald-500" : "border-red-500"} p-0.5 rounded-sm shrink-0`}>
+              <span className={`w-1 h-1 rounded-full ${isVegFood(food) ? "bg-emerald-500" : "bg-red-500"}`} />
             </span>
             <span className="text-[8px] text-slate-400 dark:text-slate-500 font-extrabold truncate">
               {getFoodCategoryLabel(food)}
@@ -989,8 +988,8 @@ export default function Menu() {
             </span>
             <span className="text-[10px] sm:text-[11px] font-black tracking-wider leading-none">VEG</span>
           </div>
-          <span className={`relative h-4.5 w-9 rounded-full transition-colors duration-300 ${vegMode ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-700"}`}>
-            <span className={`absolute top-0.5 h-3.5 w-3.5 rounded-full bg-white shadow-md transition-transform duration-300 flex items-center justify-center ${vegMode ? "translate-x-[18px]" : "translate-x-0.5"}`}>
+          <span className={`relative h-5 w-10 rounded-full transition-colors duration-300 ${vegMode ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-700"}`}>
+            <span className={`absolute top-[3px] left-[3px] h-3.5 w-3.5 rounded-full bg-white shadow-md transition-transform duration-300 flex items-center justify-center ${vegMode ? "translate-x-[20px]" : "translate-x-0"}`}>
               {vegMode && <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />}
             </span>
           </span>

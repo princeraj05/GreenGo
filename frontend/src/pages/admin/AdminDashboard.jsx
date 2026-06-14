@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { getToken } from "../../utils/getToken";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { Bike, CheckCircle2, Clock3, IndianRupee, Package, Truck, UtensilsCrossed, Users, XCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import Card from "../../components/ui/Card";
+import API from "../../api/axios";
 
 // Framer Motion helper for animated layout divisions
 const MotionDiv = motion.div;
@@ -41,6 +42,68 @@ export default function AdminDashboard() {
 
   // State to control visibility of the Active Delivery Boys details Modal
   const [showDeliveryBoys, setShowDeliveryBoys] = useState(false);
+
+  const [ordersList, setOrdersList] = useState([]);
+  const [startDate, setStartDate] = useState("2025-10-03");
+  const [endDate, setEndDate] = useState("2026-10-04");
+  const [filterPaymentMethod, setFilterPaymentMethod] = useState("All");
+
+  const loadOrdersList = useCallback(async () => {
+    try {
+      const token = await getToken();
+      if (!token) return;
+      const res = await API.get("/api/orders", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setOrdersList(res.data || []);
+    } catch (err) {
+      console.error("Failed to load orders for earnings history", err);
+    }
+  }, []);
+
+  const filteredOrders = useMemo(() => {
+    const start = startDate ? new Date(startDate) : null;
+    const end = endDate ? new Date(endDate) : null;
+    if (start) start.setHours(0, 0, 0, 0);
+    if (end) end.setHours(23, 59, 59, 999);
+
+    return ordersList.filter((order) => {
+      if (order.status !== "Delivered") return false;
+
+      const orderDate = new Date(order.deliveredAt || order.createdAt);
+      if (start && orderDate < start) return false;
+      if (end && orderDate > end) return false;
+
+      if (filterPaymentMethod !== "All") {
+        const isCod = String(order.paymentMethod || "COD").toUpperCase() === "COD";
+        if (filterPaymentMethod === "COD") return isCod;
+        if (filterPaymentMethod === "UPI/Online") return !isCod;
+      }
+      return true;
+    });
+  }, [ordersList, startDate, endDate, filterPaymentMethod]);
+
+  const { filteredTotal, filteredCod, filteredOnline } = useMemo(() => {
+    let total = 0;
+    let cod = 0;
+    let online = 0;
+
+    filteredOrders.forEach((o) => {
+      const amt = Number(o.total || 0);
+      total += amt;
+      if (String(o.paymentMethod || "COD").toUpperCase() === "COD") {
+        cod += amt;
+      } else {
+        online += amt;
+      }
+    });
+
+    return {
+      filteredTotal: total,
+      filteredCod: cod,
+      filteredOnline: online,
+    };
+  }, [filteredOrders]);
 
   // State for Recharts data inputs (Revenue per month, orders per day, and top food items)
   const [chartData, setChartData] = useState({
@@ -139,8 +202,11 @@ export default function AdminDashboard() {
 
   // Fetch dashboard data on component mount
   useEffect(() => {
-    Promise.resolve().then(loadStats);
-  }, [loadStats]);
+    Promise.resolve().then(() => {
+      loadStats();
+      loadOrdersList();
+    });
+  }, [loadStats, loadOrdersList]);
 
   // Static list configuration for generic high-level stats cards (not rendered but defined)
   const cards = [
@@ -297,10 +363,135 @@ export default function AdminDashboard() {
             </div>
           </Card>
         </MotionDiv>
-        {/* --- END DAILY ORDERS CHART --- */}
-
       </div>
       {/* --- END CHARTS SECTION --- */}
+
+      <MotionDiv
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+        className="mt-8 md:mt-10"
+      >
+        <Card className="p-5 md:p-8 border-slate-100 bg-white dark:bg-slate-950">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800/80 pb-5 mb-6">
+            <div>
+              <h2 className="text-lg md:text-2xl font-black text-slate-950 dark:text-white flex items-center gap-2">
+                💰 Earnings & Payment History
+              </h2>
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">
+                Filter and track revenue collected by payment methods across custom date ranges.
+              </p>
+            </div>
+
+            {/* Filter Inputs Group */}
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex flex-col">
+                <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 mb-1 uppercase">Start Date</span>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="px-3 py-2 text-xs font-bold rounded-xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900 text-slate-900 dark:text-white outline-none"
+                />
+              </div>
+
+              <div className="flex flex-col">
+                <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 mb-1 uppercase">End Date</span>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="px-3 py-2 text-xs font-bold rounded-xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900 text-slate-900 dark:text-white outline-none"
+                />
+              </div>
+
+              <div className="flex flex-col">
+                <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 mb-1 uppercase">Method</span>
+                <select
+                  value={filterPaymentMethod}
+                  onChange={(e) => setFilterPaymentMethod(e.target.value)}
+                  className="px-3 py-2 text-xs font-bold rounded-xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900 text-slate-900 dark:text-white outline-none"
+                >
+                  <option value="All">All Methods</option>
+                  <option value="COD">Cash (COD)</option>
+                  <option value="UPI/Online">UPI / Online</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Range Summary Dashboard Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 flex flex-col justify-between">
+              <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Total Earnings (Realized)</span>
+              <span className="text-2xl font-black text-slate-950 dark:text-white mt-1">₹{filteredTotal}</span>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500 mt-2 font-bold">{filteredOrders.length} delivered orders</span>
+            </div>
+
+            <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 flex flex-col justify-between">
+              <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider">Cash Collected (COD)</span>
+              <span className="text-2xl font-black text-slate-950 dark:text-white mt-1">₹{filteredCod}</span>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500 mt-2 font-bold">{filteredOrders.filter(o => String(o.paymentMethod || "COD").toUpperCase() === "COD").length} cash deliveries</span>
+            </div>
+
+            <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-4 flex flex-col justify-between">
+              <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider">UPI & Online Payments</span>
+              <span className="text-2xl font-black text-slate-950 dark:text-white mt-1">₹{filteredOnline}</span>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500 mt-2 font-bold">{filteredOrders.filter(o => String(o.paymentMethod || "COD").toUpperCase() !== "COD").length} online checkouts</span>
+            </div>
+          </div>
+
+          {/* Earnings History Data Table */}
+          <div className="overflow-x-auto rounded-2xl border border-slate-100 dark:border-slate-800">
+            <table className="min-w-full text-sm">
+              <thead className="bg-slate-50 dark:bg-slate-900/60">
+                <tr>
+                  {["Date", "Order ID", "Payment Method", "Collected Amount", "Status"].map((h) => (
+                    <th key={h} className="text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-500">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-950">
+                {filteredOrders.slice(0, 15).map((order) => (
+                  <tr key={order._id}>
+                    <td className="px-4 py-3 font-semibold text-slate-650 dark:text-slate-300">
+                      {new Date(order.deliveredAt || order.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-4 py-3 font-black text-slate-900 dark:text-white">
+                      #{order._id.slice(-6).toUpperCase()}
+                    </td>
+                    <td className="px-4 py-3 font-bold">
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] ${String(order.paymentMethod || "COD").toUpperCase() === "COD" ? "bg-amber-100 text-amber-800 dark:bg-amber-950/30 dark:text-amber-400" : "bg-blue-100 text-blue-800 dark:bg-blue-950/30 dark:text-blue-400"}`}>
+                        {order.paymentMethod || "COD"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 font-black text-slate-955 dark:text-white">
+                      ₹{order.total}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                        {order.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+                {filteredOrders.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="py-10 text-center font-bold text-slate-400 dark:text-slate-500">
+                      No matching sales found for the selected date range.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          {filteredOrders.length > 15 && (
+            <p className="text-[11px] font-bold text-slate-450 mt-3 text-center">
+              Showing first 15 of {filteredOrders.length} transaction entries. Change date range filters to narrow results.
+            </p>
+          )}
+        </Card>
+      </MotionDiv>
 
       {/* --- ACTIVE DELIVERY BOYS MODAL --- */}
       {/* Modal is displayed contextually overlaying screen using 'fixed' and high z-index 'z-[3000]' */}

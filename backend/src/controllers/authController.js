@@ -13,7 +13,7 @@ export const loginUser = async (req, res) => {
       uid,
       name,
       email,
-      role: "user"
+      role: "customer"
     });
 
   }

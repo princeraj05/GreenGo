@@ -131,6 +131,29 @@ export default function ManageFoods() {
   // Active filter category selection string for bottom list
   const [filterCategory, setFilterCategory] = useState("All");
 
+  const [customCategories, setCustomCategories] = useState(() => {
+    const saved = localStorage.getItem("admin_custom_categories");
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [newCategoryInput, setNewCategoryInput] = useState("");
+
+  const allCategories = useMemo(() => {
+    return [...CATEGORY_OPTIONS, ...customCategories];
+  }, [customCategories]);
+
+  const handleAddCategory = () => {
+    const clean = newCategoryInput.trim();
+    if (!clean) return;
+    if (allCategories.some(cat => cat.toLowerCase() === clean.toLowerCase())) {
+      alert("Category already exists.");
+      return;
+    }
+    const updated = [...customCategories, clean];
+    setCustomCategories(updated);
+    localStorage.setItem("admin_custom_categories", JSON.stringify(updated));
+    setNewCategoryInput("");
+  };
+
   // ==========================================
   // DATA FETCHING & EVENT HANDLERS
   // ==========================================
@@ -460,7 +483,7 @@ export default function ManageFoods() {
                 <div>
                   <SectionTitle num={3} title="Categories" sub="Select Multiple" />
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-3 gap-x-2">
-                    {CATEGORY_OPTIONS.map(cat => (
+                    {allCategories.map(cat => (
                       <label key={cat} className="flex items-center gap-2 cursor-pointer select-none">
                         <span
                           onClick={() => toggleCategory(cat)}
@@ -478,6 +501,24 @@ export default function ManageFoods() {
                         <span onClick={() => toggleCategory(cat)} className="text-sm font-semibold text-slate-700 dark:text-slate-300 leading-tight cursor-pointer">{cat}</span>
                       </label>
                     ))}
+                  </div>
+
+                  {/* Add Custom Category Input */}
+                  <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800/80 flex gap-2 max-w-sm">
+                    <input
+                      type="text"
+                      placeholder="Add custom category..."
+                      value={newCategoryInput}
+                      onChange={(e) => setNewCategoryInput(e.target.value)}
+                      className="flex-1 px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 dark:border-slate-850 dark:bg-slate-900 text-xs font-semibold text-slate-850 dark:text-slate-200 outline-none focus:border-brand-500 focus:bg-white transition-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddCategory}
+                      className="px-4 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs shadow-sm transition-all"
+                    >
+                      + Add
+                    </button>
                   </div>
                 </div>
 
