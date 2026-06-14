@@ -57,6 +57,7 @@ export default function FoodSearch() {
   const [activeCategory, setActiveCategory] = useState("All");
   // loading: Page spinner state while foods download from API
   const [loading, setLoading] = useState(true);
+  const [dbCategories, setDbCategories] = useState([]);
 
   // Active filters states
   const [filterUnder100, setFilterUnder100] = useState(false);
@@ -68,9 +69,19 @@ export default function FoodSearch() {
   // Runs on mount: Loads foods list, populates cart state, and focuses search input
   useEffect(() => {
     loadFoods();
+    loadCategories();
     loadCart();
     setTimeout(() => inputRef.current?.focus(), 80);
   }, []);
+
+  const loadCategories = async () => {
+    try {
+      const res = await fetch(`${API}/api/categories`);
+      if (res.ok) setDbCategories(await res.json());
+    } catch (err) {
+      console.error("Failed to load categories:", err);
+    }
+  };
 
   // Syncs input query state with the browser location URL search parameter ?q=
   useEffect(() => {
@@ -137,13 +148,19 @@ export default function FoodSearch() {
     const map = new Map();
     foods.forEach((food) => {
       const name = food.category || "Other";
-      if (!map.has(name)) map.set(name, food.categoryImage || food.image || "");
+      if (!map.has(name)) {
+        const match = dbCategories.find(c => c.name.toLowerCase() === name.toLowerCase());
+        const imageUrl = match?.image 
+          ? (match.image.startsWith("http") ? match.image : `${API}/uploads/${match.image}`)
+          : (food.categoryImage || food.image || "");
+        map.set(name, imageUrl);
+      }
     });
     return [
       { name: "All Food", image: "/greengo-logo.png" },
       ...Array.from(map, ([name, image]) => ({ name, image }))
     ];
-  }, [foods]);
+  }, [foods, dbCategories]);
 
   // Builds fuzzy search suggestions sorted by distanceRank for autocomplete dropdowns
   const [showSuggestions, setShowSuggestions] = useState(true);

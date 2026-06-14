@@ -38,6 +38,7 @@ const DeliveryProfile = lazy(() => import("../pages/delivery/DeliveryProfile"));
 const AdminLayout = lazy(() => import("../pages/admin/AdminLayout"));
 const AdminDashboard = lazy(() => import("../pages/admin/AdminDashboard"));
 const ManageFoods = lazy(() => import("../pages/admin/ManageFoods"));
+const ManageCategories = lazy(() => import("../pages/admin/ManageCategories"));
 const ManageOrders = lazy(() => import("../pages/admin/ManageOrders"));
 const CustomerUsers = lazy(() => import("../pages/admin/users/CustomerUsers"));
 const DeliveryBoyUsers = lazy(() => import("../pages/admin/users/DeliveryBoyUsers"));
@@ -125,6 +126,7 @@ export default function AppRoutes() {
         >
           <Route index element={<AdminDashboard />} />
           <Route path="foods" element={<ManageFoods />} />
+          <Route path="categories" element={<ManageCategories />} />
           <Route path="orders" element={<ManageOrders />} />
           <Route path="cancelled-orders" element={<CancelledOrders />} />
           <Route path="orders/:id/tracking" element={<OrderTrackingPage role="admin" />} />

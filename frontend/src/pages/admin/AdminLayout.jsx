@@ -2,7 +2,7 @@ import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useCallback, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  LayoutDashboard, UtensilsCrossed, Package, Users, 
+  LayoutDashboard, UtensilsCrossed, LayoutGrid, Package, Users, 
   MessageSquare, Ticket, Bell, LineChart, Settings, 
   LogOut, Menu, X, Star, Plus, MoreHorizontal, Sun, Moon, Image, ShieldCheck
 } from "lucide-react";
@@ -162,6 +162,7 @@ export default function AdminLayout() {
   const desktopNavLinks = [
     { to: "/admin", end: true, label: "Dashboard", icon: <LayoutDashboard size={20} /> },
     { to: "/admin/foods", label: "Foods", icon: <UtensilsCrossed size={20} /> },
+    { to: "/admin/categories", label: "Categories", icon: <LayoutGrid size={20} /> },
     { to: "/admin/orders", label: "Orders", icon: <Package size={20} /> },
     { to: "/admin/cancelled-orders", label: "Cancelled", icon: <X size={20} /> },
     { to: "/admin/users", label: "Users", icon: <Users size={20} /> },
@@ -194,6 +195,7 @@ export default function AdminLayout() {
     { to: "/admin/contacts", label: "Contacts", icon: <MessageSquare size={20} />, badge: unreadCount },
     { to: "/admin/notifications", label: "Alerts", icon: <Bell size={20} />, badge: unreadCount },
     { to: "/admin/foods", label: "Foods", icon: <UtensilsCrossed size={20} /> },
+    { to: "/admin/categories", label: "Categories", icon: <LayoutGrid size={20} /> },
     { to: "/admin/cancelled-orders", label: "Cancelled", icon: <X size={20} /> },
     { to: "/admin/coupons", label: "Coupons", icon: <Ticket size={20} /> },
     { to: "/admin/banners", label: "Banners", icon: <Image size={20} /> },

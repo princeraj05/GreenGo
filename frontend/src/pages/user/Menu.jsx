@@ -124,6 +124,11 @@ export default function Menu() {
   // currentBannerIdx: Slide position of the hero offer banner
   const [currentBannerIdx, setCurrentBannerIdx] = useState(0);
 
+  const [dynamicCategories, setDynamicCategories] = useState([]);
+  const categoriesList = useMemo(() => {
+    return dynamicCategories.length ? dynamicCategories : defaultCategoriesList;
+  }, [dynamicCategories]);
+
   // defaultBanners: Fallbacks in case database banners are empty
   const defaultBanners = [
     {
@@ -155,8 +160,8 @@ export default function Menu() {
     }
   ];
 
-  // categoriesList: Hardcoded mapping array representing supported food taxonomies
-  const categoriesList = [
+  // defaultCategoriesList: Hardcoded mapping array representing supported food taxonomies as fallback
+  const defaultCategoriesList = [
     { id: "All", name: "All", icon: "All" },
     { id: "Starter", name: "Starter", icon: "ST" },
     { id: "Combo", name: "Combo", icon: "CB" },
@@ -230,6 +235,7 @@ export default function Menu() {
   // Load menu assets and customer configs on initialization
   useEffect(() => {
     loadFoods();
+    loadCategories();
     loadFavorites();
     loadCart();
     loadBanners();
@@ -305,6 +311,26 @@ export default function Menu() {
       }
     } catch (err) {
       console.error("Failed to load banners:", err);
+    }
+  };
+
+  const loadCategories = async () => {
+    try {
+      const res = await fetch(`${API}/api/categories`);
+      if (res.ok) {
+        const data = await res.json();
+        setDynamicCategories([
+          { id: "All", name: "All", icon: "All", image: "/greengo-logo.png" },
+          ...data.map(c => ({
+            id: c.name,
+            name: c.name,
+            icon: c.name.slice(0, 2).toUpperCase(),
+            image: c.image ? (c.image.startsWith("http") ? c.image : `${API}/uploads/${c.image}`) : ""
+          }))
+        ]);
+      }
+    } catch (err) {
+      console.error("Failed to load categories:", err);
     }
   };
 
@@ -641,6 +667,7 @@ export default function Menu() {
    * getCategoryImage: Assigns images based on matches within the dynamic food list.
    */
   const getCategoryImage = (cat) => {
+    if (cat.image) return cat.image;
     if (cat.id === "All") return "/greengo-logo.png";
     const selected = cat.id.toLowerCase();
     const match = foods.find((food) => {

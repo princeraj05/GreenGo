@@ -14,6 +14,7 @@ import bannerRoutes from "./routes/bannerRoutes.js";
 // ROUTES
 import userRoutes from "./routes/userRoutes.js";
 import foodRoutes from "./routes/foodRoutes.js";
+import categoryRoutes from "./routes/categoryRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import adminDashboardRoutes from "./routes/adminDashboardRoutes.js";
 import adminUserRoutes from "./routes/adminUserRoutes.js";
@@ -107,6 +108,7 @@ app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 app.use("/api/users", userRoutes);
 app.use("/api/foods", foodRoutes);
+app.use("/api/categories", categoryRoutes);
 app.use("/api/orders", orderRoutes);
 
 app.use("/api/admin", adminDashboardRoutes);

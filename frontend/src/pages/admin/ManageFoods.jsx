@@ -5,6 +5,7 @@ import API from "../../api/axios";
 import { getToken } from "../../utils/getToken";
 import Button from "../../components/ui/Button";
 import Card from "../../components/ui/Card";
+import ImageCropModal from "../../components/ui/ImageCropModal";
 
 // Framer Motion helper for animated layouts
 const MotionDiv = motion.div;
@@ -131,35 +132,34 @@ export default function ManageFoods() {
   // Active filter category selection string for bottom list
   const [filterCategory, setFilterCategory] = useState("All");
 
-  const [customCategories, setCustomCategories] = useState(() => {
-    const saved = localStorage.getItem("admin_custom_categories");
-    return saved ? JSON.parse(saved) : [];
-  });
-  const [newCategoryInput, setNewCategoryInput] = useState("");
+  const [dbCategories, setDbCategories] = useState([]);
+  
+  // Image Crop states
+  const [cropperOpen, setCropperOpen] = useState(false);
+  const [rawFile, setRawFile] = useState(null);
 
   const allCategories = useMemo(() => {
-    return [...CATEGORY_OPTIONS, ...customCategories];
-  }, [customCategories]);
-
-  const handleAddCategory = () => {
-    const clean = newCategoryInput.trim();
-    if (!clean) return;
-    if (allCategories.some(cat => cat.toLowerCase() === clean.toLowerCase())) {
-      alert("Category already exists.");
-      return;
-    }
-    const updated = [...customCategories, clean];
-    setCustomCategories(updated);
-    localStorage.setItem("admin_custom_categories", JSON.stringify(updated));
-    setNewCategoryInput("");
-  };
+    return dbCategories.length ? dbCategories : CATEGORY_OPTIONS;
+  }, [dbCategories]);
 
   // ==========================================
   // DATA FETCHING & EVENT HANDLERS
   // ==========================================
 
   // Automatically fetch catalog items on mount
-  useEffect(() => { loadFoods(); }, []);
+  useEffect(() => { 
+    loadFoods(); 
+    loadCategories();
+  }, []);
+
+  const loadCategories = async () => {
+    try {
+      const res = await API.get("/api/categories");
+      setDbCategories(res.data.map(c => c.name));
+    } catch (err) {
+      console.log("Failed to load categories:", err);
+    }
+  };
 
   /**
    * Loads list of food items from API.
@@ -179,11 +179,25 @@ export default function ManageFoods() {
     const { name, value, files } = e.target;
     if (name === "image") {
       const file = files[0];
-      setForm(f => ({ ...f, image: file }));
-      setPreview(file ? URL.createObjectURL(file) : null);
+      if (file) {
+        setRawFile(file);
+        setCropperOpen(true);
+      }
     } else {
       setForm(f => ({ ...f, [name]: value }));
     }
+  };
+
+  const handleCroppedSave = (croppedFile, previewUrl) => {
+    setForm(f => ({ ...f, image: croppedFile }));
+    setPreview(previewUrl);
+    setCropperOpen(false);
+    setRawFile(null);
+  };
+
+  const handleCropCancel = () => {
+    setCropperOpen(false);
+    setRawFile(null);
   };
 
   /**
@@ -503,22 +517,14 @@ export default function ManageFoods() {
                     ))}
                   </div>
 
-                  {/* Add Custom Category Input */}
-                  <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800/80 flex gap-2 max-w-sm">
-                    <input
-                      type="text"
-                      placeholder="Add custom category..."
-                      value={newCategoryInput}
-                      onChange={(e) => setNewCategoryInput(e.target.value)}
-                      className="flex-1 px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 dark:border-slate-850 dark:bg-slate-900 text-xs font-semibold text-slate-850 dark:text-slate-200 outline-none focus:border-brand-500 focus:bg-white transition-all"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleAddCategory}
-                      className="px-4 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs shadow-sm transition-all"
-                    >
-                      + Add
-                    </button>
+                  {/* Link to Manage Categories */}
+                  <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800/80">
+                    <p className="text-xs text-slate-400 font-semibold">
+                      Need a new category?{" "}
+                      <a href="/admin/categories" className="text-emerald-500 hover:text-emerald-600 underline">
+                        Manage Categories
+                      </a>
+                    </p>
                   </div>
                 </div>
 
@@ -877,7 +883,6 @@ export default function ManageFoods() {
           ))}
         </AnimatePresence>
 
-        {/* Empty catalog fallback interface */}
         {displayedFoods.length === 0 && (
           <div className="col-span-full py-16 text-center bg-white dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800/60">
             <UtensilsCrossed size={28} className="text-slate-300 dark:text-slate-700 mx-auto mb-3" />
@@ -888,6 +893,12 @@ export default function ManageFoods() {
       </MotionDiv>
       {/* --- END BOTTOM CATALOG SECTION --- */}
 
+      <ImageCropModal
+        isOpen={cropperOpen}
+        imageFile={rawFile}
+        onCancel={handleCropCancel}
+        onSave={handleCroppedSave}
+      />
     </div>
   );
 }
