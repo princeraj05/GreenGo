@@ -183,6 +183,18 @@ export default function Profile() {
         };
         setForm(nextForm);
         setFavorites(userData.favorites || []);
+
+        if (location.state?.profileRequired) {
+          const isEditDone = Boolean(String(userData.name || "").trim() && String(userData.phone || "").trim() && (userData.profileCompletion?.passwordSet || userData.profileCompletion?.editProfileCompleted));
+          if (!isEditDone) {
+            setActiveSection("edit");
+          } else {
+            const hasAddr = (Array.isArray(userData.addresses) && userData.addresses.some((addr) => String(addr?.details || "").trim())) || String(userData.address || "").trim();
+            if (!hasAddr) {
+              setActiveSection("addresses");
+            }
+          }
+        }
       }
 
       if (foodsRes.ok) setFoods(await foodsRes.json());
@@ -439,8 +451,18 @@ export default function Profile() {
       };
       setForm(nextForm);
       showMessage("Profile updated successfully");
-      if (activeSection === "edit" || activeSection === "addresses") {
-        setActiveSection(null);
+      if (location.state?.profileRequired) {
+        if (activeSection === "edit") {
+          setActiveSection("addresses");
+        } else if (activeSection === "addresses") {
+          setActiveSection(null);
+          const redirectPath = location.state?.from || "/user/menu";
+          navigate(redirectPath, { replace: true });
+        }
+      } else {
+        if (activeSection === "edit" || activeSection === "addresses") {
+          setActiveSection(null);
+        }
       }
     } catch (err) {
       console.error(err);
