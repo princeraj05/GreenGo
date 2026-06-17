@@ -661,9 +661,6 @@ export const getBudgetRecommendations = async (req, res) => {
     const types = Array.isArray(selectedTypes) ? selectedTypes.map((type) => String(type).toLowerCase()) : [];
 
     let foods = await Food.find().lean();
-    if (foods.length === 0) {
-      foods = budgetDummyFoods;
-    }
 
     foods = foods.filter((food) => {
       const name = String(food.name || "").toLowerCase();
