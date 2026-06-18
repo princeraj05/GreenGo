@@ -62,6 +62,7 @@ export const addFood = async (req, res) => {
     const {
       name,
       price,
+      originalPrice,
       description,
       category,
       categories,
@@ -86,6 +87,7 @@ export const addFood = async (req, res) => {
     const food = await Food.create({
       name,
       price: toNumber(price),
+      originalPrice: toNumber(originalPrice || 0),
       description,
       category: nextCategories[0] || category || "",
       categories: nextCategories,
@@ -110,17 +112,20 @@ export const addFood = async (req, res) => {
       );
     }
 
-    res.json(food);
-  } catch {
-    res.status(500).json({ message: "Add food failed" });
+    res.status(201).json(food);
+  } catch (err) {
+    console.error("Add food error:", err);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
+// UPDATE FOOD
 export const updateFood = async (req, res) => {
   try {
     const {
       name,
       price,
+      originalPrice,
       description,
       category,
       categories,
@@ -141,6 +146,7 @@ export const updateFood = async (req, res) => {
     let updateData = {};
     if (name !== undefined) updateData.name = name;
     if (price !== undefined) updateData.price = toNumber(price);
+    if (originalPrice !== undefined) updateData.originalPrice = toNumber(originalPrice);
     if (description !== undefined) updateData.description = description;
     const nextCategories = categories !== undefined || category !== undefined
       ? normalizeCategories(categories, category)

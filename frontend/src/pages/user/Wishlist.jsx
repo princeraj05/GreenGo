@@ -203,9 +203,15 @@ export default function Wishlist() {
 
       <div className="flex items-center justify-between gap-2 mt-auto pt-2 border-t border-slate-100 dark:border-slate-800/50">
         <div className="flex flex-col">
-          <span className="text-[9px] font-bold text-slate-400 dark:text-slate-400 line-through leading-none">
-            ₹{Math.round(food.price * 1.2)}
-          </span>
+          {food.originalPrice > food.price ? (
+            <span className="text-[9px] font-bold text-slate-400 dark:text-slate-400 line-through leading-none">
+              ₹{food.originalPrice}
+            </span>
+          ) : (
+            <span className="text-[9px] font-bold text-slate-400 dark:text-slate-400 line-through leading-none">
+              ₹{Math.round(food.price * 1.2)}
+            </span>
+          )}
           <span className="text-sm font-extrabold text-slate-950 dark:text-white leading-none pt-0.5 tabular-nums">
             ₹{food.price}
           </span>

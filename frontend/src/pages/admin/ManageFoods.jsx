@@ -322,6 +322,7 @@ export default function ManageFoods() {
       const fd = new FormData();
       fd.append("name", form.name);
       fd.append("price", form.offerPrice || form.price);
+      fd.append("originalPrice", form.offerPrice ? form.price : 0);
       fd.append("description", form.description);
       fd.append("category", form.categories[0] || "Starter");
       fd.append("categories", JSON.stringify(form.categories));
@@ -368,8 +369,8 @@ export default function ManageFoods() {
     setForm({
       ...INITIAL_FORM,
       name: food.name,
-      price: food.price,
-      offerPrice: "",
+      price: food.originalPrice > 0 ? food.originalPrice : food.price,
+      offerPrice: food.originalPrice > 0 ? food.price : "",
       description: food.description,
       categories: Array.isArray(food.categories) && food.categories.length ? food.categories : [food.category || "Starter"],
       veg: food.veg === false ? "false" : "true",

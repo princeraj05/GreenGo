@@ -844,11 +844,15 @@ export default function Menu() {
         {/* Price & Action button */}
         <div className="flex items-center justify-between gap-1 mt-auto pt-1.5 border-t border-slate-100 dark:border-slate-800/50 px-0.5">
           <div className="flex flex-col">
-            {food.price && (
+            {food.originalPrice > food.price ? (
+              <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 line-through leading-none mb-0.5">
+                ₹{food.originalPrice}
+              </span>
+            ) : food.price && oldPriceFactor ? (
               <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 line-through leading-none mb-0.5">
                 ₹{Math.round(food.price * oldPriceFactor)}
               </span>
-            )}
+            ) : null}
             <span className="text-xs sm:text-sm font-black text-slate-950 dark:text-white leading-none tabular-nums">
               ₹{food.price}
             </span>
