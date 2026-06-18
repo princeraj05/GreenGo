@@ -319,7 +319,7 @@ export const loginUser = async (req, res) => {
     const token = jwt.sign(
       { id: user._id, email: user.email, role: normalizeRole(user.role) },
       process.env.JWT_SECRET || "SECRET123",
-      { expiresIn: "15m" }
+      { expiresIn: "7d" }
     );
     const refreshToken = jwt.sign(
       { id: user._id },
@@ -419,7 +419,7 @@ export const loginWithPhonePassword = async (req, res) => {
     const token = jwt.sign(
       { id: user._id, role },
       process.env.JWT_SECRET || "SECRET123",
-      { expiresIn: "15m" }
+      { expiresIn: "7d" }
     );
     const refreshToken = jwt.sign(
       { id: user._id },
@@ -813,7 +813,7 @@ export const googleLogin = async (req, res) => {
     const token = jwt.sign(
       jwtPayload,
       process.env.JWT_SECRET || "SECRET123",
-      { expiresIn: "15m" }
+      { expiresIn: "7d" }
     );
     const refreshToken = jwt.sign(
       { id: user._id },
@@ -938,7 +938,7 @@ export const firebaseLogin = async (req, res) => {
     const token = jwt.sign(
       jwtPayload,
       process.env.JWT_SECRET || "SECRET123",
-      { expiresIn: "15m" }
+      { expiresIn: "7d" }
     );
     const refreshToken = jwt.sign(
       { id: user._id },
@@ -1199,7 +1199,7 @@ export const verifyOtpEmail = async (req, res) => {
         role: normalizeRole(user.role)
       },
       process.env.JWT_SECRET || "SECRET123",
-      { expiresIn: "15m" }
+      { expiresIn: "7d" }
     );
     const refreshToken = jwt.sign(
       { id: user._id },
@@ -1316,7 +1316,7 @@ export const verifyOtpPhone = async (req, res) => {
         role: normalizeRole(user.role)
       },
       process.env.JWT_SECRET || "SECRET123",
-      { expiresIn: "15m" }
+      { expiresIn: "7d" }
     );
     const refreshToken = jwt.sign(
       { id: user._id },
