@@ -238,6 +238,23 @@ export default function BudgetAssistant({ isOpen, onClose, foods = [], onAddToCa
   
   // Custom dialog state for "View Details" click
   const [activeDetailsCombo, setActiveDetailsCombo] = useState(null);
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch(`${API}/api/categories`);
+        if (res.ok) {
+          const data = await res.json();
+          const names = data.map((cat) => cat.name);
+          setCategories(names);
+        }
+      } catch (err) {
+        console.error("Failed to load categories for budget assistant:", err);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const budgetObj = useMemo(
     () => budgetOptions.find((option) => option.label === budgetRange) || budgetOptions[3],
@@ -526,7 +543,7 @@ export default function BudgetAssistant({ isOpen, onClose, foods = [], onAddToCa
               </div>
 
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                {foodTypes.map((type) => {
+                {(categories.length > 0 ? categories : foodTypes).map((type) => {
                   const isSelected = selectedTypes.includes(type);
                   return (
                     <button
