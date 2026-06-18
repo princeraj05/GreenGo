@@ -246,8 +246,7 @@ export default function BudgetAssistant({ isOpen, onClose, foods = [], onAddToCa
         const res = await fetch(`${API}/api/categories`);
         if (res.ok) {
           const data = await res.json();
-          const names = data.map((cat) => cat.name);
-          setCategories(names);
+          setCategories(data);
         }
       } catch (err) {
         console.error("Failed to load categories for budget assistant:", err);
@@ -255,6 +254,19 @@ export default function BudgetAssistant({ isOpen, onClose, foods = [], onAddToCa
     };
     fetchCategories();
   }, []);
+
+  const displayedCategories = useMemo(() => {
+    if (categories.length > 0) {
+      return categories.map(cat => ({
+        name: cat.name,
+        image: cat.image
+      }));
+    }
+    return foodTypes.map(type => ({
+      name: type,
+      image: ""
+    }));
+  }, [categories]);
 
   const budgetObj = useMemo(
     () => budgetOptions.find((option) => option.label === budgetRange) || budgetOptions[3],
@@ -543,7 +555,8 @@ export default function BudgetAssistant({ isOpen, onClose, foods = [], onAddToCa
               </div>
 
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                {(categories.length > 0 ? categories : foodTypes).map((type) => {
+                {displayedCategories.map((cat) => {
+                  const type = cat.name;
                   const isSelected = selectedTypes.includes(type);
                   return (
                     <button
@@ -556,9 +569,13 @@ export default function BudgetAssistant({ isOpen, onClose, foods = [], onAddToCa
                           : "border-slate-850 bg-slate-900/40 text-slate-300 hover:border-emerald-500/50"
                       }`}
                     >
-                      <span className="rounded-full bg-slate-950 px-2 py-1 text-sm font-black text-slate-300 shadow-sm">
-                        {foodTypeIcon[type] || "🍽️"}
-                      </span>
+                      <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-950 shadow-sm flex items-center justify-center">
+                        {cat.image ? (
+                          <img src={getImageUrl(cat.image)} alt={type} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-sm">{foodTypeIcon[type] || "🍽️"}</span>
+                        )}
+                      </div>
                       <span className="text-xs font-black leading-tight mt-2">{type}</span>
                     </button>
                   );
