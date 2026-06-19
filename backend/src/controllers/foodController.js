@@ -75,9 +75,9 @@ export const addFood = async (req, res) => {
       variants,
       comboItems,
       preparationTime,
-      spiceLevel,
       sizeLevel,
-      isAvailable
+      isAvailable,
+      availableQty
     } = req.body;
     const foodImage = getUploadedPath(req.files, "image");
     const categoryImageUpload = getUploadedPath(req.files, "categoryImage");
@@ -104,6 +104,7 @@ export const addFood = async (req, res) => {
       spiceLevel: normalizeLevel(spiceLevel),
       sizeLevel: normalizeLevel(sizeLevel),
       isAvailable: toBoolean(isAvailable, true),
+      availableQty: availableQty !== undefined ? toNumber(availableQty, 10) : 10,
       image: foodImage, // Save the full Cloudinary URL
     });
 
@@ -141,9 +142,9 @@ export const updateFood = async (req, res) => {
       variants,
       comboItems,
       preparationTime,
-      spiceLevel,
       sizeLevel,
-      isAvailable
+      isAvailable,
+      availableQty
     } = req.body;
     const categoryImageUpload = getUploadedPath(req.files, "categoryImage");
     let updateData = {};
@@ -164,6 +165,7 @@ export const updateFood = async (req, res) => {
     if (veg !== undefined) updateData.veg = toBoolean(veg, true);
     if (featured !== undefined) updateData.featured = toBoolean(featured, false);
     if (isAvailable !== undefined) updateData.isAvailable = toBoolean(isAvailable, true);
+    if (availableQty !== undefined) updateData.availableQty = toNumber(availableQty, 10);
     if (foodType !== undefined) updateData.foodType = foodType === "combo" ? "combo" : "single";
     if (mealCategory !== undefined) updateData.mealCategory = mealCategory || "Anytime";
     if (servingSize !== undefined) updateData.servingSize = Math.max(1, Math.ceil(toNumber(servingSize, 1)));

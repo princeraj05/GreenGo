@@ -422,14 +422,31 @@ export default function ManageFoods() {
     try {
       const token = await getToken();
       const updatedAvailability = !food.isAvailable;
+      const updatedQty = updatedAvailability ? 10 : 0;
       const fd = new FormData();
       fd.append("isAvailable", updatedAvailability ? "true" : "false");
+      fd.append("availableQty", String(updatedQty));
       const headers = { Authorization: `Bearer ${token}` };
       await API.put(`/api/foods/${food._id}`, fd, { headers });
-      setFoods(prev => prev.map(f => f._id === food._id ? { ...f, isAvailable: updatedAvailability } : f));
+      setFoods(prev => prev.map(f => f._id === food._id ? { ...f, isAvailable: updatedAvailability, availableQty: updatedQty } : f));
     } catch (err) {
       console.log(err);
       alert("Failed to toggle availability");
+    }
+  };
+
+  const updateQuantityDirectly = async (food, newQty) => {
+    const qty = Math.max(0, newQty);
+    try {
+      const token = await getToken();
+      const fd = new FormData();
+      fd.append("availableQty", String(qty));
+      fd.append("isAvailable", qty > 0 ? "true" : "false");
+      const headers = { Authorization: `Bearer ${token}` };
+      await API.put(`/api/foods/${food._id}`, fd, { headers });
+      setFoods(prev => prev.map(f => f._id === food._id ? { ...f, availableQty: qty, isAvailable: qty > 0 } : f));
+    } catch (err) {
+      console.log(err);
     }
   };
 
@@ -934,6 +951,7 @@ export default function ManageFoods() {
                   <div className={`absolute bottom-2 left-2 w-2.5 h-2.5 rounded-full border-2 ${f.veg === false ? "border-red-500 bg-red-500" : "border-emerald-500 bg-emerald-500"}`} />
                 </div>
                 <div className="p-4 flex-1 flex flex-col">
+                  <div className={`w-2.5 h-2.5 rounded-full mb-1.5 ${f.isAvailable !== false ? "bg-emerald-500" : "bg-red-500"}`} />
                   <h3 className="font-black text-slate-950 dark:text-white text-base leading-tight mb-1.5 group-hover:text-emerald-600 transition-colors">{f.name}</h3>
                   <div className="flex gap-1.5 flex-wrap mb-2">
                     {(Array.isArray(f.categories) && f.categories.length ? f.categories : [f.category || "Food"]).slice(0, 2).map(c => (
@@ -942,16 +960,6 @@ export default function ManageFoods() {
                     <span className={`px-2 py-0.5 text-[10px] font-bold rounded-md ${f.veg === false ? "bg-red-50 text-red-600 dark:bg-red-950/20 dark:text-red-400" : "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/20 dark:text-emerald-400"}`}>
                       {f.veg === false ? "Non-Veg" : "Veg"}
                     </span>
-                    <button
-                      onClick={() => toggleAvailabilityDirectly(f)}
-                      className={`px-2 py-0.5 text-[10px] font-bold rounded-md border transition-all hover:scale-105 active:scale-95 ${
-                        f.isAvailable !== false
-                          ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/30"
-                          : "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/20 dark:text-rose-400 dark:border-rose-900/30"
-                      }`}
-                    >
-                      {f.isAvailable !== false ? "🟢 Available" : "🔴 Out of Stock"}
-                    </button>
                   </div>
                   <p className="text-slate-400 dark:text-slate-500 text-xs line-clamp-2 mb-3 flex-1 font-medium">{f.description}</p>
                   <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800/60 pt-3">
@@ -959,6 +967,42 @@ export default function ManageFoods() {
                     <span className="text-[10px] font-bold text-slate-400 flex items-center gap-1">
                       <Clock size={10} />{f.preparationTime || "15-20 min"}
                     </span>
+                  </div>
+                  
+                  {/* Out of Stock and Qty Available Controls Row */}
+                  <div className="flex items-center justify-between gap-3 mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/60">
+                    <button
+                      type="button"
+                      onClick={() => toggleAvailabilityDirectly(f)}
+                      className="flex-1 py-1.5 px-3 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors"
+                    >
+                      {f.isAvailable !== false ? "Out of Stock" : "In Stock"}
+                    </button>
+
+                    <div className="flex flex-col items-center">
+                      <div className="flex items-center border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden bg-white dark:bg-slate-950">
+                        <button
+                          type="button"
+                          onClick={() => updateQuantityDirectly(f, (f.availableQty || 0) - 1)}
+                          className="px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-500 dark:text-slate-400 font-bold transition-colors text-xs"
+                        >
+                          −
+                        </button>
+                        <span className="px-3 py-1.5 text-xs font-black text-slate-800 dark:text-white min-w-[20px] text-center">
+                          {f.availableQty || 0}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => updateQuantityDirectly(f, (f.availableQty || 0) + 1)}
+                          className="px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-500 dark:text-slate-400 font-bold transition-colors text-xs"
+                        >
+                          +
+                        </button>
+                      </div>
+                      <span className="text-[9px] font-semibold text-slate-400 dark:text-slate-500 mt-1 uppercase tracking-wider">
+                        Qty Available
+                      </span>
+                    </div>
                   </div>
                 </div>
               </Card>

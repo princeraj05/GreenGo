@@ -503,8 +503,15 @@ export default function Menu() {
         currentCart.splice(existingIndex, 1);
       }
     } else {
+      const maxAvailable = food.availableQty !== undefined ? food.availableQty : 10;
+      if (newQty > maxAvailable) {
+        alert(`Sorry, hmare pass ${food.name || food.baseName} ke sirf ${maxAvailable} hi available h.`);
+        return;
+      }
+
       if (existingIndex > -1) {
         currentCart[existingIndex].qty = newQty;
+        currentCart[existingIndex].availableQty = maxAvailable;
       } else {
         currentCart.push({
           _id: cartId,
@@ -518,7 +525,8 @@ export default function Menu() {
           image: food.image,
           category: food.category,
           categories: getFoodCategories(food),
-          qty: newQty
+          qty: newQty,
+          availableQty: maxAvailable
         });
       }
     }
@@ -1111,7 +1119,7 @@ export default function Menu() {
           <img
             src={currentBanner.image.startsWith("http") ? currentBanner.image : getImageUrl(currentBanner.image)}
             alt={currentBanner.title}
-            className="absolute inset-0 h-full w-full object-cover z-0"
+            className="absolute inset-0 h-full w-full object-fill z-0"
             onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=800'; }}
           />
           

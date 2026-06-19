@@ -153,6 +153,37 @@ export const createOrder = async (req, res) => {
       transactionId
     } = req.body;
 
+    // Validate stock availability before creating order
+    if (Array.isArray(items)) {
+      for (const item of items) {
+        const foodId = item.foodId || item._id;
+        const food = await Food.findById(foodId);
+        if (!food) {
+          return res.status(404).json({ message: `Item ${item.name} not found.` });
+        }
+        if (food.availableQty < item.qty) {
+          return res.status(400).json({
+            message: `Sorry, hmare pass ${food.name} ke sirf ${food.availableQty} hi available h.`
+          });
+        }
+      }
+    }
+
+    // Decrement stock levels
+    if (Array.isArray(items)) {
+      for (const item of items) {
+        const foodId = item.foodId || item._id;
+        const food = await Food.findById(foodId);
+        if (food) {
+          food.availableQty = Math.max(0, food.availableQty - item.qty);
+          if (food.availableQty === 0) {
+            food.isAvailable = false;
+          }
+          await food.save();
+        }
+      }
+    }
+
     let userLat = latitude;
     let userLon = longitude;
 

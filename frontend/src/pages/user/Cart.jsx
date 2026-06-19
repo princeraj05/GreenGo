@@ -31,11 +31,24 @@ export default function Cart() {
 
   /* --- EVENT HANDLERS & HELPERS --- */
   const updateQty = (id, type) => {
-    const updated = cart.map((item) =>
-      item._id === id
-        ? { ...item, qty: type === "inc" ? item.qty + 1 : Math.max(1, item.qty - 1) }
-        : item
-    );
+    let alertShown = false;
+    const updated = cart.map((item) => {
+      if (item._id === id) {
+        if (type === "inc") {
+          const maxAvailable = item.availableQty !== undefined ? item.availableQty : 10;
+          if (item.qty >= maxAvailable) {
+            alert(`Sorry, hmare pass ${item.name || item.baseName} ke sirf ${maxAvailable} hi available h.`);
+            alertShown = true;
+            return item;
+          }
+          return { ...item, qty: item.qty + 1 };
+        } else {
+          return { ...item, qty: Math.max(1, item.qty - 1) };
+        }
+      }
+      return item;
+    });
+    if (alertShown) return;
     setCart(updated);
     localStorage.setItem("cart", JSON.stringify(updated));
     window.dispatchEvent(new Event("cart-updated"));

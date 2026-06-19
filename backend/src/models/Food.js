@@ -39,6 +39,7 @@ const foodSchema = new mongoose.Schema({
   },
   featured: { type: Boolean, default: false },
   isAvailable: { type: Boolean, default: true },
+  availableQty: { type: Number, default: 10 },
   totalOrders: { type: Number, default: 0 },
   revenueGenerated: { type: Number, default: 0 },
   rating: { type: Number, default: 0 },
