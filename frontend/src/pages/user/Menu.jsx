@@ -1067,13 +1067,43 @@ export default function Menu() {
 
       {/* --- 3. AUTO SLIDING OFFER HERO BANNER --- */}
       {currentBanner && (
-        <div className="relative h-28 sm:h-40 md:h-48 rounded-3xl overflow-hidden mb-4 shadow-md shadow-brand-500/5 transition-all animate-fade-in group bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950">
+        <div className="relative w-full aspect-[2.3/1] sm:aspect-[3/1] md:aspect-[3.5/1] rounded-3xl overflow-hidden mb-4 shadow-md shadow-brand-500/5 transition-all animate-fade-in group bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950">
           <img
             src={currentBanner.image.startsWith("http") ? currentBanner.image : getImageUrl(currentBanner.image)}
             alt={currentBanner.title}
             className="absolute inset-0 h-full w-full object-cover z-0"
             onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=800'; }}
           />
+          
+          {/* Text Overlays */}
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/85 via-slate-950/40 to-transparent flex flex-col justify-center p-4 sm:p-6 md:p-8 text-white z-10">
+            {currentBanner.description && (
+              <span className="text-[9px] sm:text-[10px] md:text-xs font-black tracking-widest text-brand-400 uppercase mb-0.5 sm:mb-1">
+                {currentBanner.description}
+              </span>
+            )}
+            {currentBanner.title && (
+              <h2 className="text-sm sm:text-lg md:text-xl lg:text-2xl font-black tracking-tight leading-tight max-w-[55%]">
+                {currentBanner.title}
+              </h2>
+            )}
+            {currentBanner.discountText && (
+              <span className="mt-1 sm:mt-2 text-[10px] md:text-xs font-black bg-brand-500 text-white px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md w-fit shadow-sm uppercase">
+                {currentBanner.discountText}
+              </span>
+            )}
+            <button 
+              onClick={() => {
+                if (currentBanner.code) {
+                   navigator.clipboard.writeText(currentBanner.code);
+                   alert(`Coupon code "${currentBanner.code}" copied to clipboard!`);
+                }
+              }}
+              className="mt-2 sm:mt-3 bg-white hover:bg-slate-100 text-slate-950 px-3.5 py-1.5 sm:px-4.5 sm:py-2 rounded-xl text-[9px] sm:text-xs font-extrabold w-fit transition-all active:scale-95 shadow-lg shadow-black/25"
+            >
+              {currentBanner.buttonText || "ORDER NOW"}
+            </button>
+          </div>
           
           <div className="absolute bottom-4 right-6 flex gap-1.5 z-10">
             {activeBannersList.map((_, i) => (
