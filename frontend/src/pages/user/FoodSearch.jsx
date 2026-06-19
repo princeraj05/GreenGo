@@ -221,7 +221,12 @@ export default function FoodSearch() {
 
         return matchesQuery && matchesCategory;
       })
-      .sort((a, b) => distanceRank(a, query) - distanceRank(b, query) || Number(b.rating || 0) - Number(a.rating || 0));
+      .sort((a, b) => {
+        const aAvail = a.isAvailable !== false ? 1 : 0;
+        const bAvail = b.isAvailable !== false ? 1 : 0;
+        if (aAvail !== bAvail) return bAvail - aAvail;
+        return distanceRank(a, query) - distanceRank(b, query) || Number(b.rating || 0) - Number(a.rating || 0);
+      });
   }, [foods, query, activeCategory, filterUnder100, filterGreatOffers, filterPureVeg]);
 
   // If active category is excluded from new search match results, resets tag filters to "All"

@@ -592,13 +592,22 @@ export default function Menu() {
       }
 
       return matchesSearch && matchesCategory && matchesVegMode(food);
+    }).sort((a, b) => {
+      const aAvail = a.isAvailable !== false ? 1 : 0;
+      const bAvail = b.isAvailable !== false ? 1 : 0;
+      return bAvail - aAvail;
     });
   }, [category, foods, getFoodCategories, isFavorite, matchesVegMode, search]);
 
   const popularDishes = useMemo(() => foods
     .filter(matchesVegMode)
     .filter(f => Number(f.rating || 0) >= 2.5)
-    .sort((a, b) => b.rating - a.rating), [foods, matchesVegMode]);
+    .sort((a, b) => {
+      const aAvail = a.isAvailable !== false ? 1 : 0;
+      const bAvail = b.isAvailable !== false ? 1 : 0;
+      if (aAvail !== bAvail) return bAvail - aAvail;
+      return b.rating - a.rating;
+    }), [foods, matchesVegMode]);
 
   const recommendedFoods = useMemo(() => {
     const hour = new Date().getHours();
@@ -619,11 +628,25 @@ export default function Menu() {
         if (cat === "Anytime") return true;
         return cat === activeCategory;
       })
-      .sort((a, b) => b.ratingCount - a.ratingCount || new Date(b.updatedAt) - new Date(a.updatedAt));
+      .sort((a, b) => {
+        const aAvail = a.isAvailable !== false ? 1 : 0;
+        const bAvail = b.isAvailable !== false ? 1 : 0;
+        if (aAvail !== bAvail) return bAvail - aAvail;
+        return b.ratingCount - a.ratingCount || new Date(b.updatedAt) - new Date(a.updatedAt);
+      });
   }, [foods, matchesVegMode]);
 
-  const allProductFoods = useMemo(() => foods.filter(matchesVegMode), [foods, matchesVegMode]);
-  const comboFoods = useMemo(() => foods.filter(matchesVegMode).filter(f => f.foodType === "combo"), [foods, matchesVegMode]);
+  const allProductFoods = useMemo(() => foods.filter(matchesVegMode).sort((a, b) => {
+    const aAvail = a.isAvailable !== false ? 1 : 0;
+    const bAvail = b.isAvailable !== false ? 1 : 0;
+    return bAvail - aAvail;
+  }), [foods, matchesVegMode]);
+
+  const comboFoods = useMemo(() => foods.filter(matchesVegMode).filter(f => f.foodType === "combo").sort((a, b) => {
+    const aAvail = a.isAvailable !== false ? 1 : 0;
+    const bAvail = b.isAvailable !== false ? 1 : 0;
+    return bAvail - aAvail;
+  }), [foods, matchesVegMode]);
   const visibleCategories = categoriesList.slice(0, 8);
 
   const foodById = useMemo(() => new Map(foods.map((food) => [food._id, food])), [foods]);
