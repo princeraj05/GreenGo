@@ -91,6 +91,7 @@ const INITIAL_FORM = {
   preparationTime: "15 - 20 min",
   spiceLevel: "Medium",
   sizeLevel: "Medium",
+  isAvailable: "true",
   categoryImage: "",
   image: null,
   categoryImageFile: null,
@@ -338,6 +339,7 @@ export default function ManageFoods() {
       fd.append("preparationTime", form.preparationTime);
       fd.append("spiceLevel", form.spiceLevel);
       fd.append("sizeLevel", form.sizeLevel);
+      fd.append("isAvailable", form.isAvailable);
       fd.append("categoryImageCurrent", form.categoryImage || "");
       if (form.image) fd.append("image", form.image);
       if (form.categoryImageFile) fd.append("categoryImage", form.categoryImageFile);
@@ -394,6 +396,7 @@ export default function ManageFoods() {
       preparationTime: food.preparationTime || "15 - 20 min",
       spiceLevel: food.spiceLevel || "Medium",
       sizeLevel: food.sizeLevel || "Medium",
+      isAvailable: food.isAvailable === false ? "false" : "true",
       categoryImage: food.categoryImage || "",
       image: null,
       categoryImageFile: null,
@@ -413,6 +416,21 @@ export default function ManageFoods() {
       await API.delete(`/api/foods/${id}`, { headers: { Authorization: `Bearer ${token}` } });
       loadFoods();
     } catch (err) { console.log(err); }
+  };
+
+  const toggleAvailabilityDirectly = async (food) => {
+    try {
+      const token = await getToken();
+      const updatedAvailability = !food.isAvailable;
+      const fd = new FormData();
+      fd.append("isAvailable", updatedAvailability ? "true" : "false");
+      const headers = { Authorization: `Bearer ${token}` };
+      await API.put(`/api/foods/${food._id}`, fd, { headers });
+      setFoods(prev => prev.map(f => f._id === food._id ? { ...f, isAvailable: updatedAvailability } : f));
+    } catch (err) {
+      console.log(err);
+      alert("Failed to toggle availability");
+    }
   };
 
   // Compiles all dynamically configured category filters in bottom menu selections list
@@ -565,6 +583,24 @@ export default function ManageFoods() {
                         <span className="font-bold text-sm">{opt.label}</span>
                       </button>
                     ))}
+                  </div>
+
+                  <div className="mt-4">
+                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">Item Availability (Stock Status)</label>
+                    <div className="flex gap-2">
+                      {[
+                        { value: "true", label: "In Stock", emoji: "🟢", active: "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-300" },
+                        { value: "false", label: "Out of Stock", emoji: "🔴", active: "border-red-500 bg-red-50 dark:bg-red-950/20 text-red-750" },
+                      ].map(opt => (
+                        <button key={opt.value} type="button" onClick={() => setForm(f => ({ ...f, isAvailable: opt.value }))}
+                          className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border-2 transition-all ${
+                            form.isAvailable === opt.value ? opt.active : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-350"
+                          }`}>
+                          <span className="text-sm">{opt.emoji}</span>
+                          <span className="font-bold text-xs">{opt.label}</span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -906,6 +942,16 @@ export default function ManageFoods() {
                     <span className={`px-2 py-0.5 text-[10px] font-bold rounded-md ${f.veg === false ? "bg-red-50 text-red-600 dark:bg-red-950/20 dark:text-red-400" : "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/20 dark:text-emerald-400"}`}>
                       {f.veg === false ? "Non-Veg" : "Veg"}
                     </span>
+                    <button
+                      onClick={() => toggleAvailabilityDirectly(f)}
+                      className={`px-2 py-0.5 text-[10px] font-bold rounded-md border transition-all hover:scale-105 active:scale-95 ${
+                        f.isAvailable !== false
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/30"
+                          : "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/20 dark:text-rose-400 dark:border-rose-900/30"
+                      }`}
+                    >
+                      {f.isAvailable !== false ? "🟢 Available" : "🔴 Out of Stock"}
+                    </button>
                   </div>
                   <p className="text-slate-400 dark:text-slate-500 text-xs line-clamp-2 mb-3 flex-1 font-medium">{f.description}</p>
                   <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800/60 pt-3">

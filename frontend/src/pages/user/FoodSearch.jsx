@@ -491,8 +491,9 @@ export default function FoodSearch() {
  * Renders detail parameters for search matching food results, rating stars, and custom counter quantity buttons.
  */
 function FoodResultCard({ food, cartItem, onQuantity }) {
+  const isOut = food.isAvailable === false;
   return (
-    <div className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm transition-all hover:shadow-md dark:border-slate-800/80 dark:bg-slate-950">
+    <div className={`overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm transition-all hover:shadow-md dark:border-slate-800/80 dark:bg-slate-950 ${isOut ? "opacity-60 grayscale filter" : ""}`}>
       <div className="relative h-44 bg-slate-50 p-2.5 dark:bg-slate-900">
         <img
           src={getImageUrl(food.image)}
@@ -500,7 +501,12 @@ function FoodResultCard({ food, cartItem, onQuantity }) {
           className="h-full w-full rounded-2xl object-cover"
           onError={(e) => { e.target.src = "https://placehold.co/400x300?text=Food"; }}
         />
-        {food.featured && (
+        {isOut && (
+          <div className="absolute inset-0 bg-slate-955/70 flex items-center justify-center rounded-2xl m-2.5">
+            <span className="bg-red-600 text-white font-extrabold text-xs px-3 py-1.5 rounded-lg shadow-md uppercase tracking-wider">Out of Stock</span>
+          </div>
+        )}
+        {food.featured && !isOut && (
           <span className="absolute left-5 top-5 rounded-lg bg-slate-950/80 backdrop-blur-sm px-2 py-1 text-[10px] font-black text-white">
             10% OFF select items
           </span>
@@ -509,7 +515,7 @@ function FoodResultCard({ food, cartItem, onQuantity }) {
       <div className="p-4">
         <div className="mb-2 flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h3 className="line-clamp-1 text-lg font-black text-slate-900 dark:text-white">{food.name}</h3>
+            <h3 className={`line-clamp-1 text-lg font-black text-slate-900 dark:text-white ${isOut ? "text-slate-400" : ""}`}>{food.name}</h3>
             <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">{food.category || "Dish"}</p>
           </div>
           <span className="shrink-0 rounded-full bg-emerald-600 px-2 py-0.5 text-xs font-black text-white">{food.rating ? food.rating.toFixed(1) : "4.3"} ★</span>
@@ -517,7 +523,14 @@ function FoodResultCard({ food, cartItem, onQuantity }) {
         <p className="mb-4 line-clamp-2 min-h-10 text-sm font-semibold text-slate-500 dark:text-slate-400">{food.description || "Freshly prepared and ready to order."}</p>
         <div className="flex items-center justify-between gap-3 border-t border-slate-100 pt-3 dark:border-slate-800">
           <span className="text-lg font-black text-slate-950 dark:text-white">₹{food.price}</span>
-          {!cartItem ? (
+          {isOut ? (
+            <button
+              disabled
+              className="rounded-xl bg-slate-200 dark:bg-slate-800 px-4 py-2 text-xs font-black text-slate-400 dark:text-slate-500 cursor-not-allowed select-none"
+            >
+              Out of Stock
+            </button>
+          ) : !cartItem ? (
             <button
               type="button"
               onClick={() => onQuantity(food, 1)}

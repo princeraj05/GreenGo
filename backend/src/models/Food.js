@@ -38,6 +38,7 @@ const foodSchema = new mongoose.Schema({
     default: "Medium"
   },
   featured: { type: Boolean, default: false },
+  isAvailable: { type: Boolean, default: true },
   totalOrders: { type: Number, default: 0 },
   revenueGenerated: { type: Number, default: 0 },
   rating: { type: Number, default: 0 },

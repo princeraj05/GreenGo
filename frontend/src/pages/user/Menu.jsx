@@ -726,6 +726,16 @@ export default function Menu() {
    * renderCartAction: Render standard Add/Subtract increment counters on cards.
    */
   const renderCartAction = (food) => {
+    if (food.isAvailable === false) {
+      return (
+        <button
+          disabled
+          className="px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500 font-black text-[8px] sm:text-[10px] md:text-xs cursor-not-allowed select-none"
+        >
+          Out of Stock
+        </button>
+      );
+    }
     const cartItem = getCartItem(food);
     if (!cartItem) {
       return (
@@ -783,16 +793,18 @@ export default function Menu() {
     } = options;
     const preparationTime = food.preparationTime || deliveryTime;
 
+    const isOut = food.isAvailable === false;
     return (
       <div
         key={food._id}
-        className={`min-w-0 bg-white dark:bg-slate-900 rounded-2xl p-1.5 pb-2 md:p-2.5 border border-slate-100 dark:border-slate-800/60 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex flex-col group relative overflow-hidden h-full ${className}`}
+        className={`min-w-0 bg-white dark:bg-slate-900 rounded-2xl p-1.5 pb-2 md:p-2.5 border border-slate-100 dark:border-slate-800/60 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex flex-col group relative overflow-hidden h-full ${isOut ? "opacity-60 grayscale filter" : ""} ${className}`}
       >
         {/* Favorite & Rating overlays */}
         <div className="absolute top-1.5 left-1.5 z-10 flex items-center gap-1">
           <button
-            onClick={() => toggleFavoriteFood(food._id)}
-            className="w-6 h-6 flex items-center justify-center rounded-full bg-white/95 dark:bg-slate-950/95 backdrop-blur-sm border border-slate-100 dark:border-slate-800/50 text-slate-500 hover:text-red-500 transition-colors shadow-sm"
+            onClick={() => !isOut && toggleFavoriteFood(food._id)}
+            className="w-6 h-6 flex items-center justify-center rounded-full bg-white/95 dark:bg-slate-950/95 backdrop-blur-sm border border-slate-100 dark:border-slate-800/50 text-slate-500 hover:text-red-500 transition-colors shadow-sm cursor-pointer disabled:opacity-50"
+            disabled={isOut}
           >
             <Heart size={10} className={isFavorite(food._id) ? "fill-red-500 text-red-500" : ""} />
           </button>
@@ -805,8 +817,8 @@ export default function Menu() {
 
         {/* Food Image */}
         <div
-          onClick={() => selectFoodDetails(food)}
-          className="relative h-24 sm:h-28 md:h-32 w-full rounded-xl overflow-hidden mb-2 bg-slate-50 dark:bg-slate-950 cursor-pointer flex items-center justify-center"
+          onClick={() => !isOut && selectFoodDetails(food)}
+          className={`relative h-24 sm:h-28 md:h-32 w-full rounded-xl overflow-hidden mb-2 bg-slate-50 dark:bg-slate-955 flex items-center justify-center ${isOut ? "cursor-not-allowed" : "cursor-pointer"}`}
         >
           <img
             src={getImageUrl(food.image)}
@@ -814,13 +826,18 @@ export default function Menu() {
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             onError={(e) => { e.target.src = 'https://placehold.co/400x300?text=Food'; }}
           />
+          {isOut && (
+            <div className="absolute inset-0 bg-slate-950/70 flex items-center justify-center">
+              <span className="bg-red-655 text-white font-extrabold text-[8px] sm:text-[9px] px-1.5 py-0.5 rounded uppercase tracking-wider">Out of Stock</span>
+            </div>
+          )}
         </div>
 
         {/* Title & Category info */}
         <div className="px-0.5 flex-1 flex flex-col">
           <h4
-            onClick={() => selectFoodDetails(food)}
-            className="font-black text-slate-900 dark:text-white text-[10px] sm:text-xs md:text-sm group-hover:text-brand-500 transition-colors line-clamp-1 mb-0.5 cursor-pointer leading-tight"
+            onClick={() => !isOut && selectFoodDetails(food)}
+            className={`font-black text-slate-900 dark:text-white text-[10px] sm:text-xs md:text-sm transition-colors line-clamp-1 mb-0.5 leading-tight ${isOut ? "cursor-not-allowed text-slate-400" : "group-hover:text-brand-500 cursor-pointer"}`}
             title={food.name}
           >
             {food.name}
@@ -1368,77 +1385,86 @@ export default function Menu() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-              {filteredFoods.map((food) => (
-                <div 
-                  key={food._id} 
-                  className="bg-white dark:bg-slate-900 rounded-3xl p-4.5 pb-5 border border-slate-100 dark:border-slate-800/60 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col group relative overflow-hidden min-h-[410px] h-full"
-                >
+              {filteredFoods.map((food) => {
+                const isOut = food.isAvailable === false;
+                return (
                   <div 
-                    onClick={() => selectFoodDetails(food)}
-                    className="relative h-40 w-full rounded-2xl overflow-hidden mb-4 bg-slate-50 dark:bg-slate-950 p-2 cursor-pointer flex items-center justify-center"
+                    key={food._id} 
+                    className={`bg-white dark:bg-slate-900 rounded-3xl p-4.5 pb-5 border border-slate-100 dark:border-slate-800/60 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col group relative overflow-hidden min-h-[410px] h-full ${isOut ? "opacity-60 grayscale filter" : ""}`}
                   >
-                    <img
-                      src={getImageUrl(food.image)}
-                      alt={food.name}
-                      className="max-w-full max-h-full object-contain rounded-xl transition-transform duration-500 group-hover:scale-105"
-                      onError={(e) => { e.target.src = 'https://placehold.co/400x300?text=Food'; }}
-                    />
-                    <div className="absolute bottom-2 left-2 bg-slate-950/95 dark:bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-black text-white dark:text-slate-950 flex items-center gap-1 shadow-sm">
-                      <Clock size={10} className="text-brand-400" />
-                      <span>{food.preparationTime || "20-30 min"}</span>
-                    </div>
-                    <div className="absolute top-2 right-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm px-2 py-0.5 rounded-lg text-[10px] font-black text-slate-800 dark:text-slate-100 flex items-center gap-1 shadow-sm">
-                      <Star size={10} className="text-amber-500 fill-amber-500 shrink-0" />
-                      <span>{food.rating ? food.rating.toFixed(1) : "4.2"}</span>
-                    </div>
-                  </div>
-
-                  <h4 
-                    onClick={() => selectFoodDetails(food)}
-                    className="font-bold text-slate-900 dark:text-white text-base group-hover:text-brand-500 transition-colors line-clamp-1 mb-1 cursor-pointer"
-                  >
-                    {food.name}
-                  </h4>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-300 font-bold uppercase tracking-wider mb-2.5">Category: {getFoodCategoryLabel(food)}</p>
-                  <div className="mb-3 flex flex-wrap gap-1.5">
-                    <span className="inline-flex items-center gap-1 rounded-full bg-slate-50 px-2 py-1 text-[10px] font-black text-slate-600 ring-1 ring-slate-100 dark:bg-slate-950 dark:text-slate-300 dark:ring-slate-800">
-                      <Users size={10} /> {getServingLabel(food.servingSize)}
-                    </span>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-orange-50 px-2 py-1 text-[10px] font-black text-orange-700 ring-1 ring-orange-100 dark:bg-orange-950/20 dark:text-orange-300 dark:ring-orange-900/40">
-                      <Flame size={10} /> {food.spiceLevel || "Medium"}
-                    </span>
-                    <span className="rounded-full bg-indigo-50 px-2 py-1 text-[10px] font-black text-indigo-700 ring-1 ring-indigo-100 dark:bg-indigo-950/20 dark:text-indigo-300 dark:ring-indigo-900/40">
-                      {food.sizeLevel || "Medium"}
-                    </span>
-                  </div>
-                  {food.foodType === "combo" && getComboItems(food).length > 0 && (
-                    <div className="mb-3 space-y-2">
-                      <ComboItemsTicker items={getComboItems(food)} />
-                      <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2 text-[10px] font-black text-slate-600 dark:bg-slate-950 dark:text-slate-300">
-                        <span>{getComboItems(food).length} items total ₹{getComboTotalPrice(food)}</span>
-                        {getComboTotalPrice(food) > Number(food.price || 0) && (
-                          <span className="text-emerald-600 dark:text-emerald-300">Save ₹{getComboTotalPrice(food) - Number(food.price || 0)}</span>
-                        )}
+                    <div 
+                      onClick={() => !isOut && selectFoodDetails(food)}
+                      className={`relative h-40 w-full rounded-2xl overflow-hidden mb-4 bg-slate-50 dark:bg-slate-950 p-2 flex items-center justify-center ${isOut ? "cursor-not-allowed" : "cursor-pointer"}`}
+                    >
+                      <img
+                        src={getImageUrl(food.image)}
+                        alt={food.name}
+                        className="max-w-full max-h-full object-contain rounded-xl transition-transform duration-500 group-hover:scale-105"
+                        onError={(e) => { e.target.src = 'https://placehold.co/400x300?text=Food'; }}
+                      />
+                      {isOut && (
+                        <div className="absolute inset-0 bg-slate-950/70 flex items-center justify-center">
+                          <span className="bg-red-600 text-white font-extrabold text-[10px] sm:text-xs px-2.5 py-1 rounded-lg shadow-md uppercase tracking-wider">Out of Stock</span>
+                        </div>
+                      )}
+                      <div className="absolute bottom-2 left-2 bg-slate-950/95 dark:bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-black text-white dark:text-slate-950 flex items-center gap-1 shadow-sm">
+                        <Clock size={10} className="text-brand-400" />
+                        <span>{food.preparationTime || "20-30 min"}</span>
+                      </div>
+                      <div className="absolute top-2 right-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm px-2 py-0.5 rounded-lg text-[10px] font-black text-slate-800 dark:text-slate-100 flex items-center gap-1 shadow-sm">
+                        <Star size={10} className="text-amber-500 fill-amber-500 shrink-0" />
+                        <span>{food.rating ? food.rating.toFixed(1) : "4.2"}</span>
                       </div>
                     </div>
-                  )}
-                  <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed mb-4.5 font-medium flex-1">{food.description}</p>
-                  
-                  <div className="flex items-center justify-between gap-3 mt-auto pt-3 border-t border-slate-100 dark:border-slate-800/50">
-                    <span className="text-lg font-black text-slate-950 dark:text-white leading-none py-1 tabular-nums">₹{food.price}</span>
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        onClick={() => toggleFavoriteFood(food._id)}
-                        className="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 text-slate-500 dark:text-slate-400 hover:text-red-500 transition-colors"
-                      >
-                        <Heart size={14} className={isFavorite(food._id) ? "fill-red-500 text-red-500" : ""} />
-                      </button>
 
-                      {renderCartAction(food)}
+                    <h4 
+                      onClick={() => !isOut && selectFoodDetails(food)}
+                      className={`font-bold text-slate-900 dark:text-white text-base transition-colors line-clamp-1 mb-1 ${isOut ? "cursor-not-allowed text-slate-400" : "group-hover:text-brand-500 cursor-pointer"}`}
+                    >
+                      {food.name}
+                    </h4>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-300 font-bold uppercase tracking-wider mb-2.5">Category: {getFoodCategoryLabel(food)}</p>
+                    <div className="mb-3 flex flex-wrap gap-1.5">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-slate-50 px-2 py-1 text-[10px] font-black text-slate-600 ring-1 ring-slate-100 dark:bg-slate-950 dark:text-slate-300 dark:ring-slate-800">
+                        <Navigation size={10} /> {getServingLabel(food.servingSize)}
+                      </span>
+                      <span className="inline-flex items-center gap-1 rounded-full bg-orange-50 px-2 py-1 text-[10px] font-black text-orange-700 ring-1 ring-orange-100 dark:bg-orange-950/20 dark:text-orange-300 dark:ring-orange-900/40">
+                        <Flame size={10} /> {food.spiceLevel || "Medium"}
+                      </span>
+                      <span className="rounded-full bg-indigo-50 px-2 py-1 text-[10px] font-black text-indigo-700 ring-1 ring-indigo-100 dark:bg-indigo-950/20 dark:text-indigo-300 dark:ring-indigo-900/40">
+                        {food.sizeLevel || "Medium"}
+                      </span>
+                    </div>
+                    {food.foodType === "combo" && getComboItems(food).length > 0 && (
+                      <div className="mb-3 space-y-2">
+                        <ComboItemsTicker items={getComboItems(food)} />
+                        <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2 text-[10px] font-black text-slate-600 dark:bg-slate-950 dark:text-slate-300">
+                          <span>{getComboItems(food).length} items total ₹{getComboTotalPrice(food)}</span>
+                          {getComboTotalPrice(food) > Number(food.price || 0) && (
+                            <span className="text-emerald-600 dark:text-emerald-300">Save ₹{getComboTotalPrice(food) - Number(food.price || 0)}</span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed mb-4.5 font-medium flex-1">{food.description}</p>
+                    
+                    <div className="flex items-center justify-between gap-3 mt-auto pt-3 border-t border-slate-100 dark:border-slate-800/50">
+                      <span className="text-lg font-black text-slate-950 dark:text-white leading-none py-1 tabular-nums">₹{food.price}</span>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => !isOut && toggleFavoriteFood(food._id)}
+                          className="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 text-slate-500 dark:text-slate-400 hover:text-red-500 transition-colors disabled:opacity-50"
+                          disabled={isOut}
+                        >
+                          <Heart size={14} className={isFavorite(food._id) ? "fill-red-500 text-red-500" : ""} />
+                        </button>
+
+                        {renderCartAction(food)}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
