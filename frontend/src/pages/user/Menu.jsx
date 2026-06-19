@@ -199,13 +199,6 @@ export default function Menu() {
       return [];
     }
   });
-  const categoriesList = useMemo(() => {
-    const list = dynamicCategories.length ? dynamicCategories : defaultCategoriesList;
-    if (vegMode) {
-      return list.filter(c => c.id === "All" || c.foodType !== "Non-Veg");
-    }
-    return list;
-  }, [dynamicCategories, vegMode]);
 
   // defaultBanners: Fallbacks in case database banners are empty
   const defaultBanners = [
@@ -569,6 +562,24 @@ export default function Menu() {
   const isVegFood = useCallback((food) => !isNonVegFood(food), [isNonVegFood]);
 
   const matchesVegMode = useCallback((food) => !vegMode || isVegFood(food), [isVegFood, vegMode]);
+
+  const categoriesList = useMemo(() => {
+    const list = dynamicCategories.length ? dynamicCategories : defaultCategoriesList;
+    if (vegMode) {
+      return list.filter(c => {
+        if (c.id === "All" || c.id === "Favorites" || c.id === "Veg Meal") return true;
+        // Check if there is at least one veg item in this category
+        return foods.some(f => {
+          if (!isVegFood(f)) return false;
+          const fCats = getFoodCategories(f);
+          return fCats.some(catName => 
+            String(catName || "").trim().toLowerCase() === String(c.name || c.id || "").trim().toLowerCase()
+          );
+        });
+      });
+    }
+    return list;
+  }, [dynamicCategories, defaultCategoriesList, vegMode, foods, isVegFood, getFoodCategories]);
 
   /* --- MEMOIZED DERIVED VALUES --- */
 
@@ -1177,7 +1188,7 @@ export default function Menu() {
           </button>
         </div>
         <div className="flex gap-3 overflow-x-auto no-scrollbar py-2 flex-nowrap whitespace-nowrap">
-          {visibleCategories.filter(cat => !(vegMode && ["Non-Veg", "Chicken", "Kebabs"].includes(cat.id))).map(cat => {
+          {visibleCategories.map(cat => {
             const isSelected = category.toLowerCase() === cat.id.toLowerCase();
             const hasOrderedItems = orderedCategories.some((itemCategory) => itemCategory.toLowerCase() === cat.id.toLowerCase());
             const categoryImage = getCategoryImage(cat);
@@ -1244,7 +1255,7 @@ export default function Menu() {
               </div>
               <div className="p-4 sm:p-6 overflow-y-auto max-h-[68vh]">
                 <div className="grid grid-cols-4 gap-x-3 gap-y-6">
-                  {categoriesList.filter(cat => !(vegMode && ["Non-Veg", "Chicken", "Kebabs"].includes(cat.id))).map((cat) => {
+                  {categoriesList.map((cat) => {
                     const isSelected = category.toLowerCase() === cat.id.toLowerCase();
                     const hasOrderedItems = orderedCategories.some((itemCategory) => itemCategory.toLowerCase() === cat.id.toLowerCase());
                     const categoryImage = getCategoryImage(cat);
