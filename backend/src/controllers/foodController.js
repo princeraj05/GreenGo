@@ -75,6 +75,7 @@ export const addFood = async (req, res) => {
       variants,
       comboItems,
       preparationTime,
+      spiceLevel,
       sizeLevel,
       isAvailable,
       availableQty
@@ -142,6 +143,7 @@ export const updateFood = async (req, res) => {
       variants,
       comboItems,
       preparationTime,
+      spiceLevel,
       sizeLevel,
       isAvailable,
       availableQty
