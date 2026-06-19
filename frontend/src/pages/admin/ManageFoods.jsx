@@ -140,7 +140,7 @@ export default function ManageFoods() {
   const [rawFile, setRawFile] = useState(null);
 
   const allCategories = useMemo(() => {
-    return dbCategories.length ? dbCategories : CATEGORY_OPTIONS;
+    return dbCategories.length ? dbCategories.map(c => c.name) : CATEGORY_OPTIONS;
   }, [dbCategories]);
 
   // ==========================================
@@ -156,7 +156,7 @@ export default function ManageFoods() {
   const loadCategories = async () => {
     try {
       const res = await API.get("/api/categories");
-      setDbCategories(res.data.map(c => c.name));
+      setDbCategories(res.data);
     } catch (err) {
       console.log("Failed to load categories:", err);
     }
@@ -314,6 +314,19 @@ export default function ManageFoods() {
       alert("All required fields must be filled."); return;
     }
     if (!form.categories.length) { alert("Select at least one category."); return; }
+
+    // Category compatibility check
+    if (form.veg === "false") {
+      for (const catName of form.categories) {
+        const matchedCat = dbCategories.find(c => c.name === catName);
+        if (matchedCat) {
+          if (matchedCat.foodType === "Veg" || matchedCat.foodType === "Egg") {
+            alert(`The category "${catName}" is marked as ${matchedCat.foodType}-only. You cannot add a Non-Veg item to it.`);
+            return;
+          }
+        }
+      }
+    }
     if (form.foodType === "combo" && parseComboItems().length < 2) {
       alert("Combo needs at least 2 items."); return;
     }

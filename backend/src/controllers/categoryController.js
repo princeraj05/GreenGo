@@ -1,4 +1,5 @@
 import Category from "../models/Category.js";
+import Food from "../models/Food.js";
 
 // Helper to get uploaded path
 const getUploadedPath = (req) => req.file?.path || "";
@@ -44,6 +45,29 @@ export const addCategory = async (req, res) => {
 export const updateCategory = async (req, res) => {
   try {
     const { name, foodType } = req.body;
+    const existingCategory = await Category.findById(req.params.id);
+    if (!existingCategory) {
+      return res.status(404).json({ message: "Category not found" });
+    }
+
+    // If changing category type to Veg or Egg, verify there are no non-veg foods in it
+    if (foodType && foodType !== existingCategory.foodType) {
+      if (foodType === "Veg" || foodType === "Egg") {
+        const nonVegFood = await Food.findOne({
+          $or: [
+            { category: existingCategory.name },
+            { categories: existingCategory.name }
+          ],
+          veg: false
+        });
+        if (nonVegFood) {
+          return res.status(400).json({
+            message: `Cannot change category type to "${foodType}" because it contains Non-Veg food item: "${nonVegFood.name}".`
+          });
+        }
+      }
+    }
+
     const updateData = {};
     if (name) updateData.name = name.trim();
     if (foodType) updateData.foodType = foodType;
@@ -52,12 +76,9 @@ export const updateCategory = async (req, res) => {
     if (image) updateData.image = image;
 
     const category = await Category.findByIdAndUpdate(req.params.id, updateData, { new: true });
-    if (!category) {
-      return res.status(404).json({ message: "Category not found" });
-    }
-
     res.json(category);
   } catch (err) {
+    console.error("Update category error:", err);
     res.status(500).json({ message: "Failed to update category" });
   }
 };
