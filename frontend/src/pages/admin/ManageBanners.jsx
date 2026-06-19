@@ -22,10 +22,10 @@ export default function ManageBanners() {
 
   // Form input field configurations for creating or updating a banner
   const [form, setForm] = useState({
-    title: "",
+    title: "Banner",
     description: "",
     discountText: "",
-    buttonText: "ORDER NOW",
+    buttonText: "",
     displayOrder: 0,
     active: true
   });
@@ -151,10 +151,10 @@ export default function ManageBanners() {
   const resetForm = () => {
     setEditingId(null);
     setForm({
-      title: "",
+      title: "Banner",
       description: "",
       discountText: "",
-      buttonText: "ORDER NOW",
+      buttonText: "",
       displayOrder: 0,
       active: true
     });
@@ -192,52 +192,6 @@ export default function ManageBanners() {
                 onChange={(e) => setImageFile(e.target.files[0])}
                 className="w-full text-sm text-slate-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-brand-50 file:text-brand-700 dark:file:bg-brand-950/40 dark:file:text-brand-400 hover:file:bg-brand-100"
               />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Banner Title</label>
-              <input
-                type="text"
-                placeholder="e.g. 50% OFF First Order"
-                required
-                value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
-                className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:border-brand-500 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Description</label>
-              <input
-                type="text"
-                placeholder="e.g. On your first purchase of the month"
-                value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
-                className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:border-brand-500 text-slate-900 dark:text-white placeholder:text-slate-400"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Discount Text</label>
-                <input
-                  type="text"
-                  placeholder="e.g. UPTO 60% OFF"
-                  value={form.discountText}
-                  onChange={(e) => setForm({ ...form, discountText: e.target.value })}
-                  className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:border-brand-500 text-slate-900 dark:text-white placeholder:text-slate-400"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Button Text</label>
-                <input
-                  type="text"
-                  placeholder="e.g. ORDER NOW"
-                  value={form.buttonText}
-                  onChange={(e) => setForm({ ...form, buttonText: e.target.value })}
-                  className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:border-brand-500 text-slate-900 dark:text-white"
-                />
-              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -304,24 +258,15 @@ export default function ManageBanners() {
                       </span>
                     </div>
 
-                    <div className="flex justify-between items-start gap-2 mb-1.5">
-                      <h3 className="font-extrabold text-slate-800 dark:text-white text-base">{banner.title}</h3>
+                    <div className="flex justify-between items-center mb-1.5">
                       <span className={`text-[10px] uppercase font-black px-2 py-0.5 rounded-full ${banner.active ? 'bg-brand-100 text-brand-700 dark:bg-brand-950/40 dark:text-brand-400' : 'bg-slate-200 text-slate-500 dark:bg-slate-800 dark:text-slate-400'}`}>
                         {banner.active ? 'Active' : 'Inactive'}
                       </span>
                     </div>
-
-                    <p className="text-slate-500 dark:text-slate-400 text-xs font-medium mb-3">{banner.description}</p>
-                    {banner.discountText && (
-                      <span className="inline-block text-xs font-black text-brand-500 bg-brand-50 dark:bg-brand-950/40 px-2 py-0.5 rounded-md mb-4 border border-brand-100/50 dark:border-brand-900/40">
-                        {banner.discountText}
-                      </span>
-                    )}
                   </div>
 
                   {/* Banner Card Footer controls */}
-                  <div className="flex justify-between items-center mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
-                    <span className="text-xs font-bold text-slate-400">Btn: "{banner.buttonText}"</span>
+                  <div className="flex justify-end items-center mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleEdit(banner)}

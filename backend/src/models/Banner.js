@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const bannerSchema = new mongoose.Schema({
-  title: { type: String, required: true },
+  title: { type: String, default: "" },
   description: { type: String, default: "" },
   discountText: { type: String, default: "" },
   buttonText: { type: String, default: "ORDER NOW" },
