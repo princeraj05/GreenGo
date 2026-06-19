@@ -269,6 +269,7 @@ export const getAllOrders = async (req,res)=>{
   const orders = await Order
   .find()
   .populate("assignedDeliveryBoy", "name phone email role deliveryCredit")
+  .populate("userId", "name phone email")
   .sort({createdAt:-1})
   .lean();
 
