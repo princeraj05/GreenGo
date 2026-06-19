@@ -200,8 +200,12 @@ export default function Menu() {
     }
   });
   const categoriesList = useMemo(() => {
-    return dynamicCategories.length ? dynamicCategories : defaultCategoriesList;
-  }, [dynamicCategories]);
+    const list = dynamicCategories.length ? dynamicCategories : defaultCategoriesList;
+    if (vegMode) {
+      return list.filter(c => c.id === "All" || c.foodType !== "Non-Veg");
+    }
+    return list;
+  }, [dynamicCategories, vegMode]);
 
   // defaultBanners: Fallbacks in case database banners are empty
   const defaultBanners = [
@@ -345,7 +349,8 @@ export default function Menu() {
             id: c.name,
             name: c.name,
             icon: c.name.slice(0, 2).toUpperCase(),
-            image: c.image ? (c.image.startsWith("http") ? c.image : `${API}/uploads/${c.image}`) : ""
+            image: c.image ? (c.image.startsWith("http") ? c.image : `${API}/uploads/${c.image}`) : "",
+            foodType: c.foodType || "Veg"
           }))
         ];
         setDynamicCategories(formatted);

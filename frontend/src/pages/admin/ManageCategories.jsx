@@ -13,6 +13,7 @@ const inputCls = "w-full px-4 py-3 rounded-xl border border-slate-200 dark:borde
 export default function ManageCategories() {
   const [categories, setCategories] = useState([]);
   const [name, setName] = useState("");
+  const [foodType, setFoodType] = useState("Veg");
   const [imageFile, setImageFile] = useState(null);
   const [preview, setPreview] = useState("");
   
@@ -86,6 +87,7 @@ export default function ManageCategories() {
       const token = await getToken();
       const fd = new FormData();
       fd.append("name", name.trim());
+      fd.append("foodType", foodType);
       if (imageFile) {
         fd.append("image", imageFile);
       }
@@ -107,6 +109,7 @@ export default function ManageCategories() {
 
   const startEdit = (cat) => {
     setName(cat.name);
+    setFoodType(cat.foodType || "Veg");
     setEditingId(cat._id);
     setImageFile(null);
     setPreview(cat.image?.startsWith("http") ? cat.image : `${import.meta.env.VITE_API_URL}/uploads/${cat.image}`);
@@ -128,6 +131,7 @@ export default function ManageCategories() {
 
   const resetForm = () => {
     setName("");
+    setFoodType("Veg");
     setImageFile(null);
     setPreview("");
     setEditingId(null);
@@ -180,6 +184,31 @@ export default function ManageCategories() {
                     className={inputCls}
                   />
                 </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-2">
+                    Food Type <span className="text-red-500">*</span>
+                  </label>
+                  <div className="flex gap-2">
+                    {[
+                      { name: "Veg", label: "🟢 Veg" },
+                      { name: "Egg", label: "🥚 Egg" },
+                      { name: "Non-Veg", label: "🔴 Non-Veg" }
+                    ].map((opt) => (
+                      <button
+                        key={opt.name}
+                        type="button"
+                        onClick={() => setFoodType(opt.name)}
+                        className={`flex-1 py-2.5 rounded-xl text-xs font-bold border transition-all ${
+                          foodType === opt.name
+                            ? "bg-emerald-600 border-emerald-600 text-white"
+                            : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-350"
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             </Card>
           </form>
@@ -210,7 +239,10 @@ export default function ManageCategories() {
                         <LayoutGrid size={24} className="text-slate-300 dark:text-slate-700" />
                       )}
                     </div>
-                    <div className="font-black text-xs text-slate-800 dark:text-slate-200 line-clamp-1 mb-2">{cat.name}</div>
+                    <div className="font-black text-xs text-slate-800 dark:text-slate-200 line-clamp-1">{cat.name}</div>
+                    <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mb-2">
+                      {cat.foodType === "Non-Veg" ? "🔴 Non-Veg" : cat.foodType === "Egg" ? "🥚 Egg" : "🟢 Veg"}
+                    </div>
                     
                     {/* Action Overlay */}
                     <div className="flex gap-1.5 mt-1.5">

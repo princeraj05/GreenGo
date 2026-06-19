@@ -16,7 +16,7 @@ export const getCategories = async (req, res) => {
 // ADD CATEGORY
 export const addCategory = async (req, res) => {
   try {
-    const { name } = req.body;
+    const { name, foodType } = req.body;
     if (!name) {
       return res.status(400).json({ message: "Category name is required" });
     }
@@ -30,7 +30,8 @@ export const addCategory = async (req, res) => {
 
     const category = await Category.create({
       name: name.trim(),
-      image
+      image,
+      foodType: foodType || "Veg"
     });
 
     res.status(201).json(category);
@@ -42,9 +43,10 @@ export const addCategory = async (req, res) => {
 // UPDATE CATEGORY
 export const updateCategory = async (req, res) => {
   try {
-    const { name } = req.body;
+    const { name, foodType } = req.body;
     const updateData = {};
     if (name) updateData.name = name.trim();
+    if (foodType) updateData.foodType = foodType;
 
     const image = getUploadedPath(req);
     if (image) updateData.image = image;
