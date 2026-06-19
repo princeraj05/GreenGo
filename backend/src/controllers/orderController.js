@@ -341,7 +341,7 @@ export const updateRiderLocation = async (req, res) => {
 /* ================= UPDATE STATUS ================= */
 
 export const updateOrderStatus = async (req, res) => {
-  const { status } = req.body;
+  const { status, cancellationReason, cancellationCustomMessage } = req.body;
   const orderId = req.params.id;
 
   try {
@@ -357,10 +357,16 @@ export const updateOrderStatus = async (req, res) => {
       await creditDeliveryBoyAmount(order);
     }
 
-    const update = {status};
-    if(status==="Delivered"){
+    const update = { status };
+    if (status === "Delivered") {
       update.deliveredAt = new Date();
       update.assignmentStatus = order.assignedDeliveryBoy ? "Delivered" : order.assignmentStatus;
+    }
+    if (status === "Cancelled") {
+      update.cancelledAt = new Date();
+      update.cancellationReason = cancellationReason || "Cancelled by Admin";
+      update.cancellationCustomMessage = cancellationCustomMessage || "";
+      update.cancellationStatus = "Approved";
     }
 
     await Order.findByIdAndUpdate(orderId, update);
@@ -371,13 +377,14 @@ export const updateOrderStatus = async (req, res) => {
         Preparing: "Your order is now being prepared.",
         "Out for Delivery": "Your order is out for delivery.",
         Delivered: "Your order has been delivered. Enjoy your meal!",
+        Cancelled: `Your order has been cancelled: ${cancellationReason || "Cancelled by Admin"}`,
       };
 
       await Notification.create({
         userId: order.userId,
         title: `Order ${status}`,
         message: `Order #${orderCode(order._id)}: ${statusMessages[status] || `Status changed to ${status}.`}`,
-        type: status === "Delivered" ? "success" : "info",
+        type: status === "Cancelled" ? "danger" : status === "Delivered" ? "success" : "info",
       });
 
       if (status === "Delivered") {

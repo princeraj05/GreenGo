@@ -330,23 +330,41 @@ export default function Orders() {
                   </Badge>
                 </div>
 
-                {/* --- PROGRESS TRACKER BAR --- */}
-                <div className="mb-6 md:mb-10 relative">
-                  <div className="overflow-hidden h-2.5 mb-3 text-xs flex rounded-full bg-slate-100 shadow-inner">
-                    <motion.div 
-                      initial={{ width: 0 }}
-                      animate={{ width: `${getProgress(o.status)}%` }}
-                      transition={{ duration: 1, ease: "easeOut" }}
-                      className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-brand-400 to-brand-600" 
-                    />
+                {o.status === "Cancelled" ? (
+                  <div className="mb-6 p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/30 text-rose-800 dark:text-rose-300">
+                    <p className="text-sm font-black flex items-center gap-2">
+                      <span className="text-lg">🚫</span> Order Cancelled
+                    </p>
+                    {o.cancellationReason && (
+                      <p className="text-xs font-bold mt-1.5">
+                        Reason: <span className="font-extrabold text-slate-900 dark:text-white">{o.cancellationReason}</span>
+                      </p>
+                    )}
+                    {o.cancellationCustomMessage && (
+                      <p className="text-xs font-medium mt-1">
+                        Note: <span className="text-slate-600 dark:text-slate-400">{o.cancellationCustomMessage}</span>
+                      </p>
+                    )}
                   </div>
-                  <div className="flex justify-between text-[10px] font-bold text-slate-400 px-0.5 uppercase tracking-wider">
-                    <span className={getProgress(o.status) >= 25 ? "text-brand-600" : ""}>Placed</span>
-                    <span className={getProgress(o.status) >= 50 ? "text-brand-600" : ""}>Preparing</span>
-                    <span className={getProgress(o.status) >= 75 ? "text-brand-600" : ""}>On the way</span>
-                    <span className={getProgress(o.status) >= 100 ? "text-emerald-600" : ""}>Delivered</span>
+                ) : (
+                  /* --- PROGRESS TRACKER BAR --- */
+                  <div className="mb-6 md:mb-10 relative">
+                    <div className="overflow-hidden h-2.5 mb-3 text-xs flex rounded-full bg-slate-100 shadow-inner">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${getProgress(o.status)}%` }}
+                        transition={{ duration: 1, ease: "easeOut" }}
+                        className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-brand-400 to-brand-600" 
+                      />
+                    </div>
+                    <div className="flex justify-between text-[10px] font-bold text-slate-400 px-0.5 uppercase tracking-wider">
+                      <span className={getProgress(o.status) >= 25 ? "text-brand-600" : ""}>Placed</span>
+                      <span className={getProgress(o.status) >= 50 ? "text-brand-600" : ""}>Preparing</span>
+                      <span className={getProgress(o.status) >= 75 ? "text-brand-600" : ""}>On the way</span>
+                      <span className={getProgress(o.status) >= 100 ? "text-emerald-600" : ""}>Delivered</span>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* --- ORDERED FOOD ITEMS CHECKLIST --- */}
                 <div className="bg-slate-50/50 dark:bg-slate-900/40 rounded-2xl p-1.5 mb-4 md:mb-6 border border-slate-100 dark:border-slate-800/60">

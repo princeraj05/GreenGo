@@ -81,6 +81,20 @@ export default function ManageOrders() {
     } catch (err) { console.log(err); }
   };
 
+  const cancelOrderDirectly = async (orderId) => {
+    const reason = window.prompt("Enter cancellation reason for customer:", "Restaurant is closed / Out of stock");
+    if (reason === null) return;
+    try {
+      const token = await getToken();
+      await API.put(`/api/orders/${orderId}/status`, { status: "Cancelled", cancellationReason: reason }, { headers: { Authorization: `Bearer ${token}` } });
+      alert("Order cancelled successfully.");
+      loadOrders();
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.message || "Failed to cancel order");
+    }
+  };
+
   // Slice orders array down to current pagination limits
   const visibleOrders = useMemo(() => orders.slice(0, visibleCount), [orders, visibleCount]);
 
@@ -178,11 +192,18 @@ export default function ManageOrders() {
                 </div>
 
 
-                <Link to={`/admin/orders/${o._id}/tracking`} className="mb-4 md:mb-6 inline-flex">
-                  <Button variant="secondary" className="rounded-xl gap-2 text-sm">
-                    <Navigation size={16} /> Track Delivery
-                  </Button>
-                </Link>
+                <div className="flex flex-wrap gap-2 mb-4 md:mb-6">
+                  <Link to={`/admin/orders/${o._id}/tracking`} className="inline-flex">
+                    <Button variant="secondary" className="rounded-xl gap-2 text-sm">
+                      <Navigation size={16} /> Track Delivery
+                    </Button>
+                  </Link>
+                  {o.status !== "Cancelled" && o.status !== "Delivered" && (
+                    <Button variant="danger" className="rounded-xl text-sm" onClick={() => cancelOrderDirectly(o._id)}>
+                      Cancel Order
+                    </Button>
+                  )}
+                </div>
 
                 {/* --- ORDER ITEMS QUANTITIES LIST --- */}
                 <div className="space-y-2 mb-4 md:mb-6 flex-1">
