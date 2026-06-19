@@ -365,7 +365,12 @@ export default function ManageFoods() {
       }
       resetForm();
       loadFoods();
-    } catch (err) { console.log(err); } finally { setLoading(false); }
+    } catch (err) {
+      console.log(err);
+      alert(err.response?.data?.message || "Failed to save food item.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Flushes temporary parameters out of form inputs back to clean defaults
