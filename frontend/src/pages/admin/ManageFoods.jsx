@@ -315,18 +315,6 @@ export default function ManageFoods() {
     }
     if (!form.categories.length) { alert("Select at least one category."); return; }
 
-    // Category compatibility check
-    if (form.veg === "false") {
-      for (const catName of form.categories) {
-        const matchedCat = dbCategories.find(c => c.name === catName);
-        if (matchedCat) {
-          if (matchedCat.foodType === "Veg" || matchedCat.foodType === "Egg") {
-            alert(`The category "${catName}" is marked as ${matchedCat.foodType}-only. You cannot add a Non-Veg item to it.`);
-            return;
-          }
-        }
-      }
-    }
     if (form.foodType === "combo" && parseComboItems().length < 2) {
       alert("Combo needs at least 2 items."); return;
     }

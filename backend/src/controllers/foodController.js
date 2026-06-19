@@ -87,17 +87,6 @@ export const addFood = async (req, res) => {
 
     const nextCategories = normalizeCategories(categories, category);
 
-    // Validate that if the food is non-veg, none of its categories are Veg or Egg
-    const foodVeg = toBoolean(veg, true);
-    if (!foodVeg) {
-      const categoriesToCheck = await Category.find({ name: { $in: nextCategories } });
-      for (const cat of categoriesToCheck) {
-        if (cat.foodType === "Veg" || cat.foodType === "Egg") {
-          return res.status(400).json({ message: `Category "${cat.name}" is Veg/Egg only. Cannot add Non-Veg item.` });
-        }
-      }
-    }
-
     const food = await Food.create({
       name,
       price: toNumber(price),
@@ -169,33 +158,6 @@ export const updateFood = async (req, res) => {
     const nextCategories = categories !== undefined || category !== undefined
       ? normalizeCategories(categories, category)
       : [];
-
-    // Validate that if the food is non-veg, none of its categories are Veg or Egg
-    let finalVeg = true;
-    if (veg !== undefined) {
-      finalVeg = toBoolean(veg, true);
-    } else {
-      const currentFood = await Food.findById(req.params.id);
-      if (currentFood) {
-        finalVeg = currentFood.veg !== false;
-      }
-    }
-    
-    if (!finalVeg) {
-      let finalCategories = nextCategories;
-      if (categories === undefined && category === undefined) {
-        const currentFood = await Food.findById(req.params.id);
-        if (currentFood) {
-          finalCategories = currentFood.categories || [currentFood.category];
-        }
-      }
-      const categoriesToCheck = await Category.find({ name: { $in: finalCategories } });
-      for (const cat of categoriesToCheck) {
-        if (cat.foodType === "Veg" || cat.foodType === "Egg") {
-          return res.status(400).json({ message: `Category "${cat.name}" is Veg/Egg only. Cannot save Non-Veg item here.` });
-        }
-      }
-    }
     if (category !== undefined || categories !== undefined) {
       updateData.category = nextCategories[0] || category || "";
       updateData.categories = nextCategories;
