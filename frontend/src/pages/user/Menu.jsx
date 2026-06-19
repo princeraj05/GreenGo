@@ -733,7 +733,7 @@ export default function Menu() {
           onClick={() => {
             hasVariantChoices(food) ? selectFoodDetails(food) : updateQuantity(food, 1);
           }}
-          className="px-2.5 py-1.5 rounded-lg bg-brand-500 hover:bg-brand-600 text-white font-black text-[9px] sm:text-xs shadow-md shadow-brand-500/20 active:scale-95 transition-all shrink-0"
+          className="px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg bg-brand-500 hover:bg-brand-600 text-white font-black text-[8px] sm:text-[10px] md:text-xs shadow-md shadow-brand-500/20 active:scale-95 transition-all shrink-0"
         >
           + Add
         </button>
@@ -747,18 +747,18 @@ export default function Menu() {
             onClick={() => {
               hasVariantChoices(food) ? selectFoodDetails(food) : updateQuantity(food, cartItem.qty - 1);
             }}
-            className="w-5 h-5 rounded-md bg-white dark:bg-slate-900 text-brand-600 dark:text-brand-300 font-extrabold flex items-center justify-center border border-slate-100 dark:border-slate-800 text-[9px]"
+            className="w-4.5 h-4.5 sm:w-5 sm:h-5 rounded-md bg-white dark:bg-slate-900 text-brand-600 dark:text-brand-300 font-extrabold flex items-center justify-center border border-slate-100 dark:border-slate-800 text-[8px] sm:text-[9px]"
           >
             -
           </button>
-          <span className="font-black text-slate-800 dark:text-white px-1 text-[10px] min-w-4 text-center">
+          <span className="font-black text-slate-800 dark:text-white px-0.5 sm:px-1 text-[9px] sm:text-[10px] min-w-3 sm:min-w-4 text-center">
             {cartItem.qty}
           </span>
           <button
             onClick={() => {
               hasVariantChoices(food) ? selectFoodDetails(food) : updateQuantity(food, cartItem.qty + 1);
             }}
-            className="w-5 h-5 rounded-md bg-brand-500 text-white font-extrabold flex items-center justify-center shadow-sm text-[9px]"
+            className="w-4.5 h-4.5 sm:w-5 sm:h-5 rounded-md bg-brand-500 text-white font-extrabold flex items-center justify-center shadow-sm text-[8px] sm:text-[9px]"
           >
             +
           </button>
@@ -786,7 +786,7 @@ export default function Menu() {
     return (
       <div
         key={food._id}
-        className={`min-w-0 bg-white dark:bg-slate-900 rounded-2xl p-2 pb-2.5 border border-slate-100 dark:border-slate-800/60 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex flex-col group relative overflow-hidden h-full ${className}`}
+        className={`min-w-0 bg-white dark:bg-slate-900 rounded-2xl p-1.5 pb-2 md:p-2.5 border border-slate-100 dark:border-slate-800/60 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex flex-col group relative overflow-hidden h-full ${className}`}
       >
         {/* Favorite & Rating overlays */}
         <div className="absolute top-1.5 left-1.5 z-10 flex items-center gap-1">
@@ -806,12 +806,12 @@ export default function Menu() {
         {/* Food Image */}
         <div
           onClick={() => selectFoodDetails(food)}
-          className="relative h-20 sm:h-24 w-full rounded-xl overflow-hidden mb-2 bg-slate-50 dark:bg-slate-950 p-1 cursor-pointer flex items-center justify-center"
+          className="relative h-24 sm:h-28 md:h-32 w-full rounded-xl overflow-hidden mb-2 bg-slate-50 dark:bg-slate-950 cursor-pointer flex items-center justify-center"
         >
           <img
             src={getImageUrl(food.image)}
             alt={food.name}
-            className="max-w-full max-h-full object-contain rounded-lg transition-transform duration-500 group-hover:scale-105"
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             onError={(e) => { e.target.src = 'https://placehold.co/400x300?text=Food'; }}
           />
         </div>
@@ -820,14 +820,14 @@ export default function Menu() {
         <div className="px-0.5 flex-1 flex flex-col">
           <h4
             onClick={() => selectFoodDetails(food)}
-            className="font-black text-slate-900 dark:text-white text-[11px] sm:text-xs md:text-sm group-hover:text-brand-500 transition-colors line-clamp-1 mb-0.5 cursor-pointer leading-tight"
+            className="font-black text-slate-900 dark:text-white text-[10px] sm:text-xs md:text-sm group-hover:text-brand-500 transition-colors line-clamp-1 mb-0.5 cursor-pointer leading-tight"
             title={food.name}
           >
             {food.name}
           </h4>
-          <div className="flex items-center gap-1 mb-1.5">
-            <span className={`w-2.5 h-2.5 flex items-center justify-center border ${isVegFood(food) ? "border-emerald-500" : "border-red-500"} p-0.5 rounded-sm shrink-0`}>
-              <span className={`w-1 h-1 rounded-full ${isVegFood(food) ? "bg-emerald-500" : "bg-red-500"}`} />
+          <div className="flex items-center gap-1 mb-1">
+            <span className={`w-2 h-2 flex items-center justify-center border ${isVegFood(food) ? "border-emerald-500" : "border-red-500"} p-0.5 rounded-sm shrink-0`}>
+              <span className={`w-0.5 h-0.5 rounded-full ${isVegFood(food) ? "bg-emerald-500" : "bg-red-500"}`} />
             </span>
             <span className="text-[8px] text-slate-400 dark:text-slate-500 font-extrabold truncate">
               {getFoodCategoryLabel(food)}
@@ -835,7 +835,7 @@ export default function Menu() {
           </div>
 
           {/* Prep time badge */}
-          <div className="flex items-center gap-0.5 mb-2 bg-slate-50 dark:bg-slate-950 px-1.5 py-0.5 rounded-md w-fit text-[8px] sm:text-[9px] font-black text-slate-500 dark:text-slate-400 leading-none">
+          <div className="flex items-center gap-0.5 mb-1.5 bg-slate-50 dark:bg-slate-950 px-1 py-0.5 rounded-md w-fit text-[8px] sm:text-[9px] font-black text-slate-500 dark:text-slate-400 leading-none">
             <Clock size={8} className="text-brand-500 shrink-0" />
             <span>{preparationTime}</span>
           </div>
@@ -853,7 +853,7 @@ export default function Menu() {
                 ₹{Math.round(food.price * oldPriceFactor)}
               </span>
             ) : null}
-            <span className="text-xs sm:text-sm font-black text-slate-950 dark:text-white leading-none tabular-nums">
+            <span className="text-[11px] sm:text-xs md:text-sm font-black text-slate-950 dark:text-white leading-none tabular-nums">
               ₹{food.price}
             </span>
           </div>
@@ -1071,29 +1071,9 @@ export default function Menu() {
           <img
             src={currentBanner.image.startsWith("http") ? currentBanner.image : getImageUrl(currentBanner.image)}
             alt={currentBanner.title}
-            className="absolute right-0 top-0 h-full w-[50%] md:w-[45%] object-cover md:object-contain object-right z-0"
+            className="absolute inset-0 h-full w-full object-cover z-0"
             onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=800'; }}
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/70 to-transparent flex flex-col justify-center p-4 sm:p-6 text-white z-10">
-            <span className="text-[9px] sm:text-[10px] font-black tracking-widest text-brand-400 uppercase mb-0.5 sm:mb-1">{currentBanner.description}</span>
-            <h2 className="text-base sm:text-lg md:text-xl font-black tracking-tight leading-tight max-w-[50%]">{currentBanner.title}</h2>
-            {currentBanner.discountText && (
-              <span className="mt-1 sm:mt-2 text-[10px] font-black bg-brand-500 text-white px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md w-fit shadow-sm uppercase">
-                {currentBanner.discountText}
-              </span>
-            )}
-            <button 
-              onClick={() => {
-                if (currentBanner.code) {
-                   navigator.clipboard.writeText(currentBanner.code);
-                   alert(`Coupon code "${currentBanner.code}" copied to clipboard!`);
-                }
-              }}
-              className="mt-2.5 sm:mt-4 bg-white hover:bg-slate-100 text-slate-950 px-3.5 py-1.5 sm:px-4.5 sm:py-2 rounded-xl text-[10px] sm:text-xs font-extrabold w-fit transition-all active:scale-95 shadow-lg shadow-black/25"
-            >
-              {currentBanner.buttonText || "ORDER NOW"}
-            </button>
-          </div>
           
           <div className="absolute bottom-4 right-6 flex gap-1.5 z-10">
             {activeBannersList.map((_, i) => (
@@ -1264,9 +1244,9 @@ export default function Menu() {
             <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Popular Dishes</h3>
             <button type="button" onClick={() => openFoodCollection("Popular Dishes", popularDishes)} className="text-xs font-black text-brand-600 dark:text-brand-300">See All</button>
           </div>
-          <div className="flex gap-3 sm:gap-4 lg:gap-6 overflow-x-auto no-scrollbar py-2 flex-nowrap">
+          <div className="flex gap-2 sm:gap-4 md:gap-6 overflow-x-auto no-scrollbar py-2 flex-nowrap">
             {popularDishes.slice(0, 8).map((food) => (
-              <div key={food._id} className="w-[180px] sm:w-[220px] md:w-[260px] shrink-0">
+              <div key={food._id} className="w-[115px] sm:w-[155px] md:w-[200px] shrink-0">
                 {renderFoodCard(food, { deliveryTime: "25-30 min", oldPriceFactor: 1.25 })}
               </div>
             ))}
@@ -1281,9 +1261,9 @@ export default function Menu() {
             <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Recommended For You</h3>
             <button type="button" onClick={() => openFoodCollection("Recommended For You", recommendedFoods)} className="text-xs font-black text-brand-600 dark:text-brand-300">See All</button>
           </div>
-          <div className="flex gap-3 sm:gap-4 lg:gap-6 overflow-x-auto no-scrollbar py-2 flex-nowrap">
+          <div className="flex gap-2 sm:gap-4 md:gap-6 overflow-x-auto no-scrollbar py-2 flex-nowrap">
             {recommendedFoods.slice(0, 8).map((food) => (
-              <div key={food._id} className="w-[180px] sm:w-[220px] md:w-[260px] shrink-0">
+              <div key={food._id} className="w-[115px] sm:w-[155px] md:w-[200px] shrink-0">
                 {renderFoodCard(food, { deliveryTime: "20-25 min", oldPriceFactor: 1.2 })}
               </div>
             ))}
@@ -1298,9 +1278,9 @@ export default function Menu() {
             <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Combo Items</h3>
             <button type="button" onClick={() => openFoodCollection("Combo Items", comboFoods)} className="text-xs font-black text-brand-600 dark:text-brand-300">See All</button>
           </div>
-          <div className="flex gap-3 sm:gap-4 lg:gap-6 overflow-x-auto no-scrollbar py-2 flex-nowrap">
+          <div className="flex gap-2 sm:gap-4 md:gap-6 overflow-x-auto no-scrollbar py-2 flex-nowrap">
             {comboFoods.slice(0, 8).map((food) => (
-              <div key={food._id} className="w-[180px] sm:w-[220px] md:w-[260px] shrink-0">
+              <div key={food._id} className="w-[115px] sm:w-[155px] md:w-[200px] shrink-0">
                 {renderFoodCard(food, { deliveryTime: "25-35 min", oldPriceFactor: 1.2 })}
               </div>
             ))}
@@ -1324,7 +1304,7 @@ export default function Menu() {
               <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">No products available right now.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6 py-2">
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-4 lg:gap-6 py-2">
               {allProductFoods.slice(0, 12).map((food) => (
                 <div key={food._id} className="w-full">
                   {renderFoodCard(food, { deliveryTime: "20-30 min", oldPriceFactor: 1.15, categoryPrefix: "Category:" })}
