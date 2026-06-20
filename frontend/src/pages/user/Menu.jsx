@@ -1457,9 +1457,14 @@ export default function Menu() {
                         <ComboItemsTicker items={getComboItems(food)} />
                         <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2 text-[10px] font-black text-slate-600 dark:bg-slate-950 dark:text-slate-300">
                           <span>{getComboItems(food).length} items total ₹{getComboTotalPrice(food)}</span>
-                          {getComboTotalPrice(food) > Number(food.price || 0) && (
-                            <span className="text-emerald-600 dark:text-emerald-300">Save ₹{getComboTotalPrice(food) - Number(food.price || 0)}</span>
-                          )}
+                          {(() => {
+                            const total = getComboTotalPrice(food);
+                            const saving = Math.max(0, total - Number(food.price || 0));
+                            const percent = total > 0 ? Math.round((saving / total) * 100) : 0;
+                            return saving > 0 ? (
+                              <span className="text-emerald-600 dark:text-emerald-300">Save ₹{saving} ({percent}%)</span>
+                            ) : null;
+                          })()}
                         </div>
                       </div>
                     )}
@@ -1620,9 +1625,16 @@ export default function Menu() {
                           {getComboItems(selectedFood).length} items for {getServingLabel(selectedFood.servingSize)}
                         </p>
                       </div>
-                      <span className="rounded-xl bg-white px-3 py-2 text-xs font-black text-emerald-700 shadow-sm dark:bg-slate-950 dark:text-emerald-300">
-                        Save Rs. {Math.max(0, getComboTotalPrice(selectedFood) - selectedFoodPrice)}
-                      </span>
+                      {(() => {
+                        const total = getComboTotalPrice(selectedFood);
+                        const saving = Math.max(0, total - selectedFoodPrice);
+                        const percent = total > 0 ? Math.round((saving / total) * 100) : 0;
+                        return saving > 0 ? (
+                          <span className="rounded-xl bg-white px-3 py-2 text-xs font-black text-emerald-750 shadow-sm dark:bg-slate-950 dark:text-emerald-350">
+                            You Save: ₹{saving} ({percent}%)
+                          </span>
+                        ) : null;
+                      })()}
                     </div>
                     <ComboItemsTicker items={getComboItems(selectedFood)} />
                     <div className="mt-4 divide-y divide-emerald-100 overflow-hidden rounded-2xl bg-white dark:divide-emerald-900/40 dark:bg-slate-950">
