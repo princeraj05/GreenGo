@@ -22,11 +22,19 @@ export default function Cart() {
   const [promo, setPromo] = useState("");
   const [discount, setDiscount] = useState(0);
   const [promoLoading, setPromoLoading] = useState(false);
+  const [isStoreOpen, setIsStoreOpen] = useState(true);
 
   /* --- DATA FETCHING & EFFECTS --- */
   useEffect(() => {
     const data = JSON.parse(localStorage.getItem("cart")) || [];
     setCart(data);
+    
+    fetch(`${getApiUrl()}/api/settings`)
+      .then(res => res.json())
+      .then(settings => {
+        setIsStoreOpen(settings.isStoreOpen !== false);
+      })
+      .catch(err => console.error("Error loading store settings in cart", err));
   }, []);
 
   /* --- EVENT HANDLERS & HELPERS --- */
@@ -253,6 +261,7 @@ export default function Cart() {
                 </div>
 
                 <Button
+                  disabled={!isStoreOpen}
                   onClick={() => {
                     const isLoggedIn = Boolean(localStorage.getItem("token") && localStorage.getItem("auth_state") === "logged_in");
                     if (!isLoggedIn) {
@@ -269,7 +278,7 @@ export default function Cart() {
                   className="w-full gap-1.5 rounded-xl py-2.5 text-xs font-bold shadow-brand-500/20"
                 >
                   <ShieldCheck size={14} />
-                  Checkout Securely
+                  {isStoreOpen ? "Checkout Securely" : "Shop is Closed"}
                 </Button>
               </Card>
             </motion.div>

@@ -191,6 +191,8 @@ export default function Menu() {
   // currentBannerIdx: Slide position of the hero offer banner
   const [currentBannerIdx, setCurrentBannerIdx] = useState(0);
 
+  const [isStoreOpen, setIsStoreOpen] = useState(true);
+
   const [dynamicCategories, setDynamicCategories] = useState(() => {
     try {
       const cached = localStorage.getItem("cached_categories");
@@ -258,12 +260,25 @@ export default function Menu() {
     loadBanners();
     loadNotifications();
     loadUser();
+    loadSettings();
 
     window.addEventListener("address-updated", loadUser);
     return () => {
       window.removeEventListener("address-updated", loadUser);
     };
   }, []);
+
+  const loadSettings = async () => {
+    try {
+      const res = await fetch(`${API}/api/settings`);
+      if (res.ok) {
+        const data = await res.json();
+        setIsStoreOpen(data.isStoreOpen !== false);
+      }
+    } catch (err) {
+      console.error("Failed to load settings:", err);
+    }
+  };
 
   // Sets up slideshow timers for rotating hero discount banners
   useEffect(() => {
@@ -773,6 +788,16 @@ export default function Menu() {
    * renderCartAction: Render standard Add/Subtract increment counters on cards.
    */
   const renderCartAction = (food) => {
+    if (!isStoreOpen) {
+      return (
+        <button
+          disabled
+          className="px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg bg-slate-250 dark:bg-slate-850 text-slate-400 dark:text-slate-500 font-black text-[8px] sm:text-[10px] md:text-xs cursor-not-allowed select-none"
+        >
+          Closed
+        </button>
+      );
+    }
     if (food.isAvailable === false) {
       return (
         <button
@@ -840,7 +865,7 @@ export default function Menu() {
     } = options;
     const preparationTime = food.preparationTime || deliveryTime;
 
-    const isOut = food.isAvailable === false;
+    const isOut = food.isAvailable === false || !isStoreOpen;
     return (
       <div
         key={food._id}
@@ -1056,6 +1081,16 @@ export default function Menu() {
           </MotionDiv>
         </div>
       </div>
+
+      {!isStoreOpen && (
+        <MotionDiv 
+          initial={{ opacity: 0, y: -10 }} 
+          animate={{ opacity: 1, y: 0 }} 
+          className="mb-4 bg-gradient-to-r from-red-500 to-rose-600 text-white font-black text-sm sm:text-base text-center py-3.5 px-4 rounded-2xl shadow-md border border-red-650/20 animate-pulse tracking-wide uppercase"
+        >
+          🚨 plz wait shop open soon 🚨
+        </MotionDiv>
+      )}
 
       {/* --- 2. SEARCH BAR SECTION --- */}
       <div className="mb-3.5 flex items-stretch gap-2 sm:gap-3">
@@ -1403,7 +1438,7 @@ export default function Menu() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               {filteredFoods.map((food) => {
-                const isOut = food.isAvailable === false;
+                const isOut = food.isAvailable === false || !isStoreOpen;
                 return (
                   <div 
                     key={food._id} 
@@ -1421,7 +1456,9 @@ export default function Menu() {
                       />
                       {isOut && (
                         <div className="absolute inset-0 bg-slate-950/70 flex items-center justify-center">
-                          <span className="bg-red-600 text-white font-extrabold text-[10px] sm:text-xs px-2.5 py-1 rounded-lg shadow-md uppercase tracking-wider">Out of Stock</span>
+                          <span className="bg-red-600 text-white font-extrabold text-[10px] sm:text-xs px-2.5 py-1 rounded-lg shadow-md uppercase tracking-wider">
+                            {!isStoreOpen ? "Closed" : "Out of Stock"}
+                          </span>
                         </div>
                       )}
                       <div className="absolute bottom-2 left-2 bg-slate-950/95 dark:bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-black text-white dark:text-slate-950 flex items-center gap-1 shadow-sm">

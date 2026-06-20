@@ -14,7 +14,8 @@ const settingsSchema = new mongoose.Schema({
   maxDeliveryDistance: { type: Number, default: 10 },
   storeLatitude: { type: Number, default: 25.5941 },
   storeLongitude: { type: Number, default: 85.1376 },
-  isDistanceLimitEnabled: { type: Boolean, default: true }
+  isDistanceLimitEnabled: { type: Boolean, default: true },
+  isStoreOpen: { type: Boolean, default: false }
 }, { timestamps: true });
 
 export default mongoose.model("Settings", settingsSchema);

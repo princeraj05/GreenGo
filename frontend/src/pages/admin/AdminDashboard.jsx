@@ -48,6 +48,35 @@ export default function AdminDashboard() {
   const [endDate, setEndDate] = useState("2026-10-04");
   const [filterPaymentMethod, setFilterPaymentMethod] = useState("All");
 
+  const [isStoreOpen, setIsStoreOpen] = useState(false);
+  const [updatingStoreStatus, setUpdatingStoreStatus] = useState(false);
+
+  const loadSettings = useCallback(async () => {
+    try {
+      const res = await API.get("/api/settings");
+      setIsStoreOpen(res.data.isStoreOpen || false);
+    } catch (err) {
+      console.error("Failed to load settings in dashboard", err);
+    }
+  }, []);
+
+  const toggleStoreStatus = async () => {
+    setUpdatingStoreStatus(true);
+    try {
+      const token = await getToken();
+      const res = await API.put("/api/settings", 
+        { isStoreOpen: !isStoreOpen },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setIsStoreOpen(res.data.isStoreOpen);
+    } catch (err) {
+      console.error("Failed to toggle store status", err);
+      alert("Failed to update store status.");
+    } finally {
+      setUpdatingStoreStatus(false);
+    }
+  };
+
   const loadOrdersList = useCallback(async () => {
     try {
       const token = await getToken();
@@ -205,8 +234,9 @@ export default function AdminDashboard() {
     Promise.resolve().then(() => {
       loadStats();
       loadOrdersList();
+      loadSettings();
     });
-  }, [loadStats, loadOrdersList]);
+  }, [loadStats, loadOrdersList, loadSettings]);
 
   // Static list configuration for generic high-level stats cards (not rendered but defined)
   const cards = [
@@ -260,9 +290,33 @@ export default function AdminDashboard() {
       
       {/* --- HEADER SECTION --- */}
       {/* Tailwind classes: mb-6 md:mb-10 controls bottom margin spacing; tracking-tight enhances text aesthetics */}
-      <MotionDiv initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6 md:mb-10">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-950 dark:text-white tracking-tight">Overview</h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-1.5 md:mt-2 text-sm sm:text-base md:text-lg font-semibold max-w-xl">Here is the latest snapshot of your business today.</p>
+      <MotionDiv initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6 md:mb-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-950 dark:text-white tracking-tight">Overview</h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-1.5 md:mt-2 text-sm sm:text-base md:text-lg font-semibold max-w-xl">Here is the latest snapshot of your business today.</p>
+        </div>
+        
+        {/* Shop Status Toggle Button */}
+        <div className="flex items-center gap-3.5 bg-slate-100 dark:bg-slate-900 px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-800/80 w-fit shrink-0">
+          <span className="text-sm font-black text-slate-700 dark:text-slate-350">Shop Status:</span>
+          <button
+            type="button"
+            disabled={updatingStoreStatus}
+            onClick={toggleStoreStatus}
+            className={`relative flex items-center justify-between px-3.5 py-1.5 rounded-xl font-black text-xs transition-all uppercase tracking-wide gap-2 border shadow-sm ${
+              isStoreOpen
+                ? "bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600"
+                : "bg-red-500 hover:bg-red-650 text-white border-red-600"
+            }`}
+          >
+            {updatingStoreStatus ? (
+              <div className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+            ) : (
+              <span className={`w-2 h-2 rounded-full ${isStoreOpen ? "bg-white animate-pulse" : "bg-white"}`} />
+            )}
+            {isStoreOpen ? "Open" : "Closed"}
+          </button>
+        </div>
       </MotionDiv>
       {/* --- END HEADER SECTION --- */}
 
