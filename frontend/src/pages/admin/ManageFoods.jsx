@@ -78,7 +78,7 @@ const INITIAL_FORM = {
   price: "",
   offerPrice: "",
   description: "",
-  categories: ["Starter"],
+  categories: [],
   veg: "true",
   foodType: "single",
   mealCategory: "Anytime",
@@ -229,7 +229,7 @@ export default function ManageFoods() {
       const next = f.categories.includes(cat)
         ? f.categories.filter(c => c !== cat)
         : [...f.categories, cat];
-      return { ...f, categories: next.length ? next : [cat] };
+      return { ...f, categories: next };
     });
   };
 
