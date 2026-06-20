@@ -12,7 +12,7 @@ const MotionDiv = motion.div;
 
 // Pre-defined menu category labels
 const CATEGORY_OPTIONS = [
-  "Starter",
+  "Starters",
   "Combo",
   "Roti",
   "Pizza",
@@ -326,7 +326,7 @@ export default function ManageFoods() {
       fd.append("price", form.offerPrice || form.price);
       fd.append("originalPrice", form.offerPrice ? form.price : 0);
       fd.append("description", form.description);
-      fd.append("category", form.categories[0] || "Starter");
+      fd.append("category", form.categories[0] || "Starters");
       fd.append("categories", JSON.stringify(form.categories));
       fd.append("veg", form.veg);
       fd.append("foodType", form.foodType);
@@ -380,7 +380,7 @@ export default function ManageFoods() {
       price: food.originalPrice > 0 ? food.originalPrice : food.price,
       offerPrice: food.originalPrice > 0 ? food.price : "",
       description: food.description,
-      categories: Array.isArray(food.categories) && food.categories.length ? food.categories : [food.category || "Starter"],
+      categories: Array.isArray(food.categories) && food.categories.length ? food.categories : [food.category || "Starters"],
       veg: food.veg === false ? "false" : "true",
       foodType: food.foodType || "single",
       mealCategory: food.mealCategory || "Anytime",
@@ -458,7 +458,7 @@ export default function ManageFoods() {
 
   // Compiles all dynamically configured category filters in bottom menu selections list
   const allCategoryFilters = ["All", ...new Set(foods.flatMap(f =>
-    Array.isArray(f.categories) && f.categories.length ? f.categories : [f.category || "Starter"]
+    Array.isArray(f.categories) && f.categories.length ? f.categories : [f.category || "Starters"]
   ))];
 
   // Filters list of items rendered inside current menu container based on selected category tags

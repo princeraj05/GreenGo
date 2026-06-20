@@ -63,7 +63,7 @@ function ComboItemsTicker({ items = [] }) {
 
 const defaultCategoriesList = [
   { id: "All", name: "All", icon: "All" },
-  { id: "Starter", name: "Starter", icon: "ST" },
+  { id: "Starters", name: "Starters", icon: "ST" },
   { id: "Combo", name: "Combo", icon: "CB" },
   { id: "Roti", name: "Roti", icon: "RT" },
   { id: "Pizza", name: "Pizza", icon: "PZ" },

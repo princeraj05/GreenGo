@@ -33,7 +33,7 @@ const preferenceOptions = [
 const foodTypes = [
   "Pizza",
   "Burger",
-  "Starter",
+  "Starters",
   "Combo",
   "Roti",
   "Chicken",
@@ -50,7 +50,7 @@ const foodTypes = [
 const foodTypeIcon = {
   Pizza: "🍕",
   Burger: "🍔",
-  Starter: "🍢",
+  Starters: "🍢",
   Combo: "🍱",
   Roti: "🫓",
   Chicken: "🍗",
