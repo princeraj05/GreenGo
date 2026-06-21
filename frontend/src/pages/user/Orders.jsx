@@ -172,7 +172,6 @@ export default function Orders() {
    * handleSubmitReview: Submits new feedback or pushes updates to existing reviews.
    */
   const handleSubmitReview = async () => {
-    if (!reviewText.trim()) return;
     try {
       const token = await getToken();
       const url = editingReviewId
@@ -190,7 +189,7 @@ export default function Orders() {
           orderId: selectedOrder._id,
           foodId: selectedFoodItem.foodId,
           rating,
-          reviewText: reviewText.trim()
+          reviewText: (reviewText || "").trim()
         })
       });
 
@@ -535,7 +534,6 @@ export default function Orders() {
                   Cancel
                 </Button>
                 <Button
-                  disabled={!reviewText.trim()}
                   onClick={handleSubmitReview}
                   className="flex-1 rounded-xl py-2.5 text-sm shadow-brand-500/20"
                 >

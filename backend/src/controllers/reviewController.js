@@ -41,8 +41,8 @@ export const createReview = async (req, res) => {
     const { foodId, orderId, rating, reviewText } = req.body;
     const userId = req.user.id;
 
-    if (!foodId || !orderId || !rating || !reviewText) {
-      return res.status(400).json({ message: "All fields are required" });
+    if (!foodId || !orderId || !rating) {
+      return res.status(400).json({ message: "Food ID, Order ID, and Rating are required" });
     }
 
     const numRating = Number(rating);
@@ -62,7 +62,7 @@ export const createReview = async (req, res) => {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    if (order.userId !== String(userId)) {
+    if (String(order.userId) !== String(userId)) {
       return res.status(403).json({ message: "You can only review your own orders" });
     }
 
@@ -90,7 +90,7 @@ export const createReview = async (req, res) => {
       foodName: orderedItem.name,
       orderId,
       rating: numRating,
-      reviewText: String(reviewText).trim(),
+      reviewText: reviewText ? String(reviewText).trim() : "",
     });
 
     // 6. Recalculate stats for the food item
