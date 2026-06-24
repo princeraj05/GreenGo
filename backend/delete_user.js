@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const MONGO_URI = "mongodb+srv://princerajmne_db_user:0324Prince@cluster0.d5mziri.mongodb.net/foodDB?retryWrites=true&w=majority";
+const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://greengomne_db_user:3L6nr1izfjtMQC7i@cluster0.livdmyh.mongodb.net/?appName=Cluster0";
 
 mongoose.connect(MONGO_URI)
   .then(async () => {
