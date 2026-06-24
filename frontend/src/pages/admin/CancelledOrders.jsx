@@ -116,15 +116,15 @@ export default function CancelledOrders() {
                 <td className="px-4 py-4 align-top min-w-[150px]">
                   <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5 leading-snug">
                     <User size={12} className="text-slate-400 shrink-0" />
-                    {o.phone || "N/A"}
+                    {typeof o.userId === "object" && o.userId !== null ? o.userId.name || "Customer" : "Customer"}
                   </span>
                   <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-1 leading-snug break-all">
                     <Mail size={11} className="text-slate-400 shrink-0" />
-                    {o.userId || "N/A"}
+                    {typeof o.userId === "object" && o.userId !== null ? o.userId.email || "N/A" : o.userId || "N/A"}
                   </span>
                   <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-1 leading-snug">
                     <Phone size={11} className="text-slate-400 shrink-0" />
-                    {o.phone || "N/A"}
+                    {o.phone || (typeof o.userId === "object" && o.userId !== null ? o.userId.phone : "N/A")}
                   </span>
                 </td>
 
@@ -267,13 +267,13 @@ export default function CancelledOrders() {
                     </td>
                     <td className="px-4 py-4 align-top">
                       <span className="text-xs font-black text-slate-900 dark:text-white block leading-snug">
-                        {o.phone || "Customer"}
+                        {typeof o.userId === "object" && o.userId !== null ? o.userId.name || "Customer" : "Customer"}
                       </span>
-                      <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block mt-1 leading-snug">
-                        {o.userId}
+                      <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block mt-1 leading-snug break-all">
+                        {typeof o.userId === "object" && o.userId !== null ? o.userId.email || "N/A" : o.userId || "N/A"}
                       </span>
                       <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block mt-0.5 leading-snug">
-                        {o.phone || "N/A"}
+                        {o.phone || (typeof o.userId === "object" && o.userId !== null ? o.userId.phone : "N/A")}
                       </span>
                     </td>
                     <td className="px-4 py-4 align-top">
