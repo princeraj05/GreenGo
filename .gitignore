@@ -4,3 +4,6 @@ frontend/android/
 frontend/assets/
 *.keystore
 *.jks
+
+.vercel
+.env*
