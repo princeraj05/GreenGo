@@ -9,7 +9,7 @@ export const getApiUrl = () => {
     window.Capacitor ||
     (window.location.hostname === "localhost" && window.location.port === "")
   ) {
-    return "https://bytebite-8n5z.onrender.com";
+    return "https://api.green-go.in";
   }
   // Fallback for local development
   return "http://localhost:5000";
