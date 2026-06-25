@@ -2,13 +2,13 @@ import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBRzVQcULVdtjmCUidgNaYC2f01tkePCEE",
-  authDomain: "greengo-40db2.firebaseapp.com",
-  projectId: "greengo-40db2",
-  storageBucket: "greengo-40db2.firebasestorage.app",
-  messagingSenderId: "514910313840",
-  appId: "1:514910313840:web:9aca8ff1f55ff78897c3b5",
-  measurementId: "G-Z3NCB3NBJ1"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 const app = initializeApp(firebaseConfig);
