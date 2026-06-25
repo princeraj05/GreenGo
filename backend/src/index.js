@@ -41,6 +41,8 @@ const allowedOrigins = [
   "http://localhost:5173",
   "https://byte-bite-ten.vercel.app",
   "https://byte-bite-dd1g7omzo-princes-projects-d7be7534.vercel.app",
+  "https://green-go.in",
+  "https://www.green-go.in",
   "http://localhost",
   "https://localhost",
   "capacitor://localhost",
