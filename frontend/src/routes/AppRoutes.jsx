@@ -23,6 +23,7 @@ const Orders = lazy(() => import("../pages/user/Orders"));
 const Profile = lazy(() => import("../pages/user/Profile"));
 const UserContact = lazy(() => import("../pages/user/Contact"));
 const Wishlist = lazy(() => import("../pages/user/Wishlist"));
+const PrivacyPolicy = lazy(() => import("../pages/common/PrivacyPolicy"));
 const BudgetAssistantPage = lazy(() => import("../pages/user/BudgetAssistantPage"));
 const Notifications = lazy(() => import("../pages/user/Notifications"));
 const OrderTrackingPage = lazy(() => import("../pages/common/OrderTrackingPage"));
@@ -78,6 +79,7 @@ export default function AppRoutes() {
         <Route path="/contact" element={<Navigate to="/" replace />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
 
         {/* USER PANEL */}
         <Route path="/user" element={<UserLayout />}>
