@@ -38,8 +38,8 @@ export default function ForgotPassword() {
       <div className="relative w-full sm:max-w-md z-10 flex flex-col justify-center min-h-screen sm:min-h-0">
 
         <div className="flex flex-col items-center mb-6 sm:mb-8">
-          <Link to="/" className="w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-300 flex items-center justify-center shadow-xl shadow-brand-500/30 mb-4 hover:scale-105 transition-transform">
-            <span className="text-3xl text-white">🍔</span>
+          <Link to="/" className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center shadow-xl shadow-brand-500/30 mb-4 hover:scale-105 transition-transform overflow-hidden border border-brand-100 dark:border-brand-900">
+            <img src="/greengo-logo.png" alt="GreenGo" className="w-full h-full object-cover" />
           </Link>
           <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">GreenGo</h1>
           <p className="text-sm font-medium text-gray-500 dark:text-slate-400 mt-2">Reset your account password</p>

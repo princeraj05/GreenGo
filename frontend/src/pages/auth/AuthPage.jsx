@@ -411,8 +411,8 @@ export default function AuthPage() {
         {/* Top Header inside Left Panel */}
         <div className="relative z-10 flex items-center justify-between lg:justify-start gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center shadow-lg shadow-brand-500/30">
-              <span className="text-2xl sm:text-3xl">🍔</span>
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl overflow-hidden shadow-lg shadow-brand-500/30 bg-white border border-brand-100/50 dark:border-brand-900/50 flex items-center justify-center">
+              <img src="/greengo-logo.png" alt="GreenGo" className="w-full h-full object-cover" />
             </div>
             <span className="text-xl sm:text-2xl font-black tracking-tight text-white drop-shadow-md">GreenGo</span>
           </div>

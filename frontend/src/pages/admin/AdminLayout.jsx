@@ -287,8 +287,8 @@ export default function AdminLayout() {
         {/* Brand */}
         <div className="px-8 pt-8 pb-6 border-b border-slate-800/50">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center shadow-lg shadow-brand-500/25">
-              <span className="text-white text-xl font-black">G</span>
+            <div className="w-10 h-10 rounded-xl overflow-hidden bg-white border border-brand-100/50 dark:border-brand-900/50 flex items-center justify-center shadow-lg shadow-brand-500/25">
+              <img src="/greengo-logo.png" alt="GreenGo" className="w-full h-full object-cover" />
             </div>
             <span className="text-white font-black text-2xl tracking-tight">GreenGo</span>
           </div>
@@ -351,8 +351,8 @@ export default function AdminLayout() {
         {/* Hidden on desktop using md:hidden */}
         <div className="sticky top-0 z-40 h-16 flex items-center justify-between px-4 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 md:hidden transition-colors duration-300">
           <div className="flex items-center gap-2 min-w-0">
-            <div className="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center shadow-md shrink-0">
-              <span className="text-white text-sm font-black">G</span>
+            <div className="w-8 h-8 rounded-lg overflow-hidden bg-white border border-brand-100/50 dark:border-brand-900/50 flex items-center justify-center shadow-md shrink-0">
+              <img src="/greengo-logo.png" alt="GreenGo" className="w-full h-full object-cover" />
             </div>
             <span className="font-black text-slate-950 dark:text-white text-base sm:text-lg truncate">GreenGo Admin</span>
           </div>
