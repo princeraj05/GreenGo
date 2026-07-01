@@ -449,7 +449,7 @@ export default function UserLayout() {
 
         {/* Page Content Panel */}
         <div className="flex-1 p-4 sm:p-6 lg:p-8 pb-28 md:pb-8 overflow-x-hidden">
-          <div className="w-full h-full max-w-7xl mx-auto animate-fade-in">
+          <div className="w-full min-h-full max-w-7xl mx-auto animate-fade-in">
             <Outlet />
           </div>
         </div>
@@ -461,16 +461,16 @@ export default function UserLayout() {
         "fixed bottom-4 left-4 right-4 z-50 transition-all duration-300 transform md:hidden",
         showBottomNav ? "translate-y-0 opacity-100" : "translate-y-28 opacity-0 pointer-events-none"
       )}>
-        <nav className="bg-white/80 dark:bg-slate-950/85 backdrop-blur-xl border border-slate-200/50 dark:border-slate-800/50 shadow-[0_8px_32px_rgba(0,0,0,0.08)] rounded-2xl flex items-center justify-around py-2.5 px-2">
+        <nav className="bg-white/85 dark:bg-slate-950/90 backdrop-blur-xl border border-white/40 dark:border-slate-800/70 shadow-[0_8px_32px_rgba(15,23,42,0.16)] rounded-2xl flex items-center justify-around py-2.5 px-2">
           {bottomNavLinks.map(({ to, end, label, icon, badge }) => (
             <NavLink
               key={to}
               to={to}
               end={end}
               className={({ isActive }) => cn(
-                "flex min-w-[58px] flex-col items-center justify-center relative py-1.5 px-2 rounded-xl transition-all duration-300 active:scale-90",
+                "flex min-w-[58px] flex-col items-center justify-center relative py-1.5 px-2 rounded-xl transition-all duration-300 active:scale-95",
                 isActive 
-                  ? "text-brand-500 scale-105 bg-brand-500/10 dark:bg-brand-500/20 font-black" 
+                  ? "text-brand-600 scale-105 bg-brand-500/10 dark:text-brand-300 dark:bg-brand-500/15 font-black" 
                   : "text-slate-500 dark:text-slate-300 hover:text-slate-700 dark:hover:text-white font-bold"
               )}
             >
@@ -488,7 +488,7 @@ export default function UserLayout() {
           <button
             type="button"
             onClick={() => setOpen(true)}
-            className="flex min-w-[58px] flex-col items-center justify-center relative py-1.5 px-2 rounded-xl text-slate-500 dark:text-slate-300 font-bold transition-all active:scale-90"
+            className="flex min-w-[58px] flex-col items-center justify-center relative py-1.5 px-2 rounded-xl text-slate-500 dark:text-slate-300 font-bold transition-all active:scale-95"
           >
             <MoreHorizontal size={20} />
             <span className="text-[10px] mt-1 tracking-tight select-none">More</span>

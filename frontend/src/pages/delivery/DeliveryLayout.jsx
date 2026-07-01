@@ -198,7 +198,7 @@ export default function DeliveryLayout() {
 
       {/* --- MAIN WRAPPER & MOBILE COMPATIBLE SECTION --- */}
       {/* Offsets desktop viewports to compensate for fixed sidebar ('md:pl-72') */}
-      <div className="flex-1 min-h-screen md:pl-72">
+      <div className="flex-1 min-h-screen md:pl-72 pt-16 md:pt-0">
         
         {/* --- TOP BAR HEADER --- */}
         {/* Floating navbar featuring dark mode toggles, notification indicators and profile alerts */}

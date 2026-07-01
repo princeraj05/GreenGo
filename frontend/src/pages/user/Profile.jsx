@@ -989,8 +989,8 @@ export default function Profile() {
             <div className="w-20 h-20 rounded-full bg-green-500 text-white flex items-center justify-center text-4xl font-black shadow-lg shadow-green-500/30 ring-4 ring-green-100 dark:ring-green-950/20">
               {form.name ? form.name.charAt(0).toUpperCase() : <User size={38} />}
             </div>
-            <div className="min-w-0">
-              <h1 className="text-2xl sm:text-3xl font-black text-slate-950 dark:text-white truncate">{form.name || "GreenGo User"}</h1>
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-950 dark:text-white break-words leading-tight">{form.name || "GreenGo User"}</h1>
               <div className="mt-1 flex items-center gap-2 text-sm font-bold text-slate-600 dark:text-slate-300">
                 <Phone size={15} />
                 <span>{form.phone || "Phone not added"}</span>
@@ -1058,7 +1058,7 @@ export default function Profile() {
           </div>
         </div>
 
-        <div className="px-5 py-5 pb-14">
+        <div className="px-5 py-5 pb-24 sm:pb-16 relative">
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {menuItems.map((item) => (
               <button
@@ -1085,10 +1085,10 @@ export default function Profile() {
               <span className="font-bold text-red-650 dark:text-red-400 text-xs sm:text-sm tracking-tight">Logout</span>
             </button>
           </div>
-        </div>
 
-        <div className="absolute bottom-4 left-0 right-0 text-center text-xs font-bold text-slate-400 pointer-events-none">
-          Version 1.0.0
+          <div className="mt-8 text-center text-xs font-bold text-slate-400 select-none pointer-events-none">
+            Version 1.0.0
+          </div>
         </div>
       </div>
 

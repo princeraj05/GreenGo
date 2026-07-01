@@ -419,7 +419,7 @@ export default function AdminLayout() {
            <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-brand-50 dark:bg-transparent rounded-full blur-[120px] -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
            <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-50/50 dark:bg-transparent rounded-full blur-[100px] translate-y-1/2 -translate-x-1/3 pointer-events-none"></div>
            
-           <div className="relative z-10 w-full h-full max-w-7xl mx-auto">
+           <div className="relative z-10 w-full min-h-full max-w-7xl mx-auto">
              <Outlet />
            </div>
         </div>
@@ -434,16 +434,16 @@ export default function AdminLayout() {
         "fixed bottom-4 left-4 right-4 z-[800] transition-all duration-300 transform md:hidden",
         showBottomNav ? "translate-y-0 opacity-100" : "translate-y-28 opacity-0 pointer-events-none"
       )}>
-        <nav className="bg-slate-900 border border-slate-800 shadow-[0_8px_32px_rgba(0,0,0,0.3)] rounded-2xl flex items-center justify-around py-2 px-2">
+        <nav className="bg-slate-900/85 dark:bg-slate-950/95 backdrop-blur-xl border border-slate-800/70 shadow-[0_8px_32px_rgba(15,23,42,0.35)] rounded-2xl flex items-center justify-around py-2.5 px-2">
           {mobileNavLinks.map(({ to, end, label, icon }) => (
             <NavLink
               key={to}
               to={to}
               end={end}
               className={({ isActive }) => cn(
-                "flex flex-col items-center justify-center relative py-1.5 px-2.5 rounded-xl transition-all duration-300 active:scale-90 min-w-0",
+                "flex flex-col items-center justify-center relative py-1.5 px-2.5 rounded-xl transition-all duration-300 active:scale-95 min-w-0",
                 isActive 
-                  ? "text-brand-400 scale-105 bg-slate-800/80 font-black" 
+                  ? "text-brand-400 scale-105 bg-slate-800/60 dark:bg-slate-900/50 font-black" 
                   : "text-slate-500 hover:text-slate-300 font-bold"
               )}
             >
@@ -456,8 +456,8 @@ export default function AdminLayout() {
           <button
             onClick={() => setMoreOpen(true)}
             className={cn(
-              "flex flex-col items-center justify-center relative py-1.5 px-2.5 rounded-xl transition-all duration-300 active:scale-90 min-w-0",
-              moreOpen ? "text-brand-400 bg-slate-800/80" : "text-slate-500 hover:text-slate-300 font-bold"
+              "flex flex-col items-center justify-center relative py-1.5 px-2.5 rounded-xl transition-all duration-300 active:scale-95 min-w-0",
+              moreOpen ? "text-brand-400 bg-slate-800/60 dark:bg-slate-900/50" : "text-slate-500 hover:text-slate-300 font-bold"
             )}
           >
             <Plus size={20} />
