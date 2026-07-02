@@ -80,7 +80,7 @@ export default function ManageSettings() {
    */
   const loadSettings = async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/settings`);
+      const res = await fetch(`${getApiUrl()}/api/settings`);
       const data = await res.json();
       if (data) {
         setForm({

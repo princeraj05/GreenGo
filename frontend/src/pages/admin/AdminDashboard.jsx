@@ -166,9 +166,9 @@ export default function AdminDashboard() {
       }
 
       if (window.diagnostics) {
-        window.diagnostics.addLog(`AdminDashboard: Fetching dashboard-stats from VITE_API_URL = ${import.meta.env.VITE_API_URL}`);
+        window.diagnostics.addLog(`AdminDashboard: Fetching dashboard-stats from VITE_API_URL = ${getApiUrl()}`);
       }
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/analytics/dashboard-stats`, {
+      const res = await fetch(`${getApiUrl()}/api/admin/analytics/dashboard-stats`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
@@ -179,7 +179,7 @@ export default function AdminDashboard() {
         if (window.diagnostics) {
           window.diagnostics.addLog(`AdminDashboard: Fetching admin info from /api/users/me`);
         }
-        const resMe = await fetch(`${import.meta.env.VITE_API_URL}/api/users/me`, {
+        const resMe = await fetch(`${getApiUrl()}/api/users/me`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (resMe.ok) {

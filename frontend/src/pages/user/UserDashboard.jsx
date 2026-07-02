@@ -67,17 +67,17 @@ export default function UserDashboard() {
       }
 
       if (window.diagnostics) {
-        window.diagnostics.addLog(`UserDashboard: Fetching dashboard APIs from VITE_API_URL = ${import.meta.env.VITE_API_URL}`);
+        window.diagnostics.addLog(`UserDashboard: Fetching dashboard APIs from VITE_API_URL = ${getApiUrl()}`);
       }
       
       // Parallel network fetches for dashboard data
       const [ordersRes, recommendedRes, userRes, statsRes, offersRes, notifRes] = await Promise.all([
-        fetch(`${import.meta.env.VITE_API_URL}/api/orders/my`, { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`${import.meta.env.VITE_API_URL}/api/dashboard/recommended`, { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`${import.meta.env.VITE_API_URL}/api/users/me`, { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`${import.meta.env.VITE_API_URL}/api/dashboard/user-stats`, { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`${import.meta.env.VITE_API_URL}/api/dashboard/offers`, { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`${import.meta.env.VITE_API_URL}/api/notifications/my`, { headers: { Authorization: `Bearer ${token}` } })
+        fetch(`${getApiUrl()}/api/orders/my`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${getApiUrl()}/api/dashboard/recommended`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${getApiUrl()}/api/users/me`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${getApiUrl()}/api/dashboard/user-stats`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${getApiUrl()}/api/dashboard/offers`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${getApiUrl()}/api/notifications/my`, { headers: { Authorization: `Bearer ${token}` } })
       ]);
 
       if (window.diagnostics) {

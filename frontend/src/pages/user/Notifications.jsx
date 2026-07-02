@@ -78,7 +78,7 @@ export default function Notifications() {
         setNotifications([]);
         return;
       }
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/notifications/my`, {
+      const res = await fetch(`${getApiUrl()}/api/notifications/my`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -105,7 +105,7 @@ export default function Notifications() {
     try {
       const token = await getToken();
       if (!token) return;
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/notifications/${id}/read`, {
+      const res = await fetch(`${getApiUrl()}/api/notifications/${id}/read`, {
         method: "PUT",
         headers: { Authorization: `Bearer ${token}` },
       });

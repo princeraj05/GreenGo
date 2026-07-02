@@ -99,7 +99,7 @@ export default function AdminLayout() {
       if (window.diagnostics) {
         window.diagnostics.addLog(`AdminLayout loadAdmin: Fetching GET /api/users/me`);
       }
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/me`, {
+      const res = await fetch(`${getApiUrl()}/api/users/me`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (window.diagnostics) {
@@ -133,7 +133,7 @@ export default function AdminLayout() {
     const token = await getToken();
     if (!token) return;
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/notifications/all`, {
+      const res = await fetch(`${getApiUrl()}/api/notifications/all`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if(res.ok) {
@@ -152,7 +152,7 @@ export default function AdminLayout() {
     const token = await getToken();
     if (!token) return;
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/orders`, {
+      const res = await fetch(`${getApiUrl()}/api/orders`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {

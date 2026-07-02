@@ -44,7 +44,7 @@ export default function Contact() {
     if (!form.name || !form.email || !form.message) return;
     
     try {
-      await fetch(`${import.meta.env.VITE_API_URL}/api/contact`, {
+      await fetch(`${getApiUrl()}/api/contact`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form)

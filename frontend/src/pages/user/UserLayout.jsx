@@ -124,7 +124,7 @@ export default function UserLayout() {
       if (window.diagnostics) {
         window.diagnostics.addLog(`UserLayout loadUser: Fetching GET /api/users/me`);
       }
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/me`, {
+      const res = await fetch(`${getApiUrl()}/api/users/me`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (window.diagnostics) {
@@ -170,7 +170,7 @@ export default function UserLayout() {
 
   const saveAddresses = async (addresses) => {
     const token = await getToken();
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/profile`, {
+    const res = await fetch(`${getApiUrl()}/api/users/profile`, {
       method: "PUT",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify({ addresses })
@@ -211,7 +211,7 @@ export default function UserLayout() {
     const token = await getToken();
     if (!token) return;
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/orders/my`, {
+      const res = await fetch(`${getApiUrl()}/api/orders/my`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
@@ -231,7 +231,7 @@ export default function UserLayout() {
     const token = await getToken();
     if (!token) return;
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/notifications/my`, {
+      const res = await fetch(`${getApiUrl()}/api/notifications/my`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {

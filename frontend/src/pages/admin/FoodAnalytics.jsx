@@ -33,7 +33,7 @@ export default function FoodAnalytics() {
   const loadFoodAnalytics = useCallback(async () => {
     try {
       const token = await getToken();
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/analytics/food-analytics`, {
+      const res = await fetch(`${getApiUrl()}/api/admin/analytics/food-analytics`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
@@ -56,7 +56,7 @@ export default function FoodAnalytics() {
   const toggleFeatured = async (food) => {
     try {
       const token = await getToken();
-      await fetch(`${import.meta.env.VITE_API_URL}/api/foods/${food._id}`, {
+      await fetch(`${getApiUrl()}/api/foods/${food._id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

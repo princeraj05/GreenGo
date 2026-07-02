@@ -46,7 +46,7 @@ export default function ManageNotifications() {
   const loadNotifications = async () => {
     try {
       const token = await getToken();
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/notifications/all`, {
+      const res = await fetch(`${getApiUrl()}/api/notifications/all`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
@@ -86,8 +86,8 @@ export default function ManageNotifications() {
     try {
       const token = await getToken();
       const url = editingId 
-        ? `${import.meta.env.VITE_API_URL}/api/notifications/${editingId}`
-        : `${import.meta.env.VITE_API_URL}/api/notifications`;
+        ? `${getApiUrl()}/api/notifications/${editingId}`
+        : `${getApiUrl()}/api/notifications`;
       const method = editingId ? "PUT" : "POST";
 
       const res = await fetch(url, {
@@ -127,7 +127,7 @@ export default function ManageNotifications() {
     if (!window.confirm("Are you sure you want to delete this broadcast?")) return;
     try {
       const token = await getToken();
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/notifications/${id}`, {
+      const res = await fetch(`${getApiUrl()}/api/notifications/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -150,7 +150,7 @@ export default function ManageNotifications() {
     try {
       const token = await getToken();
       if (!(notification.isRead || notification.read)) {
-        await fetch(`${import.meta.env.VITE_API_URL}/api/notifications/${notification._id}/read`, {
+        await fetch(`${getApiUrl()}/api/notifications/${notification._id}/read`, {
           method: "PUT",
           headers: { Authorization: `Bearer ${token}` }
         });

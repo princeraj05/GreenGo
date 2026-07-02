@@ -116,7 +116,7 @@ export default function Checkout() {
     const data = JSON.parse(localStorage.getItem("cart")) || [];
     setCart(data);
 
-    fetch(`${import.meta.env.VITE_API_URL}/api/settings`)
+    fetch(`${getApiUrl()}/api/settings`)
       .then(res => res.json())
       .then(settingsData => {
         setSettings(settingsData);
@@ -128,7 +128,7 @@ export default function Checkout() {
 
     const token = getToken();
     if(token) {
-      fetch(`${import.meta.env.VITE_API_URL}/api/users/me`, {
+      fetch(`${getApiUrl()}/api/users/me`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       .then(res => res.json())
@@ -275,7 +275,7 @@ export default function Checkout() {
       }
 
       // Fetch store settings to calculate & validate distance
-      const settingsRes = await fetch(`${import.meta.env.VITE_API_URL}/api/settings`);
+      const settingsRes = await fetch(`${getApiUrl()}/api/settings`);
       const settingsData = await settingsRes.json();
       let checkoutDeliveryCharge = deliveryCharge;
 
@@ -300,7 +300,7 @@ export default function Checkout() {
       const checkoutTotal = subtotal + packingCharges + checkoutDeliveryCharge + taxes;
 
       if (paymentMethod !== "COD") {
-        const orderRes = await fetch(`${import.meta.env.VITE_API_URL}/api/payment/create-order`, {
+        const orderRes = await fetch(`${getApiUrl()}/api/payment/create-order`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -317,7 +317,7 @@ export default function Checkout() {
           return;
         }
 
-        const keyRes = await fetch(`${import.meta.env.VITE_API_URL}/api/payment/key`);
+        const keyRes = await fetch(`${getApiUrl()}/api/payment/key`);
         const { key } = await keyRes.json();
 
         const options = {
@@ -328,7 +328,7 @@ export default function Checkout() {
           description: "Premium Food Delivery Payment",
           order_id: orderData.order.id,
           handler: async function (response) {
-            const verifyRes = await fetch(`${import.meta.env.VITE_API_URL}/api/payment/verify`, {
+            const verifyRes = await fetch(`${getApiUrl()}/api/payment/verify`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -376,7 +376,7 @@ export default function Checkout() {
    */
   const createFinalOrder = async (token, lat, lon, finalDeliveryCharge = deliveryCharge, finalTotal = total, transactionId = "") => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/orders`, {
+      const res = await fetch(`${getApiUrl()}/api/orders`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

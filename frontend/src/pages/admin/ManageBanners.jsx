@@ -51,7 +51,7 @@ export default function ManageBanners() {
   const loadBanners = async () => {
     try {
       const token = await getToken();
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/banners/admin`, {
+      const res = await fetch(`${getApiUrl()}/api/banners/admin`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
@@ -82,11 +82,11 @@ export default function ManageBanners() {
         formData.append("image", imageFile);
       }
 
-      let url = `${import.meta.env.VITE_API_URL}/api/banners/admin`;
+      let url = `${getApiUrl()}/api/banners/admin`;
       let method = "POST";
 
       if (editingId) {
-        url = `${import.meta.env.VITE_API_URL}/api/banners/admin/${editingId}`;
+        url = `${getApiUrl()}/api/banners/admin/${editingId}`;
         method = "PUT";
       }
 
@@ -133,7 +133,7 @@ export default function ManageBanners() {
     if (!confirm("Delete this banner?")) return;
     try {
       const token = await getToken();
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/banners/admin/${id}`, {
+      const res = await fetch(`${getApiUrl()}/api/banners/admin/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` }
       });

@@ -112,7 +112,7 @@ export default function ManageCategories() {
     setFoodType(cat.foodType || "Veg");
     setEditingId(cat._id);
     setImageFile(null);
-    setPreview(cat.image?.startsWith("http") ? cat.image : `${import.meta.env.VITE_API_URL}/uploads/${cat.image}`);
+    setPreview(cat.image?.startsWith("http") ? cat.image : `${getApiUrl()}/uploads/${cat.image}`);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -231,7 +231,7 @@ export default function ManageCategories() {
                     <div className="w-16 h-16 rounded-xl overflow-hidden bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-850 flex items-center justify-center p-1.5 mb-2.5">
                       {cat.image ? (
                         <img
-                          src={cat.image?.startsWith("http") ? cat.image : `${import.meta.env.VITE_API_URL}/uploads/${cat.image}`}
+                          src={cat.image?.startsWith("http") ? cat.image : `${getApiUrl()}/uploads/${cat.image}`}
                           alt={cat.name}
                           className="w-full h-full object-cover rounded-lg"
                         />

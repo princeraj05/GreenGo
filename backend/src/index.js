@@ -63,11 +63,11 @@ const corsOptions = {
       return callback(null, true);
     }
 
-    return callback(new Error("CORS not allowed"));
+    // Return false instead of throwing Error to prevent Nginx/Hostinger 500 preflight crashes
+    return callback(null, false);
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
 };
 
 app.use((req, res, next) => {

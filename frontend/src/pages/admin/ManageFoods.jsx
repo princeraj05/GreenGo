@@ -407,7 +407,7 @@ export default function ManageFoods() {
       image: null,
       categoryImageFile: null,
     });
-    setPreview(food.image?.startsWith("http") ? food.image : `${import.meta.env.VITE_API_URL}/uploads/${food.image}`);
+    setPreview(food.image?.startsWith("http") ? food.image : `${getApiUrl()}/uploads/${food.image}`);
     setEditingId(food._id);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -943,7 +943,7 @@ export default function ManageFoods() {
               <Card hover className="overflow-hidden flex flex-col h-full border-slate-100 dark:border-slate-800/60 p-2 bg-white dark:bg-slate-950 group">
                 <div className="relative h-48 overflow-hidden bg-slate-50 dark:bg-slate-900 rounded-xl flex items-center justify-center p-2">
                   <img
-                    src={f.image?.startsWith("http") ? f.image : `${import.meta.env.VITE_API_URL}/uploads/${f.image}`}
+                    src={f.image?.startsWith("http") ? f.image : `${getApiUrl()}/uploads/${f.image}`}
                     className="max-w-full max-h-full object-contain rounded-lg transition-transform duration-500 group-hover:scale-105"
                     alt={f.name} />
                   <div className="absolute top-2 right-2 flex gap-1.5">

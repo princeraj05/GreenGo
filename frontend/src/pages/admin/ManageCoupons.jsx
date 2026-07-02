@@ -44,7 +44,7 @@ export default function ManageCoupons() {
   const loadCoupons = async () => {
     try {
       const token = await getToken();
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/coupons`, {
+      const res = await fetch(`${getApiUrl()}/api/coupons`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
@@ -63,7 +63,7 @@ export default function ManageCoupons() {
     e.preventDefault();
     try {
       const token = await getToken();
-      await fetch(`${import.meta.env.VITE_API_URL}/api/coupons`, {
+      await fetch(`${getApiUrl()}/api/coupons`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -85,7 +85,7 @@ export default function ManageCoupons() {
     if (!confirm("Delete this coupon?")) return;
     try {
       const token = await getToken();
-      await fetch(`${import.meta.env.VITE_API_URL}/api/coupons/${id}`, {
+      await fetch(`${getApiUrl()}/api/coupons/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -101,7 +101,7 @@ export default function ManageCoupons() {
   const toggleActive = async (coupon) => {
     try {
       const token = await getToken();
-      await fetch(`${import.meta.env.VITE_API_URL}/api/coupons/${coupon._id}`, {
+      await fetch(`${getApiUrl()}/api/coupons/${coupon._id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
