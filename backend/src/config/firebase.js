@@ -5,7 +5,7 @@ if (!admin.apps.length) {
   const fallbackProjectId = process.env.FIREBASE_PROJECT_ID || "greengo-102bd";
   if (serviceAccountJson) {
     try {
-      // Clean wrapping quotes and unescape escaped quotes (\") and escaped backslashes (\\)
+      // Clean wrapping quotes and remove all backslashes except those followed by 'n' (newlines) or 't' (tabs)
       let cleanJson = serviceAccountJson.trim();
       
       // Remove wrapping single or double quotes if the whole value is wrapped
@@ -14,10 +14,10 @@ if (!admin.apps.length) {
         cleanJson = cleanJson.slice(1, -1);
       }
       
-      // Replace escaped quotes \" with normal quotes "
-      cleanJson = cleanJson.replace(/\\"/g, '"');
+      // Strip backslashes that are not part of control characters (\n, \t)
+      cleanJson = cleanJson.replace(/\\(?![nt])/g, '');
       
-      // Replace double-escaped newlines \\n with \n
+      // Convert double-escaped newlines (\\n) into single-escaped newlines (\n)
       cleanJson = cleanJson.replace(/\\\\n/g, '\\n');
       
       const serviceAccount = JSON.parse(cleanJson);
@@ -27,10 +27,10 @@ if (!admin.apps.length) {
       console.log("Firebase Admin initialized successfully using service account certificate.");
     } catch (err) {
       console.error("Failed to parse or initialize Firebase Admin with service account certificate:", err);
-      // Fallback: If JSON parsing still fails, try parsing with a regex-cleaned version or log details
+      // Fallback: If parsing still fails, try replacing all backslashes except before 'n' and parse
       try {
-        // Ultimate fallback: Replace all escaped quotes and try parsing
-        const serviceAccount = JSON.parse(serviceAccountJson.replace(/\\/g, ""));
+        const fallbackClean = serviceAccountJson.replace(/\\(?![nt])/g, '');
+        const serviceAccount = JSON.parse(fallbackClean);
         admin.initializeApp({
           credential: admin.credential.cert(serviceAccount)
         });
