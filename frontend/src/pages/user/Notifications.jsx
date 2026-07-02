@@ -4,6 +4,7 @@ import { Bell, CheckCheck, Gift, MessageCircle, PackageCheck, RefreshCw } from "
 import Card from "../../components/ui/Card";
 import Button from "../../components/ui/Button";
 import { getToken } from "../../utils/getToken";
+import { getApiUrl } from "../../utils/getApiUrl";
 
 /* --- HELPER FUNCTIONS --- */
 

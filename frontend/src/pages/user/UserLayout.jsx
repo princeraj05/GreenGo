@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getToken } from "../../utils/getToken";
+import { getApiUrl } from "../../utils/getApiUrl";
 import { clearSession } from "../../utils/authStorage";
 import { cn } from "../../utils/cn";
 import { useTheme } from "../../context/ThemeContext";
