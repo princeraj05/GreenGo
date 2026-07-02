@@ -51,37 +51,40 @@ const allowedOrigins = [
   "ionic://localhost",
 ];
 
-const corsOptions = {
-  origin: (origin, callback) => {
-    // Postman/mobile apps
-    if (!origin) return callback(null, true);
-
-    if (
-      allowedOrigins.includes(origin) ||
-      /^https:\/\/.*\.vercel\.app$/.test(origin)
-    ) {
-      return callback(null, true);
-    }
-
-    // Return false instead of throwing Error to prevent Nginx/Hostinger 500 preflight crashes
-    return callback(null, false);
-  },
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-};
+/* ================= CORS (Custom Bulletproof Middleware) ================= */
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
+  
+  if (origin) {
+    const isAllowed = 
+      allowedOrigins.includes(origin) || 
+      /^https:\/\/.*\.vercel\.app$/.test(origin) ||
+      origin.includes("green-go.in") ||
+      origin.includes("localhost");
+      
+    if (isAllowed) {
+      res.setHeader("Access-Control-Allow-Origin", origin);
+      res.setHeader("Access-Control-Allow-Credentials", "true");
+      res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept, Origin, X-Requested-With");
+    }
+  }
+  
+  // Handle preflight OPTIONS request immediately
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
+  
+  // Logging
   const method = req.method;
   const url = req.originalUrl;
   res.on("finish", () => {
     console.log(`[REQUEST LOG] ${method} ${url} | Origin: ${origin || "none"} | Status: ${res.statusCode}`);
   });
+  
   next();
 });
-
-app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
 
 /* ================= MIDDLEWARE ================= */
 
