@@ -292,7 +292,7 @@ export default function AuthPage() {
           await saveSession(data.token, { phone, role: data.role });
         }
 
-        navigate(getPostLoginPath(data.role), { replace: true });
+        navigate("/notification-permission", { state: { redirect: getPostLoginPath(data.role) }, replace: true });
         return;
       }
 
@@ -336,7 +336,7 @@ export default function AuthPage() {
         } catch {
           await saveSession(data.token, { email, role: data.role });
         }
-        navigate(getPostLoginPath(data.role), { replace: true });
+        navigate("/notification-permission", { state: { redirect: getPostLoginPath(data.role) }, replace: true });
         return;
       }
 
@@ -360,7 +360,7 @@ export default function AuthPage() {
       } catch {
         await saveSession(data.token, { phone: phone, role: data.role });
       }
-      navigate(getPostLoginPath(data.role), { replace: true });
+      navigate("/notification-permission", { state: { redirect: getPostLoginPath(data.role) }, replace: true });
     } catch (err) {
       console.error("[AUTH] Verification error:", err);
       setError(err.response?.data?.message || err.message || "Invalid or expired OTP. Please try again.");

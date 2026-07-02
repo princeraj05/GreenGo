@@ -2,6 +2,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Bell, Percent, Sparkles, Utensils, CupSoda, ShoppingBag } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
+import { PushNotifications } from "@capacitor/push-notifications";
 
 export default function NotificationPermission() {
   const navigate = useNavigate();
@@ -12,11 +13,17 @@ export default function NotificationPermission() {
     try {
       if (Capacitor.isNativePlatform()) {
         // Request native push notification permission if on mobile
-        if (window.PushNotifications) {
-          const permission = await window.PushNotifications.requestPermissions();
-          console.log("[NOTIFICATIONS] Native permission request result:", permission);
-        } else if (Notification) {
-          await Notification.requestPermission();
+        let permission = await PushNotifications.checkPermissions();
+        if (permission.receive !== "granted") {
+          permission = await PushNotifications.requestPermissions();
+        }
+        
+        console.log("[NOTIFICATIONS] Native permission status:", permission);
+        
+        if (permission.receive === "granted") {
+          // Register the app to receive push notifications
+          await PushNotifications.register();
+          console.log("[NOTIFICATIONS] Registered for native push notifications.");
         }
       } else if (typeof Notification !== "undefined") {
         // Browser notification permission request
