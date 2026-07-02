@@ -198,11 +198,14 @@ export default function DeliveryLayout() {
 
       {/* --- MAIN WRAPPER & MOBILE COMPATIBLE SECTION --- */}
       {/* Offsets desktop viewports to compensate for fixed sidebar ('md:pl-72') */}
-      <div className="flex-1 min-h-screen md:pl-72 pt-16 md:pt-0">
+      <div className="flex-1 min-h-screen md:pl-72">
         
         {/* --- TOP BAR HEADER --- */}
         {/* Floating navbar featuring dark mode toggles, notification indicators and profile alerts */}
-        <header className="sticky top-0 z-40 h-auto min-h-16 md:min-h-20 bg-white/85 dark:bg-slate-950/85 backdrop-blur-xl border-b border-slate-200/70 dark:border-slate-800 transition-colors">
+        <header 
+          className="sticky top-0 z-40 h-auto min-h-16 md:min-h-20 bg-white/85 dark:bg-slate-950/85 backdrop-blur-xl border-b border-slate-200/70 dark:border-slate-800 transition-colors"
+          style={{ paddingTop: "env(safe-area-inset-top)" }}
+        >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 md:py-4 flex items-center justify-between gap-3">
             <div className="min-w-0 flex items-center gap-3">
               <div className="md:hidden w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center shadow-md shrink-0">

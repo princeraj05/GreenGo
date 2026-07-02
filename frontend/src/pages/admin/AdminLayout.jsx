@@ -349,7 +349,13 @@ export default function AdminLayout() {
         
         {/* --- MOBILE TOPBAR --- */}
         {/* Hidden on desktop using md:hidden */}
-        <div className="sticky top-0 z-40 h-16 flex items-center justify-between px-4 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 md:hidden transition-colors duration-300">
+        <div 
+          className="sticky top-0 z-40 flex items-center justify-between px-4 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 md:hidden transition-colors duration-300"
+          style={{
+            paddingTop: "env(safe-area-inset-top)",
+            height: "calc(4rem + env(safe-area-inset-top))"
+          }}
+        >
           <div className="flex items-center gap-2 min-w-0">
             <div className="w-8 h-8 rounded-lg overflow-hidden bg-white border border-brand-100/50 dark:border-brand-900/50 flex items-center justify-center shadow-md shrink-0">
               <img src="/greengo-logo.png" alt="GreenGo" className="w-full h-full object-cover" />

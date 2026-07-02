@@ -354,7 +354,13 @@ export default function UserLayout() {
         
         {/* --- MOBILE TOPBAR (FIXED HEADER) --- */}
         {/* Hidden on desktop. Sticky top-0 pins it at the top of the mobile screen. */}
-        <div className="sticky top-0 z-40 h-16 flex items-center justify-between px-4 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 md:hidden transition-colors duration-300 shadow-sm">
+        <div 
+          className="sticky top-0 z-40 flex items-center justify-between px-4 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 md:hidden transition-colors duration-300 shadow-sm"
+          style={{
+            paddingTop: "env(safe-area-inset-top)",
+            height: "calc(4rem + env(safe-area-inset-top))"
+          }}
+        >
           {/* Brand Logo & Location selector */}
           <div className="flex flex-1 items-center gap-2 min-w-0 relative">
             <div className="w-9 h-9 rounded-xl flex items-center justify-center shadow-md overflow-hidden bg-white border border-brand-100 dark:border-brand-900 shrink-0 select-none pointer-events-none [&>span]:hidden">

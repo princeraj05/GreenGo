@@ -2,9 +2,12 @@ import admin from "firebase-admin";
 
 if (!admin.apps.length) {
   const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT;
+  const fallbackProjectId = process.env.FIREBASE_PROJECT_ID || "greengo-102bd";
   if (serviceAccountJson) {
     try {
-      const serviceAccount = JSON.parse(serviceAccountJson);
+      // Clean wrapping single quotes if present
+      const cleanJson = serviceAccountJson.trim().replace(/^'|'$/g, "");
+      const serviceAccount = JSON.parse(cleanJson);
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount)
       });
@@ -12,15 +15,15 @@ if (!admin.apps.length) {
     } catch (err) {
       console.error("Failed to parse or initialize Firebase Admin with service account certificate:", err);
       admin.initializeApp({
-        projectId: "greengo-40db2"
+        projectId: fallbackProjectId
       });
+      console.log(`Firebase Admin fallback initialized with Project ID: ${fallbackProjectId}`);
     }
   } else {
-    const projectId = process.env.FIREBASE_PROJECT_ID || "greengo-40db2";
     admin.initializeApp({
-      projectId: projectId
+      projectId: fallbackProjectId
     });
-    console.log(`Firebase Admin initialized successfully using Project ID: ${projectId}`);
+    console.log(`Firebase Admin initialized successfully using Project ID: ${fallbackProjectId}`);
   }
 }
 
