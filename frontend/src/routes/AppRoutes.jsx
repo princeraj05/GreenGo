@@ -11,6 +11,7 @@ import ProfileCompletionRoute from "./ProfileCompletionRoute";
 const AuthPage = lazy(() => import("../pages/auth/AuthPage"));
 const ForgotPassword = lazy(() => import("../pages/auth/ForgotPassword"));
 const ResetPassword = lazy(() => import("../pages/auth/ResetPassword"));
+const NotificationPermission = lazy(() => import("../pages/auth/NotificationPermission"));
 
 /* USER */
 const UserLayout = lazy(() => import("../pages/user/UserLayout"));
@@ -80,6 +81,7 @@ export default function AppRoutes() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/notification-permission" element={<NotificationPermission />} />
 
         {/* USER PANEL */}
         <Route path="/user" element={<UserLayout />}>

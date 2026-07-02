@@ -12,12 +12,15 @@ import {
   signInWithPhoneNumber,
   sendSignInLinkToEmail,
   isSignInWithEmailLink,
-  signInWithEmailLink
+  signInWithEmailLink,
+  signInWithCredential,
+  GoogleAuthProvider
 } from "firebase/auth";
 import { auth, googleProvider } from "../../config/firebase";
 import { saveSession } from "../../utils/authStorage";
 import { getRoleHomePath } from "../../utils/roleRedirect";
 import { useTheme } from "../../context/ThemeContext";
+import { GoogleSignIn } from "@capawesome/capacitor-google-sign-in";
 
 const MotionImg = motion.img;
 const MotionDiv = motion.div;
@@ -50,6 +53,7 @@ export default function AuthPage() {
   const [error, setError] = useState("");
   const [countdown, setCountdown] = useState(30);
   const [canResend, setCanResend] = useState(false);
+  const [verifyingCredentials, setVerifyingCredentials] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -105,7 +109,7 @@ export default function AuthPage() {
         } catch {
           await saveSession(data.token, { email: user.email, phone: user.phoneNumber, role: data.role });
         }
-        navigate(getPostLoginPath(data.role), { replace: true });
+        navigate("/notification-permission", { state: { redirect: getPostLoginPath(data.role) }, replace: true });
       } catch (err) {
         console.error("[FIREBASE AUTH] Session handler failed:", err);
         setError("Firebase authentication backend sync failed.");
@@ -166,15 +170,52 @@ export default function AuthPage() {
 
   const handleGoogleSignIn = async () => {
     console.log("[GOOGLE DEBUG] Button clicked");
+    setVerifyingCredentials(true);
     setLoading(true);
     setError("");
     window.googleAuthInProgress = true;
     try {
       if (Capacitor.isNativePlatform()) {
-        console.log("[GOOGLE DEBUG] Using redirect");
-        await signInWithRedirect(auth, googleProvider);
+        console.log("[GOOGLE DEBUG] Native platform: using native sign-in...");
+        try {
+          await GoogleSignIn.initialize({
+            clientId: import.meta.env.VITE_GOOGLE_WEB_CLIENT_ID,
+          });
+          const result = await GoogleSignIn.signIn();
+          const idToken = result.idToken;
+          
+          if (!idToken) {
+            throw new Error("Failed to retrieve ID Token from native Google Sign-In");
+          }
+
+          // Sign in to Firebase with native credentials
+          const credential = GoogleAuthProvider.credential(idToken);
+          const userCredential = await signInWithCredential(auth, credential);
+          const user = userCredential.user;
+
+          console.log("[GOOGLE DEBUG] Native Firebase user received:", user.email);
+          const firebaseIdToken = await user.getIdToken();
+          
+          console.log("[GOOGLE DEBUG] Backend sync started");
+          const res = await API.post("/api/users/google-login", { idToken: firebaseIdToken });
+          const data = res.data;
+          console.log("[GOOGLE DEBUG] Backend sync success");
+
+          localStorage.setItem("token", data.token);
+          try {
+            const meRes = await API.get("/api/users/me");
+            await saveSession(data.token, meRes.data);
+          } catch {
+            await saveSession(data.token, { email: user.email, role: data.role });
+          }
+
+          navigate("/notification-permission", { state: { redirect: getPostLoginPath(data.role) }, replace: true });
+        } catch (nativeErr) {
+          console.warn("[GOOGLE DEBUG] Native Google Sign-In failed, falling back to web flow...", nativeErr);
+          await signInWithRedirect(auth, googleProvider);
+        }
       } else {
-        console.log("[GOOGLE DEBUG] Using popup");
+        console.log("[GOOGLE DEBUG] Web platform: using popup...");
         let result;
         try {
           result = await signInWithPopup(auth, googleProvider);
@@ -202,7 +243,7 @@ export default function AuthPage() {
           await saveSession(data.token, { email: user.email, role: data.role });
         }
         
-        navigate(getPostLoginPath(data.role), { replace: true });
+        navigate("/notification-permission", { state: { redirect: getPostLoginPath(data.role) }, replace: true });
       }
     } catch (err) {
       console.error("Google sign in failed:", err);
@@ -210,6 +251,7 @@ export default function AuthPage() {
     } finally {
       window.googleAuthInProgress = false;
       setLoading(false);
+      setVerifyingCredentials(false);
     }
   };
 
@@ -792,6 +834,23 @@ export default function AuthPage() {
       </div>
 
       <div id="recaptcha-container"></div>
+
+      {/* Verifying credentials... overlay */}
+      {verifyingCredentials && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm transition-all duration-300">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-xl flex items-center gap-4 max-w-xs w-full mx-4 border border-slate-100 dark:border-slate-800/80 animate-scale-in">
+            <Loader2 className="w-8 h-8 text-brand-500 animate-spin shrink-0" />
+            <div className="flex flex-col text-left">
+              <span className="text-slate-800 dark:text-white font-extrabold text-sm sm:text-base">
+                Verifying credentials..
+              </span>
+              <span className="text-slate-400 dark:text-slate-500 font-bold text-xs mt-0.5">
+                Please wait a moment
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
