@@ -7,6 +7,7 @@ import {
   LogOut, Menu, X, Star, Plus, MoreHorizontal, Sun, Moon, Image, ShieldCheck
 } from "lucide-react";
 import { getToken } from "../../utils/getToken";
+import { getApiUrl } from "../../utils/getApiUrl";
 import { clearSession } from "../../utils/authStorage";
 import { cn } from "../../utils/cn";
 import { useTheme } from "../../context/ThemeContext";

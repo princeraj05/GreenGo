@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import API from "../../api/axios";
 import { getToken } from "../../utils/getToken";
+import { getApiUrl } from "../../utils/getApiUrl";
 
 /**
  * ManageSettings Component

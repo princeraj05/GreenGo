@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Edit2, Trash2, UploadCloud, X, UtensilsCrossed, Clock, Flame, Users, Pencil, Crop } from "lucide-react";
 import API from "../../api/axios";
 import { getToken } from "../../utils/getToken";
+import { getApiUrl } from "../../utils/getApiUrl";
 import Button from "../../components/ui/Button";
 import Card from "../../components/ui/Card";
 import ImageCropModal from "../../components/ui/ImageCropModal";

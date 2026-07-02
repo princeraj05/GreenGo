@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { getApiUrl } from "../../utils/getApiUrl";
 
 function useReveal() {
   const ref = useRef(null);

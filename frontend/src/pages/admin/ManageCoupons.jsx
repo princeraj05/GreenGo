@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getToken } from "../../utils/getToken";
+import { getApiUrl } from "../../utils/getApiUrl";
 
 /**
  * ManageCoupons Component
