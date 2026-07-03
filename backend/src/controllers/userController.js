@@ -1499,4 +1499,21 @@ export const getSecurityLogs = async (req, res) => {
   }
 };
 
+export const saveFcmToken = async (req, res) => {
+  try {
+    const { token } = req.body;
+    if (!token) {
+      return res.status(400).json({ message: "FCM token is required" });
+    }
+
+    await User.findByIdAndUpdate(req.user.id, {
+      $addToSet: { fcmTokens: token }
+    });
+
+    res.json({ success: true, message: "FCM token saved successfully" });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 

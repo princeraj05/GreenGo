@@ -10,6 +10,8 @@ import { getApiUrl } from "../../utils/getApiUrl";
 import { clearSession } from "../../utils/authStorage";
 import { cn } from "../../utils/cn";
 import { useTheme } from "../../context/ThemeContext";
+import { Capacitor } from "@capacitor/core";
+import { PushNotifications } from "@capacitor/push-notifications";
 
 const MotionDiv = motion.div;
 
@@ -83,6 +85,30 @@ export default function UserLayout() {
       loadPendingOrdersCount();
       loadNotifications();
     });
+
+    // Background push notifications sync
+    if (Capacitor.isNativePlatform() && isLoggedIn) {
+      PushNotifications.checkPermissions().then((permission) => {
+        if (permission.receive === "granted") {
+          PushNotifications.addListener('registration', async (token) => {
+            console.log('[NOTIFICATIONS] Background token sync success, token:', token.value);
+            try {
+              await fetch(`${getApiUrl()}/api/users/fcm-token`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${getToken()}`
+                },
+                body: JSON.stringify({ token: token.value })
+              });
+            } catch (err) {
+              console.error("[NOTIFICATIONS] Background token sync fetch error:", err);
+            }
+          });
+          PushNotifications.register();
+        }
+      });
+    }
 
     // Listen to custom cart updates
     window.addEventListener("cart-updated", updateCartCount);

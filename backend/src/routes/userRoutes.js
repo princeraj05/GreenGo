@@ -18,7 +18,8 @@ import {
   getActiveSessions,
   revokeSession,
   revokeAllSessions,
-  getSecurityLogs
+  getSecurityLogs,
+  saveFcmToken
 } from "../controllers/userController.js";
 
 import { protect } from "../middleware/authMiddleware.js";
@@ -50,5 +51,8 @@ router.delete("/sessions", protect, revokeAllSessions);
 
 // Security logs (Admin Only)
 router.get("/security-logs", protect, getSecurityLogs);
+
+// Register FCM token
+router.post("/fcm-token", protect, saveFcmToken);
 
 export default router;

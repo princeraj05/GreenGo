@@ -4,6 +4,7 @@ import Notification from "../models/Notification.js";
 import User from "../models/User.js";
 import Food from "../models/Food.js";
 import SecurityLog from "../models/SecurityLog.js";
+import { sendPushToUser } from "../utils/pushNotification.js";
 import Razorpay from "razorpay";
 import { createAdminNotification, formatPaymentMethod, orderCode } from "../services/adminNotificationService.js";
 
@@ -260,6 +261,7 @@ export const createOrder = async (req, res) => {
       message: `Your order #${orderCode(order._id)} has been placed successfully.`,
       type: "success",
     });
+    sendPushToUser(req.user.id, "Order placed", `Your order #${orderCode(order._id)} has been placed successfully.`, { orderId: String(order._id) });
 
     const customer = await User.findById(req.user.id).select("name email phone");
     await createAdminNotification({
@@ -418,6 +420,12 @@ export const updateOrderStatus = async (req, res) => {
         message: `Order #${orderCode(order._id)}: ${statusMessages[status] || `Status changed to ${status}.`}`,
         type: status === "Cancelled" ? "danger" : status === "Delivered" ? "success" : "info",
       });
+      sendPushToUser(
+        order.userId,
+        `Order ${status}`,
+        `Order #${orderCode(order._id)}: ${statusMessages[status] || `Status changed to ${status}.`}`,
+        { orderId: String(order._id), status: status }
+      );
 
       if (status === "Delivered") {
         await createAdminNotification({
@@ -479,6 +487,12 @@ export const assignDeliveryBoy = async (req, res) => {
       message: `Order #${orderCode(order._id)} has been assigned to you.`,
       type: "info",
     });
+    sendPushToUser(
+      String(deliveryBoyId),
+      wasReassigned ? "Order Reassigned" : "New Order Assigned",
+      `Order #${orderCode(order._id)} has been assigned to you.`,
+      { orderId: String(order._id) }
+    );
 
     res.json({ success: true, order });
   } catch (err) {
@@ -542,6 +556,12 @@ export const acceptAssignedOrder = async (req, res) => {
       message: `Order #${orderCode(order._id)} has been accepted by your delivery partner.`,
       type: "info",
     });
+    sendPushToUser(
+      order.userId,
+      "Delivery partner accepted",
+      `Order #${orderCode(order._id)} has been accepted by your delivery partner.`,
+      { orderId: String(order._id) }
+    );
 
     const deliveryBoy = await User.findById(req.user.id).select("name email phone");
     await createAdminNotification({
@@ -612,6 +632,12 @@ export const markAssignedOrderDelivered = async (req, res) => {
       message: `Order #${orderCode(order._id)} has been delivered.`,
       type: "success",
     });
+    sendPushToUser(
+      order.userId,
+      "Order Delivered",
+      `Order #${orderCode(order._id)} has been delivered.`,
+      { orderId: String(order._id) }
+    );
 
     const deliveryBoy = await User.findById(req.user.id).select("name email phone");
     await createAdminNotification({
@@ -818,6 +844,12 @@ export const approveCancelOrder = async (req, res) => {
       message: `Your order #${orderCode(order._id)} has been cancelled by admin. ${refundMessageText}`,
       type: "success",
     });
+    sendPushToUser(
+      order.userId,
+      "Order Cancelled",
+      `Your order #${orderCode(order._id)} has been cancelled by admin.`,
+      { orderId: String(order._id) }
+    );
 
     res.json({ success: true, message: "Order cancellation approved successfully", order, refundMessage: refundMessageText });
   } catch (err) {
@@ -858,6 +890,12 @@ export const rejectCancelOrder = async (req, res) => {
       message: `Order #${orderCode(order._id)}: ${adminMessage}`,
       type: "danger",
     });
+    sendPushToUser(
+      order.userId,
+      "Cancellation Request Rejected",
+      `Order #${orderCode(order._id)}: ${adminMessage}`,
+      { orderId: String(order._id) }
+    );
 
     res.json({ success: true, message: "Order cancellation request rejected successfully", order });
   } catch (err) {

@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import { Bell, Percent, Sparkles, Utensils, CupSoda, ShoppingBag } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
 import { PushNotifications } from "@capacitor/push-notifications";
+import { getApiUrl } from "../../utils/getApiUrl";
+import { getToken } from "../../utils/getToken";
 
 export default function NotificationPermission() {
   const navigate = useNavigate();
@@ -12,6 +14,29 @@ export default function NotificationPermission() {
   const handleEnableNotifications = async () => {
     try {
       if (Capacitor.isNativePlatform()) {
+        // Add push notification listeners before registering
+        await PushNotifications.addListener('registration', async (token) => {
+          console.log('[NOTIFICATIONS] Push registration success, token:', token.value);
+          try {
+            const apiRes = await fetch(`${getApiUrl()}/api/users/fcm-token`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${getToken()}`
+              },
+              body: JSON.stringify({ token: token.value })
+            });
+            const data = await apiRes.json();
+            console.log("[NOTIFICATIONS] Token registration response:", data);
+          } catch (tokenErr) {
+            console.error("[NOTIFICATIONS] Error sending token to server:", tokenErr);
+          }
+        });
+
+        await PushNotifications.addListener('registrationError', (error) => {
+          console.error('[NOTIFICATIONS] Push registration error:', error);
+        });
+
         // Request native push notification permission if on mobile
         let permission = await PushNotifications.checkPermissions();
         if (permission.receive !== "granted") {

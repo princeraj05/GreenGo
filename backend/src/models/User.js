@@ -190,6 +190,11 @@ const userSchema = new mongoose.Schema(
     type: String,
     enum: ["customer", "deliveryBoy", "admin"],
     default: "customer"
+  },
+  
+  fcmTokens: {
+    type: [String],
+    default: []
   }
 },
 { timestamps: true }

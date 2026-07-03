@@ -1,5 +1,6 @@
 import Notification from "../models/Notification.js";
 import User from "../models/User.js";
+import { sendPushToUser } from "../utils/pushNotification.js";
 
 const activeNotificationFilter = () => ({
   $or: [
@@ -71,6 +72,10 @@ export const createNotification = async (req, res) => {
       data: data || {},
       expiresAt: expiresAt ? new Date(expiresAt) : null
     });
+
+    if (userId && audience !== "admin") {
+      sendPushToUser(userId, title, message, data || {});
+    }
 
     res.json({ success: true, notification });
   } catch (err) {
