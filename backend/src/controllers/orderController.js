@@ -4,7 +4,7 @@ import Notification from "../models/Notification.js";
 import User from "../models/User.js";
 import Food from "../models/Food.js";
 import SecurityLog from "../models/SecurityLog.js";
-import { sendPushToUser } from "../utils/pushNotification.js";
+import { sendPushToUser, sendPushToAdmins } from "../utils/pushNotification.js";
 import Razorpay from "razorpay";
 import { createAdminNotification, formatPaymentMethod, orderCode } from "../services/adminNotificationService.js";
 
@@ -262,6 +262,11 @@ export const createOrder = async (req, res) => {
       type: "success",
     });
     sendPushToUser(req.user.id, "Order placed", `Your order #${orderCode(order._id)} has been placed successfully.`, { orderId: String(order._id) });
+    sendPushToAdmins(
+      "New Order Placed",
+      `Order #${orderCode(order._id)} | Total: ₹${finalTotal} | Payment: ${paymentMethod}`,
+      { orderId: String(order._id) }
+    );
 
     const customer = await User.findById(req.user.id).select("name email phone");
     await createAdminNotification({
@@ -576,6 +581,11 @@ export const acceptAssignedOrder = async (req, res) => {
         paymentMethod: formatPaymentMethod(order.paymentMethod),
       },
     });
+    sendPushToAdmins(
+      "Delivery Boy Accepted Order",
+      `${deliveryBoy?.name || "Delivery boy"} accepted order #${orderCode(order._id)}.`,
+      { orderId: String(order._id) }
+    );
 
     res.json({ success: true, order });
   } catch (err) {
@@ -602,6 +612,11 @@ export const rejectAssignedOrder = async (req, res) => {
       message: `Order #${orderCode(order._id)} was rejected${reason ? `: ${reason}` : "."}`,
       type: "warning",
     });
+    sendPushToAdmins(
+      "Order rejected by delivery boy",
+      `Order #${orderCode(order._id)} was rejected${reason ? `: ${reason}` : "."}`,
+      { orderId: String(order._id) }
+    );
 
     res.json({ success: true, order });
   } catch (err) {
@@ -653,6 +668,11 @@ export const markAssignedOrderDelivered = async (req, res) => {
         total: order.total,
       },
     });
+    sendPushToAdmins(
+      "Order Delivered",
+      `${deliveryBoy?.name || "Delivery boy"} delivered order #${orderCode(order._id)}.`,
+      { orderId: String(order._id) }
+    );
 
     res.json({ success: true, order });
   } catch (err) {
@@ -757,6 +777,11 @@ export const cancelOrder = async (req, res) => {
       message: `Your cancellation request for order #${orderCode(order._id)} has been sent to the admin.`,
       type: "info",
     });
+    sendPushToAdmins(
+      "Cancellation Request",
+      `Cancellation requested for Order #${orderCode(order._id)}. Reason: ${reason}`,
+      { orderId: String(order._id) }
+    );
     
     // Create admin notification
     const customer = await User.findById(req.user.id).select("name email phone");

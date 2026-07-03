@@ -1,6 +1,7 @@
 import Contact from "../models/Contact.js";
 import Notification from "../models/Notification.js";
 import { sendContactReplyEmail } from "../services/emailService.js";
+import { sendPushToUser } from "../utils/pushNotification.js";
 
 const getSafeEmailError = (error) => {
   console.error("Original email sending error details:", error);
@@ -89,6 +90,12 @@ export const replyToContact = async (req, res) => {
         message: `Admin replied to your message: ${cleanReply.slice(0, 120)}${cleanReply.length > 120 ? "..." : ""}`,
         type: "info",
       });
+      sendPushToUser(
+        contact.uid,
+        "Support reply",
+        `Admin replied to your message: ${cleanReply.slice(0, 120)}${cleanReply.length > 120 ? "..." : ""}`,
+        { contactId: String(contact._id) }
+      );
     }
 
     res.json({

@@ -1,5 +1,6 @@
 import Coupon from "../models/Coupon.js";
 import Notification from "../models/Notification.js";
+import { sendPushToAllUsers } from "../utils/pushNotification.js";
 
 /* ================= CREATE COUPON ================= */
 export const createCoupon = async (req, res) => {
@@ -27,6 +28,11 @@ export const createCoupon = async (req, res) => {
         message: `${title || "New promo code"} is live. Use code ${String(code || "").toUpperCase()} and save on your next order.`,
         type: "success",
       });
+      sendPushToAllUsers(
+        "New coupon available",
+        `${title || "New promo code"} is live. Use code ${String(code || "").toUpperCase()} and save on your next order.`,
+        { code: String(code || "") }
+      );
     }
 
     res.json({ success: true, coupon });

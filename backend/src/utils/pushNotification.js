@@ -65,3 +65,103 @@ export async function sendPushToUser(userId, title, body, data = {}) {
     console.error(`[PUSH NOTIFICATION] Failed to send push notification to user ${userId}:`, error);
   }
 }
+
+/**
+ * Sends a push notification to all users who have registered FCM tokens (Broadcast).
+ *
+ * @param {string} title - The title of the push notification.
+ * @param {string} body - The body message of the push notification.
+ * @param {Object} [data] - Optional metadata/payload object.
+ */
+export async function sendPushToAllUsers(title, body, data = {}) {
+  try {
+    const users = await User.find({ fcmTokens: { $exists: true, $not: { $size: 0 } } }).select("_id fcmTokens");
+    if (users.length === 0) {
+      console.log("[PUSH NOTIFICATION] No users with FCM tokens found for broadcast.");
+      return;
+    }
+
+    const allTokens = [];
+    users.forEach(user => {
+      user.fcmTokens.forEach(token => {
+        if (typeof token === "string" && token.trim() !== "") {
+          allTokens.push(token);
+        }
+      });
+    });
+
+    if (allTokens.length === 0) return;
+
+    // Convert data properties to string
+    const stringifiedData = {};
+    Object.keys(data).forEach(key => {
+      stringifiedData[key] = String(data[key]);
+    });
+
+    console.log(`[PUSH NOTIFICATION] Broadcasting push to ${allTokens.length} tokens`);
+
+    // Firebase multicast allows up to 500 tokens per batch
+    const batchSize = 500;
+    for (let i = 0; i < allTokens.length; i += batchSize) {
+      const batchTokens = allTokens.slice(i, i + batchSize);
+      const message = {
+        tokens: batchTokens,
+        notification: {
+          title,
+          body,
+        },
+        data: stringifiedData,
+      };
+      await admin.messaging().sendEachForMulticast(message);
+    }
+  } catch (error) {
+    console.error("[PUSH NOTIFICATION] Failed to broadcast push notification:", error);
+  }
+}
+
+/**
+ * Sends a push notification to all users with the role 'admin' who have registered FCM tokens.
+ *
+ * @param {string} title - The title of the push notification.
+ * @param {string} body - The body message of the push notification.
+ * @param {Object} [data] - Optional metadata/payload object.
+ */
+export async function sendPushToAdmins(title, body, data = {}) {
+  try {
+    const admins = await User.find({ role: "admin", fcmTokens: { $exists: true, $not: { $size: 0 } } }).select("_id fcmTokens");
+    if (admins.length === 0) {
+      console.log("[PUSH NOTIFICATION] No admins with FCM tokens found.");
+      return;
+    }
+
+    const allTokens = [];
+    admins.forEach(adminUser => {
+      adminUser.fcmTokens.forEach(token => {
+        if (typeof token === "string" && token.trim() !== "") {
+          allTokens.push(token);
+        }
+      });
+    });
+
+    if (allTokens.length === 0) return;
+
+    // Convert data properties to string
+    const stringifiedData = {};
+    Object.keys(data).forEach(key => {
+      stringifiedData[key] = String(data[key]);
+    });
+
+    console.log(`[PUSH NOTIFICATION] Sending admin push to ${allTokens.length} tokens`);
+    const message = {
+      tokens: allTokens,
+      notification: {
+        title,
+        body,
+      },
+      data: stringifiedData,
+    };
+    await admin.messaging().sendEachForMulticast(message);
+  } catch (error) {
+    console.error("[PUSH NOTIFICATION] Failed to send push notification to admins:", error);
+  }
+}

@@ -10,6 +10,7 @@ import admin from "../config/firebase.js";
 import crypto from "crypto";
 import { sendEmail } from "../services/emailService.js";
 import { createAdminNotification } from "../services/adminNotificationService.js";
+import { sendPushToAdmins } from "../utils/pushNotification.js";
 
 const maskToken = (token) => {
   if (!token) return "none";
@@ -104,6 +105,10 @@ const notifyAdminUserEvent = async (title, user, type = "info") => {
       role: user.role || "customer",
     },
   });
+  
+  if (title.toLowerCase().includes("register") || title.toLowerCase().includes("new")) {
+    sendPushToAdmins(title, userDetailLine(user), { userId: String(user._id) });
+  }
 };
 
 const normalizeDeliveryDetails = (user) => {

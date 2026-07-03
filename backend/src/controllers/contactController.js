@@ -1,5 +1,6 @@
 import Contact from "../models/Contact.js";
 import { createAdminNotification } from "../services/adminNotificationService.js";
+import { sendPushToAdmins } from "../utils/pushNotification.js";
 
 export const createContact = async (req, res) => {
   try {
@@ -30,6 +31,11 @@ export const createContact = async (req, res) => {
         subject: subject || "",
       },
     });
+    sendPushToAdmins(
+      uid ? "New User Message" : "New Public Message",
+      `${name || "Guest"}: ${subject || "Message"} - ${String(message || "").slice(0, 100)}`,
+      { contactId: String(contact._id) }
+    );
 
     res.json({
       success: true,
