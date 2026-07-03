@@ -115,8 +115,8 @@ export default function UserLayout() {
     window.addEventListener("address-updated", loadUser);
 
     // Poll pending orders count
-    const interval = setInterval(loadPendingOrdersCount, 15000);
-    const notifInterval = setInterval(loadNotifications, 15000);
+    const interval = setInterval(loadPendingOrdersCount, 60000);
+    const notifInterval = setInterval(loadNotifications, 60000);
 
     return () => {
       window.removeEventListener("cart-updated", updateCartCount);

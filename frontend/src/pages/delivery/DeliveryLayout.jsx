@@ -77,8 +77,8 @@ export default function DeliveryLayout() {
       loadNotifications();
     });
     
-    // Set up a polling interval to periodically check for new notifications every 15 seconds
-    const timer = setInterval(loadNotifications, 15000);
+    // Set up a polling interval to periodically check for new notifications every 60 seconds
+    const timer = setInterval(loadNotifications, 60000);
     
     // Custom event listener triggered when updating fields within the DeliveryProfile component
     window.addEventListener("delivery-profile-updated", loadProfile);
