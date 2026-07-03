@@ -671,8 +671,22 @@ export const getBudgetRecommendations = async (req, res) => {
       const name = String(food.name || "").toLowerCase();
       const category = String(food.category || "").toLowerCase();
       const description = String(food.description || "").toLowerCase();
-      const isVeg = food.veg === true || category.includes("veg") || name.includes("veg") || name.includes("paneer");
-      const isNonVeg = food.veg === false || category.includes("non-veg") || category.includes("chicken") || name.includes("chicken") || name.includes("egg");
+      const isNonVeg = 
+        food.veg === false ||
+        category.includes("non-veg") ||
+        category.includes("nonveg") ||
+        category.includes("chicken") ||
+        category.includes("kebab") ||
+        category.includes("mutton") ||
+        category.includes("fish") ||
+        name.includes("chicken") ||
+        name.includes("mutton") ||
+        name.includes("egg") ||
+        name.includes("fish") ||
+        name.includes("non-veg") ||
+        name.includes("nonveg");
+
+      const isVeg = !isNonVeg;
 
       if (preference === "Veg" && !isVeg) return false;
       if (preference === "Non-Veg" && !isNonVeg) return false;
