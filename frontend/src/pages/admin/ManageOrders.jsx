@@ -293,6 +293,27 @@ export default function ManageOrders() {
                   </div>
                 </div>
 
+                {/* --- CUSTOMER INFO SECTION --- */}
+                <div className="bg-slate-50 dark:bg-slate-900/60 rounded-2xl p-3 md:p-4 border border-slate-100 dark:border-slate-800/50 space-y-1.5 mb-3">
+                  <p className="text-[10px] font-black text-emerald-600 dark:text-emerald-450 uppercase tracking-widest">Customer Details</p>
+                  <p className="text-sm font-black text-slate-900 dark:text-white">
+                    👤 {(o.userId && o.userId.name) || o.userName || "GreenGo Customer"}
+                  </p>
+                  <p className="text-sm font-bold text-slate-600 dark:text-slate-300">
+                    📞 {o.phone || (o.userId && o.userId.phone) || "No phone"}
+                  </p>
+                  {o.userId && o.userId.email && (
+                    <p className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                      <span>📧</span> {o.userId.email}
+                    </p>
+                  )}
+                  {o.userId && o.userId.birthDate && (
+                    <p className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                      <span>🎂</span> Birthday: {new Date(o.userId.birthDate).toLocaleDateString()}
+                    </p>
+                  )}
+                </div>
+
                 {/* --- ADDRESS DETAIL --- */}
                 <div className="bg-slate-50 dark:bg-slate-900/60 rounded-2xl p-3 md:p-4 border border-slate-100 dark:border-slate-800/50 space-y-2.5 md:space-y-3 mb-4 md:mb-6">
                   <p className="text-xs md:text-sm font-medium text-slate-600 dark:text-slate-300 flex items-start gap-2 leading-snug break-words">

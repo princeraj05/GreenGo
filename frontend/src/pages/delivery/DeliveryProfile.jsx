@@ -302,9 +302,14 @@ export default function DeliveryProfile() {
                     className="pl-11 rounded-xl"
                   />
                 </div>
-                <p className="mt-1.5 text-[10px] font-semibold text-slate-400 dark:text-slate-500">
+                 <p className="mt-1.5 text-[10px] font-semibold text-slate-400 dark:text-slate-500">
                   Min 6 chars: alphabet, number, special character.
                 </p>
+                {form.password && !/[^A-Za-z0-9]/.test(form.password) && (
+                  <p className="mt-1 text-xs font-bold text-rose-500 flex items-center gap-1 animate-pulse">
+                    <span>⚠️</span> Plz add a special character (e.g. @, #, $, %) to make it strong.
+                  </p>
+                )}
               </div>
 
               <div className="rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-850 p-4 flex items-center justify-between">

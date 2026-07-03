@@ -307,7 +307,7 @@ export const getAllOrders = async (req,res)=>{
   const orders = await Order
   .find()
   .populate("assignedDeliveryBoy", "name phone email role deliveryCredit")
-  .populate("userId", "name phone email")
+  .populate("userId", "name phone email birthDate")
   .sort({createdAt:-1})
   .lean();
 
@@ -535,7 +535,10 @@ export const getAssignedOrders = async (req, res) => {
   try {
     const user = await requireDeliveryProfile(req, res);
     if (!user) return;
-    const orders = await Order.find({ assignedDeliveryBoy: req.user.id }).sort({ createdAt: -1 }).lean();
+    const orders = await Order.find({ assignedDeliveryBoy: req.user.id })
+      .populate("userId", "name phone email birthDate")
+      .sort({ createdAt: -1 })
+      .lean();
     res.json(orders);
   } catch (err) {
     res.status(500).json({ message: "Server error" });

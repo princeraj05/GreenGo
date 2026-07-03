@@ -583,6 +583,11 @@ export default function Profile() {
               <p className="mt-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
                 Min 6 chars: alphabet, number, special character.
               </p>
+              {form.password && !/[^A-Za-z0-9]/.test(form.password) && (
+                <p className="mt-1.5 text-xs font-bold text-rose-500 flex items-center gap-1 animate-pulse">
+                  <span>⚠️</span> Plz add a special character (e.g. @, #, $, %) to make it strong.
+                </p>
+              )}
             </Field>
             <Field label="Preferred Delivery Time">
               <Input value={form.deliveryTime} onChange={(e) => setForm({ ...form, deliveryTime: e.target.value })} placeholder="ASAP / 8:00 PM" />

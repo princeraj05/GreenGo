@@ -244,8 +244,20 @@ export default function DeliveryOrders() {
               <div className="rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4 space-y-2">
                 <p className="text-sm font-bold flex items-center gap-2">
                   <Phone size={15} className="text-brand-500" />
-                  {order.phone || "No phone"}
+                  {order.phone || (order.userId && order.userId.phone) || "No phone"}
                 </p>
+                {order.userId && order.userId.email && (
+                  <p className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2 pl-6">
+                    <span>📧</span>
+                    {order.userId.email}
+                  </p>
+                )}
+                {order.userId && order.userId.birthDate && (
+                  <p className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2 pl-6">
+                    <span>🎂</span>
+                    Birthday: {new Date(order.userId.birthDate).toLocaleDateString()}
+                  </p>
+                )}
                 <p className="text-sm font-bold flex items-start gap-2 leading-relaxed">
                   <MapPin size={16} className="text-brand-500 mt-0.5 shrink-0" />
                   {order.address || "No address"}
