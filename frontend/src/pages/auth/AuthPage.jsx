@@ -212,6 +212,7 @@ export default function AuthPage() {
           navigate("/notification-permission", { state: { redirect: getPostLoginPath(data.role) }, replace: true });
         } catch (nativeErr) {
           console.warn("[GOOGLE DEBUG] Native Google Sign-In failed, falling back to web flow...", nativeErr);
+          alert("Native Google Sign-In Error: " + (nativeErr.message || JSON.stringify(nativeErr)));
           await signInWithRedirect(auth, googleProvider);
         }
       } else {
