@@ -7,7 +7,7 @@ import Button from "../../components/ui/Button";
 import Card from "../../components/ui/Card";
 import Input from "../../components/ui/Input";
 import { cn } from "../../utils/cn";
-import { getImageUrl } from "../../utils/getApiUrl";
+import { getApiUrl, getImageUrl } from "../../utils/getApiUrl";
 
 /* --- HELPER FUNCTIONS --- */
 

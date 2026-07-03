@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getToken } from "../../utils/getToken";
-import { getImageUrl } from "../../utils/getApiUrl";
+import { getApiUrl, getImageUrl } from "../../utils/getApiUrl";
 import Button from "../../components/ui/Button";
 
 /**
