@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, ChevronRight, Mic, Search, ShoppingCart, SlidersHorizontal, Sparkles, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowLeft, ChevronRight, Mic, Search, ShoppingCart, SlidersHorizontal, Sparkles, X, Heart, Star, Clock, Users, Flame } from "lucide-react";
 import Button from "../../components/ui/Button";
 import { getApiUrl, getImageUrl } from "../../utils/getApiUrl";
 
@@ -8,6 +9,47 @@ const API = getApiUrl();
 
 // Quick suggestions tags displayed underneath the search box when empty
 const quickPrompts = ["Light meals", "Need coffee ASAP", "Breakfast in bed", "Pizza cravings"];
+
+const MotionDiv = motion.div;
+
+function ComboItemsTicker({ items = [] }) {
+  const comboItems = items.filter((item) => item?.name);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    if (comboItems.length <= 1) return undefined;
+    const timer = setInterval(() => {
+      setActiveIndex((index) => (index + 1) % comboItems.length);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, [comboItems.length]);
+
+  if (comboItems.length === 0) return null;
+
+  const activeItem = comboItems[activeIndex] || comboItems[0];
+
+  return (
+    <div className="overflow-hidden rounded-2xl border border-emerald-100 bg-emerald-50/70 px-3 py-2 dark:border-emerald-900/40 dark:bg-emerald-950/20">
+      <div className="mb-1 flex items-center justify-between gap-2">
+        <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-300">Combo includes</span>
+        <span className="text-[10px] font-black text-slate-500 dark:text-slate-400">{activeIndex + 1}/{comboItems.length}</span>
+      </div>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={`${activeItem.name}-${activeIndex}`}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.35, ease: "easeOut" }}
+          className="flex items-center justify-between gap-3"
+        >
+          <span className="truncate text-xs font-black text-slate-900 dark:text-white">{activeItem.name}</span>
+          <span className="shrink-0 text-xs font-black text-emerald-700 dark:text-emerald-300">Rs. {activeItem.price || 0}</span>
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
+}
 
 /* --- HELPERS & UTILITIES --- */
 
@@ -64,6 +106,12 @@ export default function FoodSearch() {
   const [filterGreatOffers, setFilterGreatOffers] = useState(false);
   const [filterPureVeg, setFilterPureVeg] = useState(false);
 
+  // Selected food item actively opened in details modal
+  const [selectedFood, setSelectedFood] = useState(null);
+  const [selectedFoodQty, setSelectedFoodQty] = useState(1);
+  const [selectedVariant, setSelectedVariant] = useState(null);
+  const [foodReviews, setFoodReviews] = useState([]);
+
   // Recent searches state
   const [recentSearches, setRecentSearches] = useState(() => {
     return JSON.parse(localStorage.getItem("recentSearches")) || [];
@@ -119,6 +167,80 @@ export default function FoodSearch() {
       setLoading(false);
     }
   };
+
+  // Fetch reviews whenever a food item is selected
+  useEffect(() => {
+    if (!selectedFood) {
+      setFoodReviews([]);
+      setSelectedVariant(null);
+      setSelectedFoodQty(1);
+      return;
+    }
+
+    const loadReviews = async () => {
+      try {
+        const res = await fetch(`${API}/api/reviews/food/${selectedFood._id}`);
+        if (res.ok) setFoodReviews(await res.json());
+      } catch (err) {
+        console.error("Failed to load reviews:", err);
+      }
+    };
+
+    loadReviews();
+
+    // Default variant configuration
+    const variants = getVariantOptions(selectedFood);
+    if (variants.length > 0) {
+      setSelectedVariant(variants[0]);
+    }
+  }, [selectedFood]);
+
+  // Utility helpers matching Menu.jsx detail modal
+  const getVariantOptions = (food) => {
+    if (!food) return [];
+    if (Array.isArray(food.variants) && food.variants.length > 0) return food.variants;
+    if (food.sizePrice && typeof food.sizePrice === "object") {
+      return Object.entries(food.sizePrice)
+        .filter(([_, price]) => price !== null && price !== undefined)
+        .map(([name, price]) => ({ name, price: Number(price) }));
+    }
+    return [];
+  };
+
+  const getComboItems = (food) => {
+    return Array.isArray(food?.comboItems) ? food.comboItems : [];
+  };
+
+  const getComboTotalPrice = (food) => {
+    return getComboItems(food).reduce((sum, item) => sum + Number(item.price || 0), 0);
+  };
+
+  const getServingLabel = (serv) => {
+    if (!serv) return "1 Person";
+    if (String(serv).toLowerCase().includes("person") || String(serv).toLowerCase().includes("people")) return serv;
+    return `${serv} Person`;
+  };
+
+  const withSelectedVariant = (food, variant) => {
+    if (!food) return null;
+    if (!variant) return food;
+    return {
+      ...food,
+      _id: `${food._id}:${variant.name}`,
+      foodId: food._id,
+      variantName: variant.name,
+      price: variant.price
+    };
+  };
+
+  // Sync details variant selection cart match
+  const selectedFoodVariantOptions = selectedFood ? getVariantOptions(selectedFood) : [];
+  const selectedFoodCartItem = selectedFood && selectedVariant
+    ? cart.find((item) => item._id === `${selectedFood._id}:${selectedVariant.name}`)
+    : selectedFood
+      ? cart.find((item) => item._id === selectedFood._id || item.foodId === selectedFood._id)
+      : null;
+  const selectedFoodPrice = selectedVariant?.price || Number(selectedFood?.price || 0);
 
   /**
    * loadCart: Retrieves items from LocalStorage and sets React state.
@@ -531,7 +653,7 @@ export default function FoodSearch() {
             {/* Renders 1 item if query is present, or 3 items on standard deal view to keep the UI clean as requested */}
             <div className="grid grid-cols-1 gap-4.5 sm:grid-cols-2 lg:grid-cols-3">
               {visibleFoods.slice(0, query ? 1 : 3).map((food) => (
-                <FoodResultCard key={food._id} food={food} cartItem={cart.find((item) => item._id === food._id)} onQuantity={updateQuantity} />
+                <FoodResultCard key={food._id} food={food} cartItem={cart.find((item) => item._id === food._id)} onQuantity={updateQuantity} onClick={setSelectedFood} />
               ))}
             </div>
 
@@ -543,7 +665,7 @@ export default function FoodSearch() {
                 </h3>
                 <div className="grid grid-cols-1 gap-4.5 sm:grid-cols-2 lg:grid-cols-3">
                   {relatedFoods.map((food) => (
-                    <FoodResultCard key={food._id} food={food} cartItem={cart.find((item) => item._id === food._id)} onQuantity={updateQuantity} />
+                    <FoodResultCard key={food._id} food={food} cartItem={cart.find((item) => item._id === food._id)} onQuantity={updateQuantity} onClick={setSelectedFood} />
                   ))}
                 </div>
               </div>
@@ -574,6 +696,214 @@ export default function FoodSearch() {
       <div className="mt-10 text-center">
         <Link to="/user/menu" className="text-sm font-black text-brand-600 hover:underline dark:text-brand-405">Back to full menu</Link>
       </div>
+
+      {/* --- FOOD DETAILS & CUSTOMISATION MODAL --- */}
+      <AnimatePresence>
+        {selectedFood && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[2000] flex items-center justify-center p-4">
+            <MotionDiv 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white dark:bg-slate-950 rounded-[2.5rem] shadow-2xl border border-slate-100 dark:border-slate-800/60 w-full max-w-2xl overflow-hidden flex flex-col max-h-[85vh]"
+            >
+              {/* Modal Banner Image */}
+              <div className="relative h-64 sm:h-80 bg-slate-50 dark:bg-slate-900 shrink-0 flex items-center justify-center p-4">
+                <img 
+                  src={getImageUrl(selectedFood.image)} 
+                  alt={selectedFood.name}
+                  className="max-w-full max-h-full w-auto h-auto object-contain rounded-2xl"
+                  onError={(e) => { e.target.src = 'https://placehold.co/600x400?text=Food'; }}
+                />
+                <button 
+                  onClick={() => setSelectedFood(null)}
+                  className="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md flex items-center justify-center text-slate-700 dark:text-slate-300 shadow-md hover:bg-white dark:hover:bg-slate-800 transition-colors animate-fade-in"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Scrollable details contents */}
+              <div className="p-6 sm:p-8 flex-1 overflow-y-auto space-y-6">
+                <div>
+                  <div className="flex justify-between items-start gap-4 mb-3">
+                    <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">{selectedFood.name}</h2>
+                    <span className="text-2xl font-black text-brand-600 shrink-0">₹{selectedFoodPrice}</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 text-sm font-extrabold text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-900 px-3.5 py-2 rounded-xl w-fit border border-slate-100 dark:border-slate-800/60">
+                    <Star size={16} className="text-amber-500 fill-amber-500" />
+                    <span>{selectedFood.rating > 0 ? `${selectedFood.rating.toFixed(1)} ★ (${selectedFood.ratingCount} reviews)` : "No reviews yet"}</span>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  <span className="inline-flex items-center gap-1.5 rounded-xl bg-slate-50 px-3 py-2 text-xs font-black text-slate-600 ring-1 ring-slate-100 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-800">
+                    <Clock size={14} /> {selectedFood.preparationTime || "20-30 min"}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 rounded-xl bg-slate-50 px-3 py-2 text-xs font-black text-slate-600 ring-1 ring-slate-100 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-800">
+                    <Users size={14} /> {getServingLabel(selectedFood.servingSize)}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 rounded-xl bg-orange-50 px-3 py-2 text-xs font-black text-orange-700 ring-1 ring-orange-100 dark:bg-orange-950/20 dark:text-orange-300 dark:ring-orange-900/40">
+                    <Flame size={14} /> {selectedFood.spiceLevel || "Medium"}
+                  </span>
+                  <span className="rounded-xl bg-indigo-50 px-3 py-2 text-xs font-black text-indigo-700 ring-1 ring-indigo-100 dark:bg-indigo-950/20 dark:text-indigo-300 dark:ring-indigo-900/40">
+                    {selectedFood.sizeLevel || "Medium"}
+                  </span>
+                </div>
+
+                <div>
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Description</h4>
+                  <p className="text-slate-600 dark:text-slate-300 leading-relaxed font-medium">{selectedFood.description || "No description available."}</p>
+                </div>
+
+                {/* Combo detail items checklist */}
+                {selectedFood.foodType === "combo" && getComboItems(selectedFood).length > 0 && (
+                  <div className="rounded-3xl border border-emerald-100 bg-emerald-50/70 p-4 dark:border-emerald-900/40 dark:bg-emerald-950/20">
+                    <div className="mb-4 flex items-center justify-between gap-3">
+                      <div>
+                        <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">Combo Details</h3>
+                        <p className="mt-1 text-sm font-bold text-slate-500 dark:text-slate-400">
+                          {getComboItems(selectedFood).length} items for {getServingLabel(selectedFood.servingSize)}
+                        </p>
+                      </div>
+                      {(() => {
+                        const total = getComboTotalPrice(selectedFood);
+                        const saving = Math.max(0, total - selectedFoodPrice);
+                        const percent = total > 0 ? Math.round((saving / total) * 100) : 0;
+                        return saving > 0 ? (
+                          <span className="rounded-xl bg-white px-3 py-2 text-xs font-black text-emerald-75 shadow-sm dark:bg-slate-950 dark:text-emerald-350">
+                            You Save: ₹{saving} ({percent}%)
+                          </span>
+                        ) : null;
+                      })()}
+                    </div>
+                    <ComboItemsTicker items={getComboItems(selectedFood)} />
+                    <div className="mt-4 divide-y divide-emerald-100 overflow-hidden rounded-2xl bg-white dark:divide-emerald-900/40 dark:bg-slate-950">
+                      {getComboItems(selectedFood).map((item) => (
+                        <div key={item.name} className="flex items-center justify-between gap-3 px-4 py-3 text-sm font-bold">
+                          <span className="min-w-0 truncate text-slate-700 dark:text-slate-200">{item.name}</span>
+                          <span className="shrink-0 text-slate-900 dark:text-white">Rs. {item.price || 0}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Variant choice picker */}
+                {selectedFoodVariantOptions.length > 0 && (
+                  <div>
+                    <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">Customisation</h3>
+                    <p className="mt-1 text-sm font-bold text-slate-500 dark:text-slate-400">Select any 1</p>
+                    <div className="mt-4 overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/50">
+                      {selectedFoodVariantOptions.map((variant) => {
+                        const active = selectedVariant?.name === variant.name;
+                        return (
+                          <button
+                            key={variant.name}
+                            type="button"
+                            onClick={() => setSelectedVariant(variant)}
+                            className={`flex w-full items-center justify-between gap-4 border-b border-slate-100 px-4 py-4 text-left last:border-b-0 dark:border-slate-800 ${
+                              active ? "bg-brand-50/70 dark:bg-brand-950/20" : "bg-white dark:bg-slate-950"
+                            }`}
+                          >
+                            <span className="flex min-w-0 items-center gap-3">
+                              <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 ${selectedFood.veg === false ? "border-red-500" : "border-emerald-500"}`}>
+                                <span className={`h-2.5 w-2.5 rounded-full ${selectedFood.veg === false ? "bg-red-500" : "bg-emerald-500"}`} />
+                              </span>
+                              <span className="truncate text-base font-black text-slate-900 dark:text-white">{variant.name}</span>
+                            </span>
+                            <span className="flex shrink-0 items-center gap-3">
+                              <span className="text-base font-black text-slate-700 dark:text-slate-200">₹{variant.price}</span>
+                              <span className={`h-6 w-6 rounded-full border-2 ${active ? "border-brand-500 bg-brand-500 shadow-inner" : "border-slate-300 dark:border-slate-600"}`}>
+                                {active && <span className="block h-full w-full rounded-full border-4 border-white dark:border-slate-950" />}
+                              </span>
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                <hr className="border-slate-100 dark:border-slate-800/60" />
+
+                {/* Customer Review Logs */}
+                <div>
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight mb-4">Customer Reviews</h3>
+                  {foodReviews.length === 0 ? (
+                    <div className="bg-slate-50 dark:bg-slate-900 rounded-2xl p-6 text-center border border-slate-100 dark:border-slate-800/60">
+                      <p className="text-slate-500 dark:text-slate-400 font-medium">No reviews for this dish yet.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {foodReviews.map((r) => (
+                        <div key={r._id} className="bg-slate-50 dark:bg-slate-900 rounded-2xl p-5 border border-slate-100/60 dark:border-slate-800/50">
+                          <div className="flex justify-between items-start gap-4 mb-3">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full bg-brand-50 dark:bg-brand-950/30 text-brand-650 dark:text-brand-400 font-black text-sm flex items-center justify-center border border-brand-100 dark:border-brand-900/60">
+                                {r.userName ? r.userName[0].toUpperCase() : "U"}
+                              </div>
+                              <div>
+                                <h5 className="font-bold text-slate-800 dark:text-white text-sm">{r.userName}</h5>
+                                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">
+                                  {new Date(r.createdAt).toLocaleDateString()}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex gap-0.5 text-yellow-400 bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800/60 px-2 py-1 rounded-lg">
+                              {[...Array(r.rating)].map((_, idx) => (
+                                <Star key={idx} size={12} fill="currentColor" className="text-yellow-400" />
+                              ))}
+                              {[...Array(5 - r.rating)].map((_, idx) => (
+                                <Star key={idx} size={12} className="text-slate-200 dark:text-slate-800" />
+                              ))}
+                            </div>
+                          </div>
+                          <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed font-medium">"{r.reviewText}"</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Action Add/Update Toolbar */}
+              <div className="p-6 border-t border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-950">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-14 shrink-0 items-center rounded-2xl border border-slate-200 bg-white p-1 dark:border-slate-800 dark:bg-slate-900">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedFoodQty((qty) => Math.max(1, qty - 1))}
+                      className="flex h-12 w-12 items-center justify-center rounded-xl text-2xl font-black text-brand-600 hover:bg-brand-50 dark:text-brand-300 dark:hover:bg-brand-950/30"
+                    >
+                      -
+                    </button>
+                    <span className="w-10 text-center text-lg font-black text-slate-900 dark:text-white">{selectedFoodQty}</span>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedFoodQty((qty) => qty + 1)}
+                      className="flex h-12 w-12 items-center justify-center rounded-xl text-2xl font-black text-brand-600 hover:bg-brand-50 dark:text-brand-300 dark:hover:bg-brand-950/30"
+                    >
+                      +
+                    </button>
+                  </div>
+                  <Button
+                    onClick={() => {
+                      updateQuantity(withSelectedVariant(selectedFood, selectedVariant), selectedFoodQty);
+                      setSelectedFood(null);
+                    }}
+                    className="flex-1 gap-2 py-4 text-base rounded-2xl"
+                  >
+                    <ShoppingCart size={20} />
+                    {selectedFoodCartItem ? "Update Item" : "Add Item"} | ₹{selectedFoodPrice * selectedFoodQty}
+                  </Button>
+                </div>
+              </div>
+            </MotionDiv>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -583,10 +913,13 @@ export default function FoodSearch() {
  * 
  * Renders detail parameters for search matching food results, rating stars, and custom counter quantity buttons.
  */
-function FoodResultCard({ food, cartItem, onQuantity }) {
+function FoodResultCard({ food, cartItem, onQuantity, onClick }) {
   const isOut = food.isAvailable === false;
   return (
-    <div className={`overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm transition-all hover:shadow-md dark:border-slate-800/80 dark:bg-slate-950 ${isOut ? "opacity-60 grayscale filter" : ""}`}>
+    <div 
+      onClick={() => onClick && onClick(food)}
+      className={`overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm transition-all hover:shadow-md hover:scale-[1.01] cursor-pointer dark:border-slate-800/80 dark:bg-slate-950 ${isOut ? "opacity-60 grayscale filter" : ""}`}
+    >
       <div className="relative h-44 bg-slate-50 p-2.5 dark:bg-slate-900">
         <img
           src={getImageUrl(food.image)}
@@ -619,6 +952,7 @@ function FoodResultCard({ food, cartItem, onQuantity }) {
           {isOut ? (
             <button
               disabled
+              onClick={(e) => e.stopPropagation()}
               className="rounded-xl bg-slate-200 dark:bg-slate-800 px-4 py-2 text-xs font-black text-slate-400 dark:text-slate-500 cursor-not-allowed select-none"
             >
               Out of Stock
@@ -626,16 +960,22 @@ function FoodResultCard({ food, cartItem, onQuantity }) {
           ) : !cartItem ? (
             <button
               type="button"
-              onClick={() => onQuantity(food, 1)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onQuantity(food, 1);
+              }}
               className="rounded-xl bg-brand-500 px-4 py-2 text-xs font-black text-white shadow-md shadow-brand-500/20 transition-all hover:bg-brand-600 active:scale-95"
             >
               Add
             </button>
           ) : (
-            <div className="flex items-center rounded-xl border border-brand-100 bg-brand-50 p-1 dark:border-brand-800/40 dark:bg-brand-950/30">
-              <button type="button" onClick={() => onQuantity(food, cartItem.qty - 1)} className="h-8 w-8 rounded-lg bg-white text-base font-black text-brand-600 dark:bg-slate-900 dark:text-brand-350 shadow-sm">-</button>
+            <div 
+              onClick={(e) => e.stopPropagation()}
+              className="flex items-center rounded-xl border border-brand-100 bg-brand-50 p-1 dark:border-brand-800/40 dark:bg-brand-950/30"
+            >
+              <button type="button" onClick={(e) => { e.stopPropagation(); onQuantity(food, cartItem.qty - 1); }} className="h-8 w-8 rounded-lg bg-white text-base font-black text-brand-600 dark:bg-slate-900 dark:text-brand-350 shadow-sm">-</button>
               <span className="min-w-8 px-1 text-center text-xs font-black text-slate-900 dark:text-white">{cartItem.qty}</span>
-              <button type="button" onClick={() => onQuantity(food, cartItem.qty + 1)} className="h-8 w-8 rounded-lg bg-brand-500 text-base font-black text-white">+</button>
+              <button type="button" onClick={(e) => { e.stopPropagation(); onQuantity(food, cartItem.qty + 1); }} className="h-8 w-8 rounded-lg bg-brand-500 text-base font-black text-white">+</button>
             </div>
           )}
         </div>
