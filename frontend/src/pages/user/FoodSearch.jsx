@@ -585,7 +585,7 @@ export default function FoodSearch() {
                         : "bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-700"
                     }`}>
                       <img
-                        src={getImageUrl(cat.image)}
+                        src={cat.image.startsWith("/") ? cat.image : getImageUrl(cat.image)}
                         alt={cat.name}
                         className="w-full h-full object-cover rounded-full"
                         onError={(e) => { e.target.src = "https://placehold.co/160x160?text=Food"; }}
@@ -760,7 +760,7 @@ export default function FoodSearch() {
                       >
                         <span className="relative w-full aspect-[1.35] rounded-xl flex items-center justify-center overflow-hidden bg-slate-50 dark:bg-slate-900">
                           <img 
-                            src={getImageUrl(cat.image)} 
+                            src={cat.image.startsWith("/") ? cat.image : getImageUrl(cat.image)} 
                             alt={cat.name} 
                             className="w-full h-full object-contain"
                             onError={(e) => { e.target.src = "https://placehold.co/160x160?text=Food"; }}
