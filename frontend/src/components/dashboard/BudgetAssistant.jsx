@@ -81,16 +81,16 @@ const addBudgetMath = (food, people, maxBudget) => {
 };
 
 const isNonVegFood = (food) => {
-  const name = normalize(food.name);
-  const category = normalize(food.category);
+  const category = normalize(food.category || "");
+  const name = normalize(food.name || "");
   return (
     food.veg === false ||
+    food.veg === "false" ||
     category.includes("non-veg") ||
     category.includes("chicken") ||
     category.includes("kebab") ||
     name.includes("chicken") ||
-    name.includes("mutton") ||
-    name.includes("egg")
+    name.includes("mutton")
   );
 };
 

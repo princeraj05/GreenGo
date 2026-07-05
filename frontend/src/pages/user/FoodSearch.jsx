@@ -58,6 +58,12 @@ function normalize(value = "") {
   return String(value).toLowerCase().trim();
 }
 
+function isNonVegFood(food) {
+  const cat = String(food.category || "").toLowerCase();
+  const name = String(food.name || "").toLowerCase();
+  return food.veg === false || food.veg === "false" || cat.includes("non-veg") || cat.includes("chicken") || name.includes("chicken") || name.includes("mutton");
+}
+
 /**
  * distanceRank: Scores how close a food item's text matches the search query.
  * Lower scores denote closer matches (e.g. 0 for exact match, up to 5 for no prefix match).
@@ -341,7 +347,16 @@ export default function FoodSearch() {
       .filter((food) => {
         const matchesQuery = !q || q === "all food" || normalize(food.name).includes(q) || normalize(food.category).includes(q) || normalize(food.description).includes(q);
         const active = normalize(activeCategory);
-        const matchesCategory = activeCategory === "All" || activeCategory === "All Food" || normalize(food.category || "Other") === active || normalize(food.name).includes(active);
+        let matchesCategory = false;
+        if (activeCategory === "All" || activeCategory === "All Food") {
+          matchesCategory = true;
+        } else if (active === "veg") {
+          matchesCategory = !isNonVegFood(food);
+        } else if (active === "non-veg") {
+          matchesCategory = isNonVegFood(food);
+        } else {
+          matchesCategory = normalize(food.category || "Other") === active || normalize(food.name).includes(active);
+        }
         
         // Apply rupee filter <= 100
         if (filterUnder100 && Number(food.price) > 100) {

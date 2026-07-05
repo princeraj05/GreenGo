@@ -618,9 +618,9 @@ export default function Menu() {
         const hasCategoryText = (value) => foodCategories.some((item) => item.includes(value));
 
         if (selectedCategory === "veg") {
-          matchesCategory = food.veg === true || hasCategory("veg") || foodName.includes("veg") || foodName.includes("paneer");
+          matchesCategory = !isNonVegFood(food);
         } else if (selectedCategory === "non-veg") {
-          matchesCategory = food.veg === false || hasCategory("non-veg") || hasCategory("chicken") || foodName.includes("chicken") || foodName.includes("egg");
+          matchesCategory = isNonVegFood(food);
         } else if (selectedCategory === "drinks") {
           matchesCategory = hasCategory("drinks") || hasCategory("water") || hasCategory("cold drink");
         } else if (selectedCategory === "desserts") {
