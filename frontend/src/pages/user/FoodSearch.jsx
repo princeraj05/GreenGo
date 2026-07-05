@@ -64,6 +64,50 @@ export default function FoodSearch() {
   const [filterGreatOffers, setFilterGreatOffers] = useState(false);
   const [filterPureVeg, setFilterPureVeg] = useState(false);
 
+  // Recent searches state
+  const [recentSearches, setRecentSearches] = useState(() => {
+    return JSON.parse(localStorage.getItem("recentSearches")) || [];
+  });
+
+  const saveRecentSearch = (searchQuery) => {
+    const trimmed = searchQuery.trim();
+    if (!trimmed) return;
+    setRecentSearches((prev) => {
+      const filtered = prev.filter((q) => q.toLowerCase() !== trimmed.toLowerCase());
+      const updated = [trimmed, ...filtered].slice(0, 3);
+      localStorage.setItem("recentSearches", JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  // Memoized related foods builder
+  const relatedFoods = useMemo(() => {
+    if (!query || visibleFoods.length === 0) return [];
+    
+    // Check if the current search matches fast food or thali specifically
+    const lowerQuery = query.toLowerCase();
+    
+    let targets = [];
+    if (lowerQuery.includes("burger") || lowerQuery.includes("fastfood") || lowerQuery.includes("pizza") || lowerQuery.includes("chaomin") || lowerQuery.includes("chowmein") || lowerQuery.includes("noodle") || lowerQuery.includes("cold drink") || lowerQuery.includes("coke")) {
+      targets = ["pizza", "burger", "chowmein", "chaomin", "noodle", "french fries", "cold drink", "coke", "fastfood"];
+    } else if (lowerQuery.includes("thali") || lowerQuery.includes("rice") || lowerQuery.includes("dal") || lowerQuery.includes("paneer") || lowerQuery.includes("mushroom") || lowerQuery.includes("sabji") || lowerQuery.includes("roti")) {
+      targets = ["rice", "dal", "paneer", "mushroom", "roti", "thali", "sabji", "chili combo"];
+    }
+
+    const visibleIds = new Set(visibleFoods.map(f => f._id));
+    return foods.filter(f => {
+      if (visibleIds.has(f._id)) return false;
+      const name = f.name.toLowerCase();
+      const cat = (f.category || "").toLowerCase();
+      
+      if (targets.length > 0) {
+        return targets.some(target => name.includes(target) || cat.includes(target));
+      }
+      
+      return visibleFoods.some(vf => (vf.category && vf.category === f.category));
+    }).slice(0, 3); // limit to 3 related foods
+  }, [foods, query, visibleFoods]);
+
   /* --- DATA FETCHING & EFFECTS --- */
 
   // Runs on mount: Loads foods list, populates cart state, and focuses search input
@@ -241,6 +285,7 @@ export default function FoodSearch() {
 
   const chooseSuggestion = (item) => {
     setQuery(item.name);
+    saveRecentSearch(item.name);
     setActiveCategory(item.isCategory ? item.name : "All");
     setShowSuggestions(false);
   };
@@ -248,6 +293,7 @@ export default function FoodSearch() {
   const chooseCategory = (name) => {
     setActiveCategory(name);
     setQuery(name === "All Food" ? "" : name);
+    if (name !== "All Food") saveRecentSearch(name);
     setShowSuggestions(false);
   };
 
@@ -260,8 +306,8 @@ export default function FoodSearch() {
     <div className="mx-auto w-full max-w-6xl px-4 pb-28 md:px-6">
       
       {/* --- STICKY SEARCH BAR HEADER --- */}
-      <div className="sticky top-0 z-30 -mx-4 bg-slate-50/95 px-4 pb-4 pt-1.5 backdrop-blur-md dark:bg-slate-900/95 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-        <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-2.5 shadow-sm transition-all focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/25 dark:border-slate-800 dark:bg-slate-950">
+      <div className="sticky top-0 z-30 -mx-4 bg-slate-50/95 px-4 pb-3 pt-1.5 backdrop-blur-md dark:bg-slate-900/95 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+        <div className="flex max-w-4xl mx-auto items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-1.5 shadow-sm transition-all focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/25 dark:border-slate-800 dark:bg-slate-950">
           <button
             type="button"
             onClick={() => navigate(-1)}
@@ -278,6 +324,12 @@ export default function FoodSearch() {
               setQuery(event.target.value);
               setActiveCategory("All");
               setShowSuggestions(true);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && query.trim()) {
+                saveRecentSearch(query);
+                setShowSuggestions(false);
+              }
             }}
             placeholder="Search delicious food..."
             className="min-w-0 flex-1 bg-transparent text-base font-extrabold text-slate-900 outline-none placeholder:text-slate-400 dark:text-white sm:text-lg"
@@ -306,24 +358,43 @@ export default function FoodSearch() {
         </div>
       </div>
 
-      {/* --- QUICK PROMPTS INSPIRATION TAGS --- */}
+      {/* --- QUICK PROMPTS / RECENT SEARCHES INSPIRATION TAGS --- */}
       {!query && (
-        <section className="mb-8 overflow-hidden">
+        <section className="mb-8 overflow-hidden max-w-4xl mx-auto">
           <div className="flex gap-2.5 overflow-x-auto pb-2 no-scrollbar scroll-smooth">
-            {quickPrompts.map((prompt) => (
-              <button
-                key={prompt}
-                type="button"
-                onClick={() => {
-                  setQuery(prompt);
-                  setShowSuggestions(true);
-                }}
-                className="shrink-0 rounded-full border border-brand-100 hover:border-brand-300 bg-white px-4 py-2 text-sm font-black text-slate-700 shadow-sm transition-all hover:bg-brand-50/30 dark:border-brand-900/40 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-brand-950/20"
-              >
-                <Sparkles size={14} className="mr-1.5 inline text-brand-500" />
-                {prompt}
-              </button>
-            ))}
+            {recentSearches.length > 0 ? (
+              recentSearches.map((searchItem) => (
+                <button
+                  key={searchItem}
+                  type="button"
+                  onClick={() => {
+                    setQuery(searchItem);
+                    setShowSuggestions(false);
+                    saveRecentSearch(searchItem);
+                  }}
+                  className="shrink-0 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-black text-slate-700 shadow-sm transition-all hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900 flex items-center gap-1.5"
+                >
+                  <Search size={12} className="text-slate-400" />
+                  {searchItem}
+                </button>
+              ))
+            ) : (
+              quickPrompts.map((prompt) => (
+                <button
+                  key={prompt}
+                  type="button"
+                  onClick={() => {
+                    setQuery(prompt);
+                    setShowSuggestions(false);
+                    saveRecentSearch(prompt);
+                  }}
+                  className="shrink-0 rounded-full border border-brand-100 hover:border-brand-300 bg-white px-4 py-2 text-xs font-black text-slate-700 shadow-sm transition-all hover:bg-brand-50/30 dark:border-brand-900/40 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-brand-950/20"
+                >
+                  <Sparkles size={14} className="inline text-brand-500" />
+                  {prompt}
+                </button>
+              ))
+            )}
           </div>
         </section>
       )}
@@ -456,10 +527,27 @@ export default function FoodSearch() {
             <p className="mt-1 text-sm font-semibold text-slate-450 dark:text-slate-500">Try another dish name or category.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-4.5 sm:grid-cols-2 lg:grid-cols-3">
-            {visibleFoods.map((food) => (
-              <FoodResultCard key={food._id} food={food} cartItem={cart.find((item) => item._id === food._id)} onQuantity={updateQuantity} />
-            ))}
+          <div>
+            {/* Renders 1 item if query is present, or 3 items on standard deal view to keep the UI clean as requested */}
+            <div className="grid grid-cols-1 gap-4.5 sm:grid-cols-2 lg:grid-cols-3">
+              {visibleFoods.slice(0, query ? 1 : 3).map((food) => (
+                <FoodResultCard key={food._id} food={food} cartItem={cart.find((item) => item._id === food._id)} onQuantity={updateQuantity} />
+              ))}
+            </div>
+
+            {/* Related Foods Section */}
+            {query && relatedFoods.length > 0 && (
+              <div className="mt-10 pt-8 border-t border-slate-100 dark:border-slate-800/60">
+                <h3 className="mb-5 text-base font-black text-slate-800 dark:text-slate-200 uppercase tracking-[0.2em]">
+                  Related to this food
+                </h3>
+                <div className="grid grid-cols-1 gap-4.5 sm:grid-cols-2 lg:grid-cols-3">
+                  {relatedFoods.map((food) => (
+                    <FoodResultCard key={food._id} food={food} cartItem={cart.find((item) => item._id === food._id)} onQuantity={updateQuantity} />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </section>

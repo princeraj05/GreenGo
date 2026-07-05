@@ -111,7 +111,8 @@ export default function Notifications() {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
-        setNotifications((items) => items.map((item) => item._id === id ? { ...item, read: true, isRead: true } : item));
+        // Remove from list since they should disappear when read
+        setNotifications((items) => items.filter((item) => item._id !== id));
       }
     } catch (err) {
       console.error("Failed to mark notification as read:", err);
@@ -119,8 +120,19 @@ export default function Notifications() {
   };
 
   const markAllAsRead = async () => {
-    const unread = notifications.filter((item) => !(item.isRead || item.read));
-    await Promise.all(unread.map((item) => markAsRead(item._id)));
+    try {
+      const token = await getToken();
+      if (!token) return;
+      const res = await fetch(`${getApiUrl()}/api/notifications/read-all`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        setNotifications([]);
+      }
+    } catch (err) {
+      console.error("Failed to mark all notifications as read:", err);
+    }
   };
 
   const smoothTransition = { type: "spring", stiffness: 300, damping: 28 };
@@ -150,7 +162,7 @@ export default function Notifications() {
           <Button type="button" variant="secondary" onClick={loadNotifications} className="rounded-xl py-1.5 px-3 text-xs gap-1">
             <RefreshCw size={12} /> Refresh
           </Button>
-          {unreadCount > 0 && (
+          {notifications.length > 0 && (
             <Button type="button" onClick={markAllAsRead} className="rounded-xl py-1.5 px-3 text-xs gap-1">
               <CheckCheck size={12} /> Mark Read
             </Button>

@@ -90,9 +90,16 @@ export const getAllNotifications = async (req, res) => {
   try {
     await ensureTodayBirthdayNotifications();
     const notifications = await Notification.find(activeNotificationFilter()).sort({ createdAt: -1 });
-    res.json(notifications.map((notification) => ({
+    
+    // Filter out notifications that are read by the admin
+    const unreadNotifications = notifications.filter(n => {
+      const isRead = Boolean(n.read || (n.readBy || []).includes(req.user.id));
+      return !isRead;
+    });
+
+    res.json(unreadNotifications.map((notification) => ({
       ...notification.toObject(),
-      isRead: Boolean(notification.read || (notification.readBy || []).includes(req.user.id)),
+      isRead: false,
     })));
   } catch (err) {
     res.status(500).json({ message: "Server error" });
@@ -118,8 +125,14 @@ export const getMyNotifications = async (req, res) => {
         }
       ]
     }).sort({ createdAt: -1 });
+
+    // Filter out read notifications so that marking them as read clears them
+    const unreadNotifications = notifications.filter(n => {
+      const isRead = Boolean(n.read || (n.readBy || []).includes(req.user.id));
+      return !isRead;
+    });
     
-    res.json(notifications);
+    res.json(unreadNotifications);
   } catch (err) {
     res.status(500).json({ message: "Server error" });
   }
@@ -168,6 +181,37 @@ export const deleteNotification = async (req, res) => {
 export const markAsRead = async (req, res) => {
   try {
     const notificationId = req.params.id;
+
+    if (!notificationId) {
+      // Mark all as read
+      const filter = isAdmin(req.user)
+        ? {}
+        : {
+            audience: { $ne: "admin" },
+            $or: [
+              { userId: req.user.id },
+              { userId: { $exists: false } },
+              { userId: null },
+              { userId: "" }
+            ]
+          };
+
+      const notifications = await Notification.find(filter);
+      for (const notification of notifications) {
+        if (notification.userId) {
+          notification.read = true;
+        }
+        if (!notification.readBy) {
+          notification.readBy = [];
+        }
+        if (!notification.readBy.includes(req.user.id)) {
+          notification.readBy.push(req.user.id);
+        }
+        await notification.save();
+      }
+      return res.json({ success: true });
+    }
+
     const notification = await Notification.findOne({
       _id: notificationId,
       ...(isAdmin(req.user)

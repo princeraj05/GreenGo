@@ -914,7 +914,7 @@ export default function Profile() {
         <Section title="About GreenGo" onClose={() => setActiveSection(null)}>
           <div className="space-y-4 text-sm font-semibold text-slate-600 dark:text-slate-300 leading-relaxed">
             <p>GreenGo is built for quick food discovery, budget recommendations, coupons, saved addresses, and easy re-ordering.</p>
-            <p>Version 1.0.0</p>
+            <p className="font-extrabold text-brand-655 text-base">Version 1.0.0 (Stable release)</p>
             <p>Account data shown here is loaded from your backend login session using the saved authentication token.</p>
           </div>
         </Section>
@@ -1091,8 +1091,8 @@ export default function Profile() {
             </button>
           </div>
 
-          <div className="mt-8 text-center text-xs font-bold text-slate-400 select-none pointer-events-none">
-            Version 1.0.0
+          <div className="mt-8 text-center text-xs font-black text-brand-500/80 select-none tracking-wider uppercase">
+            Version 1.0.0 (Production)
           </div>
         </div>
       </div>

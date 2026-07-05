@@ -156,7 +156,7 @@ export default function ManageNotifications() {
           headers: { Authorization: `Bearer ${token}` }
         });
         setNotifications((items) =>
-          items.map((item) => item._id === notification._id ? { ...item, isRead: true, read: true } : item)
+          items.filter((item) => item._id !== notification._id)
         );
       }
     } catch (err) {
@@ -173,14 +173,39 @@ export default function ManageNotifications() {
     <div className="animate-fade-in pt-6 md:pt-0 pb-10">
       
       {/* --- HEADER SECTION --- */}
-      <div className="mb-6 md:mb-10">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3 md:gap-4">
-          <div className="w-10 h-10 md:w-12 md:h-12 bg-emerald-50 dark:bg-emerald-950/30 rounded-2xl flex items-center justify-center text-emerald-600 dark:text-emerald-450 shrink-0">
-            <Megaphone size={22} className="md:w-[26px] md:h-[26px]" />
-          </div>
-          Notification Center
-        </h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm sm:text-base md:text-lg font-medium">Broadcast offers and track live admin alerts for orders, messages, users, and birthdays.</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 md:mb-10">
+        <div>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3 md:gap-4">
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-emerald-50 dark:bg-emerald-950/30 rounded-2xl flex items-center justify-center text-emerald-600 dark:text-emerald-450 shrink-0">
+              <Megaphone size={22} className="md:w-[26px] md:h-[26px]" />
+            </div>
+            Notification Center
+          </h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm sm:text-base md:text-lg font-medium">Broadcast offers and track live admin alerts for orders, messages, users, and birthdays.</p>
+        </div>
+        {notifications.length > 0 && (
+          <Button
+            type="button"
+            onClick={async () => {
+              try {
+                const token = await getToken();
+                if (!token) return;
+                const res = await fetch(`${getApiUrl()}/api/notifications/read-all`, {
+                  method: "PUT",
+                  headers: { Authorization: `Bearer ${token}` }
+                });
+                if (res.ok) {
+                  setNotifications([]);
+                }
+              } catch (err) {
+                console.error("Failed to mark all as read:", err);
+              }
+            }}
+            className="rounded-xl py-2 px-4 text-xs font-black shrink-0 self-start sm:self-auto bg-emerald-600 hover:bg-emerald-700"
+          >
+            Mark All Read
+          </Button>
+        )}
       </div>
       {/* --- END HEADER SECTION --- */}
 
