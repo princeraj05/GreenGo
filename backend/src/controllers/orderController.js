@@ -224,10 +224,20 @@ export const createOrder = async (req, res) => {
       finalDeliveryCharge = settings.isDeliveryChargeEnabled ? Number(settings.deliveryChargeAmount || 0) : 0;
     }
 
+    let finalRainCharge = 0;
+    let finalFestivalCharge = 0;
+    let finalPlatformCharge = 0;
+
+    if (settings) {
+      finalRainCharge = Number(settings.rainCharge || 0);
+      finalFestivalCharge = Number(settings.festivalCharge || 0);
+      finalPlatformCharge = Number(settings.platformCharge || 0);
+    }
+
     const packingTotal = Array.isArray(items)
       ? items.reduce((sum, item) => sum + (Number(item.packingCharge || 0) * Number(item.qty || 0)), 0)
       : 0;
-    const finalTotal = Number(subtotal || 0) + packingTotal + finalDeliveryCharge;
+    const finalTotal = Number(subtotal || 0) + packingTotal + finalDeliveryCharge + finalRainCharge + finalFestivalCharge + finalPlatformCharge;
 
     const order = await Order.create({
       userId: req.user.id,
@@ -247,6 +257,9 @@ export const createOrder = async (req, res) => {
       subtotal,
       deliveryCharge: finalDeliveryCharge,
       deliveryBoyAmount,
+      rainCharge: finalRainCharge,
+      festivalCharge: finalFestivalCharge,
+      platformCharge: finalPlatformCharge,
       total: finalTotal,
       distance: distance ? Number(distance.toFixed(2)) : null,
       latitude: userLat,
@@ -406,6 +419,11 @@ export const updateOrderStatus = async (req, res) => {
       update.cancellationReason = cancellationReason || "Cancelled by Admin";
       update.cancellationCustomMessage = cancellationCustomMessage || "";
       update.cancellationStatus = "Approved";
+    }
+
+    if (req.body.etaMinutes !== undefined) {
+      update.etaMinutes = Number(req.body.etaMinutes);
+      update.etaSetAt = new Date();
     }
 
     await Order.findByIdAndUpdate(orderId, update);

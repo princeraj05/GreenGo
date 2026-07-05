@@ -7,7 +7,8 @@ const bannerSchema = new mongoose.Schema({
   buttonText: { type: String, default: "ORDER NOW" },
   image: { type: String, required: true },
   displayOrder: { type: Number, default: 0 },
-  active: { type: Boolean, default: true }
+  active: { type: Boolean, default: true },
+  targetCategory: { type: String, default: "" }
 }, { timestamps: true });
 
 export default mongoose.model("Banner", bannerSchema);

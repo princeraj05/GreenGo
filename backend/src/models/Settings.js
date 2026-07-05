@@ -15,7 +15,14 @@ const settingsSchema = new mongoose.Schema({
   storeLatitude: { type: Number, default: 25.5941 },
   storeLongitude: { type: Number, default: 85.1376 },
   isDistanceLimitEnabled: { type: Boolean, default: true },
-  isStoreOpen: { type: Boolean, default: false }
+  isStoreOpen: { type: Boolean, default: false },
+  rainCharge: { type: Number, default: 0 },
+  festivalCharge: { type: Number, default: 0 },
+  platformCharge: { type: Number, default: 0 },
+  enabledPaymentMethods: {
+    cod: { type: Boolean, default: true },
+    online: { type: Boolean, default: true }
+  }
 }, { timestamps: true });
 
 export default mongoose.model("Settings", settingsSchema);

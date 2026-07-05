@@ -29,7 +29,7 @@ export const getAllBannersAdmin = async (req, res) => {
 // @access  Private/Admin
 export const addBanner = async (req, res) => {
   try {
-    const { title, description, discountText, buttonText, displayOrder, active } = req.body;
+    const { title, description, discountText, buttonText, displayOrder, active, targetCategory } = req.body;
     let image = "";
     if (req.file) {
       image = req.file.path || req.file.filename;
@@ -44,7 +44,8 @@ export const addBanner = async (req, res) => {
       buttonText,
       image,
       displayOrder: Number(displayOrder || 0),
-      active: active === "false" ? false : true
+      active: active === "false" ? false : true,
+      targetCategory: targetCategory || ""
     });
 
     res.status(201).json({ success: true, data: banner });
@@ -58,7 +59,7 @@ export const addBanner = async (req, res) => {
 // @access  Private/Admin
 export const updateBanner = async (req, res) => {
   try {
-    const { title, description, discountText, buttonText, displayOrder, active } = req.body;
+    const { title, description, discountText, buttonText, displayOrder, active, targetCategory } = req.body;
     let banner = await Banner.findById(req.params.id);
     if (!banner) {
       return res.status(404).json({ message: "Banner not found" });
@@ -70,7 +71,8 @@ export const updateBanner = async (req, res) => {
       discountText,
       buttonText,
       displayOrder: Number(displayOrder || 0),
-      active: active === "false" ? false : true
+      active: active === "false" ? false : true,
+      targetCategory: targetCategory || ""
     };
 
     if (req.file) {

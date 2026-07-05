@@ -34,7 +34,11 @@ export const updateSettings = async (req, res) => {
       storeLatitude,
       storeLongitude,
       isDistanceLimitEnabled,
-      isStoreOpen
+      isStoreOpen,
+      rainCharge,
+      festivalCharge,
+      platformCharge,
+      enabledPaymentMethods
     } = req.body;
     let settings = await Settings.findOne();
     
@@ -51,6 +55,16 @@ export const updateSettings = async (req, res) => {
     if (storeLongitude !== undefined) settings.storeLongitude = Number(storeLongitude);
     if (isDistanceLimitEnabled !== undefined) settings.isDistanceLimitEnabled = Boolean(isDistanceLimitEnabled);
     if (isStoreOpen !== undefined) settings.isStoreOpen = Boolean(isStoreOpen);
+    
+    if (rainCharge !== undefined) settings.rainCharge = Number(rainCharge);
+    if (festivalCharge !== undefined) settings.festivalCharge = Number(festivalCharge);
+    if (platformCharge !== undefined) settings.platformCharge = Number(platformCharge);
+    if (enabledPaymentMethods !== undefined) {
+      settings.enabledPaymentMethods = {
+        cod: Boolean(enabledPaymentMethods.cod),
+        online: Boolean(enabledPaymentMethods.online)
+      };
+    }
     
     await settings.save();
     res.json(settings);

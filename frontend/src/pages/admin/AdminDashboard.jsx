@@ -113,10 +113,11 @@ export default function AdminDashboard() {
     });
   }, [ordersList, startDate, endDate, filterPaymentMethod]);
 
-  const { filteredTotal, filteredCod, filteredOnline } = useMemo(() => {
+  const { filteredTotal, filteredCod, filteredOnline, filteredNetSell } = useMemo(() => {
     let total = 0;
     let cod = 0;
     let online = 0;
+    let netSell = 0;
 
     filteredOrders.forEach((o) => {
       const amt = Number(o.total || 0);
@@ -126,12 +127,18 @@ export default function AdminDashboard() {
       } else {
         online += amt;
       }
+
+      // Compute Net Sell: total minus deliveryCharge, packaging, platformCharge, rainCharge, festivalCharge
+      const itemPacking = Array.isArray(o.items) ? o.items.reduce((s, item) => s + (Number(item.packingCharge || 0) * Number(item.qty || 0)), 0) : 0;
+      const dec = Number(o.deliveryCharge || 0) + itemPacking + Number(o.platformCharge || 0) + Number(o.rainCharge || 0) + Number(o.festivalCharge || 0);
+      netSell += (amt - dec);
     });
 
     return {
       filteredTotal: total,
       filteredCod: cod,
       filteredOnline: online,
+      filteredNetSell: netSell
     };
   }, [filteredOrders]);
 
@@ -476,11 +483,17 @@ export default function AdminDashboard() {
           </div>
 
           {/* Range Summary Dashboard Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 flex flex-col justify-between">
               <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Total Earnings (Realized)</span>
               <span className="text-2xl font-black text-slate-950 dark:text-white mt-1">₹{filteredTotal}</span>
               <span className="text-[10px] text-slate-400 dark:text-slate-500 mt-2 font-bold">{filteredOrders.length} delivered orders</span>
+            </div>
+
+            <div className="bg-lime-500/10 border border-lime-500/20 rounded-2xl p-4 flex flex-col justify-between">
+              <span className="text-[10px] font-black text-lime-600 dark:text-lime-400 uppercase tracking-wider">Net Sell (Product Only)</span>
+              <span className="text-2xl font-black text-slate-950 dark:text-white mt-1">₹{filteredNetSell}</span>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500 mt-2 font-bold">Minus delivery, packing, surcharges</span>
             </div>
 
             <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 flex flex-col justify-between">

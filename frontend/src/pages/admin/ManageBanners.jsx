@@ -27,8 +27,11 @@ export default function ManageBanners() {
     discountText: "",
     buttonText: "",
     displayOrder: 0,
-    active: true
+    active: true,
+    targetCategory: ""
   });
+
+  const [categories, setCategories] = useState([]);
 
   // Local state container for files selected via standard file inputs
   const [imageFile, setImageFile] = useState(null);
@@ -43,7 +46,18 @@ export default function ManageBanners() {
   // Load all banners on initial component rendering
   useEffect(() => {
     loadBanners();
+    loadCategories();
   }, []);
+
+  const loadCategories = async () => {
+    try {
+      const res = await fetch(`${getApiUrl()}/api/categories`);
+      const data = await res.json();
+      setCategories(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   /**
    * Fetches all banners (both active and inactive status) for admin management views.
@@ -78,6 +92,7 @@ export default function ManageBanners() {
       formData.append("buttonText", form.buttonText);
       formData.append("displayOrder", form.displayOrder);
       formData.append("active", form.active);
+      formData.append("targetCategory", form.targetCategory || "");
       if (imageFile) {
         formData.append("image", imageFile);
       }
@@ -121,7 +136,8 @@ export default function ManageBanners() {
       discountText: banner.discountText || "",
       buttonText: banner.buttonText || "ORDER NOW",
       displayOrder: banner.displayOrder || 0,
-      active: banner.active
+      active: banner.active,
+      targetCategory: banner.targetCategory || ""
     });
     setImageFile(null);
   };
@@ -156,7 +172,8 @@ export default function ManageBanners() {
       discountText: "",
       buttonText: "",
       displayOrder: 0,
-      active: true
+      active: true,
+      targetCategory: ""
     });
     setImageFile(null);
   };
@@ -216,6 +233,25 @@ export default function ManageBanners() {
                   <option value="false">Inactive</option>
                 </select>
               </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Target Category / Offer Target</label>
+              <select
+                value={form.targetCategory}
+                onChange={(e) => setForm({ ...form, targetCategory: e.target.value })}
+                className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl outline-none text-slate-900 dark:text-white font-semibold"
+              >
+                <option value="">No Target (Regular banner)</option>
+                {categories.map((c) => (
+                  <option key={c._id} value={c.name}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-[10px] text-slate-400 font-bold leading-tight">
+                Banner par click krne pr customer direct is category (jaise Burger, Combo, Pizza) pr redirect hoga.
+              </p>
             </div>
 
             <div className="flex gap-3 mt-2">

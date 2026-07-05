@@ -31,6 +31,13 @@ export default function ManageSettings() {
     isDistanceLimitEnabled: true,
     deliveryChargeSlabs: [{ upToKm: 10, amount: 50 }, { upToKm: 50, amount: 100 }],
     deliveryBoyAmountSlabs: [{ upToKm: 10, amount: 50 }, { upToKm: 100, amount: 100 }],
+    rainCharge: 0,
+    festivalCharge: 0,
+    platformCharge: 0,
+    enabledPaymentMethods: {
+      cod: true,
+      online: true
+    }
   });
 
   // ==========================================
@@ -97,6 +104,10 @@ export default function ManageSettings() {
           deliveryBoyAmountSlabs: Array.isArray(data.deliveryBoyAmountSlabs) && data.deliveryBoyAmountSlabs.length
             ? data.deliveryBoyAmountSlabs
             : [{ upToKm: 10, amount: 50 }, { upToKm: 100, amount: 100 }],
+          rainCharge: data.rainCharge !== undefined ? data.rainCharge : 0,
+          festivalCharge: data.festivalCharge !== undefined ? data.festivalCharge : 0,
+          platformCharge: data.platformCharge !== undefined ? data.platformCharge : 0,
+          enabledPaymentMethods: data.enabledPaymentMethods || { cod: true, online: true }
         });
       }
     } catch (err) {
@@ -200,6 +211,87 @@ export default function ManageSettings() {
         </h2>
         
         <form onSubmit={handleSave} className="space-y-8">
+
+          {/* Payment Methods Configuration Section */}
+          <div className="border-b border-slate-100 dark:border-slate-800/80 pb-6 space-y-4">
+            <h3 className="font-extrabold text-slate-800 dark:text-white uppercase tracking-wider text-xs">Payment Methods Configuration</h3>
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Select which options to display on the customer checkout screen.</p>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <label className="flex items-center gap-3 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="rounded text-emerald-500 focus:ring-emerald-500 w-5 h-5"
+                  checked={form.enabledPaymentMethods?.cod ?? true}
+                  onChange={(e) => setForm({
+                    ...form,
+                    enabledPaymentMethods: {
+                      ...form.enabledPaymentMethods,
+                      cod: e.target.checked
+                    }
+                  })}
+                />
+                <span className="font-bold text-sm text-slate-800 dark:text-white">Enable Cash On Delivery (COD)</span>
+              </label>
+
+              <label className="flex items-center gap-3 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="rounded text-emerald-500 focus:ring-emerald-500 w-5 h-5"
+                  checked={form.enabledPaymentMethods?.online ?? true}
+                  onChange={(e) => setForm({
+                    ...form,
+                    enabledPaymentMethods: {
+                      ...form.enabledPaymentMethods,
+                      online: e.target.checked
+                    }
+                  })}
+                />
+                <span className="font-bold text-sm text-slate-800 dark:text-white">Enable Online Payment</span>
+              </label>
+            </div>
+          </div>
+
+          {/* Extra / Seasonal Surcharge Fees Section */}
+          <div className="border-b border-slate-100 dark:border-slate-800/80 pb-6 space-y-4">
+            <h3 className="font-extrabold text-slate-800 dark:text-white uppercase tracking-wider text-xs">Extra / Seasonal Charges (Surcharges)</h3>
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Apply seasonal, weather, or operational surcharges to every order.</p>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Rainy Season Charge (₹)</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={form.rainCharge || ""}
+                  onChange={(e) => setForm({ ...form, rainCharge: Number(e.target.value) })}
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white font-medium outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Festival Surcharge (₹)</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={form.festivalCharge || ""}
+                  onChange={(e) => setForm({ ...form, festivalCharge: Number(e.target.value) })}
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white font-medium outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Platform Charge (₹)</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={form.platformCharge || ""}
+                  onChange={(e) => setForm({ ...form, platformCharge: Number(e.target.value) })}
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white font-medium outline-none"
+                />
+              </div>
+            </div>
+          </div>
           
           {/* Custom Delivery Toggle Switch */}
           <div className="flex items-center justify-between p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900">

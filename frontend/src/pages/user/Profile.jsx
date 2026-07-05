@@ -409,10 +409,7 @@ export default function Profile() {
   };
 
   const isStrongPassword = (password = "") => (
-    password.length >= 6 &&
-    /[A-Za-z]/.test(password) &&
-    /\d/.test(password) &&
-    /[^A-Za-z0-9]/.test(password)
+    password.length >= 6
   );
 
   const saveProfile = async (override = {}, options = {}) => {
@@ -421,7 +418,7 @@ export default function Profile() {
       return;
     }
     if (form.password && !isStrongPassword(form.password)) {
-      showMessage("Password must include alphabet, number, special character and min 6 chars.", "error");
+      showMessage("Password must be at least 6 characters long.", "error");
       return;
     }
     setSaving(true);
@@ -561,7 +558,7 @@ export default function Profile() {
               <Input value={form.email} disabled readOnly className="bg-slate-100 dark:bg-slate-900 cursor-not-allowed" />
             </Field>
             <Field label="Mobile Number">
-              <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="9876543210" />
+              <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="Enter Number" />
             </Field>
             <Field label={form.hasPassword ? "Set New Password" : "Set Password"}>
               <div className="relative">
@@ -569,7 +566,7 @@ export default function Profile() {
                   type={showPassword ? "text" : "password"}
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  placeholder="Abc@123"
+                  placeholder="Enter Password"
                   className="pr-12"
                 />
                 <button
@@ -582,13 +579,8 @@ export default function Profile() {
                 </button>
               </div>
               <p className="mt-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
-                Min 6 chars: alphabet, number, special character.
+                Minimum 6 digits/characters.
               </p>
-              {form.password && !/[^A-Za-z0-9]/.test(form.password) && (
-                <p className="mt-1.5 text-xs font-bold text-rose-500 flex items-center gap-1 animate-pulse">
-                  <span>⚠️</span> Plz add a special character (e.g. @, #, $, %) to make it strong.
-                </p>
-              )}
             </Field>
             <Field label="Birthday">
               <Input type="date" value={form.birthDate} onChange={(e) => setForm({ ...form, birthDate: e.target.value })} />
@@ -912,7 +904,7 @@ export default function Profile() {
         <Section title="About GreenGo" onClose={() => setActiveSection(null)}>
           <div className="space-y-4 text-sm font-semibold text-slate-600 dark:text-slate-300 leading-relaxed">
             <p>GreenGo is built for quick food discovery, budget recommendations, coupons, saved addresses, and easy re-ordering.</p>
-            <p className="font-extrabold text-brand-655 text-base">Version 1.0.25 (Stable release)</p>
+            <p className="font-extrabold text-brand-655 text-base">Version 1.0.26 (Stable release)</p>
             <p>Account data shown here is loaded from your backend login session using the saved authentication token.</p>
           </div>
         </Section>
@@ -1090,7 +1082,7 @@ export default function Profile() {
           </div>
 
           <div className="mt-8 text-center text-xs font-black text-brand-500/80 select-none tracking-wider uppercase">
-            Version 1.0.25 (Production)
+            Version 1.0.26 (Production)
           </div>
         </div>
       </div>

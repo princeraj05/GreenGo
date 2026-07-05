@@ -190,7 +190,10 @@ export default function Checkout() {
   const subtotal = cart.reduce((s, i) => s + Number(i.price || 0) * Number(i.qty || 0), 0);
   const packingCharges = cart.reduce((s, i) => s + Number(i.packingCharge || 0) * Number(i.qty || 0), 0);
   const taxes = 0;
-  const total = subtotal + packingCharges + deliveryCharge + taxes;
+  const rainCharge = settings ? Number(settings.rainCharge || 0) : 0;
+  const festivalCharge = settings ? Number(settings.festivalCharge || 0) : 0;
+  const platformCharge = settings ? Number(settings.platformCharge || 0) : 0;
+  const total = subtotal + packingCharges + deliveryCharge + taxes + rainCharge + festivalCharge + platformCharge;
   const totalItems = cart.reduce((s, i) => s + Number(i.qty || 0), 0);
 
   /* --- EVENT HANDLERS --- */
@@ -463,10 +466,25 @@ export default function Checkout() {
 
   // Payment method options mapping helper
   const paymentOptions = [
-    { id: 'UPI', title: 'UPI (GPay, PhonePe)', desc: 'Pay securely using UPI apps', icon: <Smartphone size={24} /> },
-    { id: 'COD', title: 'Cash on Delivery', desc: 'Pay when your food arrives', icon: <Banknote size={24} /> },
-    { id: 'Card', title: 'Credit/Debit Card', desc: 'Visa, MasterCard, RuPay', icon: <CreditCard size={24} /> }
-  ];
+    { id: 'UPI', title: 'UPI (GPay, PhonePe)', desc: 'Pay securely using UPI apps', icon: <Smartphone size={24} />, online: true },
+    { id: 'COD', title: 'Cash on Delivery', desc: 'Pay when your food arrives', icon: <Banknote size={24} />, cod: true },
+    { id: 'Card', title: 'Credit/Debit Card', desc: 'Visa, MasterCard, RuPay', icon: <CreditCard size={24} />, online: true }
+  ].filter(opt => {
+    if (!settings || !settings.enabledPaymentMethods) return true;
+    if (opt.cod && !settings.enabledPaymentMethods.cod) return false;
+    if (opt.online && !settings.enabledPaymentMethods.online) return false;
+    return true;
+  });
+
+  // Ensure default selected payment method is available
+  useEffect(() => {
+    if (paymentOptions.length > 0) {
+      const exists = paymentOptions.some(o => o.id === paymentMethod);
+      if (!exists) {
+        setPaymentMethod(paymentOptions[0].id);
+      }
+    }
+  }, [settings, paymentOptions, paymentMethod]);
 
   return (
     /* --- MAIN PAGE CONTAINER --- */
@@ -584,6 +602,24 @@ export default function Checkout() {
                     <span>Delivery Fee</span>
                     <span className="font-black text-slate-900 dark:text-white">₹{deliveryCharge}</span>
                   </div>
+                  {rainCharge > 0 && (
+                    <div className="flex items-center justify-between text-blue-600 dark:text-blue-400">
+                      <span>Rain Surcharge ⛈️</span>
+                      <span className="font-black">₹{rainCharge}</span>
+                    </div>
+                  )}
+                  {festivalCharge > 0 && (
+                    <div className="flex items-center justify-between text-amber-600 dark:text-amber-400">
+                      <span>Festival Surcharge 🪔</span>
+                      <span className="font-black">₹{festivalCharge}</span>
+                    </div>
+                  )}
+                  {platformCharge > 0 && (
+                    <div className="flex items-center justify-between text-purple-600 dark:text-purple-400">
+                      <span>Platform Charge ⚡</span>
+                      <span className="font-black">₹{platformCharge}</span>
+                    </div>
+                  )}
                   <div className="flex items-center justify-between">
                     <span>Taxes</span>
                     <span className="font-black text-slate-900 dark:text-white">₹{taxes}</span>

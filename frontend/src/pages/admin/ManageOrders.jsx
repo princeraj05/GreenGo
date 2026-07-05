@@ -30,6 +30,9 @@ export default function ManageOrders() {
   // Map tracking rider assignment selections mapped by Order ID
   const [assignInput, setAssignInput] = useState({});
 
+  // Map tracking eta minutes input updates mapped by Order ID
+  const [etaInput, setEtaInput] = useState({});
+
   // Pagination count limit indicator
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
@@ -95,6 +98,20 @@ export default function ManageOrders() {
     }
   };
 
+  const updateETA = async (orderId) => {
+    const mins = etaInput[orderId];
+    if (mins === undefined || mins === "") return;
+    try {
+      const token = await getToken();
+      await API.put(`/api/orders/${orderId}/status`, { etaMinutes: Number(mins) }, { headers: { Authorization: `Bearer ${token}` } });
+      alert("ETA updated successfully!");
+      loadOrders();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update ETA");
+    }
+  };
+
   const printOrderKOT = (o) => {
     const printWindow = window.open("", "_blank", "width=600,height=800");
     if (!printWindow) {
@@ -151,9 +168,12 @@ export default function ManageOrders() {
             .row { display: flex; margin-bottom: 4px; }
             .label { width: 100px; font-weight: bold; }
             .value { flex: 1; }
+            @media print {
+              .no-print { display: none !important; }
+            }
           </style>
         </head>
-        <body onload="window.print(); window.close();">
+        <body onload="window.print();">
           <div class="text-center">
             <div class="header-title">GREEN GO</div>
             <div class="header-subtitle">Kitchen Order Ticket (KOT)</div>
@@ -207,6 +227,12 @@ export default function ManageOrders() {
           
           <div class="text-center" style="margin-top: 15px; font-weight: bold;">
             Thank You!<br>Have a nice day!
+          </div>
+
+          <div style="margin-top: 25px; text-align: center;" class="no-print">
+            <button onclick="window.close()" style="padding: 8px 20px; font-weight: bold; background: #10b981; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 12px; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2);">
+              &larr; Back to Admin
+            </button>
           </div>
         </body>
       </html>
@@ -289,6 +315,28 @@ export default function ManageOrders() {
                     </select>
                     <Button onClick={() => assignDeliveryBoy(o._id)} className="rounded-xl px-4 bg-emerald-600 hover:bg-emerald-700 text-sm">
                       Assign
+                    </Button>
+                  </div>
+                </div>
+
+                {/* --- TIME ESTIMATION (ETA) SETTING --- */}
+                <div className="mb-4 md:mb-6 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 p-3">
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Set Prep Time Estimation (ETA)</label>
+                    {o.etaMinutes && (
+                      <span className="text-xs font-black text-emerald-600 dark:text-emerald-450">{o.etaMinutes} mins set</span>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      type="number"
+                      placeholder="e.g. 25 mins"
+                      value={etaInput[o._id] !== undefined ? etaInput[o._id] : o.etaMinutes || ""}
+                      onChange={(e) => setEtaInput({ ...etaInput, [o._id]: e.target.value })}
+                      className="min-w-0 flex-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-bold text-sm outline-none"
+                    />
+                    <Button onClick={() => updateETA(o._id)} className="rounded-xl px-4 bg-slate-900 dark:bg-slate-800 text-sm">
+                      Update
                     </Button>
                   </div>
                 </div>

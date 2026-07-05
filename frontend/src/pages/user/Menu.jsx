@@ -1179,7 +1179,18 @@ export default function Menu() {
 
       {/* --- 3. AUTO SLIDING OFFER HERO BANNER --- */}
       {currentBanner && (
-        <div className="relative w-full h-28 sm:h-36 md:h-44 lg:h-52 rounded-3xl overflow-hidden mb-4 shadow-md shadow-brand-500/5 transition-all animate-fade-in group bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950">
+        <div 
+          onClick={() => {
+            if (currentBanner.targetCategory) {
+              setCategory(currentBanner.targetCategory);
+              const catElem = document.getElementById("categories-section");
+              if (catElem) {
+                catElem.scrollIntoView({ behavior: "smooth" });
+              }
+            }
+          }}
+          className={`relative w-full h-28 sm:h-36 md:h-44 lg:h-52 rounded-3xl overflow-hidden mb-4 shadow-md shadow-brand-500/5 transition-all animate-fade-in group bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 ${currentBanner.targetCategory ? "cursor-pointer" : ""}`}
+        >
           <img
             src={currentBanner.image.startsWith("http") ? currentBanner.image : getImageUrl(currentBanner.image)}
             alt={currentBanner.title}
@@ -1224,7 +1235,7 @@ export default function Menu() {
       </div>
 
       {/* --- 5. FOOD CATEGORIES HORIZONTAL SLIDER --- */}
-      <div className="mb-5">
+      <div id="categories-section" className="mb-5">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">Food Categories</h3>
         </div>
