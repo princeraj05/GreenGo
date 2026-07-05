@@ -1098,19 +1098,32 @@ export default function Menu() {
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
             <Search className="h-5 w-5 text-rose-500" />
           </div>
-          <input
-            type="text"
-            placeholder={'Search "bread"'}
-            value={search}
-            readOnly
-            onFocus={() => navigate("/user/search")}
-            onClick={() => navigate("/user/search")}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setShowAllFoods(false);
-            }}
-            className="w-full h-full pl-12 pr-12 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-2xl outline-none focus:ring-4 focus:ring-brand-500/15 focus:border-brand-500 text-sm sm:text-base font-bold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm transition-all"
-          />
+          {(() => {
+            let lastSearch = "bread";
+            try {
+              const recents = JSON.parse(localStorage.getItem("recentSearches")) || [];
+              if (recents.length > 0) {
+                lastSearch = recents[0];
+              }
+            } catch (err) {
+              console.error(err);
+            }
+            return (
+              <input
+                type="text"
+                placeholder={`Search "${lastSearch}"`}
+                value={search}
+                readOnly
+                onFocus={() => navigate("/user/search")}
+                onClick={() => navigate("/user/search")}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setShowAllFoods(false);
+                }}
+                className="w-full h-full pl-12 pr-12 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-2xl outline-none focus:ring-4 focus:ring-brand-500/15 focus:border-brand-500 text-sm sm:text-base font-bold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-sm transition-all"
+              />
+            );
+          })()}
           <button
             type="button"
             className="absolute inset-y-0 right-0 px-4 text-rose-500 border-l border-slate-100 dark:border-slate-800"
