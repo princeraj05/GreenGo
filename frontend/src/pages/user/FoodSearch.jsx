@@ -80,34 +80,6 @@ export default function FoodSearch() {
     });
   };
 
-  // Memoized related foods builder
-  const relatedFoods = useMemo(() => {
-    if (!query || visibleFoods.length === 0) return [];
-    
-    // Check if the current search matches fast food or thali specifically
-    const lowerQuery = query.toLowerCase();
-    
-    let targets = [];
-    if (lowerQuery.includes("burger") || lowerQuery.includes("fastfood") || lowerQuery.includes("pizza") || lowerQuery.includes("chaomin") || lowerQuery.includes("chowmein") || lowerQuery.includes("noodle") || lowerQuery.includes("cold drink") || lowerQuery.includes("coke")) {
-      targets = ["pizza", "burger", "chowmein", "chaomin", "noodle", "french fries", "cold drink", "coke", "fastfood"];
-    } else if (lowerQuery.includes("thali") || lowerQuery.includes("rice") || lowerQuery.includes("dal") || lowerQuery.includes("paneer") || lowerQuery.includes("mushroom") || lowerQuery.includes("sabji") || lowerQuery.includes("roti")) {
-      targets = ["rice", "dal", "paneer", "mushroom", "roti", "thali", "sabji", "chili combo"];
-    }
-
-    const visibleIds = new Set(visibleFoods.map(f => f._id));
-    return foods.filter(f => {
-      if (visibleIds.has(f._id)) return false;
-      const name = f.name.toLowerCase();
-      const cat = (f.category || "").toLowerCase();
-      
-      if (targets.length > 0) {
-        return targets.some(target => name.includes(target) || cat.includes(target));
-      }
-      
-      return visibleFoods.some(vf => (vf.category && vf.category === f.category));
-    }).slice(0, 3); // limit to 3 related foods
-  }, [foods, query, visibleFoods]);
-
   /* --- DATA FETCHING & EFFECTS --- */
 
   // Runs on mount: Loads foods list, populates cart state, and focuses search input
@@ -277,6 +249,34 @@ export default function FoodSearch() {
   useEffect(() => {
     if (!matchingCategories.includes(activeCategory)) setActiveCategory("All");
   }, [matchingCategories, activeCategory]);
+
+  // Memoized related foods builder
+  const relatedFoods = useMemo(() => {
+    if (!query || visibleFoods.length === 0) return [];
+    
+    // Check if the current search matches fast food or thali specifically
+    const lowerQuery = query.toLowerCase();
+    
+    let targets = [];
+    if (lowerQuery.includes("burger") || lowerQuery.includes("fastfood") || lowerQuery.includes("pizza") || lowerQuery.includes("chaomin") || lowerQuery.includes("chowmein") || lowerQuery.includes("noodle") || lowerQuery.includes("cold drink") || lowerQuery.includes("coke")) {
+      targets = ["pizza", "burger", "chowmein", "chaomin", "noodle", "french fries", "cold drink", "coke", "fastfood"];
+    } else if (lowerQuery.includes("thali") || lowerQuery.includes("rice") || lowerQuery.includes("dal") || lowerQuery.includes("paneer") || lowerQuery.includes("mushroom") || lowerQuery.includes("sabji") || lowerQuery.includes("roti")) {
+      targets = ["rice", "dal", "paneer", "mushroom", "roti", "thali", "sabji", "chili combo"];
+    }
+
+    const visibleIds = new Set(visibleFoods.map(f => f._id));
+    return foods.filter(f => {
+      if (visibleIds.has(f._id)) return false;
+      const name = f.name.toLowerCase();
+      const cat = (f.category || "").toLowerCase();
+      
+      if (targets.length > 0) {
+        return targets.some(target => name.includes(target) || cat.includes(target));
+      }
+      
+      return visibleFoods.some(vf => (vf.category && vf.category === f.category));
+    }).slice(0, 3); // limit to 3 related foods
+  }, [foods, query, visibleFoods]);
 
   const cartCount = cart.reduce((sum, item) => sum + Number(item.qty || 0), 0);
   const cartTotal = cart.reduce((sum, item) => sum + Number(item.price || 0) * Number(item.qty || 0), 0);
