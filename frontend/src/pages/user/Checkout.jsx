@@ -128,21 +128,28 @@ export default function Checkout() {
 
     const loadCheckoutUser = () => {
       const token = getToken();
-      if(token) {
-        fetch(`${getApiUrl()}/api/users/me`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-        .then(res => res.json())
-        .then(userData => {
-          if (userData) {
-            if (userData.phone) setPhone(userData.phone);
-            const savedAddress = getSavedAddressText(userData);
-            if (savedAddress) setAddress(savedAddress);
-            setProfileDeliveryReady(Boolean(userData.phone && savedAddress));
-          }
-        })
-        .catch(err => console.error("Could not fetch user", err));
+      if(!token) {
+        navigate("/", {
+          state: {
+            from: { pathname: "/user/checkout" },
+            loginRequired: true,
+          },
+        });
+        return;
       }
+      fetch(`${getApiUrl()}/api/users/me`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      .then(res => res.json())
+      .then(userData => {
+        if (userData) {
+          if (userData.phone) setPhone(userData.phone);
+          const savedAddress = getSavedAddressText(userData);
+          if (savedAddress) setAddress(savedAddress);
+          setProfileDeliveryReady(Boolean(userData.phone && savedAddress));
+        }
+      })
+      .catch(err => console.error("Could not fetch user", err));
     };
 
     loadCheckoutUser();

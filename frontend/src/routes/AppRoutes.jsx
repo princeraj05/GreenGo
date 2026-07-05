@@ -87,13 +87,13 @@ export default function AppRoutes() {
         <Route path="/user" element={<UserLayout />}>
           <Route index element={<Navigate to="/user/menu" replace />} />
           <Route path="menu" element={<Menu />} />
-          <Route path="search" element={<PrivateRoute><ProfileCompletionRoute><FoodSearch /></ProfileCompletionRoute></PrivateRoute>} />
-          <Route path="dashboard" element={<PrivateRoute><ProfileCompletionRoute><UserDashboard /></ProfileCompletionRoute></PrivateRoute>} />
+          <Route path="search" element={<FoodSearch />} />
+          <Route path="dashboard" element={<UserDashboard />} />
           <Route path="cart" element={<Cart />} />
-          <Route path="checkout" element={<PrivateRoute><ProfileCompletionRoute><Checkout /></ProfileCompletionRoute></PrivateRoute>} />
+          <Route path="checkout" element={<Checkout />} />
           <Route path="orders" element={<Orders />} />
-          <Route path="orders/:id/tracking" element={<PrivateRoute><ProfileCompletionRoute><OrderTrackingPage role="user" /></ProfileCompletionRoute></PrivateRoute>} />
-          <Route path="profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
+          <Route path="orders/:id/tracking" element={<OrderTrackingPage role="user" />} />
+          <Route path="profile" element={<Profile />} />
           <Route path="wishlist" element={<Wishlist />} />
           <Route path="contact" element={<UserContact />} />
           <Route path="budget-assistant" element={<BudgetAssistantPage />} />
