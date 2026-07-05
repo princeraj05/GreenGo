@@ -460,6 +460,7 @@ export default function Profile() {
       };
       setForm(nextForm);
       showMessage("Profile updated successfully");
+      window.dispatchEvent(new CustomEvent("address-updated"));
       if (location.state?.profileRequired) {
         if (activeSection === "edit") {
           setActiveSection("addresses");
@@ -911,7 +912,7 @@ export default function Profile() {
         <Section title="About GreenGo" onClose={() => setActiveSection(null)}>
           <div className="space-y-4 text-sm font-semibold text-slate-600 dark:text-slate-300 leading-relaxed">
             <p>GreenGo is built for quick food discovery, budget recommendations, coupons, saved addresses, and easy re-ordering.</p>
-            <p className="font-extrabold text-brand-655 text-base">Version 1.0.23 (Stable release)</p>
+            <p className="font-extrabold text-brand-655 text-base">Version 1.0.24 (Stable release)</p>
             <p>Account data shown here is loaded from your backend login session using the saved authentication token.</p>
           </div>
         </Section>
@@ -1089,7 +1090,7 @@ export default function Profile() {
           </div>
 
           <div className="mt-8 text-center text-xs font-black text-brand-500/80 select-none tracking-wider uppercase">
-            Version 1.0.23 (Production)
+            Version 1.0.24 (Production)
           </div>
         </div>
       </div>

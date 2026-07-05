@@ -126,22 +126,30 @@ export default function Checkout() {
       })
       .catch(err => console.error("Could not fetch settings", err));
 
-    const token = getToken();
-    if(token) {
-      fetch(`${getApiUrl()}/api/users/me`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      .then(res => res.json())
-      .then(userData => {
-        if (userData) {
-          if (userData.phone) setPhone(userData.phone);
-          const savedAddress = getSavedAddressText(userData);
-          if (savedAddress) setAddress(savedAddress);
-          setProfileDeliveryReady(Boolean(userData.phone && savedAddress));
-        }
-      })
-      .catch(err => console.error("Could not fetch user", err));
-    }
+    const loadCheckoutUser = () => {
+      const token = getToken();
+      if(token) {
+        fetch(`${getApiUrl()}/api/users/me`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        .then(res => res.json())
+        .then(userData => {
+          if (userData) {
+            if (userData.phone) setPhone(userData.phone);
+            const savedAddress = getSavedAddressText(userData);
+            if (savedAddress) setAddress(savedAddress);
+            setProfileDeliveryReady(Boolean(userData.phone && savedAddress));
+          }
+        })
+        .catch(err => console.error("Could not fetch user", err));
+      }
+    };
+
+    loadCheckoutUser();
+    window.addEventListener("address-updated", loadCheckoutUser);
+    return () => {
+      window.removeEventListener("address-updated", loadCheckoutUser);
+    };
   }, [navigate]);
 
   // Requests browser geolocation permissions and extracts coordinates
