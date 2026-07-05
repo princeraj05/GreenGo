@@ -549,39 +549,64 @@ export default function FoodSearch() {
         </section>
       )}
 
-      {/* --- CATEGORY ROUND BUBBLES GRID --- */}
+      {/* --- CATEGORY HORIZONTAL SLIDING LIST --- */}
       {!query && (
         <section className="mb-8">
-          <h2 className="mb-5 text-xs font-black uppercase tracking-[0.25em] text-slate-400 dark:text-slate-500">What's on your mind?</h2>
+          <h2 className="mb-4 text-lg font-black text-slate-900 dark:text-white tracking-tight">Food Categories</h2>
           {loading ? (
-            <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar sm:grid sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
+            <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
               {[...Array(8)].map((_, index) => (
                 <div key={index} className="flex shrink-0 flex-col items-center gap-2">
-                  <div className="h-20 w-20 rounded-full bg-slate-150 animate-pulse dark:bg-slate-800 sm:h-24 sm:w-24" />
+                  <div className="h-20 w-20 rounded-full bg-slate-150 animate-pulse dark:bg-slate-800 sm:h-[72px] sm:w-[72px]" />
                   <div className="h-3 w-14 rounded bg-slate-150 animate-pulse dark:bg-slate-800" />
                 </div>
               ))}
             </div>
           ) : (
-            <div className="flex gap-4 overflow-x-auto pb-4 pt-1 no-scrollbar sm:grid sm:grid-cols-4 sm:gap-x-4 sm:gap-y-6 md:grid-cols-6 lg:grid-cols-8">
-              {categories.slice(0, 18).map((cat) => (
-                <button 
-                  key={cat.name} 
-                  type="button" 
-                  onClick={() => chooseCategory(cat.name)} 
-                  className="group flex shrink-0 flex-col items-center text-center sm:w-auto"
-                >
-                  <div className="mx-auto mb-2 flex h-20 w-20 items-center justify-center rounded-full border border-slate-100/80 bg-white shadow-sm transition-all duration-300 group-hover:scale-105 group-hover:shadow-md dark:border-slate-800 dark:bg-slate-950 sm:h-24 sm:w-24 overflow-hidden">
-                    <img
-                      src={getImageUrl(cat.image)}
-                      alt={cat.name}
-                      className="h-full w-full object-cover rounded-full aspect-square"
-                      onError={(e) => { e.target.src = "https://placehold.co/160x160?text=Food"; }}
-                    />
-                  </div>
-                  <p className="line-clamp-1 text-xs font-black text-slate-800 dark:text-slate-200 w-20 sm:w-full">{cat.name}</p>
-                </button>
-              ))}
+            <div className="flex gap-3 overflow-x-auto no-scrollbar py-2 flex-nowrap whitespace-nowrap scroll-smooth">
+              {categories.map((cat) => {
+                const isSelected = activeCategory.toLowerCase() === cat.name.toLowerCase();
+                return (
+                  <button 
+                    key={cat.name} 
+                    type="button" 
+                    onClick={() => chooseCategory(cat.name === "All Food" ? "All" : cat.name)} 
+                    className={`flex min-w-[76px] sm:min-w-[88px] flex-col items-center gap-2 transition-all select-none duration-300 ${
+                      isSelected
+                        ? "text-brand-600 dark:text-brand-300 scale-105 font-black"
+                        : "text-slate-700 dark:text-slate-200"
+                    }`}
+                  >
+                    <span className={`relative w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-full border flex items-center justify-center overflow-hidden shadow-sm transition-all ${
+                      isSelected
+                        ? "bg-brand-500 border-brand-500 shadow-brand-500/25"
+                        : "bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-700"
+                    }`}>
+                      <img
+                        src={getImageUrl(cat.image)}
+                        alt={cat.name}
+                        className="w-full h-full object-cover rounded-full"
+                        onError={(e) => { e.target.src = "https://placehold.co/160x160?text=Food"; }}
+                      />
+                    </span>
+                    <span className="text-xs font-bold tracking-tight line-clamp-1 w-20 text-center">
+                      {cat.name === "All Food" ? "All" : cat.name}
+                    </span>
+                  </button>
+                );
+              })}
+
+              {/* Trailing circle trigger to reset category filters/show dialog */}
+              <button
+                type="button"
+                onClick={() => chooseCategory("All")}
+                className="flex min-w-[76px] sm:min-w-[88px] flex-col items-center gap-2 transition-all select-none duration-300"
+              >
+                <span className="w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-full border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex items-center justify-center shadow-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                  <ChevronRight size={24} className="text-slate-500 dark:text-slate-400" />
+                </span>
+                <span className="text-[11px] sm:text-xs font-black text-slate-500 dark:text-slate-400 tracking-tight">See All</span>
+              </button>
             </div>
           )}
         </section>
