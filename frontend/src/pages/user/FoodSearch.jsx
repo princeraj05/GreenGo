@@ -368,10 +368,7 @@ export default function FoodSearch() {
       });
   }, [foods, query, activeCategory, filterUnder100, filterGreatOffers, filterPureVeg]);
 
-  // If active category is excluded from new search match results, resets tag filters to "All"
-  useEffect(() => {
-    if (!matchingCategories.includes(activeCategory)) setActiveCategory("All");
-  }, [matchingCategories, activeCategory]);
+  // Active Category reset effect bypassed to prevent reset during categories filters selection
 
   // Memoized related foods builder
   const relatedFoods = useMemo(() => {
@@ -677,9 +674,9 @@ export default function FoodSearch() {
           </div>
         ) : (
           <div>
-            {/* Renders 1 item if query is present, otherwise displays all items in rows of 3 to continue indefinitely */}
+            {/* Renders 1 item if query is present and it is not a category filter, otherwise displays all items in rows of 3 to continue indefinitely */}
             <div className="grid grid-cols-1 gap-4.5 sm:grid-cols-2 lg:grid-cols-3">
-              {visibleFoods.slice(0, query ? 1 : visibleFoods.length).map((food) => (
+              {visibleFoods.slice(0, (query && query !== activeCategory) ? 1 : visibleFoods.length).map((food) => (
                 <FoodResultCard key={food._id} food={food} cartItem={cart.find((item) => item._id === food._id)} onQuantity={updateQuantity} onClick={setSelectedFood} />
               ))}
             </div>
