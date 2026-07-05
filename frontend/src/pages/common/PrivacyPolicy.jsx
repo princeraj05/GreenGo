@@ -64,7 +64,7 @@ export default function PrivacyPolicyPage() {
               Users maintain full control over their credentials. You can request account and profile deletion through the application:
             </p>
             <div className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-emerald-100 dark:border-slate-800 text-xs font-bold space-y-1">
-              <p>1. Open App Settings -> Go to <strong className="text-slate-900 dark:text-white">Privacy & Security Center</strong>.</p>
+              <p>1. Open App Settings &rarr; Go to <strong className="text-slate-900 dark:text-white">Privacy & Security Center</strong>.</p>
               <p>2. Tap on <strong className="text-red-500 font-black">"Request Account Deletion"</strong>.</p>
               <p>3. Following a 7-day safety backup period, your entire profile, location logs, and sessions will be permanently purged.</p>
             </div>
