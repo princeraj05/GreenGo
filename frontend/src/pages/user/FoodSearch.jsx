@@ -414,8 +414,9 @@ export default function FoodSearch() {
 
   const chooseCategory = (name) => {
     setActiveCategory(name);
-    setQuery(name === "All Food" ? "" : name);
-    if (name !== "All Food") saveRecentSearch(name);
+    // Setting query to name if it is not "All" to show proper filter label
+    setQuery(name === "All" ? "" : name);
+    if (name !== "All") saveRecentSearch(name);
     setShowSuggestions(false);
   };
 
@@ -675,9 +676,9 @@ export default function FoodSearch() {
           </div>
         ) : (
           <div>
-            {/* Renders 1 item if query is present, or 3 items on standard deal view to keep the UI clean as requested */}
+            {/* Renders 1 item if query is present, otherwise displays all items in rows of 3 to continue indefinitely */}
             <div className="grid grid-cols-1 gap-4.5 sm:grid-cols-2 lg:grid-cols-3">
-              {visibleFoods.slice(0, query ? 1 : 3).map((food) => (
+              {visibleFoods.slice(0, query ? 1 : visibleFoods.length).map((food) => (
                 <FoodResultCard key={food._id} food={food} cartItem={cart.find((item) => item._id === food._id)} onQuantity={updateQuantity} onClick={setSelectedFood} />
               ))}
             </div>
