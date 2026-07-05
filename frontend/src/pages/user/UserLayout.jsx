@@ -306,7 +306,7 @@ export default function UserLayout() {
         <div className="px-6 h-20 flex items-center justify-between border-b border-slate-100 dark:border-slate-800/50">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-md shadow-brand-500/20 overflow-hidden bg-white border border-brand-100 dark:border-brand-900 [&>span]:hidden">
-              <img src="/greengo-logo.png" alt="GreenGo" className="w-full h-full object-cover" />
+              <img src="/logo/final-logo.png" alt="GreenGo" className="w-full h-full object-cover" />
               <span className="text-white text-xl">🍔</span>
             </div>
             <span className="text-slate-900 dark:text-white font-extrabold text-xl tracking-tight"><span className="text-brand-500">Green</span>GO</span>
@@ -391,7 +391,7 @@ export default function UserLayout() {
           {/* Brand Logo & Location selector */}
           <div className="flex flex-1 items-center gap-2 min-w-0 relative">
             <div className="w-9 h-9 rounded-xl flex items-center justify-center shadow-md overflow-hidden bg-white border border-brand-100 dark:border-brand-900 shrink-0 select-none pointer-events-none [&>span]:hidden">
-              <img src="/greengo-logo.png" alt="GreenGo" className="w-full h-full object-cover" />
+              <img src="/logo/final-logo.png" alt="GreenGo" className="w-full h-full object-cover" />
               <span className="text-white text-sm">🍔</span>
             </div>
             

@@ -135,7 +135,7 @@ export default function DeliveryLayout() {
         {/* Displays brand icon logo and panel metadata */}
         <div className="px-6 h-20 flex items-center gap-3 border-b border-slate-800/70">
           <div className="w-10 h-10 rounded-xl bg-white border border-brand-900/40 shadow-md shadow-brand-500/15 overflow-hidden flex items-center justify-center [&>span]:hidden">
-            <img src="/greengo-logo.png" alt="GreenGo" className="w-full h-full object-cover" />
+            <img src="/logo/final-logo.png" alt="GreenGo" className="w-full h-full object-cover" />
             <span className="font-black text-brand-500">G</span>
           </div>
           <div className="min-w-0">

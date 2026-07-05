@@ -296,7 +296,7 @@ export default function FoodSearch() {
       }
     });
     return [
-      { name: "All Food", image: "/greengo-logo.png" },
+      { name: "All Food", image: "/logo/final-logo.png" },
       ...Array.from(map, ([name, image]) => ({ name, image }))
     ];
   }, [foods, dbCategories]);

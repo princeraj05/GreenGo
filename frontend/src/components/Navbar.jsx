@@ -28,7 +28,7 @@ export default function Navbar() {
         {/* Logo */}
         <NavLink to="/" className="flex items-center gap-2 group">
           <div className="w-10 h-10 rounded-xl overflow-hidden bg-white border border-brand-100/50 dark:border-brand-900/50 flex items-center justify-center shadow-lg shadow-brand-500/30 group-hover:scale-105 transition-transform">
-            <img src="/greengo-logo.png" alt="GreenGo" className="w-full h-full object-cover" />
+            <img src="/logo/final-logo.png" alt="GreenGo" className="w-full h-full object-cover" />
           </div>
           <span className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">GreenGo</span>
         </NavLink>

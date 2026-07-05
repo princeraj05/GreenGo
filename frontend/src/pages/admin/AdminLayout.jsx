@@ -289,7 +289,7 @@ export default function AdminLayout() {
         <div className="px-8 pt-8 pb-6 border-b border-slate-800/50">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl overflow-hidden bg-white border border-brand-100/50 dark:border-brand-900/50 flex items-center justify-center shadow-lg shadow-brand-500/25">
-              <img src="/greengo-logo.png" alt="GreenGo" className="w-full h-full object-cover" />
+              <img src="/logo/final-logo.png" alt="GreenGo" className="w-full h-full object-cover" />
             </div>
             <span className="text-white font-black text-2xl tracking-tight">GreenGo</span>
           </div>
@@ -359,7 +359,7 @@ export default function AdminLayout() {
         >
           <div className="flex items-center gap-2 min-w-0">
             <div className="w-8 h-8 rounded-lg overflow-hidden bg-white border border-brand-100/50 dark:border-brand-900/50 flex items-center justify-center shadow-md shrink-0">
-              <img src="/greengo-logo.png" alt="GreenGo" className="w-full h-full object-cover" />
+              <img src="/logo/final-logo.png" alt="GreenGo" className="w-full h-full object-cover" />
             </div>
             <span className="font-black text-slate-950 dark:text-white text-base sm:text-lg truncate">GreenGo Admin</span>
           </div>
