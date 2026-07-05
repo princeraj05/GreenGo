@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ChevronRight, Mic, Search, ShoppingCart, SlidersHorizontal, Sparkles, X, Heart, Star, Clock, Users, Flame } from "lucide-react";
+import { ArrowLeft, ChevronRight, Mic, Search, ShoppingCart, SlidersHorizontal, Sparkles, X, Heart, Star, Clock, Users, Flame, Grid3X3 } from "lucide-react";
 import Button from "../../components/ui/Button";
 import { getApiUrl, getImageUrl } from "../../utils/getApiUrl";
 
@@ -111,6 +111,7 @@ export default function FoodSearch() {
   const [selectedFoodQty, setSelectedFoodQty] = useState(1);
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [foodReviews, setFoodReviews] = useState([]);
+  const [showAllCategories, setShowAllCategories] = useState(false);
 
   // Recent searches state
   const [recentSearches, setRecentSearches] = useState(() => {
@@ -600,7 +601,7 @@ export default function FoodSearch() {
               {/* Trailing circle trigger to reset category filters/show dialog */}
               <button
                 type="button"
-                onClick={() => chooseCategory("All")}
+                onClick={() => setShowAllCategories(true)}
                 className="flex min-w-[76px] sm:min-w-[88px] flex-col items-center gap-2 transition-all select-none duration-300"
               >
                 <span className="w-16 h-16 sm:w-[72px] sm:h-[72px] rounded-full border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex items-center justify-center shadow-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
@@ -718,10 +719,65 @@ export default function FoodSearch() {
         </div>
       )}
 
-      {/* Back navigation hyperlink footer */}
-      <div className="mt-10 text-center">
-        <Link to="/user/menu" className="text-sm font-black text-brand-600 hover:underline dark:text-brand-405">Back to full menu</Link>
-      </div>
+      {/* Categories modal listing overlay */}
+      <AnimatePresence>
+        {showAllCategories && (
+          <div className="fixed inset-0 z-[1800] flex items-end justify-center bg-slate-955/55 backdrop-blur-sm">
+            <MotionDiv
+              initial={{ opacity: 0, y: 80 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 80 }}
+              className="w-full max-w-3xl max-h-[82vh] bg-white dark:bg-slate-950 rounded-t-[2rem] shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden"
+            >
+              <div className="relative px-5 pt-5 pb-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">Cuisines and dishes</h3>
+                <button
+                  type="button"
+                  onClick={() => setShowAllCategories(false)}
+                  className="w-10 h-10 rounded-full bg-slate-105 text-slate-700 dark:bg-slate-900 dark:text-slate-200 flex items-center justify-center shadow-sm"
+                  title="Close"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="p-4 sm:p-6 overflow-y-auto max-h-[68vh]">
+                <div className="grid grid-cols-4 gap-x-3 gap-y-6">
+                  {categories.map((cat) => {
+                    const isSelected = activeCategory.toLowerCase() === cat.name.toLowerCase();
+                    return (
+                      <button
+                        type="button"
+                        key={cat.name}
+                        onClick={() => {
+                          chooseCategory(cat.name === "All Food" ? "All" : cat.name);
+                          setShowAllCategories(false);
+                        }}
+                        className={`min-w-0 rounded-2xl p-2 flex flex-col items-center gap-2 transition-all ${
+                          isSelected
+                            ? "bg-rose-50 dark:bg-rose-950/20 ring-1 ring-rose-300"
+                            : "hover:bg-slate-50 dark:hover:bg-slate-900"
+                        }`}
+                      >
+                        <span className="relative w-full aspect-[1.35] rounded-xl flex items-center justify-center overflow-hidden bg-slate-50 dark:bg-slate-900">
+                          <img 
+                            src={getImageUrl(cat.image)} 
+                            alt={cat.name} 
+                            className="w-full h-full object-contain"
+                            onError={(e) => { e.target.src = "https://placehold.co/160x160?text=Food"; }}
+                          />
+                        </span>
+                        <span className={`w-full text-center text-[11px] sm:text-sm font-bold leading-tight break-words ${isSelected ? "text-slate-950 dark:text-white" : "text-slate-505 dark:text-slate-300"}`}>
+                          {cat.name}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </MotionDiv>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* --- FOOD DETAILS & CUSTOMISATION MODAL --- */}
       <AnimatePresence>
