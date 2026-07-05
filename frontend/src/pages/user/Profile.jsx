@@ -589,9 +589,6 @@ export default function Profile() {
                 </p>
               )}
             </Field>
-            <Field label="Preferred Delivery Time">
-              <Input value={form.deliveryTime} onChange={(e) => setForm({ ...form, deliveryTime: e.target.value })} placeholder="ASAP / 8:00 PM" />
-            </Field>
             <Field label="Birthday">
               <Input type="date" value={form.birthDate} onChange={(e) => setForm({ ...form, birthDate: e.target.value })} />
             </Field>
