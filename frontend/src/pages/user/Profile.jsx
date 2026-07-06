@@ -1097,7 +1097,7 @@ export default function Profile() {
           </div>
 
           <div className="mt-8 text-center text-xs font-black text-brand-500/80 select-none tracking-wider uppercase">
-            Version 1.0.26 (Production)
+            Version 1.0.27 (Production)
           </div>
         </div>
       </div>
