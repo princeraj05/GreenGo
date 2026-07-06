@@ -312,19 +312,40 @@ export const createOrder = async (req, res) => {
   }
 };
 
+    res.json({
+      success:true,
+      order
+    });
+
+  } catch (err) {
+
+    console.error("Create order error:",err);
+
+    res.status(500).json({
+      message:"Order failed"
+    });
+
+  }
+};
+
 
 /* ================= ADMIN – ALL ORDERS ================= */
 
 export const getAllOrders = async (req,res)=>{
-  if (!isAdmin(req.user)) return res.status(403).json({ message: "Not admin" });
-  const orders = await Order
-  .find()
-  .populate("assignedDeliveryBoy", "name phone email role deliveryCredit")
-  .populate("userId", "name phone email birthDate")
-  .sort({createdAt:-1})
-  .lean();
+  try {
+    if (!isAdmin(req.user)) return res.status(403).json({ message: "Not admin" });
+    const orders = await Order
+    .find()
+    .populate("assignedDeliveryBoy", "name phone email role deliveryCredit")
+    .populate("userId", "name phone email birthDate")
+    .sort({createdAt:-1})
+    .lean();
 
-  res.json(orders);
+    res.json(orders);
+  } catch (err) {
+    console.error("getAllOrders error:", err);
+    res.status(500).json({ message: "Failed to fetch orders" });
+  }
 };
 
 

@@ -131,7 +131,7 @@ export default function CancelledOrders() {
                 {/* Items Ordered */}
                 <td className="px-4 py-4 align-top min-w-[200px]">
                   <div className="flex flex-col gap-2">
-                    {o.items.map((item, idx) => (
+                    {(o.items || []).map((item, idx) => (
                       <div key={idx} className="flex items-center gap-2">
                         <img
                           src={getImageUrl(item.image)}
@@ -278,7 +278,7 @@ export default function CancelledOrders() {
                     </td>
                     <td className="px-4 py-4 align-top">
                       <div className="flex flex-col gap-2">
-                        {o.items.map((item, idx) => (
+                        {(o.items || []).map((item, idx) => (
                           <div key={idx} className="flex items-center gap-2">
                             <img
                               src={getImageUrl(item.image)}

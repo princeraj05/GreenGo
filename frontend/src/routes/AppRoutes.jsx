@@ -133,6 +133,7 @@ export default function AppRoutes() {
           <Route path="categories" element={<ManageCategories />} />
           <Route path="orders" element={<ManageOrders />} />
           <Route path="cancelled-orders" element={<CancelledOrders />} />
+          <Route path="cancelled_orders" element={<CancelledOrders />} />
           <Route path="orders/:id/tracking" element={<OrderTrackingPage role="admin" />} />
           <Route path="users" element={<Navigate to="/admin/users/customers" replace />} />
           <Route path="users/customers" element={<CustomerUsers />} />
