@@ -1000,10 +1000,14 @@ export default function Profile() {
 
         {/* Quick Statistics Bar */}
         <div className="relative z-10 px-5 pt-5 pb-5 grid grid-cols-3 gap-3">
-          <div className="rounded-2xl bg-white/70 dark:bg-slate-900/60 backdrop-blur-md border border-slate-100 dark:border-slate-800/80 p-3 text-center shadow-md shadow-slate-900/5 dark:shadow-black/20 hover:scale-[1.02] transition-all duration-300">
+          <button
+            type="button"
+            onClick={() => navigate("/user/wishlist")}
+            className="rounded-2xl bg-white/70 dark:bg-slate-900/60 backdrop-blur-md border border-slate-100 dark:border-slate-800/80 p-3 text-center shadow-md shadow-slate-900/5 dark:shadow-black/20 hover:scale-[1.02] transition-all duration-300 cursor-pointer block w-full"
+          >
             <p className="text-xs font-bold text-slate-500 dark:text-slate-400">Favorites</p>
             <p className="mt-1 text-lg font-black text-slate-900 dark:text-white">{favorites.length || 0}</p>
-          </div>
+          </button>
           <div className="rounded-2xl bg-white/70 dark:bg-slate-900/60 backdrop-blur-md border border-slate-100 dark:border-slate-800/80 p-3 text-center shadow-md shadow-slate-900/5 dark:shadow-black/20 hover:scale-[1.02] transition-all duration-300">
             <p className="text-xs font-bold text-slate-500 dark:text-slate-400">Coupons</p>
             <p className="mt-1 text-lg font-black text-slate-900 dark:text-white">{coupons.length || 0}</p>
@@ -1059,7 +1063,13 @@ export default function Profile() {
               <button
                 key={item.id}
                 type="button"
-                onClick={() => setActiveSection(item.id)}
+                onClick={() => {
+                  if (item.id === "favorites") {
+                    navigate("/user/wishlist");
+                  } else {
+                    setActiveSection(item.id);
+                  }
+                }}
                 className="group relative flex flex-col items-center justify-center p-4 rounded-3xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800/80 text-center transition-all duration-350 hover:shadow-md active:scale-[0.97] min-h-[110px]"
               >
                 <span className="w-11 h-11 rounded-2xl bg-green-500/10 text-green-700 dark:text-green-400 flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform duration-300 shrink-0">

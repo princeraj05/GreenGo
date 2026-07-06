@@ -22,7 +22,6 @@ export default function Wishlist() {
   const [favorites, setFavorites] = useState([]);
   const [cart, setCart] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showAllLiked, setShowAllLiked] = useState(false);
 
   /* --- EFFECTS & DATA FETCHING --- */
   useEffect(() => {
@@ -232,22 +231,12 @@ export default function Wishlist() {
               <span>❤️</span> My Wishlist
             </h1>
             <p className="text-slate-500 dark:text-slate-400 text-[11px] sm:text-xs mt-0.5">
-              Your liked items. Slide through them and add favorites directly to your cart.
+              Your liked items. Add favorites directly to your cart.
             </p>
           </div>
-          {foods.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setShowAllLiked(true)}
-              className="shrink-0 text-[11px] font-bold text-brand-600 dark:text-brand-300 px-2.5 py-1.5 rounded-xl bg-brand-55 dark:bg-brand-950/20"
-            >
-              See All
-            </button>
-          )}
         </div>
       </div>
 
-      {/* WISHLIST CARD CAROUSEL VIEWPORTS */}
       {loading ? (
         <div className="flex justify-center items-center py-16">
           <div className="w-8 h-8 border-3 border-brand-100 border-t-brand-500 rounded-full animate-spin" />
@@ -264,56 +253,10 @@ export default function Wishlist() {
           </Button>
         </div>
       ) : (
-        <div>
-          <div className="flex items-center justify-between mb-3.5">
-            <h2 className="text-sm font-bold text-slate-900 dark:text-white tracking-tight">Liked Foods</h2>
-            <button type="button" onClick={() => setShowAllLiked(true)} className="text-[11px] font-bold text-brand-600 dark:text-brand-300">
-              See All
-            </button>
-          </div>
-          <div className="flex gap-3 overflow-x-auto no-scrollbar snap-x pb-2">
-            <AnimatePresence>{foods.map((food) => renderWishlistCard(food))}</AnimatePresence>
-          </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 pb-8">
+          <AnimatePresence>{foods.map((food) => renderWishlistCard(food, "min-w-0"))}</AnimatePresence>
         </div>
       )}
-
-      {/* --- ALL WISHLIST ITEMS MODAL OVERLAY --- */}
-      <AnimatePresence>
-        {showAllLiked && (
-          <div className="fixed inset-0 z-[1900] flex items-end justify-center bg-slate-950/60 backdrop-blur-sm sm:items-center sm:p-4">
-            <motion.div
-              initial={{ opacity: 0, y: 50, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 50, scale: 0.98 }}
-              transition={smoothTransition}
-              className="flex max-h-[85vh] w-full max-w-5xl flex-col overflow-hidden rounded-t-[1.5rem] border border-slate-100 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-950 sm:rounded-[1.5rem]"
-            >
-              <div className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-100 px-4 py-3 dark:border-slate-800">
-                <div className="min-w-0">
-                  <h3 className="truncate text-lg font-black tracking-tight text-slate-900 dark:text-white">All Liked Foods</h3>
-                  <p className="mt-0.5 text-[10px] font-bold text-slate-500 dark:text-slate-400">
-                    {foods.length} items
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowAllLiked(false)}
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-700 transition-colors hover:bg-slate-200 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
-                  aria-label="Close liked foods"
-                >
-                  <X size={18} />
-                </button>
-              </div>
-
-              <div className="flex-1 overflow-y-auto p-3 sm:p-4">
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                  <AnimatePresence>{foods.map((food) => renderWishlistCard(food, "min-w-0"))}</AnimatePresence>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
