@@ -227,17 +227,33 @@ export const createOrder = async (req, res) => {
     let finalRainCharge = 0;
     let finalFestivalCharge = 0;
     let finalPlatformCharge = 0;
+    let surchargesAmount = 0;
+    let appliedSurcharges = [];
 
     if (settings) {
       finalRainCharge = Number(settings.rainCharge || 0);
       finalFestivalCharge = Number(settings.festivalCharge || 0);
       finalPlatformCharge = Number(settings.platformCharge || 0);
+      
+      if (Array.isArray(settings.surcharges)) {
+        const isCod = paymentMethod === "COD";
+        settings.surcharges.forEach(s => {
+          const isAllowed = isCod ? s.cod : s.online;
+          if (isAllowed) {
+            surchargesAmount += Number(s.amount || 0);
+            appliedSurcharges.push({
+              name: s.name,
+              amount: Number(s.amount || 0)
+            });
+          }
+        });
+      }
     }
 
     const packingTotal = Array.isArray(items)
       ? items.reduce((sum, item) => sum + (Number(item.packingCharge || 0) * Number(item.qty || 0)), 0)
       : 0;
-    const finalTotal = Number(subtotal || 0) + packingTotal + finalDeliveryCharge + finalRainCharge + finalFestivalCharge + finalPlatformCharge;
+    const finalTotal = Number(subtotal || 0) + packingTotal + finalDeliveryCharge + finalRainCharge + finalFestivalCharge + finalPlatformCharge + surchargesAmount;
 
     const order = await Order.create({
       userId: req.user.id,
@@ -260,6 +276,8 @@ export const createOrder = async (req, res) => {
       rainCharge: finalRainCharge,
       festivalCharge: finalFestivalCharge,
       platformCharge: finalPlatformCharge,
+      surcharges: appliedSurcharges,
+      surchargesAmount: surchargesAmount,
       total: finalTotal,
       distance: distance ? Number(distance.toFixed(2)) : null,
       latitude: userLat,

@@ -22,6 +22,15 @@ const settingsSchema = new mongoose.Schema({
   enabledPaymentMethods: {
     cod: { type: Boolean, default: true },
     online: { type: Boolean, default: true }
+  },
+  surcharges: {
+    type: [{
+      name: { type: String, required: true },
+      amount: { type: Number, default: 0 },
+      cod: { type: Boolean, default: true },
+      online: { type: Boolean, default: true }
+    }],
+    default: []
   }
 }, { timestamps: true });
 

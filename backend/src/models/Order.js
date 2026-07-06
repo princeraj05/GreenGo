@@ -39,6 +39,11 @@ const orderSchema = new mongoose.Schema(
   rainCharge: { type: Number, default: 0 },
   festivalCharge: { type: Number, default: 0 },
   platformCharge: { type: Number, default: 0 },
+  surcharges: [{
+    name: String,
+    amount: Number
+  }],
+  surchargesAmount: { type: Number, default: 0 },
   total:Number,
 
   status:{

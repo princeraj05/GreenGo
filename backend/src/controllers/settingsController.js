@@ -38,7 +38,8 @@ export const updateSettings = async (req, res) => {
       rainCharge,
       festivalCharge,
       platformCharge,
-      enabledPaymentMethods
+      enabledPaymentMethods,
+      surcharges
     } = req.body;
     let settings = await Settings.findOne();
     
@@ -59,6 +60,20 @@ export const updateSettings = async (req, res) => {
     if (rainCharge !== undefined) settings.rainCharge = Number(rainCharge);
     if (festivalCharge !== undefined) settings.festivalCharge = Number(festivalCharge);
     if (platformCharge !== undefined) settings.platformCharge = Number(platformCharge);
+    if (surcharges !== undefined) {
+      if (Array.isArray(surcharges)) {
+        settings.surcharges = surcharges
+          .map((s) => ({
+            name: String(s?.name || "").trim(),
+            amount: Number(s?.amount || 0),
+            cod: s?.cod !== undefined ? Boolean(s.cod) : true,
+            online: s?.online !== undefined ? Boolean(s.online) : true,
+          }))
+          .filter((s) => s.name !== "" && s.amount >= 0);
+      } else {
+        settings.surcharges = [];
+      }
+    }
     if (enabledPaymentMethods !== undefined) {
       settings.enabledPaymentMethods = {
         cod: Boolean(enabledPaymentMethods.cod),

@@ -7,6 +7,7 @@ import { encryptText, decryptText, hashText } from "../config/cryptoHelper.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import admin from "../config/firebase.js";
+import { getAuth } from "firebase-admin/auth";
 import crypto from "crypto";
 import { sendEmail } from "../services/emailService.js";
 import { createAdminNotification } from "../services/adminNotificationService.js";
@@ -776,7 +777,7 @@ export const googleLogin = async (req, res) => {
       return res.status(400).json({ message: "ID token is required" });
     }
 
-    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    const decodedToken = await getAuth().verifyIdToken(idToken);
     const { uid, email, name, picture } = decodedToken;
     console.log("[AUTH DEBUG] Firebase token verified:", { uid, email, name, hasPicture: Boolean(picture) });
 
@@ -888,7 +889,7 @@ export const firebaseLogin = async (req, res) => {
       return res.status(400).json({ message: "ID token is required" });
     }
 
-    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    const decodedToken = await getAuth().verifyIdToken(idToken);
     const { uid, email, phone_number, name, picture, firebase } = decodedToken;
     const provider = firebase?.sign_in_provider || "firebase";
     
