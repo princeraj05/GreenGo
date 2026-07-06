@@ -9,6 +9,11 @@ import { getApiUrl } from "./getApiUrl";
  * @param {object} userData - User profile details.
  */
 export const saveSession = async (token, userData) => {
+  // Synchronous write for instant UI and route guard updates
+  localStorage.setItem("token", token);
+  localStorage.setItem("user_data", JSON.stringify(userData));
+  localStorage.setItem("auth_state", "logged_in");
+
   try {
     await Preferences.set({ key: "token", value: token });
     await Preferences.set({ key: "user_data", value: JSON.stringify(userData) });
@@ -16,10 +21,6 @@ export const saveSession = async (token, userData) => {
   } catch (err) {
     console.error("Failed to save to Capacitor Preferences:", err);
   }
-  // Synchronous sync for existing parts of application
-  localStorage.setItem("token", token);
-  localStorage.setItem("user_data", JSON.stringify(userData));
-  localStorage.setItem("auth_state", "logged_in");
 };
 
 /**
@@ -43,6 +44,11 @@ export const clearSession = async () => {
     }
   }
 
+  // Clear localStorage synchronously
+  localStorage.removeItem("token");
+  localStorage.removeItem("user_data");
+  localStorage.removeItem("auth_state");
+
   try {
     await Preferences.remove({ key: "token" });
     await Preferences.remove({ key: "user_data" });
@@ -50,9 +56,6 @@ export const clearSession = async () => {
   } catch (err) {
     console.error("Failed to clear Capacitor Preferences:", err);
   }
-  localStorage.removeItem("token");
-  localStorage.removeItem("user_data");
-  localStorage.removeItem("auth_state");
 
   try {
     if (auth) {
@@ -68,6 +71,15 @@ export const clearSession = async () => {
  * Returns the token and userData if active, null otherwise.
  */
 export const restoreSession = async () => {
+  // Check localStorage first (synchronous, instant)
+  const localToken = localStorage.getItem("token");
+  const localUserDataStr = localStorage.getItem("user_data");
+  const localAuthState = localStorage.getItem("auth_state");
+  if (localToken && localAuthState === "logged_in") {
+    return { token: localToken, userData: localUserDataStr ? JSON.parse(localUserDataStr) : null };
+  }
+
+  // Fallback to checking Capacitor Preferences if localStorage is empty
   try {
     const { value: token } = await Preferences.get({ key: "token" });
     const { value: userDataStr } = await Preferences.get({ key: "user_data" });
@@ -85,12 +97,5 @@ export const restoreSession = async () => {
     console.error("Failed to restore session from Preferences:", err);
   }
 
-  // Fallback to checking localStorage if Preferences is empty/fails
-  const token = localStorage.getItem("token");
-  const userDataStr = localStorage.getItem("user_data");
-  const authState = localStorage.getItem("auth_state");
-  if (token && authState === "logged_in") {
-    return { token, userData: userDataStr ? JSON.parse(userDataStr) : null };
-  }
   return null;
 };

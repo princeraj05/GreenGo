@@ -125,7 +125,7 @@ export default function App() {
     };
 
     initAuth();
-  }, [navigate, location]);
+  }, []);
 
   useEffect(() => {
     if (window.diagnostics) {
