@@ -1,6 +1,7 @@
 import { Preferences } from "@capacitor/preferences";
 import { TextToSpeech } from "@capacitor-community/text-to-speech";
 import { Capacitor } from "@capacitor/core";
+import { App as CapApp } from "@capacitor/app";
 
 /**
  * TTS Service for GreenGo Food Delivery Application
@@ -18,12 +19,35 @@ export const ORDER_STATUS_VOICES = {
 let lastAnnouncement = "";
 
 /**
+ * Stop any current speech.
+ */
+export const stopSpeaking = async () => {
+  try {
+    if (Capacitor.isNativePlatform()) {
+      await TextToSpeech.stop();
+    }
+    if (typeof window !== "undefined" && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+    console.log("TTS Service: Speech stopped.");
+  } catch (err) {
+    console.error("TTS Service: Failed to stop speaking:", err);
+  }
+};
+
+/**
  * Plays a Text-to-Speech message.
  *
  * @param {string} text - The text message to speak.
  */
 export const speakText = async (text) => {
   try {
+    // If the screen is locked, minimized, or tab is hidden, do not speak
+    if (typeof document !== "undefined" && document.hidden) {
+      console.log("TTS Service: App is in background. Skipping speech.");
+      return false;
+    }
+
     // Prevent duplicate announcements of the exact same text within a short timeframe
     if (lastAnnouncement === text) {
       console.log("TTS Service: Already announcing this message. Skipping.");
@@ -86,12 +110,22 @@ export const speakText = async (text) => {
  *
  * @param {string} orderId - The unique ID of the order.
  * @param {string} status - The status of the order.
+ * @param {string} updatedAt - The last update timestamp of the order.
  */
-export const playOrderStatusVoice = async (orderId, status) => {
+export const playOrderStatusVoice = async (orderId, status, updatedAt) => {
   if (!orderId || !status) return;
 
   const validStatuses = ["Pending", "Preparing", "CancellationRequested", "Cancelled"];
   if (!validStatuses.includes(status)) return;
+
+  // Only announce if the order was updated recently (within last 2 minutes) to prevent playing old/stale orders
+  if (updatedAt) {
+    const timeDiff = Date.now() - new Date(updatedAt).getTime();
+    if (timeDiff > 120000) { // 2 minutes
+      console.log(`TTS Service: Skipping voice for order ${orderId} because it was updated too long ago (${Math.round(timeDiff / 1000)}s ago).`);
+      return;
+    }
+  }
 
   const message = ORDER_STATUS_VOICES[status];
   if (!message) return;
@@ -117,15 +151,38 @@ export const playOrderStatusVoice = async (orderId, status) => {
 };
 
 // Legacy compatibility exports for index/others
-export const playOrderConfirmationVoice = async (orderId, status) => {
+export const playOrderConfirmationVoice = async (orderId, status, updatedAt) => {
   if (status === "Pending" || status === "Preparing") {
-    await playOrderStatusVoice(orderId, status);
+    await playOrderStatusVoice(orderId, status, updatedAt);
   }
 };
 
 export const playOrderCancellationVoice = async (orderId) => {
-  await playOrderStatusVoice(orderId, "CancellationRequested");
+  await playOrderStatusVoice(orderId, "CancellationRequested", new Date());
 };
+
+// Automatically stop speech when screen is locked, minimized, or tab is hidden
+if (typeof document !== "undefined") {
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      console.log("TTS Service: Document hidden, stopping speech.");
+      stopSpeaking();
+    }
+  });
+}
+
+if (Capacitor.isNativePlatform()) {
+  try {
+    CapApp.addListener('appStateChange', (state) => {
+      if (!state.isActive) {
+        console.log("TTS Service: Capacitor App became inactive, stopping speech.");
+        stopSpeaking();
+      }
+    });
+  } catch (err) {
+    console.warn("TTS Service: Failed to register native app state change listener:", err);
+  }
+}
 
 // Ensure voices are loaded asynchronously in Chrome/Android WebViews
 if (typeof window !== "undefined" && window.speechSynthesis) {

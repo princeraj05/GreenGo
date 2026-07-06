@@ -68,7 +68,7 @@ export default function Orders() {
       const targetStatuses = ["Pending", "Preparing", "CancellationRequested", "Cancelled"];
       orders.forEach((order) => {
         if (targetStatuses.includes(order.status)) {
-          playOrderStatusVoice(order._id, order.status);
+          playOrderStatusVoice(order._id, order.status, order.updatedAt || order.createdAt);
         }
       });
     }

@@ -92,6 +92,7 @@ export default function UserLayout() {
         if (permission.receive === "granted") {
           PushNotifications.addListener('registration', async (token) => {
             console.log('[NOTIFICATIONS] Background token sync success, token:', token.value);
+            localStorage.setItem("fcm_token", token.value);
             try {
               await fetch(`${getApiUrl()}/api/users/fcm-token`, {
                 method: "POST",

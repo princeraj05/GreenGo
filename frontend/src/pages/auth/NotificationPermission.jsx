@@ -17,6 +17,7 @@ export default function NotificationPermission() {
         // Add push notification listeners before registering
         await PushNotifications.addListener('registration', async (token) => {
           console.log('[NOTIFICATIONS] Push registration success, token:', token.value);
+          localStorage.setItem("fcm_token", token.value);
           try {
             const apiRes = await fetch(`${getApiUrl()}/api/users/fcm-token`, {
               method: "POST",

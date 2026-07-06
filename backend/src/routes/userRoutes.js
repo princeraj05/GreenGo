@@ -19,7 +19,8 @@ import {
   revokeSession,
   revokeAllSessions,
   getSecurityLogs,
-  saveFcmToken
+  saveFcmToken,
+  removeFcmToken
 } from "../controllers/userController.js";
 
 import { protect } from "../middleware/authMiddleware.js";
@@ -54,5 +55,6 @@ router.get("/security-logs", protect, getSecurityLogs);
 
 // Register FCM token
 router.post("/fcm-token", protect, saveFcmToken);
+router.delete("/fcm-token", protect, removeFcmToken);
 
 export default router;

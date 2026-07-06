@@ -73,7 +73,7 @@ export default function OrderTrackingPage({ role = "user" }) {
   useEffect(() => {
     if (tracking && tracking.status) {
       if (tracking.status === "Preparing" || tracking.status === "Pending") {
-        playOrderConfirmationVoice(id, tracking.status);
+        playOrderConfirmationVoice(id, tracking.status, tracking.updatedAt || tracking.createdAt);
       }
     }
   }, [tracking, id]);

@@ -1525,11 +1525,35 @@ export const saveFcmToken = async (req, res) => {
       return res.status(400).json({ message: "FCM token is required" });
     }
 
+    // Remove token from all other users' fcmTokens list first to ensure it's uniquely mapped
+    await User.updateMany(
+      { fcmTokens: token },
+      { $pull: { fcmTokens: token } }
+    );
+
+    // Add token to the current user
     await User.findByIdAndUpdate(req.user.id, {
       $addToSet: { fcmTokens: token }
     });
 
     res.json({ success: true, message: "FCM token saved successfully" });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const removeFcmToken = async (req, res) => {
+  try {
+    const { token } = req.body;
+    if (!token) {
+      return res.status(400).json({ message: "FCM token is required" });
+    }
+
+    await User.findByIdAndUpdate(req.user.id, {
+      $pull: { fcmTokens: token }
+    });
+
+    res.json({ success: true, message: "FCM token removed successfully" });
   } catch (err) {
     res.status(500).json({ message: "Server error" });
   }

@@ -1,6 +1,7 @@
 import { Preferences } from "@capacitor/preferences";
 import { signOut } from "firebase/auth";
 import { auth } from "../config/firebase";
+import { getApiUrl } from "./getApiUrl";
 
 /**
  * Save user session data securely in Preferences and fallback/sync with localStorage.
@@ -25,6 +26,23 @@ export const saveSession = async (token, userData) => {
  * Clear user session from Preferences and localStorage.
  */
 export const clearSession = async () => {
+  const fcmToken = localStorage.getItem("fcm_token");
+  const token = localStorage.getItem("token");
+  if (fcmToken && token) {
+    try {
+      await fetch(`${getApiUrl()}/api/users/fcm-token`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ token: fcmToken })
+      });
+    } catch (err) {
+      console.error("Failed to remove FCM token on server:", err);
+    }
+  }
+
   try {
     await Preferences.remove({ key: "token" });
     await Preferences.remove({ key: "user_data" });
