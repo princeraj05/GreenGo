@@ -1,6 +1,6 @@
-import admin from "firebase-admin";
+import admin, { cert } from "firebase-admin";
 
-if (!admin.apps.length) {
+if (!admin.getApps().length) {
   const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT;
   const fallbackProjectId = process.env.FIREBASE_PROJECT_ID || "greengo-102bd";
   if (serviceAccountJson) {
@@ -22,7 +22,7 @@ if (!admin.apps.length) {
       
       const serviceAccount = JSON.parse(cleanJson);
       admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount)
+        credential: cert(serviceAccount)
       });
       console.log("Firebase Admin initialized successfully using service account certificate.");
     } catch (err) {
@@ -32,7 +32,7 @@ if (!admin.apps.length) {
         const fallbackClean = serviceAccountJson.replace(/\\(?![nt])/g, '');
         const serviceAccount = JSON.parse(fallbackClean);
         admin.initializeApp({
-          credential: admin.credential.cert(serviceAccount)
+          credential: cert(serviceAccount)
         });
         console.log("Firebase Admin initialized successfully using fallback sanitized service account.");
       } catch (fallbackErr) {

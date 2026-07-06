@@ -296,21 +296,6 @@ export const createOrder = async (req, res) => {
       },
     });
 
-    res.json({
-      success:true,
-      order
-    });
-
-  } catch (err) {
-
-    console.error("Create order error:",err);
-
-    res.status(500).json({
-      message:"Order failed"
-    });
-
-  }
-};
 
     res.json({
       success:true,
@@ -318,13 +303,10 @@ export const createOrder = async (req, res) => {
     });
 
   } catch (err) {
-
-    console.error("Create order error:",err);
-
+    console.error("Create order error:", err);
     res.status(500).json({
-      message:"Order failed"
+      message: "Order failed"
     });
-
   }
 };
 
