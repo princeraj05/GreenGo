@@ -130,7 +130,7 @@ export default function AdminDashboard() {
 
       // Compute Net Sell: total minus deliveryCharge, packaging, platformCharge, rainCharge, festivalCharge
       const itemPacking = Array.isArray(o.items) ? o.items.reduce((s, item) => s + (Number(item.packingCharge || 0) * Number(item.qty || 0)), 0) : 0;
-      const dec = Number(o.deliveryCharge || 0) + itemPacking + Number(o.platformCharge || 0) + Number(o.rainCharge || 0) + Number(o.festivalCharge || 0);
+      const dec = Number(o.deliveryCharge || 0) + itemPacking + Number(o.surchargesAmount || 0) + Number(o.platformCharge || 0) + Number(o.rainCharge || 0) + Number(o.festivalCharge || 0);
       netSell += (amt - dec);
     });
 

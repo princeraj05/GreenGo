@@ -189,11 +189,12 @@ export default function Checkout() {
   /* --- PRICE CALCULATION COMPUTATIONS --- */
   const subtotal = cart.reduce((s, i) => s + Number(i.price || 0) * Number(i.qty || 0), 0);
   const packingCharges = cart.reduce((s, i) => s + Number(i.packingCharge || 0) * Number(i.qty || 0), 0);
-  const taxes = 0;
-  const rainCharge = settings ? Number(settings.rainCharge || 0) : 0;
-  const festivalCharge = settings ? Number(settings.festivalCharge || 0) : 0;
-  const platformCharge = settings ? Number(settings.platformCharge || 0) : 0;
-  const total = subtotal + packingCharges + deliveryCharge + taxes + rainCharge + festivalCharge + platformCharge;
+  const isCod = paymentMethod === "COD";
+  const activeSurcharges = settings && Array.isArray(settings.surcharges)
+    ? settings.surcharges.filter(s => isCod ? s.cod : s.online)
+    : [];
+  const surchargesTotal = activeSurcharges.reduce((sum, s) => sum + Number(s.amount || 0), 0);
+  const total = subtotal + packingCharges + deliveryCharge + taxes + surchargesTotal;
   const totalItems = cart.reduce((s, i) => s + Number(i.qty || 0), 0);
 
   /* --- EVENT HANDLERS --- */
@@ -602,24 +603,12 @@ export default function Checkout() {
                     <span>Delivery Fee</span>
                     <span className="font-black text-slate-900 dark:text-white">₹{deliveryCharge}</span>
                   </div>
-                  {rainCharge > 0 && (
-                    <div className="flex items-center justify-between text-blue-600 dark:text-blue-400">
-                      <span>Rain Surcharge ⛈️</span>
-                      <span className="font-black">₹{rainCharge}</span>
+                  {activeSurcharges.map((s, idx) => (
+                    <div key={idx} className="flex items-center justify-between text-brand-600 dark:text-brand-400">
+                      <span>{s.name}</span>
+                      <span className="font-black">₹{s.amount}</span>
                     </div>
-                  )}
-                  {festivalCharge > 0 && (
-                    <div className="flex items-center justify-between text-amber-600 dark:text-amber-400">
-                      <span>Festival Surcharge 🪔</span>
-                      <span className="font-black">₹{festivalCharge}</span>
-                    </div>
-                  )}
-                  {platformCharge > 0 && (
-                    <div className="flex items-center justify-between text-purple-600 dark:text-purple-400">
-                      <span>Platform Charge ⚡</span>
-                      <span className="font-black">₹{platformCharge}</span>
-                    </div>
-                  )}
+                  ))}
                   <div className="flex items-center justify-between">
                     <span>Taxes</span>
                     <span className="font-black text-slate-900 dark:text-white">₹{taxes}</span>

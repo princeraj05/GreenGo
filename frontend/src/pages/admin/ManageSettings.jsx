@@ -31,6 +31,7 @@ export default function ManageSettings() {
     isDistanceLimitEnabled: true,
     deliveryChargeSlabs: [{ upToKm: 10, amount: 50 }, { upToKm: 50, amount: 100 }],
     deliveryBoyAmountSlabs: [{ upToKm: 10, amount: 50 }, { upToKm: 100, amount: 100 }],
+    surcharges: [],
     rainCharge: 0,
     festivalCharge: 0,
     platformCharge: 0,
@@ -43,6 +44,40 @@ export default function ManageSettings() {
   // ==========================================
   // DATA FETCHING & EVENT HANDLERS
   // ==========================================
+
+  /**
+   * Modifies dynamic details inside settings surcharge lists.
+   */
+  const updateSurcharge = (index, key, value) => {
+    setForm((current) => ({
+      ...current,
+      surcharges: current.surcharges.map((item, itemIndex) => (
+        itemIndex === index ? { ...item, [key]: value } : item
+      )),
+    }));
+  };
+
+  /**
+   * Appends a new blank surcharge slab.
+   */
+  const addSurcharge = () => {
+    setForm((current) => ({
+      ...current,
+      surcharges: [...(current.surcharges || []), { name: "", amount: "", cod: true, online: true }],
+    }));
+  };
+
+  /**
+   * Removes a surcharge slab.
+   */
+  const removeSurcharge = (index) => {
+    setForm((current) => ({
+      ...current,
+      surcharges: (current.surcharges || []).length > 1
+        ? current.surcharges.filter((_, itemIndex) => itemIndex !== index)
+        : [{ name: "", amount: "", cod: true, online: true }],
+    }));
+  };
 
   /**
    * Modifies dynamic details inside settings slab lists (distance or amount).
@@ -104,6 +139,7 @@ export default function ManageSettings() {
           deliveryBoyAmountSlabs: Array.isArray(data.deliveryBoyAmountSlabs) && data.deliveryBoyAmountSlabs.length
             ? data.deliveryBoyAmountSlabs
             : [{ upToKm: 10, amount: 50 }, { upToKm: 100, amount: 100 }],
+          surcharges: Array.isArray(data.surcharges) && data.surcharges.length ? data.surcharges : [{ name: "", amount: "", cod: true, online: true }],
           rainCharge: data.rainCharge !== undefined ? data.rainCharge : 0,
           festivalCharge: data.festivalCharge !== undefined ? data.festivalCharge : 0,
           platformCharge: data.platformCharge !== undefined ? data.platformCharge : 0,
@@ -128,6 +164,7 @@ export default function ManageSettings() {
       const payload = {
         ...form,
         deliveryChargeAmount: Number(form.deliveryChargeSlabs?.[0]?.amount || form.deliveryChargeAmount || 0),
+        surcharges: (form.surcharges || []).filter(s => s.name.trim() !== "")
       };
       await API.put("/api/settings", payload, {
         headers: { Authorization: `Bearer ${token}` },
@@ -181,6 +218,70 @@ export default function ManageSettings() {
       <button
         type="button"
         onClick={() => addSlab(field)}
+        className="w-full py-3 rounded-xl border border-dashed border-emerald-300 dark:border-emerald-800 text-emerald-600 dark:text-emerald-300 font-bold"
+      >
+        + Add Slab
+      </button>
+    </div>
+  );
+
+  // Renders dynamic surcharges
+  const renderSurchargeRows = () => (
+    <div className="space-y-3">
+      {(form.surcharges || []).map((surcharge, index) => (
+        <div key={index} className="flex flex-wrap items-center gap-3 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900">
+          <div className="flex-1 min-w-[150px]">
+            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Surcharge Name</label>
+            <input
+              type="text"
+              placeholder="e.g. Rainy Season"
+              value={surcharge.name}
+              onChange={(e) => updateSurcharge(index, "name", e.target.value)}
+              className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-slate-800 dark:text-white font-medium text-sm"
+            />
+          </div>
+          <div className="w-[100px]">
+            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Amount (₹)</label>
+            <input
+              type="number"
+              min="0"
+              value={surcharge.amount}
+              onChange={(e) => updateSurcharge(index, "amount", Number(e.target.value))}
+              className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-slate-800 dark:text-white font-medium text-sm"
+            />
+          </div>
+          <div className="flex items-center gap-4 mt-4 sm:mt-0">
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={surcharge.cod}
+                onChange={(e) => updateSurcharge(index, "cod", e.target.checked)}
+                className="rounded text-emerald-500 focus:ring-emerald-500 w-5 h-5"
+              />
+              <span className="text-xs font-bold text-slate-600 dark:text-slate-300">COD</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={surcharge.online}
+                onChange={(e) => updateSurcharge(index, "online", e.target.checked)}
+                className="rounded text-emerald-500 focus:ring-emerald-500 w-5 h-5"
+              />
+              <span className="text-xs font-bold text-slate-600 dark:text-slate-300">Online</span>
+            </label>
+          </div>
+          <button
+            type="button"
+            onClick={() => removeSurcharge(index)}
+            className="sm:self-end mt-4 sm:mt-0 px-4 py-3 rounded-xl border border-red-100 dark:border-red-900/40 bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-300 font-bold text-sm"
+          >
+            Remove
+          </button>
+        </div>
+      ))}
+      <button
+        type="button"
+        onClick={addSurcharge}
         className="w-full py-3 rounded-xl border border-dashed border-emerald-300 dark:border-emerald-800 text-emerald-600 dark:text-emerald-300 font-bold"
       >
         + Add Slab
@@ -257,40 +358,7 @@ export default function ManageSettings() {
             <h3 className="font-extrabold text-slate-800 dark:text-white uppercase tracking-wider text-xs">Extra / Seasonal Charges (Surcharges)</h3>
             <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Apply seasonal, weather, or operational surcharges to every order.</p>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Rainy Season Charge (₹)</label>
-                <input
-                  type="number"
-                  min="0"
-                  value={form.rainCharge || ""}
-                  onChange={(e) => setForm({ ...form, rainCharge: Number(e.target.value) })}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white font-medium outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Festival Surcharge (₹)</label>
-                <input
-                  type="number"
-                  min="0"
-                  value={form.festivalCharge || ""}
-                  onChange={(e) => setForm({ ...form, festivalCharge: Number(e.target.value) })}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white font-medium outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Platform Charge (₹)</label>
-                <input
-                  type="number"
-                  min="0"
-                  value={form.platformCharge || ""}
-                  onChange={(e) => setForm({ ...form, platformCharge: Number(e.target.value) })}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white font-medium outline-none"
-                />
-              </div>
-            </div>
+            {renderSurchargeRows()}
           </div>
           
           {/* Custom Delivery Toggle Switch */}
@@ -306,18 +374,6 @@ export default function ManageSettings() {
               />
               <div className="w-11 h-6 bg-gray-300 dark:bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-350 dark:after:border-slate-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
             </label>
-          </div>
-
-          <div className={`${!form.isDeliveryChargeEnabled ? "opacity-50 pointer-events-none" : "transition-opacity"}`}>
-            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Delivery Charge Amount (₹)</label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <span className="text-slate-400 dark:text-slate-500 font-bold">₹</span>
-              </div>
-              <input type="number" min="0" value={form.deliveryChargeAmount} 
-                onChange={(e) => setForm({ ...form, deliveryChargeAmount: Number(e.target.value) })}
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-slate-800 dark:text-white font-medium" />
-            </div>
           </div>
 
           {/* Delivery Charge Slabs section */}
