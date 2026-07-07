@@ -51,12 +51,11 @@ const allowedOrigins = [
   "ionic://localhost",
 ];
 
-/* ================= CORS (Custom Bulletproof Middleware) ================= */
-
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  
-  if (origin) {
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps, curl, postman)
+    if (!origin) return callback(null, true);
+    
     const isAllowed = 
       allowedOrigins.includes(origin) || 
       /^https:\/\/.*\.vercel\.app$/.test(origin) ||
@@ -64,25 +63,24 @@ app.use((req, res, next) => {
       origin.includes("localhost");
       
     if (isAllowed) {
-      res.setHeader("Access-Control-Allow-Origin", origin);
-      res.setHeader("Access-Control-Allow-Credentials", "true");
-      res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
-      res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept, Origin, X-Requested-With");
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
     }
-  }
-  
-  // Handle preflight OPTIONS request immediately
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(204);
-  }
-  
-  // Logging
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "Accept", "Origin", "X-Requested-With"]
+}));
+
+// Request Logging Middleware
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
   const method = req.method;
   const url = req.originalUrl;
   res.on("finish", () => {
     console.log(`[REQUEST LOG] ${method} ${url} | Origin: ${origin || "none"} | Status: ${res.statusCode}`);
   });
-  
   next();
 });
 
