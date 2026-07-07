@@ -457,8 +457,7 @@ export default function UserLayout() {
             </button>
             <button 
               onClick={() => {
-                if (isLoggedIn) navigate("/user/notifications");
-                else navigate("/", { state: { loginRequired: true, from: { pathname: "/user/notifications" } } });
+                navigate("/user/notifications");
               }}
               className="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800 shadow-sm relative"
               aria-label="Notifications"
@@ -470,8 +469,7 @@ export default function UserLayout() {
             </button>
             <button
               onClick={() => {
-                if (isLoggedIn) navigate("/user/profile");
-                else navigate("/", { state: { loginRequired: true, from: { pathname: "/user/profile" } } });
+                navigate("/user/profile");
               }}
               className="w-9 h-9 flex items-center justify-center rounded-xl bg-brand-500 text-white font-extrabold text-sm shadow-sm"
               aria-label="Profile"

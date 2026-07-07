@@ -23,16 +23,10 @@ export default function App() {
     };
   }, []);
 
-  const guestUserPaths = new Set([
-    "/user",
-    "/user/menu",
-    "/user/wishlist",
-    "/user/cart",
-    "/user/orders",
-    "/user/notifications",
-    "/user/contact",
-  ]);
-  const isGuestUserPath = (path) => guestUserPaths.has(path);
+  const isGuestUserPath = (path) => {
+    if (path === "/user/checkout") return false;
+    return path.startsWith("/user");
+  };
 
   // Check auth and restore session on mount
   useEffect(() => {

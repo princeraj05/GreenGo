@@ -158,7 +158,7 @@ export default function Profile() {
     try {
       const token = await getToken();
       if (!token) {
-        navigate("/login", { replace: true });
+        setLoading(false);
         return;
       }
 
@@ -976,6 +976,30 @@ export default function Profile() {
     return (
       <div className="flex justify-center items-center py-32">
         <div className="w-12 h-12 border-4 border-brand-100 border-t-brand-500 rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  const isLoggedIn = Boolean(localStorage.getItem("token") && localStorage.getItem("auth_state") === "logged_in");
+
+  if (!isLoggedIn) {
+    return (
+      <div className="w-full max-w-md mx-auto py-16 px-4 text-center">
+        <Card className="p-8 border-slate-100 dark:border-slate-800 rounded-[2rem] shadow-xl flex flex-col items-center bg-white dark:bg-slate-950">
+          <div className="w-20 h-20 bg-brand-500/10 rounded-2xl flex items-center justify-center mb-6 text-brand-500">
+            <User size={40} />
+          </div>
+          <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-2">Guest Mode</h2>
+          <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-8 max-w-xs mx-auto">
+            Please log in to view and manage your profile, delivery addresses, and settings.
+          </p>
+          <Button
+            onClick={() => navigate("/", { state: { loginRequired: true, from: { pathname: "/user/profile" } } })}
+            className="w-full py-3.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-extrabold text-sm transition-all shadow-lg shadow-brand-500/20 active:scale-[0.98]"
+          >
+            Log In Now
+          </Button>
+        </Card>
       </div>
     );
   }

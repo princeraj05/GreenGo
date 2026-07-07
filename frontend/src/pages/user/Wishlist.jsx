@@ -37,19 +37,19 @@ export default function Wishlist() {
   const loadWishlistData = async () => {
     try {
       const token = await getToken();
-      if (!token) {
-        setLoading(false);
-        return;
-      }
-
-      const userRes = await fetch(`${API}/api/users/me`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
       let favIds = [];
-      if (userRes.ok) {
-        const userData = await userRes.json();
-        favIds = userData.favorites || [];
+      if (!token) {
+        favIds = JSON.parse(localStorage.getItem("guest_favorites")) || [];
         setFavorites(favIds);
+      } else {
+        const userRes = await fetch(`${API}/api/users/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (userRes.ok) {
+          const userData = await userRes.json();
+          favIds = userData.favorites || [];
+          setFavorites(favIds);
+        }
       }
 
       const foodRes = await fetch(`${API}/api/foods`);
@@ -67,7 +67,19 @@ export default function Wishlist() {
   const toggleFavoriteFood = async (foodId) => {
     try {
       const token = await getToken();
-      if (!token) return;
+      if (!token) {
+        const localFavs = JSON.parse(localStorage.getItem("guest_favorites")) || [];
+        let nextFavs;
+        if (localFavs.includes(foodId)) {
+          nextFavs = localFavs.filter(id => id !== foodId);
+        } else {
+          nextFavs = [...localFavs, foodId];
+        }
+        localStorage.setItem("guest_favorites", JSON.stringify(nextFavs));
+        setFavorites(nextFavs);
+        setFoods((prev) => prev.filter((food) => nextFavs.includes(food._id)));
+        return;
+      }
       const res = await fetch(`${API}/api/users/favorites/toggle`, {
         method: "POST",
         headers: {

@@ -383,7 +383,11 @@ export default function Menu() {
   const loadFavorites = async () => {
     try {
       const token = await getToken();
-      if (!token) return;
+      if (!token) {
+        const localFavs = JSON.parse(localStorage.getItem("guest_favorites")) || [];
+        setFavorites(localFavs);
+        return;
+      }
       const res = await fetch(`${API}/api/users/me`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -402,9 +406,20 @@ export default function Menu() {
    * toggleFavoriteFood: Requests server toggle favorite dish status.
    */
   const toggleFavoriteFood = async (foodId) => {
-    if (!requireLogin("/user/wishlist")) return;
     try {
       const token = await getToken();
+      if (!token) {
+        const localFavs = JSON.parse(localStorage.getItem("guest_favorites")) || [];
+        let nextFavs;
+        if (localFavs.includes(foodId)) {
+          nextFavs = localFavs.filter(id => id !== foodId);
+        } else {
+          nextFavs = [...localFavs, foodId];
+        }
+        localStorage.setItem("guest_favorites", JSON.stringify(nextFavs));
+        setFavorites(nextFavs);
+        return;
+      }
       const res = await fetch(`${API}/api/users/favorites/toggle`, {
         method: "POST",
         headers: {
@@ -1051,7 +1066,7 @@ export default function Menu() {
           </button>
 
           <button
-            onClick={() => requireLogin("/user/notifications") && navigate("/user/notifications")}
+            onClick={() => navigate("/user/notifications")}
             className="w-9 h-11 sm:w-10 sm:h-12 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800 relative"
           >
             <Bell size={16} />
@@ -1063,7 +1078,7 @@ export default function Menu() {
           </button>
 
           <MotionDiv 
-            onClick={() => requireLogin("/user/profile") && navigate("/user/profile")}
+            onClick={() => navigate("/user/profile")}
             animate={vegMode ? {
               scale: [1, 1.08, 1],
               boxShadow: ["0px 0px 0px rgba(16, 185, 129, 0)", "0px 0px 12px rgba(16, 185, 129, 0.6)", "0px 0px 0px rgba(16, 185, 129, 0)"]
