@@ -1,4 +1,5 @@
 import admin from "../config/firebase.js";
+import { getMessaging } from "firebase-admin/messaging";
 import User from "../models/User.js";
 
 /**
@@ -38,7 +39,7 @@ export async function sendPushToUser(userId, title, body, data = {}) {
     };
 
     console.log(`[PUSH NOTIFICATION] Sending push to user ${userId} (${tokens.length} tokens)`);
-    const response = await admin.messaging().sendEachForMulticast(message);
+    const response = await getMessaging().sendEachForMulticast(message);
     
     // Check if any tokens failed because they are unregistered/expired and remove them
     const tokensToRemove = [];
@@ -112,7 +113,7 @@ export async function sendPushToAllUsers(title, body, data = {}) {
         },
         data: stringifiedData,
       };
-      await admin.messaging().sendEachForMulticast(message);
+      await getMessaging().sendEachForMulticast(message);
     }
   } catch (error) {
     console.error("[PUSH NOTIFICATION] Failed to broadcast push notification:", error);
@@ -160,7 +161,7 @@ export async function sendPushToAdmins(title, body, data = {}) {
       },
       data: stringifiedData,
     };
-    await admin.messaging().sendEachForMulticast(message);
+    await getMessaging().sendEachForMulticast(message);
   } catch (error) {
     console.error("[PUSH NOTIFICATION] Failed to send push notification to admins:", error);
   }
