@@ -113,18 +113,6 @@ export default function Profile() {
     return () => clearInterval(timer);
   }, [developerPhotoCandidates.length]);
 
-  useEffect(() => {
-    if (activeSection === "edit") {
-      speakText("Please complete your profile. Add your name, phone number, password, and birthday date.");
-    } else if (activeSection === "addresses") {
-      speakText("Please fill your address. Choose current location or any location.");
-    } else {
-      stopSpeaking();
-    }
-    return () => {
-      stopSpeaking();
-    };
-  }, [activeSection]);
 
   const showMessage = (text, type = "success") => {
     setMessage(text);
@@ -332,6 +320,23 @@ export default function Profile() {
   const editProfileCompleted = Boolean(String(form.name || "").trim() && String(form.phone || "").trim() && form.hasPassword);
   const addressCompleted = getCleanAddresses(form.addresses).length > 0 || Boolean(String(form.address || "").trim());
   const profileCompletionPercent = (editProfileCompleted ? 50 : 0) + (addressCompleted ? 50 : 0);
+
+  useEffect(() => {
+    if (profileCompletionPercent === 100) {
+      stopSpeaking();
+      return;
+    }
+    if (activeSection === "edit") {
+      speakText("Please complete your profile. Add your name, phone number, password, and birthday date.");
+    } else if (activeSection === "addresses") {
+      speakText("Please fill your address. Choose current location or any location.");
+    } else {
+      stopSpeaking();
+    }
+    return () => {
+      stopSpeaking();
+    };
+  }, [activeSection, profileCompletionPercent]);
 
   const referralCode = useMemo(() => {
     const source = form.name || form.phone || form.email || "GREENGO";
