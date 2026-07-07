@@ -141,12 +141,11 @@ export default function Checkout() {
     const loadCheckoutUser = () => {
       const token = getToken();
       if(!token) {
-        navigate("/", {
-          state: {
-            from: { pathname: "/user/checkout" },
-            loginRequired: true,
-          },
-        });
+        const guestAddress = localStorage.getItem("guest_address") || "";
+        const guestPhone = localStorage.getItem("guest_phone") || "";
+        if (guestAddress) setAddress(guestAddress);
+        if (guestPhone) setPhone(guestPhone);
+        setProfileDeliveryReady(true);
         return;
       }
       fetch(`${getApiUrl()}/api/users/me`, {
@@ -155,10 +154,12 @@ export default function Checkout() {
       .then(res => res.json())
       .then(userData => {
         if (userData) {
-          if (userData.phone) setPhone(userData.phone);
           const savedAddress = getSavedAddressText(userData);
-          if (savedAddress) setAddress(savedAddress);
-          setProfileDeliveryReady(Boolean(userData.phone && savedAddress));
+          const finalPhone = userData.phone || localStorage.getItem("guest_phone") || "";
+          const finalAddress = savedAddress || localStorage.getItem("guest_address") || "";
+          if (finalPhone) setPhone(finalPhone);
+          if (finalAddress) setAddress(finalAddress);
+          setProfileDeliveryReady(Boolean(finalPhone && finalAddress));
         }
       })
       .catch(err => console.error("Could not fetch user", err));
@@ -263,13 +264,27 @@ export default function Checkout() {
       return;
     }
 
-    if (!profileDeliveryReady) {
-      redirectToLoginForDeliveryDetails();
+    if (!address || !phone) {
+      alert("Please fill in your delivery address and phone number.");
       return;
     }
 
-    if (!address || !phone) {
-      alert("Please fill in your delivery address and phone number.");
+    const token = await getToken();
+    if (!token) {
+      localStorage.setItem("guest_address", address);
+      localStorage.setItem("guest_phone", phone);
+      alert("Please login first to complete your payment and place the order.");
+      navigate("/", {
+        state: {
+          from: { pathname: "/user/checkout" },
+          loginRequired: true,
+        },
+      });
+      return;
+    }
+
+    if (!profileDeliveryReady) {
+      redirectToLoginForDeliveryDetails();
       return;
     }
 

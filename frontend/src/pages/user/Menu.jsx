@@ -1923,7 +1923,7 @@ export default function Menu() {
 
             <button
               type="button"
-              onClick={() => requireLogin("/user/checkout") && navigate("/user/checkout")}
+              onClick={() => navigate("/user/checkout")}
               className="shrink-0 rounded-2xl bg-brand-500 px-3 py-2.5 text-center font-black text-white shadow-lg shadow-brand-500/25 transition-all hover:bg-brand-600 active:scale-95 sm:min-w-[170px] sm:px-6 sm:py-3"
             >
               <span className="block text-[10px] sm:text-sm">

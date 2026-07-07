@@ -24,7 +24,6 @@ export default function App() {
   }, []);
 
   const isGuestUserPath = (path) => {
-    if (path === "/user/checkout") return false;
     return path.startsWith("/user");
   };
 
