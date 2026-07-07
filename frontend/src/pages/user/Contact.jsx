@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { MessageCircle, RefreshCw, Send } from "lucide-react";
 import API from "../../api/axios";
 
@@ -9,6 +10,7 @@ import API from "../../api/axios";
  * and view automated/agent live-replies inside a scrollable inbox view.
  */
 export default function Contact() {
+  const navigate = useNavigate();
   
   /* --- STATE DECLARATIONS --- */
   // form: Handles message, name, and email fields for contact message submission
@@ -57,6 +59,16 @@ export default function Contact() {
 
   // Load account properties and user message threads on mount
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/", {
+        state: {
+          from: { pathname: "/user/contact" },
+          loginRequired: true,
+        },
+      });
+      return;
+    }
     loadUserProfile();
     loadMyContacts();
   }, []);

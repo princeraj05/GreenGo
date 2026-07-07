@@ -17,14 +17,36 @@ class ErrorBoundary extends Component {
     this.state = { hasError: false, error: null, errorInfo: null };
   }
 
+  componentDidMount() {
+    window.sessionStorage.removeItem("chunk-load-failed-refreshed");
+  }
+
   componentDidCatch(error, errorInfo) {
+    const errorMsg = error?.message || "";
+    const isChunkError = 
+      error?.name === "ChunkLoadError" ||
+      errorMsg.includes("Failed to fetch dynamically imported module") ||
+      errorMsg.includes("failed to load module script") ||
+      errorMsg.includes("Loading chunk");
+
+    if (isChunkError) {
+      const hasRefreshed = window.sessionStorage.getItem("chunk-load-failed-refreshed") === "true";
+      if (!hasRefreshed) {
+        window.sessionStorage.setItem("chunk-load-failed-refreshed", "true");
+        window.location.reload();
+        return;
+      }
+    }
+
     this.setState({
       hasError: true,
       error: error,
       errorInfo: errorInfo
     });
-    const errorMsg = `React Error Boundary: ${error?.message || error}\nComponent Stack: ${errorInfo?.componentStack}`;
-    window.diagnostics.addError(errorMsg);
+    const logMsg = `React Error Boundary: ${error?.message || error}\nComponent Stack: ${errorInfo?.componentStack}`;
+    if (window.diagnostics && typeof window.diagnostics.addError === "function") {
+      window.diagnostics.addError(logMsg);
+    }
   }
 
   render() {

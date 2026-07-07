@@ -264,11 +264,6 @@ export default function Checkout() {
       return;
     }
 
-    if (!address || !phone) {
-      alert("Please fill in your delivery address and phone number.");
-      return;
-    }
-
     const token = await getToken();
     if (!token) {
       localStorage.setItem("guest_address", address);
@@ -280,6 +275,11 @@ export default function Checkout() {
           loginRequired: true,
         },
       });
+      return;
+    }
+
+    if (!address || !phone) {
+      alert("Please fill in your delivery address and phone number.");
       return;
     }
 
