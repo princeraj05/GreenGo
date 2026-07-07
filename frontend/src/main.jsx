@@ -6,6 +6,9 @@ import { ThemeProvider } from "./context/ThemeContext";
 import './index.css'
 
 // Global diagnostics store is initialized inline in index.html to capture bundle parse/syntax exceptions.
+if (window.diagnostics) {
+  window.diagnostics.reactStarted = true;
+}
 
 // Premium Error Boundary Component to prevent silent black screens
 class ErrorBoundary extends Component {

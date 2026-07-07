@@ -11,6 +11,7 @@
       window.diagnostics = {
         logs: ["[LOG] HTML head inline script initialized"],
         errors: [],
+        reactStarted: false,
         userLayoutMounted: "NO",
         adminLayoutMounted: "NO",
         userDashboardMounted: "NO",
@@ -32,15 +33,39 @@
           if (window.updateDiagnosticsUI) {
             window.updateDiagnosticsUI();
           }
-          var isRoutineAuthError = err && (
-            err.indexOf("Verification failed") > -1 || 
-            err.indexOf("401") > -1 || 
-            err.indexOf("403") > -1 || 
-            err.indexOf("No token found") > -1 || 
-            err.indexOf("failed: status") > -1
+          var errStr = "";
+          if (err) {
+            if (typeof err === "string") {
+              errStr = err;
+            } else if (err.message) {
+              errStr = err.message;
+            } else {
+              try {
+                errStr = JSON.stringify(err);
+              } catch(e) {
+                errStr = String(err);
+              }
+            }
+          }
+          var isRoutineAuthOrNetworkError = errStr && (
+            errStr.indexOf("Verification failed") > -1 || 
+            errStr.indexOf("401") > -1 || 
+            errStr.indexOf("403") > -1 || 
+            errStr.indexOf("No token found") > -1 || 
+            errStr.indexOf("failed: status") > -1 ||
+            errStr.indexOf("Failed to fetch") > -1 ||
+            errStr.indexOf("NetworkError") > -1 ||
+            errStr.indexOf("network error") > -1 ||
+            errStr.indexOf("loadAdmin exception") > -1 ||
+            errStr.indexOf("loadUser exception") > -1 ||
+            errStr.indexOf("load error") > -1 ||
+            errStr.indexOf("load admin details error") > -1 ||
+            errStr.indexOf("token decode crash") > -1 ||
+            errStr.indexOf("React Error Boundary") > -1 ||
+            this.reactStarted === true
           );
-          if (!isRoutineAuthError) {
-            showFallbackError(err);
+          if (!isRoutineAuthOrNetworkError) {
+            showFallbackError(errStr);
           }
         }
       };
