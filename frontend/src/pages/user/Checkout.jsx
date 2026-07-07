@@ -31,12 +31,24 @@ function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
  * getSlabAmount: Matches the computed distance with delivery charge distance slabs 
  * to determine the applicable delivery fee.
  */
-const getSlabAmount = (slabs = [], distance = null, fallback = 0) => {
+/**
+ * getSlabAmount: Matches the computed distance with delivery charge distance slabs 
+ * to determine the applicable delivery fee, filtering by payment method if cod/online fields exist.
+ */
+const getSlabAmount = (slabs = [], distance = null, fallback = 0, isCod = false) => {
   const km = Number(distance || 0);
   const sortedSlabs = Array.isArray(slabs)
     ? slabs
-        .map((slab) => ({ upToKm: Number(slab?.upToKm || 0), amount: Number(slab?.amount || 0) }))
-        .filter((slab) => slab.upToKm > 0)
+        .map((slab) => ({
+          upToKm: Number(slab?.upToKm || 0),
+          amount: Number(slab?.amount || 0),
+          cod: slab?.cod !== undefined ? Boolean(slab.cod) : true,
+          online: slab?.online !== undefined ? Boolean(slab.online) : true
+        }))
+        .filter((slab) => {
+          if (slab.upToKm <= 0) return false;
+          return isCod ? slab.cod : slab.online;
+        })
         .sort((a, b) => a.upToKm - b.upToKm)
     : [];
   if (!sortedSlabs.length || !Number.isFinite(km) || km <= 0) return Number(fallback || 0);
@@ -174,7 +186,7 @@ export default function Checkout() {
     );
   }, [userCoords]);
 
-  // Recalculates delivery fee once both store settings and user coordinates are loaded
+  // Recalculates delivery fee once store settings, user coordinates, and payment method are loaded/changed
   useEffect(() => {
     if (!settings || !userCoords?.latitude || !userCoords?.longitude) return;
     const dist = calculateHaversineDistance(
@@ -183,10 +195,11 @@ export default function Checkout() {
       userCoords.latitude,
       userCoords.longitude
     );
-    updateDeliveryChargeByDistance(settings, dist);
-  }, [settings, userCoords]);
+    updateDeliveryChargeByDistance(settings, dist, paymentMethod === "COD");
+  }, [settings, userCoords, paymentMethod]);
 
   /* --- PRICE CALCULATION COMPUTATIONS --- */
+  const taxes = 0;
   const subtotal = cart.reduce((s, i) => s + Number(i.price || 0) * Number(i.qty || 0), 0);
   const packingCharges = cart.reduce((s, i) => s + Number(i.packingCharge || 0) * Number(i.qty || 0), 0);
   const isCod = paymentMethod === "COD";
@@ -202,9 +215,9 @@ export default function Checkout() {
   /**
    * updateDeliveryChargeByDistance: Recalculates next delivery charge slab
    */
-  const updateDeliveryChargeByDistance = (settingsData, distance) => {
+  const updateDeliveryChargeByDistance = (settingsData, distance, isCodOrder = false) => {
     const nextCharge = settingsData?.isDeliveryChargeEnabled
-      ? getSlabAmount(settingsData.deliveryChargeSlabs, distance, settingsData.deliveryChargeAmount)
+      ? getSlabAmount(settingsData.deliveryChargeSlabs, distance, settingsData.deliveryChargeAmount, isCodOrder)
       : 0;
     setDeliveryCharge(nextCharge);
     return nextCharge;
@@ -311,9 +324,9 @@ export default function Checkout() {
           setLoading(false);
           return;
         }
-        checkoutDeliveryCharge = updateDeliveryChargeByDistance(settingsData, dist);
+        checkoutDeliveryCharge = updateDeliveryChargeByDistance(settingsData, dist, paymentMethod === "COD");
       } else if (settingsData) {
-        checkoutDeliveryCharge = updateDeliveryChargeByDistance(settingsData, null);
+        checkoutDeliveryCharge = updateDeliveryChargeByDistance(settingsData, null, paymentMethod === "COD");
       }
 
       const checkoutTotal = subtotal + packingCharges + checkoutDeliveryCharge + taxes;

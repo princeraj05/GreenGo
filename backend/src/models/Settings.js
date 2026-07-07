@@ -5,7 +5,9 @@ const settingsSchema = new mongoose.Schema({
   isDeliveryChargeEnabled: { type: Boolean, default: true },
   deliveryChargeSlabs: [{
     upToKm: { type: Number, default: 0 },
-    amount: { type: Number, default: 0 }
+    amount: { type: Number, default: 0 },
+    cod: { type: Boolean, default: true },
+    online: { type: Boolean, default: true }
   }],
   deliveryBoyAmountSlabs: [{
     upToKm: { type: Number, default: 0 },

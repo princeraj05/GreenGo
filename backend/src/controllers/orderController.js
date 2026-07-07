@@ -88,12 +88,20 @@ const creditDeliveryBoyForCod = async (order) => {
   });
 };
 
-const getSlabAmount = (slabs = [], distance = null, fallback = 0) => {
+const getSlabAmount = (slabs = [], distance = null, fallback = 0, isCod = false) => {
   const km = Number(distance || 0);
   const sortedSlabs = Array.isArray(slabs)
     ? slabs
-        .map((slab) => ({ upToKm: Number(slab?.upToKm || 0), amount: Number(slab?.amount || 0) }))
-        .filter((slab) => slab.upToKm > 0)
+        .map((slab) => ({
+          upToKm: Number(slab?.upToKm || 0),
+          amount: Number(slab?.amount || 0),
+          cod: slab?.cod !== undefined ? Boolean(slab.cod) : true,
+          online: slab?.online !== undefined ? Boolean(slab.online) : true,
+        }))
+        .filter((slab) => {
+          if (slab.upToKm <= 0) return false;
+          return isCod ? slab.cod : slab.online;
+        })
         .sort((a, b) => a.upToKm - b.upToKm)
     : [];
   if (!sortedSlabs.length || !Number.isFinite(km) || km <= 0) return Number(fallback || 0);
@@ -217,7 +225,7 @@ export const createOrder = async (req, res) => {
       }
 
       finalDeliveryCharge = settings.isDeliveryChargeEnabled
-        ? getSlabAmount(settings.deliveryChargeSlabs, distance, settings.deliveryChargeAmount)
+        ? getSlabAmount(settings.deliveryChargeSlabs, distance, settings.deliveryChargeAmount, paymentMethod === "COD")
         : 0;
       deliveryBoyAmount = getSlabAmount(settings.deliveryBoyAmountSlabs, distance, 0);
     } else if (settings) {

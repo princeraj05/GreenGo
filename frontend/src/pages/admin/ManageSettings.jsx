@@ -86,7 +86,9 @@ export default function ManageSettings() {
     setForm((current) => ({
       ...current,
       [field]: current[field].map((slab, slabIndex) => (
-        slabIndex === index ? { ...slab, [key]: Number(value) } : slab
+        slabIndex === index
+          ? { ...slab, [key]: (key === "cod" || key === "online") ? Boolean(value) : (value === "" ? "" : Number(value)) }
+          : slab
       )),
     }));
   };
@@ -97,7 +99,12 @@ export default function ManageSettings() {
   const addSlab = (field) => {
     setForm((current) => ({
       ...current,
-      [field]: [...current[field], { upToKm: "", amount: "" }],
+      [field]: [
+        ...current[field],
+        field === "deliveryChargeSlabs"
+          ? { upToKm: "", amount: "", cod: true, online: true }
+          : { upToKm: "", amount: "" }
+      ],
     }));
   };
 
@@ -109,7 +116,11 @@ export default function ManageSettings() {
       ...current,
       [field]: current[field].length > 1
         ? current[field].filter((_, slabIndex) => slabIndex !== index)
-        : [{ upToKm: "", amount: "" }],
+        : [
+            field === "deliveryChargeSlabs"
+              ? { upToKm: "", amount: "", cod: true, online: true }
+              : { upToKm: "", amount: "" }
+          ],
     }));
   };
 
@@ -134,8 +145,13 @@ export default function ManageSettings() {
           storeLongitude: data.storeLongitude !== undefined ? data.storeLongitude : 85.1376,
           isDistanceLimitEnabled: data.isDistanceLimitEnabled !== undefined ? data.isDistanceLimitEnabled : true,
           deliveryChargeSlabs: Array.isArray(data.deliveryChargeSlabs) && data.deliveryChargeSlabs.length
-            ? data.deliveryChargeSlabs
-            : [{ upToKm: 10, amount: data.deliveryChargeAmount || 50 }, { upToKm: 50, amount: 100 }],
+            ? data.deliveryChargeSlabs.map(s => ({
+                upToKm: s.upToKm,
+                amount: s.amount,
+                cod: s.cod !== undefined ? s.cod : true,
+                online: s.online !== undefined ? s.online : true
+              }))
+            : [{ upToKm: 10, amount: data.deliveryChargeAmount || 50, cod: true, online: true }, { upToKm: 50, amount: 100, cod: true, online: true }],
           deliveryBoyAmountSlabs: Array.isArray(data.deliveryBoyAmountSlabs) && data.deliveryBoyAmountSlabs.length
             ? data.deliveryBoyAmountSlabs
             : [{ upToKm: 10, amount: 50 }, { upToKm: 100, amount: 100 }],
@@ -184,8 +200,8 @@ export default function ManageSettings() {
   const renderSlabRows = (field) => (
     <div className="space-y-3">
       {(form[field] || []).map((slab, index) => (
-        <div key={index} className="grid grid-cols-[1fr_1fr_auto] gap-3">
-          <div>
+        <div key={index} className="flex flex-wrap items-center gap-3 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900">
+          <div className="flex-1 min-w-[120px]">
             <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Up to km</label>
             <input
               type="number"
@@ -193,23 +209,45 @@ export default function ManageSettings() {
               step="0.1"
               value={slab.upToKm}
               onChange={(e) => updateSlab(field, index, "upToKm", e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-slate-800 dark:text-white font-medium"
+              className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-slate-800 dark:text-white font-medium text-sm"
             />
           </div>
-          <div>
+          <div className="flex-1 min-w-[100px]">
             <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">Amount (₹)</label>
             <input
               type="number"
               min="0"
               value={slab.amount}
               onChange={(e) => updateSlab(field, index, "amount", e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-slate-800 dark:text-white font-medium"
+              className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-slate-800 dark:text-white font-medium text-sm"
             />
           </div>
+          {field === "deliveryChargeSlabs" && (
+            <div className="flex items-center gap-4 mt-4 sm:mt-0">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={slab.cod !== false}
+                  onChange={(e) => updateSlab(field, index, "cod", e.target.checked)}
+                  className="rounded text-emerald-500 focus:ring-emerald-500 w-5 h-5"
+                />
+                <span className="text-xs font-bold text-slate-600 dark:text-slate-300">COD</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={slab.online !== false}
+                  onChange={(e) => updateSlab(field, index, "online", e.target.checked)}
+                  className="rounded text-emerald-500 focus:ring-emerald-500 w-5 h-5"
+                />
+                <span className="text-xs font-bold text-slate-600 dark:text-slate-300">Online</span>
+              </label>
+            </div>
+          )}
           <button
             type="button"
             onClick={() => removeSlab(field, index)}
-            className="self-end px-4 py-3 rounded-xl border border-red-100 dark:border-red-900/40 bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-300 font-bold"
+            className="sm:self-end mt-4 sm:mt-0 px-4 py-3 rounded-xl border border-red-100 dark:border-red-900/40 bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-300 font-bold text-sm"
           >
             Remove
           </button>
@@ -313,45 +351,7 @@ export default function ManageSettings() {
         
         <form onSubmit={handleSave} className="space-y-8">
 
-          {/* Payment Methods Configuration Section */}
-          <div className="border-b border-slate-100 dark:border-slate-800/80 pb-6 space-y-4">
-            <h3 className="font-extrabold text-slate-800 dark:text-white uppercase tracking-wider text-xs">Payment Methods Configuration</h3>
-            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Select which options to display on the customer checkout screen.</p>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <label className="flex items-center gap-3 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="rounded text-emerald-500 focus:ring-emerald-500 w-5 h-5"
-                  checked={form.enabledPaymentMethods?.cod ?? true}
-                  onChange={(e) => setForm({
-                    ...form,
-                    enabledPaymentMethods: {
-                      ...form.enabledPaymentMethods,
-                      cod: e.target.checked
-                    }
-                  })}
-                />
-                <span className="font-bold text-sm text-slate-800 dark:text-white">Enable Cash On Delivery (COD)</span>
-              </label>
 
-              <label className="flex items-center gap-3 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="rounded text-emerald-500 focus:ring-emerald-500 w-5 h-5"
-                  checked={form.enabledPaymentMethods?.online ?? true}
-                  onChange={(e) => setForm({
-                    ...form,
-                    enabledPaymentMethods: {
-                      ...form.enabledPaymentMethods,
-                      online: e.target.checked
-                    }
-                  })}
-                />
-                <span className="font-bold text-sm text-slate-800 dark:text-white">Enable Online Payment</span>
-              </label>
-            </div>
-          </div>
 
           {/* Extra / Seasonal Surcharge Fees Section */}
           <div className="border-b border-slate-100 dark:border-slate-800/80 pb-6 space-y-4">

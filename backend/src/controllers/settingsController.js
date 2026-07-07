@@ -11,6 +11,20 @@ const normalizeSlabs = (slabs) => {
     .sort((a, b) => a.upToKm - b.upToKm);
 };
 
+const normalizeDeliverySlabs = (slabs) => {
+  if (!Array.isArray(slabs)) return [];
+  return slabs
+    .map((slab) => ({
+      upToKm: Number(slab?.upToKm || 0),
+      amount: Number(slab?.amount || 0),
+      cod: slab?.cod !== undefined ? Boolean(slab.cod) : true,
+      online: slab?.online !== undefined ? Boolean(slab.online) : true,
+    }))
+    .filter((slab) => slab.upToKm > 0 && slab.amount >= 0)
+    .sort((a, b) => a.upToKm - b.upToKm);
+};
+
+
 export const getSettings = async (req, res) => {
   try {
     let settings = await Settings.findOne();
@@ -49,7 +63,7 @@ export const updateSettings = async (req, res) => {
     
     settings.deliveryChargeAmount = deliveryChargeAmount;
     settings.isDeliveryChargeEnabled = isDeliveryChargeEnabled;
-    if (deliveryChargeSlabs !== undefined) settings.deliveryChargeSlabs = normalizeSlabs(deliveryChargeSlabs);
+    if (deliveryChargeSlabs !== undefined) settings.deliveryChargeSlabs = normalizeDeliverySlabs(deliveryChargeSlabs);
     if (deliveryBoyAmountSlabs !== undefined) settings.deliveryBoyAmountSlabs = normalizeSlabs(deliveryBoyAmountSlabs);
     if (maxDeliveryDistance !== undefined) settings.maxDeliveryDistance = Number(maxDeliveryDistance);
     if (storeLatitude !== undefined) settings.storeLatitude = Number(storeLatitude);
