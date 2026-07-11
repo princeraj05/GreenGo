@@ -173,7 +173,7 @@ export default function Wishlist() {
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={smoothTransition}
-      className={`min-w-[210px] sm:min-w-[230px] lg:min-w-[250px] snap-start bg-white dark:bg-slate-900 rounded-2xl p-3 pb-4 border border-slate-100 dark:border-slate-800/60 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col group relative overflow-hidden min-h-[310px] ${className}`}
+      className={`w-full bg-white dark:bg-slate-900 rounded-2xl p-3 pb-4 border border-slate-100 dark:border-slate-800/60 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col group relative overflow-hidden min-h-[310px] ${className}`}
     >
       <div className="relative h-28 w-full rounded-xl overflow-hidden mb-3 bg-slate-50 dark:bg-slate-950 p-1 flex items-center justify-center">
         <img
@@ -208,7 +208,7 @@ export default function Wishlist() {
       <p className="text-[9px] text-slate-400 dark:text-slate-400 font-bold uppercase tracking-wider mb-1.5">
         {food.category || "Food"}
       </p>
-      <p className="text-[10px] text-slate-500 dark:text-slate-300 line-clamp-2 leading-relaxed mb-3 font-medium flex-1">
+      <p className="text-[10px] text-slate-500 dark:text-slate-300 line-clamp-2-custom leading-relaxed mb-3 font-medium">
         {food.description}
       </p>
 

@@ -32,6 +32,9 @@ export default function ManageNotifications() {
   // loading indicator for write operations
   const [loading, setLoading] = useState(false);
 
+  // Active tab state: "send" or "view"
+  const [activeTab, setActiveTab] = useState("send");
+
   // ==========================================
   // DATA FETCHING & EVENT HANDLERS
   // ==========================================
@@ -68,6 +71,7 @@ export default function ManageNotifications() {
       type: n.type,
       expiresAt: n.expiresAt ? new Date(n.expiresAt).toISOString().slice(0, 16) : ""
     });
+    setActiveTab("send"); // Switch to send tab to show edit form
   };
 
   /**
@@ -183,7 +187,7 @@ export default function ManageNotifications() {
           </h1>
           <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm sm:text-base md:text-lg font-medium">Broadcast offers and track live admin alerts for orders, messages, users, and birthdays.</p>
         </div>
-        {notifications.length > 0 && (
+        {activeTab === "view" && notifications.length > 0 && (
           <Button
             type="button"
             onClick={async () => {
@@ -209,195 +213,224 @@ export default function ManageNotifications() {
       </div>
       {/* --- END HEADER SECTION --- */}
 
-      {/* --- SPLIT GRID PANELS --- */}
-      {/* Responsive layout containers: 1 column on mobile, changes to 2 unequal columns on desktop lg screens */}
-      <div className="grid grid-cols-1 lg:grid-cols-[450px_1fr] gap-5 md:gap-8">
-        
-        {/* --- GLOBAL BROADCAST FORM PANEL --- */}
-        {/* Uses sticky top alignment constraints to remain anchored when scrolling lists */}
-        <div>
-          <Card className="p-6 md:p-8 border-slate-100 dark:border-slate-800/60 sticky top-24">
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6 border-b border-slate-100 dark:border-slate-800 pb-4">
-              {editingId ? "Edit Broadcast Message" : "Send Global Broadcast"}
-            </h2>
-            
-            <form onSubmit={handleSend} className="space-y-5">
-              <div>
-                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Title *</label>
-                <input 
-                  type="text"
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500 font-medium text-sm"
-                  placeholder="Notification Title" 
-                  required 
-                  value={form.title} 
-                  onChange={(e) => setForm({ ...form, title: e.target.value })} 
-                />
-              </div>
+      {/* --- TAB SWITCHER --- */}
+      <div className="flex border-b border-slate-100 dark:border-slate-800/60 mb-8 gap-2">
+        <button
+          type="button"
+          onClick={() => setActiveTab("send")}
+          className={`flex items-center gap-2 px-6 py-3 font-bold text-sm border-b-2 transition-all cursor-pointer ${
+            activeTab === "send"
+              ? "border-emerald-500 text-emerald-605 dark:text-emerald-450"
+              : "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
+          }`}
+        >
+          <Megaphone size={16} />
+          Send Notification
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("view")}
+          className={`flex items-center gap-2 px-6 py-3 font-bold text-sm border-b-2 transition-all cursor-pointer ${
+            activeTab === "view"
+              ? "border-emerald-500 text-emerald-605 dark:text-emerald-450"
+              : "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
+          }`}
+        >
+          <Bell size={16} />
+          View Notifications
+          {notifications.length > 0 && (
+            <span className="ml-1 bg-emerald-500 text-white text-[10px] px-2 py-0.5 rounded-full font-black">
+              {notifications.length}
+            </span>
+          )}
+        </button>
+      </div>
 
-              <div>
-                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Message Body *</label>
-                <textarea 
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none min-h-[120px] text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500 font-medium text-sm resize-none"
-                  placeholder="Type your announcement or deal details..." 
-                  required 
-                  value={form.message} 
-                  onChange={(e) => setForm({ ...form, message: e.target.value })}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Broadcast Category</label>
-                <select 
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-bold text-sm cursor-pointer"
-                  value={form.type} 
-                  onChange={(e) => setForm({ ...form, type: e.target.value })}
-                >
-                  <option value="info" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">General Announcement</option>
-                  <option value="success" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Success / Promotion & Offer</option>
-                  <option value="warning" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Alert / Warning</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-1.5">
-                  <Calendar size={15} />
-                  Expiry Date & Time (Optional)
-                </label>
-                <input 
-                  type="datetime-local" 
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-medium text-sm"
-                  value={form.expiresAt} 
-                  onChange={(e) => setForm({ ...form, expiresAt: e.target.value })} 
-                />
-                <span className="text-[11px] text-slate-400 dark:text-slate-500 font-semibold block mt-1.5 leading-normal">
-                  If set, the broadcast will automatically disappear from both user accounts and the admin panel once the expiration time passes.
-                </span>
-              </div>
-
-              <div className="flex gap-3 pt-3">
-                {editingId && (
-                  <Button type="button" variant="secondary" onClick={handleCancelEdit} className="flex-1 py-3.5 rounded-xl font-bold">
-                    Cancel
-                  </Button>
-                )}
-                <Button type="submit" disabled={loading} className="flex-[2] py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/25 font-bold">
-                  {loading ? "Processing..." : editingId ? "Update Broadcast" : "Send to All Users"}
-                </Button>
-              </div>
-            </form>
-          </Card>
-        </div>
-        {/* --- END GLOBAL BROADCAST FORM PANEL --- */}
-
-        {/* --- RECENT NOTIFICATIONS LIST PANEL --- */}
-        <div>
-          <Card className="p-6 md:p-8 border-slate-100 dark:border-slate-800/60 h-full flex flex-col">
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6 border-b border-slate-100 dark:border-slate-800 pb-4">
-              Recent Notifications
-            </h2>
-            
-            <div className="flex flex-col gap-4 overflow-y-auto pr-1 flex-1">
-              {notifications.length === 0 ? (
-                <div className="text-center py-20 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 gap-2">
-                  <span>📢</span>
-                  <p className="font-bold">No active broadcast messages found.</p>
+      {/* --- TAB CONTENT PANEL --- */}
+      <div className="w-full">
+        {activeTab === "send" ? (
+          /* --- GLOBAL BROADCAST FORM PANEL --- */
+          <div className="max-w-2xl mx-auto w-full">
+            <Card className="p-6 md:p-8 border-slate-100 dark:border-slate-800/60 shadow-premium">
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6 border-b border-slate-100 dark:border-slate-800 pb-4">
+                {editingId ? "Edit Broadcast Message" : "Send Global Broadcast"}
+              </h2>
+              
+              <form onSubmit={handleSend} className="space-y-5">
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Title *</label>
+                  <input 
+                    type="text"
+                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500 font-medium text-sm"
+                    placeholder="Notification Title" 
+                    required 
+                    value={form.title} 
+                    onChange={(e) => setForm({ ...form, title: e.target.value })} 
+                  />
                 </div>
-              ) : (
-                notifications.map((n) => {
-                  const isAdminAlert = n.audience === "admin";
-                  const isUnread = !(n.isRead || n.read);
-                  return (
-                  <div
-                    key={n._id}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => handleOpenNotification(n)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" || event.key === " ") handleOpenNotification(n);
-                    }}
-                    className={`p-5 rounded-2xl border flex flex-col gap-3 group relative overflow-hidden transition-all hover:shadow-sm cursor-pointer ${
-                      isUnread
-                        ? "border-emerald-200 bg-emerald-50/70 dark:border-emerald-900/45 dark:bg-emerald-950/20"
-                        : "border-slate-100 dark:border-slate-800/50 bg-slate-50 dark:bg-slate-900"
-                    }`}
+
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Message Body *</label>
+                  <textarea 
+                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none min-h-[120px] text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500 font-medium text-sm resize-none"
+                    placeholder="Type your announcement or deal details..." 
+                    required 
+                    value={form.message} 
+                    onChange={(e) => setForm({ ...form, message: e.target.value })}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Broadcast Category</label>
+                  <select 
+                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-bold text-sm cursor-pointer"
+                    value={form.type} 
+                    onChange={(e) => setForm({ ...form, type: e.target.value })}
                   >
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <h4 className="font-extrabold text-slate-800 dark:text-white text-base leading-tight">{n.title}</h4>
-                        <span className="text-[11px] text-slate-400 dark:text-slate-500 block mt-1 leading-none">
-                          Sent: {new Date(n.createdAt).toLocaleString()}
-                        </span>
-                      </div>
-                      <div className="flex flex-col items-end gap-2">
-                        <span className={`text-[10px] px-2.5 py-0.5 rounded-full border font-black uppercase tracking-wider shrink-0 ${
-                          n.type === 'success' ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-450 border-emerald-100 dark:border-emerald-900/30' :
-                          n.type === 'warning' ? 'bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-900/30' :
-                          'bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-900/30'
-                        }`}>{n.type}</span>
-                        <span className={`text-[10px] px-2.5 py-0.5 rounded-full border font-black uppercase tracking-wider shrink-0 ${
-                          isAdminAlert
-                            ? "bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white"
-                            : "bg-purple-50 text-purple-600 border-purple-100 dark:bg-purple-950/20 dark:text-purple-300 dark:border-purple-900/30"
-                        }`}>
-                          {isAdminAlert ? "Admin Alert" : "Broadcast"}
-                        </span>
-                      </div>
-                    </div>
+                    <option value="info" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">General Announcement</option>
+                    <option value="success" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Success / Promotion & Offer</option>
+                    <option value="warning" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Alert / Warning</option>
+                  </select>
+                </div>
 
-                    <p className="text-slate-600 dark:text-slate-300 text-sm font-medium leading-relaxed">{n.message}</p>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-1.5">
+                    <Calendar size={15} />
+                    Expiry Date & Time (Optional)
+                  </label>
+                  <input 
+                    type="datetime-local" 
+                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-medium text-sm"
+                    value={form.expiresAt} 
+                    onChange={(e) => setForm({ ...form, expiresAt: e.target.value })} 
+                  />
+                  <span className="text-[11px] text-slate-400 dark:text-slate-500 font-semibold block mt-1.5 leading-normal">
+                    If set, the broadcast will automatically disappear from both user accounts and the admin panel once the expiration time passes.
+                  </span>
+                </div>
 
-                    {n.expiresAt && (
-                      <div className="flex items-center gap-1 text-[11px] font-bold text-rose-500 bg-rose-50 dark:bg-rose-950/25 border border-rose-100 dark:border-rose-900/20 px-2.5 py-1 rounded-lg w-fit">
-                        <Calendar size={12} />
-                        <span>Expires: {new Date(n.expiresAt).toLocaleString()}</span>
-                      </div>
-                    )}
-
-                    <div className="flex flex-wrap items-center gap-2 mt-2 pt-3 border-t border-slate-200 dark:border-slate-800/40">
-                      {isUnread && (
-                        <span className="text-xs font-black text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/40 px-3 py-1.5 rounded-lg">
-                          New
-                        </span>
-                      )}
-                      {n.actionPath && (
-                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400 px-3 py-1.5 rounded-lg bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
-                          Click to open
-                        </span>
-                      )}
-                      {!isAdminAlert && (
-                        <>
-                          <button
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              handleStartEdit(n);
-                            }}
-                            className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all cursor-pointer"
-                            title="Edit Broadcast"
-                          >
-                            <Edit3 size={13} /> Edit
-                          </button>
-                          <button
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              handleDelete(n._id);
-                            }}
-                            className="text-xs font-bold text-rose-600 dark:text-rose-400 hover:underline flex items-center gap-1 px-3 py-1.5 rounded-lg bg-rose-50 dark:bg-rose-950/20 hover:bg-rose-100 dark:hover:bg-rose-900/30 transition-all cursor-pointer"
-                            title="Delete Broadcast"
-                          >
-                            <Trash2 size={13} /> Delete
-                          </button>
-                        </>
-                      )}
-                    </div>
+                <div className="flex gap-3 pt-3">
+                  {editingId && (
+                    <Button type="button" variant="secondary" onClick={handleCancelEdit} className="flex-1 py-3.5 rounded-xl font-bold">
+                      Cancel
+                    </Button>
+                  )}
+                  <Button type="submit" disabled={loading} className="flex-[2] py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/25 font-bold">
+                    {loading ? "Processing..." : editingId ? "Update Broadcast" : "Send to All Users"}
+                  </Button>
+                </div>
+              </form>
+            </Card>
+          </div>
+        ) : (
+          /* --- RECENT NOTIFICATIONS LIST PANEL --- */
+          <div className="w-full">
+            <Card className="p-6 md:p-8 border-slate-100 dark:border-slate-800/60 shadow-premium flex flex-col">
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6 border-b border-slate-100 dark:border-slate-800 pb-4">
+                Recent Notifications
+              </h2>
+              
+              <div className="flex flex-col gap-4">
+                {notifications.length === 0 ? (
+                  <div className="text-center py-20 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 gap-2">
+                    <span>📢</span>
+                    <p className="font-bold">No active broadcast messages found.</p>
                   </div>
-                  );
-                })
-              )}
-            </div>
-          </Card>
-        </div>
-        {/* --- END RECENT NOTIFICATIONS LIST PANEL --- */}
+                ) : (
+                  notifications.map((n) => {
+                    const isAdminAlert = n.audience === "admin";
+                    const isUnread = !(n.isRead || n.read);
+                    return (
+                      <div
+                        key={n._id}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => handleOpenNotification(n)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") handleOpenNotification(n);
+                        }}
+                        className={`p-5 rounded-2xl border flex flex-col gap-3 group relative overflow-hidden transition-all hover:shadow-sm cursor-pointer ${
+                          isUnread
+                            ? "border-emerald-200 bg-emerald-50/70 dark:border-emerald-900/45 dark:bg-emerald-950/20"
+                            : "border-slate-100 dark:border-slate-800/50 bg-slate-50 dark:bg-slate-900"
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div>
+                            <h4 className="font-extrabold text-slate-800 dark:text-white text-base leading-tight">{n.title}</h4>
+                            <span className="text-[11px] text-slate-400 dark:text-slate-500 block mt-1 leading-none">
+                              Sent: {new Date(n.createdAt).toLocaleString()}
+                            </span>
+                          </div>
+                          <div className="flex flex-col items-end gap-2">
+                            <span className={`text-[10px] px-2.5 py-0.5 rounded-full border font-black uppercase tracking-wider shrink-0 ${
+                              n.type === 'success' ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-605 dark:text-emerald-450 border-emerald-100 dark:border-emerald-900/30' :
+                              n.type === 'warning' ? 'bg-amber-50 dark:bg-amber-950/20 text-amber-606 dark:text-amber-400 border-amber-100 dark:border-amber-900/30' :
+                              'bg-blue-50 dark:bg-blue-950/20 text-blue-606 dark:text-blue-400 border-blue-100 dark:border-blue-900/30'
+                            }`}>{n.type}</span>
+                            <span className={`text-[10px] px-2.5 py-0.5 rounded-full border font-black uppercase tracking-wider shrink-0 ${
+                              isAdminAlert
+                                ? "bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white"
+                                : "bg-purple-50 text-purple-600 border-purple-100 dark:bg-purple-950/20 dark:text-purple-300 dark:border-purple-900/30"
+                            }`}>
+                              {isAdminAlert ? "Admin Alert" : "Broadcast"}
+                            </span>
+                          </div>
+                        </div>
 
+                        <p className="text-slate-600 dark:text-slate-300 text-sm font-medium leading-relaxed">{n.message}</p>
+
+                        {n.expiresAt && (
+                          <div className="flex items-center gap-1 text-[11px] font-bold text-rose-500 bg-rose-50 dark:bg-rose-950/25 border border-rose-100 dark:border-rose-900/20 px-2.5 py-1 rounded-lg w-fit">
+                            <Calendar size={12} />
+                            <span>Expires: {new Date(n.expiresAt).toLocaleString()}</span>
+                          </div>
+                        )}
+
+                        <div className="flex flex-wrap items-center gap-2 mt-2 pt-3 border-t border-slate-200 dark:border-slate-800/40">
+                          {isUnread && (
+                            <span className="text-xs font-black text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/40 px-3 py-1.5 rounded-lg">
+                              New
+                            </span>
+                          )}
+                          {n.actionPath && (
+                            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 px-3 py-1.5 rounded-lg bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
+                              Click to open
+                            </span>
+                          )}
+                          {!isAdminAlert && (
+                            <>
+                              <button
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  handleStartEdit(n);
+                                }}
+                                className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all cursor-pointer"
+                                title="Edit Broadcast"
+                              >
+                                <Edit3 size={13} /> Edit
+                              </button>
+                              <button
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  handleDelete(n._id);
+                                }}
+                                className="text-xs font-bold text-rose-600 dark:text-rose-400 hover:underline flex items-center gap-1 px-3 py-1.5 rounded-lg bg-rose-50 dark:bg-rose-950/20 hover:bg-rose-100 dark:hover:bg-rose-900/30 transition-all cursor-pointer"
+                                title="Delete Broadcast"
+                              >
+                                <Trash2 size={13} /> Delete
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </Card>
+          </div>
+        )}
       </div>
     </div>
   );
