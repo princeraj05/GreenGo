@@ -97,6 +97,7 @@ export default function Checkout() {
   const [promoMinOrder, setPromoMinOrder] = useState(0);
   const [promoDiscountType, setPromoDiscountType] = useState("");
   const [promoDiscountValue, setPromoDiscountValue] = useState(0);
+  const [availableCoupons, setAvailableCoupons] = useState([]);
 
   /* --- HELPER METHOD --- */
   // Extracts the primary address text or general address from user record
@@ -146,6 +147,20 @@ export default function Checkout() {
         }
       })
       .catch(err => console.error("Could not fetch settings", err));
+
+    const token = getToken();
+    if (token) {
+      fetch(`${getApiUrl()}/api/coupons/active`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      .then(res => res.json())
+      .then(couponsData => {
+        if (Array.isArray(couponsData)) {
+          setAvailableCoupons(couponsData);
+        }
+      })
+      .catch(err => console.error("Error fetching active coupons in checkout", err));
+    }
 
     // Auto-load saved promo from localStorage on page mount
     const savedPromo = localStorage.getItem("applied_promo");
@@ -326,8 +341,9 @@ export default function Checkout() {
    * applyPromo: Submits promo code input to validation API, 
    * calculates applicable discount, and updates checkout summary pricing.
    */
-  const applyPromo = async () => {
-    const cleanPromo = promo.trim().toUpperCase();
+  const applyPromo = async (codeToApply) => {
+    const codeVal = typeof codeToApply === "string" ? codeToApply : promo;
+    const cleanPromo = codeVal.trim().toUpperCase();
     if (!cleanPromo) return;
     setPromoLoading(true);
     try {
@@ -907,13 +923,68 @@ export default function Checkout() {
                   placeholder="SAVE20" 
                   className="font-bold tracking-widest bg-slate-50 dark:bg-slate-950 py-1.5 text-xs rounded-xl"
                 />
-                <Button onClick={applyPromo} variant="secondary" className="px-3 text-xs rounded-xl" disabled={promoLoading}>
+                <Button onClick={() => applyPromo()} variant="secondary" className="px-3 text-xs rounded-xl" disabled={promoLoading}>
                   {promoLoading ? "..." : "Apply"}
                 </Button>
               </div>
               {appliedPromoCode && (
                 <div className="mt-2 text-xs font-bold text-emerald-600 dark:text-emerald-400">
                   Applied: {appliedPromoCode} (₹{discountAmount} Off)
+                </div>
+              )}
+              {availableCoupons.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800/60">
+                  <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Available Coupons</p>
+                  <div className="space-y-2 max-h-[180px] overflow-y-auto pr-1 custom-scrollbar">
+                    {availableCoupons.map((coupon) => {
+                      const isApplied = appliedPromoCode === coupon.code;
+                      const isMinOrderSatisfied = subtotal >= (coupon.minimumOrder || 0);
+                      
+                      return (
+                        <div 
+                          key={coupon._id}
+                          onClick={() => {
+                            setPromo(coupon.code);
+                            applyPromo(coupon.code);
+                          }}
+                          className={`group relative p-2.5 rounded-xl border border-dashed transition-all duration-200 cursor-pointer ${
+                            isApplied 
+                              ? "bg-brand-500/10 border-brand-500 dark:bg-brand-500/5" 
+                              : isMinOrderSatisfied 
+                                ? "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-brand-400 dark:hover:border-brand-500" 
+                                : "bg-slate-50/50 dark:bg-slate-900/50 border-slate-100 dark:border-slate-800/40 opacity-60"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-black tracking-wider transition-colors ${
+                              isApplied 
+                                ? "bg-brand-500 text-white" 
+                                : "bg-brand-100 dark:bg-brand-950 text-brand-600 dark:text-brand-400 group-hover:bg-brand-500 group-hover:text-white"
+                            }`}>
+                              {coupon.code}
+                            </span>
+                            <span className="text-[10px] font-bold text-brand-600 dark:text-brand-400">
+                              {coupon.discountValue}{coupon.discountType === "percentage" ? "%" : " ₹"} OFF
+                            </span>
+                          </div>
+                          <h4 className="text-[11px] font-black text-slate-800 dark:text-slate-200 mt-1.5 transition-colors group-hover:text-brand-500">
+                            {coupon.title}
+                          </h4>
+                          {coupon.minimumOrder > 0 && (
+                            <p className={`text-[9px] font-bold mt-1 ${isMinOrderSatisfied ? "text-slate-400 dark:text-slate-500" : "text-red-500"}`}>
+                              Min order: ₹{coupon.minimumOrder} {!isMinOrderSatisfied && `(Add ₹${(coupon.minimumOrder - subtotal).toFixed(0)} more)`}
+                            </p>
+                          )}
+                          
+                          <div className="absolute right-2.5 bottom-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                            <span className="text-[9px] font-black text-brand-500">
+                              Apply
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </Card>
