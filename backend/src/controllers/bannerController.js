@@ -28,12 +28,15 @@ export const getAllBannersAdmin = async (req, res) => {
 // @route   POST /api/admin/banners
 // @access  Private/Admin
 export const addBanner = async (req, res) => {
+  console.log("[BANNER DEBUG] addBanner initiated. req.body:", req.body);
+  console.log("[BANNER DEBUG] req.file:", req.file);
   try {
     const { title, description, discountText, buttonText, displayOrder, active, targetCategory } = req.body;
     let image = "";
     if (req.file) {
       image = req.file.path || req.file.filename;
     } else {
+      console.log("[BANNER DEBUG] No file uploaded in req.file");
       return res.status(400).json({ message: "Please upload an image for the banner" });
     }
 
@@ -48,8 +51,10 @@ export const addBanner = async (req, res) => {
       targetCategory: targetCategory || ""
     });
 
+    console.log("[BANNER DEBUG] Banner created successfully:", banner._id);
     res.status(201).json({ success: true, data: banner });
   } catch (err) {
+    console.error("[BANNER DEBUG] Error in addBanner:", err);
     res.status(500).json({ message: "Server error", error: err.message });
   }
 };
@@ -58,10 +63,13 @@ export const addBanner = async (req, res) => {
 // @route   PUT /api/admin/banners/:id
 // @access  Private/Admin
 export const updateBanner = async (req, res) => {
+  console.log("[BANNER DEBUG] updateBanner initiated. req.body:", req.body);
+  console.log("[BANNER DEBUG] req.file:", req.file);
   try {
     const { title, description, discountText, buttonText, displayOrder, active, targetCategory } = req.body;
     let banner = await Banner.findById(req.params.id);
     if (!banner) {
+      console.log("[BANNER DEBUG] Banner not found with ID:", req.params.id);
       return res.status(404).json({ message: "Banner not found" });
     }
 
@@ -80,8 +88,10 @@ export const updateBanner = async (req, res) => {
     }
 
     banner = await Banner.findByIdAndUpdate(req.params.id, updateData, { new: true });
+    console.log("[BANNER DEBUG] Banner updated successfully:", banner._id);
     res.json({ success: true, data: banner });
   } catch (err) {
+    console.error("[BANNER DEBUG] Error in updateBanner:", err);
     res.status(500).json({ message: "Server error", error: err.message });
   }
 };
