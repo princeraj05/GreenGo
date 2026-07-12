@@ -105,7 +105,7 @@ export const validateCoupon = async (req, res) => {
     }
 
     // Referral coupon validation check
-    const isReferral = (coupon.title && coupon.title.includes("Referral")) || coupon.referrerId != null || coupon.code.endsWith("25");
+    const isReferral = (coupon.title && coupon.title.includes("Referral") && !coupon.title.includes("Reward")) || coupon.referrerId != null || coupon.code.endsWith("25");
     if (isReferral && req.user && req.user.id) {
       // 1. Prevent using own referral code
       if (coupon.referrerId && String(coupon.referrerId) === String(req.user.id)) {
