@@ -34,7 +34,7 @@ export const addBanner = async (req, res) => {
     const { title, description, discountText, buttonText, displayOrder, active, targetCategory } = req.body;
     let image = "";
     if (req.file) {
-      image = req.file.path || req.file.filename;
+      image = req.file.secure_url || req.file.path || req.file.filename;
     } else {
       console.log("[BANNER DEBUG] No file uploaded in req.file");
       return res.status(400).json({ message: "Please upload an image for the banner" });
@@ -84,7 +84,7 @@ export const updateBanner = async (req, res) => {
     };
 
     if (req.file) {
-      updateData.image = req.file.path || req.file.filename;
+      updateData.image = req.file.secure_url || req.file.path || req.file.filename;
     }
 
     banner = await Banner.findByIdAndUpdate(req.params.id, updateData, { new: true });

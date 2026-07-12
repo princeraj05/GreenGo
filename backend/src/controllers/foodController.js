@@ -1,7 +1,7 @@
 import Food from "../models/Food.js";
 import Category from "../models/Category.js";
 
-const getUploadedPath = (files, field) => files?.[field]?.[0]?.path || "";
+const getUploadedPath = (files, field) => files?.[field]?.[0]?.secure_url || files?.[field]?.[0]?.path || "";
 const toBoolean = (value, fallback = true) => {
   if (value === undefined || value === null || value === "") return fallback;
   if (typeof value === "boolean") return value;

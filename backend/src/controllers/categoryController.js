@@ -2,7 +2,7 @@ import Category from "../models/Category.js";
 import Food from "../models/Food.js";
 
 // Helper to get uploaded path
-const getUploadedPath = (req) => req.file?.path || "";
+const getUploadedPath = (req) => req.file?.secure_url || req.file?.path || "";
 
 // GET ALL CATEGORIES
 export const getCategories = async (req, res) => {
