@@ -98,6 +98,29 @@ export const validateCoupon = async (req, res) => {
     if (cartTotal < coupon.minimumOrder) {
       return res.status(400).json({ message: `Minimum order amount of ₹${coupon.minimumOrder} is required.` });
     }
+
+    // Referral coupon validation check
+    const isReferral = (coupon.title && coupon.title.includes("Referral")) || coupon.code.endsWith("25");
+    if (isReferral && req.user && req.user.id) {
+      // 1. Prevent using own referral code
+      const User = (await import("../models/User.js")).default;
+      const currentUser = await User.findById(req.user.id);
+      if (currentUser) {
+        const source = currentUser.name || currentUser.phone || currentUser.email || "GREENGO";
+        const cleanSource = source.replace(/[^a-z0-9]/gi, "").slice(0, 6).toUpperCase() || "GREEN";
+        const ownReferralCode = `${cleanSource}25`;
+        if (cleanCode === ownReferralCode) {
+          return res.status(400).json({ message: "You cannot use your own referral code." });
+        }
+      }
+
+      // 2. Prevent using referral coupon on repeat orders (first order only)
+      const Order = (await import("../models/Order.js")).default;
+      const orderCount = await Order.countDocuments({ userId: req.user.id });
+      if (orderCount > 0) {
+        return res.status(400).json({ message: "Referral coupons are only valid for your first order." });
+      }
+    }
     
     res.json({
       success: true,

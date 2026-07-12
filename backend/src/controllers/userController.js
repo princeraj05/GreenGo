@@ -3,6 +3,37 @@ import Otp from "../models/Otp.js";
 import Food from "../models/Food.js";
 import Session from "../models/Session.js";
 import SecurityLog from "../models/SecurityLog.js";
+import Coupon from "../models/Coupon.js";
+
+const generateReferralCode = (user) => {
+  const source = user.name || user.phone || user.email || "GREENGO";
+  const cleanSource = source.replace(/[^a-z0-9]/gi, "").slice(0, 6).toUpperCase() || "GREEN";
+  return `${cleanSource}25`;
+};
+
+const createReferralCoupon = async (user) => {
+  try {
+    const code = generateReferralCode(user);
+    const exists = await Coupon.findOne({ code });
+    if (!exists) {
+      const expiry = new Date();
+      expiry.setFullYear(expiry.getFullYear() + 5); // coupon valid for 5 years
+      
+      await Coupon.create({
+        code,
+        title: `Referral Coupon for ${user.name || "User"}`,
+        discountType: "percentage",
+        discountValue: 25,
+        minimumOrder: 200,
+        expiryDate: expiry,
+        active: true
+      });
+      console.log(`Created referral coupon code: ${code}`);
+    }
+  } catch (err) {
+    console.error("Failed to create referral coupon:", err);
+  }
+};
 import { encryptText, decryptText, hashText } from "../config/cryptoHelper.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
@@ -228,6 +259,7 @@ export const registerUser = async (req, res) => {
 
     normalizeUserCompletion(user);
     await user.save();
+    await createReferralCoupon(user);
 
     await SecurityLog.create({
       userId: user._id,
@@ -600,6 +632,7 @@ export const updateProfile = async (req, res) => {
 
     normalizeUserCompletion(user);
     await user.save();
+    await createReferralCoupon(user);
 
     await SecurityLog.create({
       userId: user._id,
@@ -802,6 +835,7 @@ export const googleLogin = async (req, res) => {
       });
       normalizeUserCompletion(user);
       await user.save();
+      await createReferralCoupon(user);
       await notifyAdminUserEvent("New Google User", user, "success");
     } else {
       let updated = false;
