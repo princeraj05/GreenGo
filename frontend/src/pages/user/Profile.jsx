@@ -1043,14 +1043,22 @@ export default function Profile() {
             <p className="text-xs font-bold text-slate-500 dark:text-slate-400">Favorites</p>
             <p className="mt-1 text-lg font-black text-slate-900 dark:text-white">{favorites.length || 0}</p>
           </button>
-          <div className="rounded-2xl bg-white/70 dark:bg-slate-900/60 backdrop-blur-md border border-slate-100 dark:border-slate-800/80 p-3 text-center shadow-md shadow-slate-900/5 dark:shadow-black/20 hover:scale-[1.02] transition-all duration-300">
+          <button
+            type="button"
+            onClick={() => setActiveSection("coupons")}
+            className="rounded-2xl bg-white/70 dark:bg-slate-900/60 backdrop-blur-md border border-slate-100 dark:border-slate-800/80 p-3 text-center shadow-md shadow-slate-900/5 dark:shadow-black/20 hover:scale-[1.02] transition-all duration-300 cursor-pointer block w-full"
+          >
             <p className="text-xs font-bold text-slate-500 dark:text-slate-400">Coupons</p>
             <p className="mt-1 text-lg font-black text-slate-900 dark:text-white">{coupons.length || 0}</p>
-          </div>
-          <div className="rounded-2xl bg-white/70 dark:bg-slate-900/60 backdrop-blur-md border border-slate-100 dark:border-slate-800/80 p-3 text-center shadow-md shadow-slate-900/5 dark:shadow-black/20 hover:scale-[1.02] transition-all duration-300">
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate("/user/contact")}
+            className="rounded-2xl bg-white/70 dark:bg-slate-900/60 backdrop-blur-md border border-slate-100 dark:border-slate-800/80 p-3 text-center shadow-md shadow-slate-900/5 dark:shadow-black/20 hover:scale-[1.02] transition-all duration-300 cursor-pointer block w-full"
+          >
             <p className="text-xs font-bold text-slate-500 dark:text-slate-400">Support</p>
             <p className="mt-1 text-lg font-black text-slate-900 dark:text-white">{contacts.length || 0}</p>
-          </div>
+          </button>
         </div>
 
         {message && (
