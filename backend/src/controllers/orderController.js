@@ -316,6 +316,33 @@ export const createOrder = async (req, res) => {
       try {
         const cleanCode = String(couponCode).trim().toUpperCase();
         const couponDoc = await Coupon.findOne({ code: cleanCode });
+        
+        if (couponDoc) {
+          // If the coupon belongs to a specific user (referral reward), deactivate it after use
+          if (couponDoc.userId) {
+            couponDoc.active = false;
+            await couponDoc.save();
+
+            await Notification.create({
+              userId: req.user.id,
+              title: "Referral Coupon Used!",
+              message: `Your referral reward coupon ${cleanCode} has been used successfully.`,
+              type: "success"
+            });
+
+            try {
+              const { sendPushToUser } = await import("../utils/pushNotification.js");
+              await sendPushToUser(
+                req.user.id,
+                "Referral Coupon Used!",
+                `Your referral reward coupon ${cleanCode} has been used successfully.`
+              );
+            } catch (pushErr) {
+              console.error("Failed to send coupon use push:", pushErr);
+            }
+          }
+        }
+
         if (couponDoc && couponDoc.referrerId) {
           const previousOrders = await Order.countDocuments({ userId: req.user.id, _id: { $ne: order._id } });
           if (previousOrders === 0) {
