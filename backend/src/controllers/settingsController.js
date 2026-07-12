@@ -53,7 +53,9 @@ export const updateSettings = async (req, res) => {
       festivalCharge,
       platformCharge,
       enabledPaymentMethods,
-      surcharges
+      surcharges,
+      referralRewardFriend,
+      referralRewardReferrer
     } = req.body;
     let settings = await Settings.findOne();
     
@@ -94,6 +96,8 @@ export const updateSettings = async (req, res) => {
         online: Boolean(enabledPaymentMethods.online)
       };
     }
+    if (referralRewardFriend !== undefined) settings.referralRewardFriend = Number(referralRewardFriend);
+    if (referralRewardReferrer !== undefined) settings.referralRewardReferrer = Number(referralRewardReferrer);
     
     await settings.save();
     res.json(settings);

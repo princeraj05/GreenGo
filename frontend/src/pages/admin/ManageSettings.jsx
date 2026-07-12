@@ -38,7 +38,9 @@ export default function ManageSettings() {
     enabledPaymentMethods: {
       cod: true,
       online: true
-    }
+    },
+    referralRewardFriend: 50,
+    referralRewardReferrer: 20
   });
 
   // ==========================================
@@ -159,7 +161,9 @@ export default function ManageSettings() {
           rainCharge: data.rainCharge !== undefined ? data.rainCharge : 0,
           festivalCharge: data.festivalCharge !== undefined ? data.festivalCharge : 0,
           platformCharge: data.platformCharge !== undefined ? data.platformCharge : 0,
-          enabledPaymentMethods: data.enabledPaymentMethods || { cod: true, online: true }
+          enabledPaymentMethods: data.enabledPaymentMethods || { cod: true, online: true },
+          referralRewardFriend: data.referralRewardFriend !== undefined ? data.referralRewardFriend : 50,
+          referralRewardReferrer: data.referralRewardReferrer !== undefined ? data.referralRewardReferrer : 20
         });
       }
     } catch (err) {
@@ -180,7 +184,9 @@ export default function ManageSettings() {
       const payload = {
         ...form,
         deliveryChargeAmount: Number(form.deliveryChargeSlabs?.[0]?.amount || form.deliveryChargeAmount || 0),
-        surcharges: (form.surcharges || []).filter(s => s.name.trim() !== "")
+        surcharges: (form.surcharges || []).filter(s => s.name.trim() !== ""),
+        referralRewardFriend: Number(form.referralRewardFriend || 0),
+        referralRewardReferrer: Number(form.referralRewardReferrer || 0)
       };
       await API.put("/api/settings", payload, {
         headers: { Authorization: `Bearer ${token}` },
@@ -423,6 +429,37 @@ export default function ManageSettings() {
                     Delivery range 10 km rakhein. Store location system ke saved/default location se calculate hogi.
                   </p>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Referral Reward Settings Section */}
+          <div className="border-t border-slate-100 dark:border-slate-800/80 pt-6">
+            <h3 className="font-extrabold text-slate-800 dark:text-white mb-4 uppercase tracking-wider text-xs">Referral Rewards Settings</h3>
+            <p className="mb-4 text-xs font-semibold text-slate-500 dark:text-slate-400">
+              Configure dynamic referral discount payouts for friends (new users) and referrers.
+            </p>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">Friend's Reward (New User Discount) (₹)</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={form.referralRewardFriend}
+                  onChange={(e) => setForm({ ...form, referralRewardFriend: e.target.value })}
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-slate-800 dark:text-white font-medium text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">Referrer's Reward (Ishani's Coupon) (₹)</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={form.referralRewardReferrer}
+                  onChange={(e) => setForm({ ...form, referralRewardReferrer: e.target.value })}
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-slate-800 dark:text-white font-medium text-sm"
+                />
               </div>
             </div>
           </div>
