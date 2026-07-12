@@ -147,6 +147,45 @@ export default function Checkout() {
       })
       .catch(err => console.error("Could not fetch settings", err));
 
+    // Auto-load saved promo from localStorage on page mount
+    const savedPromo = localStorage.getItem("applied_promo");
+    if (savedPromo && data.length > 0) {
+      setPromo(savedPromo);
+      const tempSubtotal = data.reduce((s, i) => s + Number(i.price || 0) * Number(i.qty || 0), 0);
+      getToken().then(token => {
+        if (!token) return;
+        fetch(`${getApiUrl()}/api/coupons/validate`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ code: savedPromo.trim().toUpperCase(), cartTotal: tempSubtotal })
+        })
+        .then(res => {
+          if (res.ok) return res.json();
+          localStorage.removeItem("applied_promo");
+          return null;
+        })
+        .then(resData => {
+          if (resData && resData.coupon) {
+            let calculatedDiscount = 0;
+            if (resData.coupon.discountType === "percentage") {
+              calculatedDiscount = Math.round((tempSubtotal * resData.coupon.discountValue) / 100);
+            } else {
+              calculatedDiscount = resData.coupon.discountValue;
+            }
+            setDiscountAmount(calculatedDiscount);
+            setAppliedPromoCode(resData.coupon.code);
+            setPromoMinOrder(resData.coupon.minimumOrder || 0);
+            setPromoDiscountType(resData.coupon.discountType);
+            setPromoDiscountValue(resData.coupon.discountValue);
+          }
+        })
+        .catch(err => console.error("Error auto-validating promo code on checkout mount", err));
+      });
+    }
+
     const loadCheckoutUser = () => {
       const token = getToken();
       if(!token) {
@@ -226,6 +265,7 @@ export default function Checkout() {
       if (subtotal < promoMinOrder) {
         setDiscountAmount(0);
         setAppliedPromoCode("");
+        localStorage.removeItem("applied_promo");
         alert(`Promo code ${appliedPromoCode} removed because subtotal is now less than ₹${promoMinOrder}.`);
       } else {
         let calculatedDiscount = 0;
@@ -309,6 +349,7 @@ export default function Checkout() {
         setPromoMinOrder(0);
         setPromoDiscountType("");
         setPromoDiscountValue(0);
+        localStorage.removeItem("applied_promo");
       } else {
         let calculatedDiscount = 0;
         if (data.coupon.discountType === "percentage") {
@@ -321,6 +362,7 @@ export default function Checkout() {
         setPromoMinOrder(data.coupon.minimumOrder || 0);
         setPromoDiscountType(data.coupon.discountType);
         setPromoDiscountValue(data.coupon.discountValue);
+        localStorage.setItem("applied_promo", data.coupon.code);
         alert(`Promo code ${data.coupon.code} applied successfully! You saved ₹${calculatedDiscount}.`);
       }
     } catch (err) {
@@ -330,6 +372,7 @@ export default function Checkout() {
       setPromoMinOrder(0);
       setPromoDiscountType("");
       setPromoDiscountValue(0);
+      localStorage.removeItem("applied_promo");
     } finally {
       setPromoLoading(false);
     }
@@ -528,6 +571,7 @@ export default function Checkout() {
       }
 
       localStorage.removeItem("cart");
+      localStorage.removeItem("applied_promo");
       window.dispatchEvent(new Event("cart-updated"));
       navigate("/user/orders");
     } catch (err) {

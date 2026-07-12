@@ -20,9 +20,12 @@ export default function Cart() {
   /* --- STATE DECLARATIONS --- */
   const [cart, setCart] = useState([]);
   const [promo, setPromo] = useState("");
-  const [discount, setDiscount] = useState(0);
   const [promoLoading, setPromoLoading] = useState(false);
   const [isStoreOpen, setIsStoreOpen] = useState(true);
+  const [promoMinOrder, setPromoMinOrder] = useState(0);
+  const [promoDiscountType, setPromoDiscountType] = useState("");
+  const [promoDiscountValue, setPromoDiscountValue] = useState(0);
+  const [appliedPromoCode, setAppliedPromoCode] = useState("");
 
   /* --- DATA FETCHING & EFFECTS --- */
   useEffect(() => {
@@ -35,6 +38,38 @@ export default function Cart() {
         setIsStoreOpen(settings.isStoreOpen !== false);
       })
       .catch(err => console.error("Error loading store settings in cart", err));
+
+    // Auto-load saved promo from localStorage on page mount
+    const savedPromo = localStorage.getItem("applied_promo");
+    if (savedPromo && data.length > 0) {
+      setPromo(savedPromo);
+      const subtotalNow = data.reduce((sum, item) => sum + Number(item.price || 0) * item.qty, 0);
+      getToken().then(token => {
+        if (!token) return;
+        fetch(`${getApiUrl()}/api/coupons/validate`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ code: savedPromo.trim().toUpperCase(), cartTotal: subtotalNow })
+        })
+        .then(res => {
+          if (res.ok) return res.json();
+          localStorage.removeItem("applied_promo");
+          return null;
+        })
+        .then(resData => {
+          if (resData && resData.coupon) {
+            setAppliedPromoCode(resData.coupon.code);
+            setPromoMinOrder(resData.coupon.minimumOrder || 0);
+            setPromoDiscountType(resData.coupon.discountType);
+            setPromoDiscountValue(resData.coupon.discountValue);
+          }
+        })
+        .catch(err => console.error("Error auto-validating promo code on mount", err));
+      });
+    }
   }, []);
 
   /* --- EVENT HANDLERS & HELPERS --- */
@@ -75,31 +110,38 @@ export default function Cart() {
     setPromoLoading(true);
     try {
       const token = await getToken();
-      const subtotalNow = cart.reduce((sum, item) => sum + (Number(item.price || 0) + Number(item.packingCharge || 0)) * item.qty, 0);
       const res = await fetch(`${getApiUrl()}/api/coupons/validate`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ code: cleanPromo, cartTotal: subtotalNow })
+        body: JSON.stringify({ code: cleanPromo, cartTotal: subtotal })
       });
       const data = await res.json();
       
       if (!res.ok) {
         alert(data.message || "Invalid promo code.");
-        setDiscount(0);
+        setAppliedPromoCode("");
+        setPromoMinOrder(0);
+        setPromoDiscountType("");
+        setPromoDiscountValue(0);
+        localStorage.removeItem("applied_promo");
       } else {
-        if (data.coupon.discountType === "percentage") {
-          setDiscount(data.coupon.discountValue / 100);
-        } else {
-          setDiscount(data.coupon.discountValue / subtotalNow);
-        }
+        setAppliedPromoCode(data.coupon.code);
+        setPromoMinOrder(data.coupon.minimumOrder || 0);
+        setPromoDiscountType(data.coupon.discountType);
+        setPromoDiscountValue(data.coupon.discountValue);
+        localStorage.setItem("applied_promo", data.coupon.code);
         alert("Promo code applied successfully!");
       }
     } catch (err) {
       alert("Error applying promo code");
-      setDiscount(0);
+      setAppliedPromoCode("");
+      setPromoMinOrder(0);
+      setPromoDiscountType("");
+      setPromoDiscountValue(0);
+      localStorage.removeItem("applied_promo");
     } finally {
       setPromoLoading(false);
     }
@@ -107,9 +149,32 @@ export default function Cart() {
 
   const subtotal = cart.reduce((sum, item) => sum + Number(item.price || 0) * item.qty, 0);
   const packingCharges = cart.reduce((sum, item) => sum + Number(item.packingCharge || 0) * item.qty, 0);
-  const discountAmount = subtotal * discount;
   const delivery = 40; 
+  
+  // Calculate dynamic discount amount
+  let discountAmount = 0;
+  if (appliedPromoCode) {
+    if (promoDiscountType === "percentage") {
+      discountAmount = Math.round((subtotal * promoDiscountValue) / 100);
+    } else {
+      discountAmount = promoDiscountValue;
+    }
+  }
   const total = subtotal + packingCharges - discountAmount + delivery;
+
+  // Monitor subtotal to dynamically remove applied coupon if subtotal falls below minOrder
+  useEffect(() => {
+    if (appliedPromoCode && subtotal > 0) {
+      if (subtotal < promoMinOrder) {
+        setAppliedPromoCode("");
+        setPromoMinOrder(0);
+        setPromoDiscountType("");
+        setPromoDiscountValue(0);
+        localStorage.removeItem("applied_promo");
+        alert(`Promo code ${appliedPromoCode} removed because subtotal is now less than ₹${promoMinOrder}.`);
+      }
+    }
+  }, [subtotal, appliedPromoCode, promoMinOrder]);
 
   // Smooth layout / hover transition settings
   const smoothTransition = { type: "spring", stiffness: 300, damping: 28 };
@@ -238,7 +303,7 @@ export default function Cart() {
                     <span>Subtotal ({cart.length} items)</span>
                     <span className="text-slate-900 dark:text-white font-bold">₹{subtotal.toFixed(2)}</span>
                   </div>
-                  {discount > 0 && (
+                  {discountAmount > 0 && (
                     <div className="flex justify-between items-center text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/20 p-2 rounded-lg border border-emerald-100/30">
                       <span className="flex items-center gap-1"><Ticket size={12} /> Discount Applied</span>
                       <span className="font-bold">-₹{discountAmount.toFixed(2)}</span>
