@@ -81,6 +81,8 @@ export default function Profile() {
   
   const [message, setMessage] = useState("");
   const [msgType, setMsgType] = useState("");
+  const [referralRewardFriend, setReferralRewardFriend] = useState(50);
+  const [referralRewardReferrer, setReferralRewardReferrer] = useState(20);
 
   // Sessions and deletion center states
   const [sessions, setSessions] = useState([]);
@@ -163,11 +165,12 @@ export default function Profile() {
         return;
       }
 
-      const [userRes, foodsRes, couponsRes, contactsRes] = await Promise.all([
+      const [userRes, foodsRes, couponsRes, contactsRes, settingsRes] = await Promise.all([
         fetch(`${API}/api/users/me`, { headers: { Authorization: `Bearer ${token}` } }),
         fetch(`${API}/api/foods`),
         fetch(`${API}/api/coupons/active`, { headers: { Authorization: `Bearer ${token}` } }),
         fetch(`${API}/api/contact/my`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API}/api/settings`),
       ]);
 
       if (userRes.ok) {
@@ -203,6 +206,14 @@ export default function Profile() {
       if (foodsRes.ok) setFoods(await foodsRes.json());
       if (couponsRes.ok) setCoupons(await couponsRes.json());
       if (contactsRes.ok) setContacts(await contactsRes.json());
+      
+      if (settingsRes && settingsRes.ok) {
+        const settingsData = await settingsRes.json();
+        if (settingsData) {
+          setReferralRewardFriend(settingsData.referralRewardFriend ?? 50);
+          setReferralRewardReferrer(settingsData.referralRewardReferrer ?? 20);
+        }
+      }
     } catch (err) {
       console.error("Failed to load profile:", err);
       showMessage("Failed to load profile", "error");
@@ -341,8 +352,8 @@ export default function Profile() {
 
   const referralCode = useMemo(() => {
     const source = form.name || form.phone || form.email || "GREENGO";
-    return `${source.replace(/[^a-z0-9]/gi, "").slice(0, 6).toUpperCase() || "GREEN"}25`;
-  }, [form.name, form.phone, form.email]);
+    return `${source.replace(/[^a-z0-9]/gi, "").slice(0, 6).toUpperCase() || "GREEN"}${referralRewardFriend}`;
+  }, [form.name, form.phone, form.email, referralRewardFriend]);
 
   const updateAddressField = (index, field, value) => {
     const nextAddresses = [...(form.addresses || [])];
@@ -827,7 +838,7 @@ export default function Profile() {
           <div className="rounded-3xl bg-brand-50 dark:bg-brand-950/30 border border-brand-100 dark:border-brand-900 p-5 text-center">
             <Gift className="mx-auto text-brand-600 mb-3" size={38} />
             <h3 className="text-xl font-black text-slate-950 dark:text-white">Share GreenGo</h3>
-            <p className="text-sm font-semibold text-slate-500 dark:text-slate-300 mt-2">Give your friend a coupon and earn rewards after their first order.</p>
+            <p className="text-sm font-semibold text-slate-500 dark:text-slate-300 mt-2">You earn ₹{referralRewardReferrer} for sending the refer. Your friend gets ₹{referralRewardFriend} flat discount on their first order.</p>
             <div className="mt-5 flex items-center gap-2 rounded-2xl bg-white dark:bg-slate-950 border border-brand-100 dark:border-brand-900 p-2">
               <span className="flex-1 font-black tracking-widest text-brand-700 dark:text-brand-300">{referralCode}</span>
               <button

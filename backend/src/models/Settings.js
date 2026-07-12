@@ -33,7 +33,9 @@ const settingsSchema = new mongoose.Schema({
       online: { type: Boolean, default: true }
     }],
     default: []
-  }
+  },
+  referralRewardFriend: { type: Number, default: 50 },
+  referralRewardReferrer: { type: Number, default: 20 }
 }, { timestamps: true });
 
 export default mongoose.model("Settings", settingsSchema);

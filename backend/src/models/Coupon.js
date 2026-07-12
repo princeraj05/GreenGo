@@ -7,7 +7,9 @@ const couponSchema = new mongoose.Schema({
   discountValue: { type: Number, required: true },
   minimumOrder: { type: Number, default: 0 },
   expiryDate: { type: Date, required: true },
-  active: { type: Boolean, default: true }
+  active: { type: Boolean, default: true },
+  userId: { type: String, default: null },
+  referrerId: { type: String, default: null }
 }, { timestamps: true });
 
 export default mongoose.model("Coupon", couponSchema);

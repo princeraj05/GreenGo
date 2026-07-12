@@ -5,28 +5,35 @@ import Session from "../models/Session.js";
 import SecurityLog from "../models/SecurityLog.js";
 import Coupon from "../models/Coupon.js";
 
-const generateReferralCode = (user) => {
+import Settings from "../models/Settings.js";
+
+const generateReferralCode = async (user) => {
+  const settings = await Settings.findOne();
+  const rewardFriend = settings?.referralRewardFriend || 50;
   const source = user.name || user.phone || user.email || "GREENGO";
   const cleanSource = source.replace(/[^a-z0-9]/gi, "").slice(0, 6).toUpperCase() || "GREEN";
-  return `${cleanSource}25`;
+  return `${cleanSource}${rewardFriend}`;
 };
 
 const createReferralCoupon = async (user) => {
   try {
-    const code = generateReferralCode(user);
+    const code = await generateReferralCode(user);
     const exists = await Coupon.findOne({ code });
     if (!exists) {
+      const settings = await Settings.findOne();
+      const rewardFriend = settings?.referralRewardFriend || 50;
       const expiry = new Date();
       expiry.setFullYear(expiry.getFullYear() + 5); // coupon valid for 5 years
       
       await Coupon.create({
         code,
         title: `Referral Coupon for ${user.name || "User"}`,
-        discountType: "percentage",
-        discountValue: 25,
+        discountType: "flat",
+        discountValue: rewardFriend,
         minimumOrder: 200,
         expiryDate: expiry,
-        active: true
+        active: true,
+        referrerId: String(user._id)
       });
       console.log(`Created referral coupon code: ${code}`);
     }

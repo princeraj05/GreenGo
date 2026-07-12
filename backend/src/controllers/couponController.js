@@ -90,6 +90,11 @@ export const validateCoupon = async (req, res) => {
     if (!coupon || !coupon.active) {
       return res.status(400).json({ message: "Invalid or inactive promo code." });
     }
+
+    // Check user locking
+    if (coupon.userId && req.user && String(coupon.userId) !== String(req.user.id)) {
+      return res.status(400).json({ message: "This coupon code does not belong to you." });
+    }
     
     if (new Date() > new Date(coupon.expiryDate)) {
       return res.status(400).json({ message: "This promo code has expired." });
@@ -100,16 +105,25 @@ export const validateCoupon = async (req, res) => {
     }
 
     // Referral coupon validation check
-    const isReferral = (coupon.title && coupon.title.includes("Referral")) || coupon.code.endsWith("25");
+    const isReferral = (coupon.title && coupon.title.includes("Referral")) || coupon.referrerId != null || coupon.code.endsWith("25");
     if (isReferral && req.user && req.user.id) {
       // 1. Prevent using own referral code
+      if (coupon.referrerId && String(coupon.referrerId) === String(req.user.id)) {
+        return res.status(400).json({ message: "You cannot use your own referral code." });
+      }
+
       const User = (await import("../models/User.js")).default;
       const currentUser = await User.findById(req.user.id);
       if (currentUser) {
         const source = currentUser.name || currentUser.phone || currentUser.email || "GREENGO";
         const cleanSource = source.replace(/[^a-z0-9]/gi, "").slice(0, 6).toUpperCase() || "GREEN";
-        const ownReferralCode = `${cleanSource}25`;
-        if (cleanCode === ownReferralCode) {
+        
+        // Fallback suffix support (based on admin setting or legacy 25)
+        const Settings = (await import("../models/Settings.js")).default;
+        const settings = await Settings.findOne();
+        const rewardFriend = settings?.referralRewardFriend || 50;
+        
+        if (cleanCode === `${cleanSource}${rewardFriend}` || cleanCode === `${cleanSource}25`) {
           return res.status(400).json({ message: "You cannot use your own referral code." });
         }
       }

@@ -312,6 +312,63 @@ export const createOrder = async (req, res) => {
       discountAmount: finalDiscount
     });
 
+    if (finalDiscount > 0 && couponCode) {
+      try {
+        const cleanCode = String(couponCode).trim().toUpperCase();
+        const couponDoc = await Coupon.findOne({ code: cleanCode });
+        if (couponDoc && couponDoc.referrerId) {
+          const previousOrders = await Order.countDocuments({ userId: req.user.id, _id: { $ne: order._id } });
+          if (previousOrders === 0) {
+            const Settings = (await import("../models/Settings.js")).default;
+            const settings = await Settings.findOne();
+            const rewardReferrer = settings?.referralRewardReferrer || 20;
+            
+            const User = (await import("../models/User.js")).default;
+            const referrer = await User.findById(couponDoc.referrerId);
+            const referrerName = referrer ? (referrer.name || "USER").split(" ")[0].replace(/[^a-z0-9]/gi, "").toUpperCase() : "USER";
+            const uniqueSuffix = String(order._id).slice(-4).toUpperCase();
+            const rewardCode = `REFER${rewardReferrer}-${referrerName}-${uniqueSuffix}`;
+            
+            const expiry = new Date();
+            expiry.setFullYear(expiry.getFullYear() + 1); // 1 year expiry
+            
+            await Coupon.create({
+              code: rewardCode,
+              title: `Referral Reward for ${referrer?.name || "User"}`,
+              discountType: "flat",
+              discountValue: rewardReferrer,
+              minimumOrder: 0,
+              expiryDate: expiry,
+              active: true,
+              userId: String(couponDoc.referrerId)
+            });
+            
+            await Notification.create({
+              userId: String(couponDoc.referrerId),
+              title: "Referral Reward Earned!",
+              message: `Congratulations! Your friend used your referral code. You earned a ₹${rewardReferrer} discount coupon: ${rewardCode}`,
+              type: "success",
+              data: { couponCode: rewardCode }
+            });
+            
+            try {
+              const { sendPushToUser } = await import("../utils/pushNotification.js");
+              await sendPushToUser(
+                String(couponDoc.referrerId),
+                "Referral Reward Earned!",
+                `Congratulations! Your friend used your referral code. You earned a ₹${rewardReferrer} discount coupon: ${rewardCode}`,
+                { couponCode: rewardCode }
+              );
+            } catch (pushErr) {
+              console.error("Failed to send referral reward push:", pushErr);
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Referrer reward processing error:", err);
+      }
+    }
+
     await Notification.create({
       userId: req.user.id,
       title: "Order placed",
