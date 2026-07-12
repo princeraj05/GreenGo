@@ -3,6 +3,7 @@ import Settings from "../models/Settings.js";
 import Notification from "../models/Notification.js";
 import User from "../models/User.js";
 import Food from "../models/Food.js";
+import Coupon from "../models/Coupon.js";
 import SecurityLog from "../models/SecurityLog.js";
 import { sendPushToUser, sendPushToAdmins } from "../utils/pushNotification.js";
 import Razorpay from "razorpay";
@@ -159,7 +160,9 @@ export const createOrder = async (req, res) => {
       latitude,
       longitude,
       customMessage,
-      transactionId
+      transactionId,
+      couponCode,
+      discountAmount
     } = req.body;
 
     // Validate stock availability before creating order
@@ -258,10 +261,23 @@ export const createOrder = async (req, res) => {
       }
     }
 
+    let finalDiscount = 0;
+    if (couponCode) {
+      const cleanCode = String(couponCode).trim().toUpperCase();
+      const coupon = await Coupon.findOne({ code: cleanCode });
+      if (coupon && coupon.active && new Date() <= new Date(coupon.expiryDate) && Number(subtotal || 0) >= coupon.minimumOrder) {
+        if (coupon.discountType === "percentage") {
+          finalDiscount = Math.round((Number(subtotal || 0) * coupon.discountValue) / 100);
+        } else {
+          finalDiscount = coupon.discountValue;
+        }
+      }
+    }
+
     const packingTotal = Array.isArray(items)
       ? items.reduce((sum, item) => sum + (Number(item.packingCharge || 0) * Number(item.qty || 0)), 0)
       : 0;
-    const finalTotal = Number(subtotal || 0) + packingTotal + finalDeliveryCharge + finalRainCharge + finalFestivalCharge + finalPlatformCharge + surchargesAmount;
+    const finalTotal = Math.max(0, Number(subtotal || 0) + packingTotal + finalDeliveryCharge + finalRainCharge + finalFestivalCharge + finalPlatformCharge + surchargesAmount - finalDiscount);
 
     const order = await Order.create({
       userId: req.user.id,
@@ -291,7 +307,9 @@ export const createOrder = async (req, res) => {
       latitude: userLat,
       longitude: userLon,
       customMessage: customMessage || "",
-      transactionId: transactionId || ""
+      transactionId: transactionId || "",
+      couponCode: finalDiscount > 0 ? couponCode : "",
+      discountAmount: finalDiscount
     });
 
     await Notification.create({

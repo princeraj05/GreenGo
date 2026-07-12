@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { MapPin, Phone, CreditCard, Banknote, Smartphone, CheckCircle, Navigation, Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
+import { MapPin, Phone, CreditCard, Banknote, Smartphone, CheckCircle, Navigation, Minus, Plus, Trash2, ShoppingBag, Ticket } from "lucide-react";
 import { getToken } from "../../utils/getToken";
 import Button from "../../components/ui/Button";
 import Card from "../../components/ui/Card";
@@ -88,6 +88,15 @@ export default function Checkout() {
   const [userCoords, setUserCoords] = useState(null);
   // profileDeliveryReady: Boolean indicating if user profile has phone & primary address filled
   const [profileDeliveryReady, setProfileDeliveryReady] = useState(false);
+
+  // Coupon states
+  const [promo, setPromo] = useState("");
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [appliedPromoCode, setAppliedPromoCode] = useState("");
+  const [promoMinOrder, setPromoMinOrder] = useState(0);
+  const [promoDiscountType, setPromoDiscountType] = useState("");
+  const [promoDiscountValue, setPromoDiscountValue] = useState(0);
 
   /* --- HELPER METHOD --- */
   // Extracts the primary address text or general address from user record
@@ -208,8 +217,27 @@ export default function Checkout() {
     ? settings.surcharges.filter(s => isCod ? s.cod : s.online)
     : [];
   const surchargesTotal = activeSurcharges.reduce((sum, s) => sum + Number(s.amount || 0), 0);
-  const total = subtotal + packingCharges + deliveryCharge + taxes + surchargesTotal;
+  const total = Math.max(0, subtotal + packingCharges + deliveryCharge + taxes + surchargesTotal - discountAmount);
   const totalItems = cart.reduce((s, i) => s + Number(i.qty || 0), 0);
+
+  // Monitor cart subtotal to dynamically update or remove coupon if subtotal falls below minOrder
+  useEffect(() => {
+    if (appliedPromoCode && subtotal > 0) {
+      if (subtotal < promoMinOrder) {
+        setDiscountAmount(0);
+        setAppliedPromoCode("");
+        alert(`Promo code ${appliedPromoCode} removed because subtotal is now less than ₹${promoMinOrder}.`);
+      } else {
+        let calculatedDiscount = 0;
+        if (promoDiscountType === "percentage") {
+          calculatedDiscount = Math.round((subtotal * promoDiscountValue) / 100);
+        } else {
+          calculatedDiscount = promoDiscountValue;
+        }
+        setDiscountAmount(calculatedDiscount);
+      }
+    }
+  }, [subtotal, appliedPromoCode, promoMinOrder, promoDiscountType, promoDiscountValue]);
 
   /* --- EVENT HANDLERS --- */
 
@@ -252,6 +280,59 @@ export default function Checkout() {
    */
   const removeCartItem = (itemId) => {
     syncCart(cart.filter((item) => item._id !== itemId));
+  };
+
+  /**
+   * applyPromo: Submits promo code input to validation API, 
+   * calculates applicable discount, and updates checkout summary pricing.
+   */
+  const applyPromo = async () => {
+    const cleanPromo = promo.trim().toUpperCase();
+    if (!cleanPromo) return;
+    setPromoLoading(true);
+    try {
+      const token = await getToken();
+      const res = await fetch(`${getApiUrl()}/api/coupons/validate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ code: cleanPromo, cartTotal: subtotal })
+      });
+      const data = await res.json();
+      
+      if (!res.ok) {
+        alert(data.message || "Invalid promo code.");
+        setDiscountAmount(0);
+        setAppliedPromoCode("");
+        setPromoMinOrder(0);
+        setPromoDiscountType("");
+        setPromoDiscountValue(0);
+      } else {
+        let calculatedDiscount = 0;
+        if (data.coupon.discountType === "percentage") {
+          calculatedDiscount = Math.round((subtotal * data.coupon.discountValue) / 100);
+        } else {
+          calculatedDiscount = data.coupon.discountValue;
+        }
+        setDiscountAmount(calculatedDiscount);
+        setAppliedPromoCode(data.coupon.code);
+        setPromoMinOrder(data.coupon.minimumOrder || 0);
+        setPromoDiscountType(data.coupon.discountType);
+        setPromoDiscountValue(data.coupon.discountValue);
+        alert(`Promo code ${data.coupon.code} applied successfully! You saved ₹${calculatedDiscount}.`);
+      }
+    } catch (err) {
+      alert("Error applying promo code");
+      setDiscountAmount(0);
+      setAppliedPromoCode("");
+      setPromoMinOrder(0);
+      setPromoDiscountType("");
+      setPromoDiscountValue(0);
+    } finally {
+      setPromoLoading(false);
+    }
   };
 
   /**
@@ -344,7 +425,7 @@ export default function Checkout() {
         checkoutDeliveryCharge = updateDeliveryChargeByDistance(settingsData, null, paymentMethod === "COD");
       }
 
-      const checkoutTotal = subtotal + packingCharges + checkoutDeliveryCharge + taxes;
+      const checkoutTotal = Math.max(0, subtotal + packingCharges + checkoutDeliveryCharge + taxes - discountAmount);
 
       if (paymentMethod !== "COD") {
         const orderRes = await fetch(`${getApiUrl()}/api/payment/create-order`, {
@@ -433,7 +514,9 @@ export default function Checkout() {
           items: cart, address, phone, paymentMethod, subtotal, deliveryCharge: finalDeliveryCharge, total: finalTotal,
           latitude: lat, longitude: lon,
           customMessage,
-          transactionId
+          transactionId,
+          couponCode: appliedPromoCode,
+          discountAmount: discountAmount
         }),
       });
 
@@ -764,8 +847,34 @@ export default function Checkout() {
         </div>
 
         {/* Right Column - Receipt Summary stickiness */}
-        <div className="w-full lg:w-[380px] shrink-0">
+        <div className="w-full lg:w-[380px] shrink-0 space-y-4">
           
+          {/* --- PROMO CODE CARD --- */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+            <Card className="p-4 border-slate-100 dark:border-slate-800/60 rounded-3xl">
+              <h3 className="font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-1.5 text-xs">
+                <Ticket size={15} className="text-brand-500" /> Have a Promo Code?
+              </h3>
+              <div className="flex gap-2">
+                <Input 
+                  type="text" 
+                  value={promo}
+                  onChange={e => setPromo(e.target.value.toUpperCase())}
+                  placeholder="SAVE20" 
+                  className="font-bold tracking-widest bg-slate-50 dark:bg-slate-950 py-1.5 text-xs rounded-xl"
+                />
+                <Button onClick={applyPromo} variant="secondary" className="px-3 text-xs rounded-xl" disabled={promoLoading}>
+                  {promoLoading ? "..." : "Apply"}
+                </Button>
+              </div>
+              {appliedPromoCode && (
+                <div className="mt-2 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                  Applied: {appliedPromoCode} (₹{discountAmount} Off)
+                </div>
+              )}
+            </Card>
+          </motion.div>
+
           {/* --- STICKY RECEIPT CHECKOUT PANEL --- */}
           {/* Tailwind: sticky top-24 makes sure the summary panel follows scrolling viewport */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
@@ -787,6 +896,13 @@ export default function Checkout() {
                   <div className="flex justify-between items-center">
                     <span>Packing Charges</span>
                     <span className="font-bold text-slate-900 dark:text-white">₹{packingCharges}</span>
+                  </div>
+                )}
+
+                {discountAmount > 0 && (
+                  <div className="flex justify-between items-center text-emerald-600 dark:text-emerald-400 font-bold">
+                    <span>Discount ({appliedPromoCode})</span>
+                    <span>-₹{discountAmount}</span>
                   </div>
                 )}
 

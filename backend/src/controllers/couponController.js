@@ -83,8 +83,9 @@ export const deleteCoupon = async (req, res) => {
 export const validateCoupon = async (req, res) => {
   try {
     const { code, cartTotal } = req.body;
+    const cleanCode = String(code || "").trim().toUpperCase();
     
-    const coupon = await Coupon.findOne({ code: code.toUpperCase() });
+    const coupon = await Coupon.findOne({ code: cleanCode });
     
     if (!coupon || !coupon.active) {
       return res.status(400).json({ message: "Invalid or inactive promo code." });

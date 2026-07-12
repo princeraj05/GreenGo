@@ -84,7 +84,9 @@ const orderSchema = new mongoose.Schema(
       updatedAt: Date
     }
   },
-  customMessage:{ type: String, default: "" }
+  customMessage:{ type: String, default: "" },
+  couponCode: { type: String, default: "" },
+  discountAmount: { type: Number, default: 0 }
 
 },
 {timestamps:true}

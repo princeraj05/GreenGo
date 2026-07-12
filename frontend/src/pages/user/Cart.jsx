@@ -70,7 +70,8 @@ export default function Cart() {
   };
 
   const applyPromo = async () => {
-    if (!promo) return;
+    const cleanPromo = promo.trim().toUpperCase();
+    if (!cleanPromo) return;
     setPromoLoading(true);
     try {
       const token = await getToken();
@@ -81,7 +82,7 @@ export default function Cart() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ code: promo, cartTotal: subtotalNow })
+        body: JSON.stringify({ code: cleanPromo, cartTotal: subtotalNow })
       });
       const data = await res.json();
       
