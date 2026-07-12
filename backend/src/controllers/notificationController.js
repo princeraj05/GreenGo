@@ -1,6 +1,6 @@
 import Notification from "../models/Notification.js";
 import User from "../models/User.js";
-import { sendPushToUser, sendPushToAllUsers } from "../utils/pushNotification.js";
+import { sendPushToUser, sendPushToAllUsers, sendPushToAdmins } from "../utils/pushNotification.js";
 
 const activeNotificationFilter = () => ({
   $or: [
@@ -54,6 +54,19 @@ const ensureTodayBirthdayNotifications = async () => {
         date: key,
       },
     });
+
+    await sendPushToAdmins(
+      "User Birthday Today",
+      `${user.name || "Customer"} has a birthday today. Email: ${user.email || "N/A"} | Phone: ${user.phone || "N/A"}`,
+      {
+        event: "birthday_today",
+        userId: String(user._id),
+        name: user.name || "",
+        email: user.email || "",
+        phone: user.phone || "",
+        date: key,
+      }
+    );
   }
 };
 
