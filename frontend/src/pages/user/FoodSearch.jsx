@@ -137,12 +137,112 @@ export default function FoodSearch() {
 
   /* --- DATA FETCHING & EFFECTS --- */
 
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef(null);
+
+  const startVoiceSearch = async () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Voice search is not supported in this browser.");
+      return;
+    }
+
+    try {
+      // Proactively request microphone permission using standard Web API.
+      // This triggers the native browser/WebView permission prompt.
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Stop the stream tracks immediately so SpeechRecognition can use the microphone
+      stream.getTracks().forEach((track) => track.stop());
+    } catch (err) {
+      console.error("Microphone permission request failed:", err);
+      alert("Microphone permission is required for voice search. Please allow microphone access.");
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.lang = "en-IN";
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onstart = () => {
+        setIsListening(true);
+      };
+
+      recognition.onerror = (event) => {
+        console.error("Speech recognition error:", event.error);
+        setIsListening(false);
+        if (event.error === "not-allowed") {
+          alert("Microphone permission is denied. Please allow microphone access in your settings.");
+        } else if (event.error === "network") {
+          alert("Voice search requires an active internet connection.");
+        } else if (event.error === "no-speech") {
+          alert("No speech detected. Please try speaking again.");
+        } else {
+          alert(`Voice search error: ${event.error}`);
+        }
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        if (transcript) {
+          setQuery(transcript);
+          saveRecentSearch(transcript);
+        }
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
+    } catch (e) {
+      console.error(e);
+      setIsListening(false);
+    }
+  };
+
+  const stopVoiceSearch = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+    }
+    setIsListening(false);
+  };
+
+  const handleVoiceSearchClick = () => {
+    if (isListening) {
+      stopVoiceSearch();
+    } else {
+      startVoiceSearch();
+    }
+  };
+
   // Runs on mount: Loads foods list, populates cart state, and focuses search input
   useEffect(() => {
     loadFoods();
     loadCategories();
     loadCart();
     setTimeout(() => inputRef.current?.focus(), 80);
+
+    if (searchParams.get("voice") === "true") {
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete("voice");
+      setSearchParams(newParams, { replace: true });
+      setTimeout(() => {
+        startVoiceSearch();
+      }, 300);
+    }
+  }, []);
+
+  // Cleanup speech recognition on unmount
+  useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
   }, []);
 
   const loadCategories = async () => {
@@ -486,8 +586,11 @@ export default function FoodSearch() {
           )}
           <button
             type="button"
-            className="flex h-10 w-10 shrink-0 items-center justify-center border-l border-slate-100 pl-3 text-brand-500 dark:border-slate-800 hover:text-brand-600 transition-colors"
-            title="Voice search"
+            onClick={handleVoiceSearchClick}
+            className={`flex h-10 w-10 shrink-0 items-center justify-center border-l border-slate-100 pl-3 transition-colors dark:border-slate-800 ${
+              isListening ? "text-rose-600 animate-pulse" : "text-brand-500 hover:text-brand-600"
+            }`}
+            title={isListening ? "Listening... Click to stop" : "Voice search"}
           >
             <Mic size={20} />
           </button>

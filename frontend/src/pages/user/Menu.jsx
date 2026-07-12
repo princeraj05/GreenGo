@@ -1141,7 +1141,8 @@ export default function Menu() {
           })()}
           <button
             type="button"
-            className="absolute inset-y-0 right-0 px-4 text-rose-500 border-l border-slate-100 dark:border-slate-800"
+            onClick={() => navigate("/user/search?voice=true")}
+            className="absolute inset-y-0 right-0 px-4 text-rose-500 border-l border-slate-100 dark:border-slate-800 hover:text-rose-600 transition-colors"
             title="Voice search"
           >
             <Mic size={20} />

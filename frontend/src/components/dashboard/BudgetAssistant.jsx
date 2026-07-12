@@ -87,10 +87,17 @@ const isNonVegFood = (food) => {
     food.veg === false ||
     food.veg === "false" ||
     category.includes("non-veg") ||
+    category.includes("nonveg") ||
     category.includes("chicken") ||
     category.includes("kebab") ||
+    category.includes("mutton") ||
+    category.includes("fish") ||
     name.includes("chicken") ||
-    name.includes("mutton")
+    name.includes("mutton") ||
+    name.includes("egg") ||
+    name.includes("fish") ||
+    name.includes("non-veg") ||
+    name.includes("nonveg")
   );
 };
 
@@ -256,17 +263,23 @@ export default function BudgetAssistant({ isOpen, onClose, foods = [], onAddToCa
   }, []);
 
   const displayedCategories = useMemo(() => {
-    if (categories.length > 0) {
-      return categories.map(cat => ({
-        name: cat.name,
-        image: cat.image
-      }));
+    const rawCategories = categories.length > 0
+      ? categories.map(cat => ({ name: cat.name, image: cat.image }))
+      : foodTypes.map(type => ({ name: type, image: "" }));
+
+    if (!preference || preference === "Both" || !foods || foods.length === 0) {
+      return rawCategories;
     }
-    return foodTypes.map(type => ({
-      name: type,
-      image: ""
-    }));
-  }, [categories]);
+
+    return rawCategories.filter(cat => {
+      return foods.some(food => {
+        const isNonVeg = isNonVegFood(food);
+        const matchesPref = preference === "Veg" ? !isNonVeg : isNonVeg;
+        if (!matchesPref) return false;
+        return matchesType(food, cat.name);
+      });
+    });
+  }, [categories, preference, foods]);
 
   const budgetObj = useMemo(
     () => budgetOptions.find((option) => option.label === budgetRange) || budgetOptions[3],
