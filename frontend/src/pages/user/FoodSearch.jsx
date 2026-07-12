@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Capacitor } from "@capacitor/core";
+import { SpeechRecognition } from "@capacitor-community/speech-recognition";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ChevronRight, Mic, Search, ShoppingCart, SlidersHorizontal, Sparkles, X, Heart, Star, Clock, Users, Flame, Grid3X3 } from "lucide-react";
 import Button from "../../components/ui/Button";
@@ -70,14 +72,19 @@ function isNonVegFood(food) {
  */
 function distanceRank(food, query) {
   const name = normalize(food.name);
-  const category = normalize(food.category);
   const q = normalize(query);
   if (!q) return 0;
   if (name === q) return 0;
   if (name.startsWith(q)) return 1;
-  if (category.startsWith(q)) return 2;
+
+  const categories = Array.isArray(food?.categories) && food.categories.length
+    ? food.categories
+    : [food?.category].filter(Boolean);
+  const foodCategories = categories.map((item) => normalize(item));
+
+  if (foodCategories.some(cat => cat.startsWith(q))) return 2;
   if (name.includes(q)) return 3;
-  if (category.includes(q)) return 4;
+  if (foodCategories.some(cat => cat.includes(q))) return 4;
   return 5;
 }
 
@@ -141,74 +148,113 @@ export default function FoodSearch() {
   const recognitionRef = useRef(null);
 
   const startVoiceSearch = async () => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      alert("Voice search is not supported in this browser.");
-      return;
-    }
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const { available } = await SpeechRecognition.available();
+        if (!available) {
+          alert("Voice search is not supported on this device.");
+          return;
+        }
 
-    try {
-      // Proactively request microphone permission using standard Web API.
-      // This triggers the native browser/WebView permission prompt.
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      // Stop the stream tracks immediately so SpeechRecognition can use the microphone
-      stream.getTracks().forEach((track) => track.stop());
-    } catch (err) {
-      console.error("Microphone permission request failed:", err);
-      alert("Microphone permission is required for voice search. Please allow microphone access.");
-      return;
-    }
+        const status = await SpeechRecognition.checkPermissions();
+        if (status.speechRecognition !== "granted") {
+          const req = await SpeechRecognition.requestPermissions();
+          if (req.speechRecognition !== "granted") {
+            alert("Microphone permission is denied. Please allow microphone access in settings.");
+            return;
+          }
+        }
 
-    try {
-      const recognition = new SpeechRecognition();
-      recognition.continuous = false;
-      recognition.lang = "en-IN";
-      recognition.interimResults = false;
-      recognition.maxAlternatives = 1;
-
-      recognition.onstart = () => {
         setIsListening(true);
-      };
 
-      recognition.onerror = (event) => {
-        console.error("Speech recognition error:", event.error);
+        const result = await SpeechRecognition.start({
+          language: "en-IN",
+          maxResults: 1,
+          partialResults: false,
+          popup: true,
+          prompt: "GreenGo: Try saying 'Rice', 'Biryani'..."
+        });
+
         setIsListening(false);
-        if (event.error === "not-allowed") {
-          alert("Microphone permission is denied. Please allow microphone access in your settings.");
-        } else if (event.error === "network") {
-          alert("Voice search requires an active internet connection.");
-        } else if (event.error === "no-speech") {
-          alert("No speech detected. Please try speaking again.");
-        } else {
-          alert(`Voice search error: ${event.error}`);
-        }
-      };
 
-      recognition.onend = () => {
+        if (result.matches && result.matches.length > 0) {
+          const transcript = result.matches[0];
+          if (transcript) {
+            setQuery(transcript);
+            saveRecentSearch(transcript);
+          }
+        }
+      } catch (err) {
+        console.error("Native voice search failed:", err);
         setIsListening(false);
-      };
+      }
+    } else {
+      const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognitionAPI) {
+        alert("Voice search is not supported in this browser.");
+        return;
+      }
 
-      recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        if (transcript) {
-          setQuery(transcript);
-          saveRecentSearch(transcript);
-        }
-      };
+      try {
+        const recognition = new SpeechRecognitionAPI();
+        recognition.continuous = false;
+        recognition.lang = "en-IN";
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
 
-      recognitionRef.current = recognition;
-      recognition.start();
-    } catch (e) {
-      console.error(e);
-      setIsListening(false);
+        recognition.onstart = () => {
+          setIsListening(true);
+        };
+
+        recognition.onerror = (event) => {
+          console.error("Speech recognition error:", event.error);
+          setIsListening(false);
+          if (event.error === "not-allowed") {
+            alert("Microphone permission is denied. Please allow microphone access in your settings.");
+          } else if (event.error === "network") {
+            alert("Voice search requires an active internet connection.");
+          } else if (event.error === "no-speech") {
+            alert("No speech detected. Please try speaking again.");
+          } else {
+            alert(`Voice search error: ${event.error}`);
+          }
+        };
+
+        recognition.onend = () => {
+          setIsListening(false);
+        };
+
+        recognition.onresult = (event) => {
+          const transcript = event.results[0][0].transcript;
+          if (transcript) {
+            setQuery(transcript);
+            saveRecentSearch(transcript);
+          }
+        };
+
+        recognitionRef.current = recognition;
+        recognition.start();
+      } catch (e) {
+        console.error(e);
+        setIsListening(false);
+      }
     }
   };
 
-  const stopVoiceSearch = () => {
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
+  const stopVoiceSearch = async () => {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        await SpeechRecognition.stop();
+      } catch (err) {
+        console.error(err);
+      }
+      setIsListening(false);
+    } else {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+      setIsListening(false);
     }
-    setIsListening(false);
   };
 
   const handleVoiceSearchClick = () => {
@@ -388,6 +434,13 @@ export default function FoodSearch() {
 
   /* --- MEMOIZED DERIVED VALUES --- */
 
+  const getFoodCategories = (food) => {
+    const categoriesList = Array.isArray(food?.categories) && food.categories.length
+      ? food.categories
+      : [food?.category].filter(Boolean);
+    return [...new Set(categoriesList.map((item) => String(item || "").trim()).filter(Boolean))];
+  };
+
   // Extracts unique categories list from foods for bubble representation
   const categories = useMemo(() => {
     const map = new Map();
@@ -413,7 +466,10 @@ export default function FoodSearch() {
     const q = normalize(query);
     if (!q || !showSuggestions) return [];
     const dishSuggestions = foods
-      .filter((food) => normalize(food.name).includes(q) || normalize(food.category).includes(q))
+      .filter((food) => {
+        const foodCategories = getFoodCategories(food).map((item) => normalize(item));
+        return normalize(food.name).includes(q) || foodCategories.some(cat => cat.includes(q));
+      })
       .sort((a, b) => distanceRank(a, query) - distanceRank(b, query))
       .slice(0, 6);
     const categorySuggestions = categories
@@ -427,7 +483,10 @@ export default function FoodSearch() {
   const matchingCategories = useMemo(() => {
     const q = normalize(query);
     const source = q
-      ? foods.filter((food) => normalize(food.name).includes(q) || normalize(food.category).includes(q) || normalize(food.description).includes(q))
+      ? foods.filter((food) => {
+          const foodCategories = getFoodCategories(food).map((item) => normalize(item));
+          return normalize(food.name).includes(q) || foodCategories.some(cat => cat.includes(q)) || normalize(food.description).includes(q);
+        })
       : foods;
     const queryWords = q.split(/\s+/).filter(Boolean);
     const derivedNames = source.map((food) => {
@@ -437,7 +496,7 @@ export default function FoodSearch() {
       });
       return name.replace(/\s+/g, " ").trim();
     }).filter((name) => name && normalize(name) !== q);
-    return ["All", ...new Set([...source.map((food) => food.category || "Other"), ...derivedNames])].slice(0, 12);
+    return ["All", ...new Set([...source.flatMap((food) => getFoodCategories(food)), ...derivedNames])].slice(0, 12);
   }, [foods, query]);
 
   // Filters and sorts the foods list to show in grid based on query and selected category
@@ -445,7 +504,8 @@ export default function FoodSearch() {
     const q = normalize(query);
     return foods
       .filter((food) => {
-        const matchesQuery = !q || q === "all food" || normalize(food.name).includes(q) || normalize(food.category).includes(q) || normalize(food.description).includes(q);
+        const foodCategories = getFoodCategories(food).map((item) => normalize(item));
+        const matchesQuery = !q || q === "all food" || normalize(food.name).includes(q) || foodCategories.some(cat => cat.includes(q)) || normalize(food.description).includes(q);
         const active = normalize(activeCategory);
         let matchesCategory = false;
         if (activeCategory === "All" || activeCategory === "All Food") {
@@ -455,7 +515,7 @@ export default function FoodSearch() {
         } else if (active === "non-veg") {
           matchesCategory = isNonVegFood(food);
         } else {
-          matchesCategory = normalize(food.category || "Other") === active || normalize(food.name).includes(active);
+          matchesCategory = foodCategories.includes(active) || foodCategories.some(cat => cat.includes(active)) || normalize(food.name).includes(active) || (food.foodType === "combo" && active === "combo");
         }
         
         // Apply rupee filter <= 100
@@ -792,9 +852,9 @@ export default function FoodSearch() {
           </div>
         ) : (
           <div>
-            {/* Renders 1 item if query is present and it is not a category filter, otherwise displays all items in rows of 3 to continue indefinitely */}
+            {/* Displays all items in rows of 3 to continue indefinitely */}
             <div className="grid grid-cols-1 gap-4.5 sm:grid-cols-2 lg:grid-cols-3">
-              {visibleFoods.slice(0, (query && query !== activeCategory) ? 1 : visibleFoods.length).map((food) => (
+              {visibleFoods.map((food) => (
                 <FoodResultCard key={food._id} food={food} cartItem={cart.find((item) => item._id === food._id)} onQuantity={updateQuantity} onClick={setSelectedFood} />
               ))}
             </div>

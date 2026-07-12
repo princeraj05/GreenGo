@@ -149,10 +149,16 @@ export const validateCoupon = async (req, res) => {
   }
 };
 
-/* ================= GET ACTIVE COUPONS (USER) ================= */
 export const getActiveCoupons = async (req, res) => {
   try {
-    const coupons = await Coupon.find({ active: true, expiryDate: { $gt: new Date() } }).sort({ createdAt: -1 });
+    const coupons = await Coupon.find({
+      active: true,
+      expiryDate: { $gt: new Date() },
+      $or: [
+        { referrerId: null },
+        { referrerId: { $exists: false } }
+      ]
+    }).sort({ createdAt: -1 });
     res.json(coupons);
   } catch (err) {
     res.status(500).json({ message: "Server error" });
