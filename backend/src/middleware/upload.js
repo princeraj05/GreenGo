@@ -1,5 +1,5 @@
 import multer from "multer";
-import { v2 as cloudinary } from "cloudinary";
+import cloudinary from "cloudinary";
 import CloudinaryStorage from "multer-storage-cloudinary";
 import dotenv from "dotenv";
 import path from "path";
@@ -15,17 +15,17 @@ cloudinary.config({
 // Configure cloudinary storage with sanitization and extensions restrictions
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
-  params: async (req, file) => {
+  params: (req, file, cb) => {
     // Filename sanitization
     const cleanName = path.basename(file.originalname, path.extname(file.originalname))
       .replace(/[^a-zA-Z0-9]/g, "_")
       .substring(0, 50);
 
-    return {
+    cb(null, {
       folder: "greengo_uploads",
       format: "webp", // Convert format automatically for secure delivery
       public_id: `${Date.now()}_${cleanName}`
-    };
+    });
   }
 });
 
