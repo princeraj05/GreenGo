@@ -44,8 +44,8 @@ export default function Cart() {
     if (savedPromo && data.length > 0) {
       setPromo(savedPromo);
       const subtotalNow = data.reduce((sum, item) => sum + Number(item.price || 0) * item.qty, 0);
-      getToken().then(token => {
-        if (!token) return;
+      const token = getToken();
+      if (token) {
         fetch(`${getApiUrl()}/api/coupons/validate`, {
           method: "POST",
           headers: {
@@ -68,7 +68,7 @@ export default function Cart() {
           }
         })
         .catch(err => console.error("Error auto-validating promo code on mount", err));
-      });
+      }
     }
   }, []);
 

@@ -152,8 +152,8 @@ export default function Checkout() {
     if (savedPromo && data.length > 0) {
       setPromo(savedPromo);
       const tempSubtotal = data.reduce((s, i) => s + Number(i.price || 0) * Number(i.qty || 0), 0);
-      getToken().then(token => {
-        if (!token) return;
+      const token = getToken();
+      if (token) {
         fetch(`${getApiUrl()}/api/coupons/validate`, {
           method: "POST",
           headers: {
@@ -183,7 +183,7 @@ export default function Checkout() {
           }
         })
         .catch(err => console.error("Error auto-validating promo code on checkout mount", err));
-      });
+      }
     }
 
     const loadCheckoutUser = () => {

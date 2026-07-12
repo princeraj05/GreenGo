@@ -315,6 +315,26 @@ export const createOrder = async (req, res) => {
     if (finalDiscount > 0 && couponCode) {
       try {
         const cleanCode = String(couponCode).trim().toUpperCase();
+
+        if (cleanCode === "NEW50") {
+          await Notification.create({
+            userId: req.user.id,
+            title: "Coupon Applied!",
+            message: "new users coupon use successfully",
+            type: "success"
+          });
+
+          try {
+            await sendPushToUser(
+              req.user.id,
+              "Coupon Applied!",
+              "new users coupon use successfully"
+            );
+          } catch (pushErr) {
+            console.error("Failed to send NEW50 push:", pushErr);
+          }
+        }
+
         const couponDoc = await Coupon.findOne({ code: cleanCode });
         
         if (couponDoc) {

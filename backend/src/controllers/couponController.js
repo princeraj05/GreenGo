@@ -91,6 +91,18 @@ export const validateCoupon = async (req, res) => {
       return res.status(400).json({ message: "Invalid or inactive promo code." });
     }
 
+    // Check if the user has already used the NEW50 coupon
+    if (cleanCode === "NEW50" && req.user && req.user.id) {
+      const Order = (await import("../models/Order.js")).default;
+      const hasUsedNew50 = await Order.exists({
+        userId: req.user.id,
+        couponCode: { $regex: /^NEW50$/i }
+      });
+      if (hasUsedNew50) {
+        return res.status(400).json({ message: "You have already used this coupon." });
+      }
+    }
+
     // Check user locking
     if (coupon.userId && req.user && String(coupon.userId) !== String(req.user.id)) {
       return res.status(400).json({ message: "This coupon code does not belong to you." });
@@ -159,7 +171,20 @@ export const getActiveCoupons = async (req, res) => {
         { referrerId: { $exists: false } }
       ]
     }).sort({ createdAt: -1 });
-    res.json(coupons);
+
+    let filteredCoupons = coupons;
+    if (req.user && req.user.id) {
+      const Order = (await import("../models/Order.js")).default;
+      const hasUsedNew50 = await Order.exists({
+        userId: req.user.id,
+        couponCode: { $regex: /^NEW50$/i }
+      });
+      if (hasUsedNew50) {
+        filteredCoupons = coupons.filter(c => c.code.toUpperCase() !== "NEW50");
+      }
+    }
+
+    res.json(filteredCoupons);
   } catch (err) {
     res.status(500).json({ message: "Server error" });
   }
