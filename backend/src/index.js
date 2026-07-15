@@ -149,16 +149,19 @@ app.use((err, req, res, next) => {
 /* ================= SERVER ================= */
 import { runDatabaseBackup } from "./services/backupService.js";
 import { runPrivacyCleanupJob } from "./services/privacyService.js";
+import { runPaymentCleanupJob } from "./services/paymentCleanupService.js";
 
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   
-  // Run tasks immediately on startup, then every 24 hours
+  // Run tasks immediately on startup, then periodically
   setTimeout(runDatabaseBackup, 5000);
   setTimeout(runPrivacyCleanupJob, 8000);
+  setTimeout(runPaymentCleanupJob, 10000);
   
   setInterval(runDatabaseBackup, 24 * 60 * 60 * 1000);
   setInterval(runPrivacyCleanupJob, 24 * 60 * 60 * 1000);
+  setInterval(runPaymentCleanupJob, 60 * 60 * 1000); // Run cleanup every hour
 });

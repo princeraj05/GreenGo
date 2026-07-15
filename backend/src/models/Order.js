@@ -12,7 +12,9 @@ const orderItemSchema = new mongoose.Schema(
   price:Number,
   packingCharge:{ type: Number, default: 0 },
   qty:Number,
-  image:String
+  image:String,
+  variant: { type: String, default: "" },
+  taxAtPurchase: { type: Number, default: 0 }
 
 },
 {_id:false}

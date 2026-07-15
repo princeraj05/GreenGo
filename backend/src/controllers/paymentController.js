@@ -280,6 +280,7 @@ export const verifyRazorpayPayment = async (req, res) => {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      console.warn(`[METRIC] failed_verification_missing_fields`);
       return res.status(400).json({ success: false, message: "Missing required signature fields." });
     }
 
@@ -289,7 +290,9 @@ export const verifyRazorpayPayment = async (req, res) => {
       .update(body.toString())
       .digest("hex");
 
-    if (expectedSignature !== razorpay_signature) {
+    const isAuthentic = expectedSignature === razorpay_signature;
+    if (!isAuthentic) {
+      console.warn(`[METRIC] signature_verification_failed | orderId: ${razorpay_order_id} | paymentId: ${razorpay_payment_id}`);
       await SecurityLog.create({
         userId: req.user.id,
         action: "payment_signature_verification_failed",
@@ -300,6 +303,8 @@ export const verifyRazorpayPayment = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid payment signature" });
     }
 
+    console.log(`[METRIC] signature_verification_success | orderId: ${razorpay_order_id} | paymentId: ${razorpay_payment_id}`);
+
     // Query Razorpay API directly for authoritative state check
     const razorpay = new Razorpay({
       key_id: process.env.RAZORPAY_KEY_ID,
@@ -308,22 +313,26 @@ export const verifyRazorpayPayment = async (req, res) => {
 
     const paymentDetails = await razorpay.payments.fetch(razorpay_payment_id);
     if (!paymentDetails || paymentDetails.status !== "captured" || paymentDetails.order_id !== razorpay_order_id) {
+      console.warn(`[METRIC] payment_not_captured | orderId: ${razorpay_order_id} | paymentId: ${razorpay_payment_id} | status: ${paymentDetails?.status}`);
       return res.status(400).json({ success: false, message: "Payment was not captured or belongs to a different order." });
     }
 
     const orderDetails = await razorpay.orders.fetch(razorpay_order_id);
     if (!orderDetails) {
+      console.warn(`[METRIC] order_details_fetch_failed | orderId: ${razorpay_order_id}`);
       return res.status(400).json({ success: false, message: "Razorpay order details not found." });
     }
 
     const orderDoc = await Order.findOne({ razorpayOrderId: razorpay_order_id });
     if (!orderDoc) {
+      console.warn(`[METRIC] local_order_not_found | orderId: ${razorpay_order_id}`);
       return res.status(404).json({ success: false, message: "Local order record not found." });
     }
 
     // Triple Amount Validation
     const expectedAmountPaise = orderDoc.total * 100;
     if (paymentDetails.amount !== expectedAmountPaise || orderDetails.amount !== expectedAmountPaise) {
+      console.warn(`[METRIC] amount_mismatch | orderId: ${razorpay_order_id} | expected: ${expectedAmountPaise} | orderDetails: ${orderDetails.amount} | paymentDetails: ${paymentDetails.amount}`);
       await SecurityLog.create({
         userId: req.user.id,
         action: "payment_amount_mismatch",
@@ -342,7 +351,10 @@ export const verifyRazorpayPayment = async (req, res) => {
       { ipAddress: req.ip, userAgent: req.headers["user-agent"] }
     );
 
-    if (!alreadyProcessed) {
+    if (alreadyProcessed) {
+      console.log(`[METRIC] duplicate_verification_attempt | orderId: ${razorpay_order_id} | paymentId: ${razorpay_payment_id}`);
+    } else {
+      console.log(`[METRIC] payment_success | orderId: ${razorpay_order_id} | paymentId: ${razorpay_payment_id}`);
       runPostPaymentActions(
         order,
         req.user.id,
@@ -355,7 +367,7 @@ export const verifyRazorpayPayment = async (req, res) => {
 
     res.json({ success: true, message: "Payment verified successfully" });
   } catch (err) {
-    console.error("Razorpay Verify Error:", err);
+    console.error(`[METRIC] verification_error | error: ${err.message}`);
     res.status(500).json({ success: false, message: err.message || "Payment verification failed" });
   }
 };
@@ -379,6 +391,7 @@ export const handleRazorpayWebhook = async (req, res) => {
       .digest("hex");
 
     if (expectedSignature !== webhookSignature) {
+      console.warn(`[METRIC] webhook_signature_failed`);
       await SecurityLog.create({
         action: "webhook_signature_failed",
         details: `Invalid webhook signature header: ${webhookSignature}`,
@@ -396,12 +409,14 @@ export const handleRazorpayWebhook = async (req, res) => {
 
       const orderDoc = await Order.findOne({ razorpayOrderId: razorpay_order_id });
       if (!orderDoc) {
+        console.warn(`[METRIC] webhook_local_order_not_found | orderId: ${razorpay_order_id}`);
         return res.status(404).json({ success: false, message: "Order not found" });
       }
 
       // Triple verification in Webhook
       const expectedAmountPaise = orderDoc.total * 100;
       if (payment.amount !== expectedAmountPaise) {
+        console.warn(`[METRIC] webhook_amount_mismatch | orderId: ${razorpay_order_id} | expected: ${expectedAmountPaise} | captured: ${payment.amount}`);
         await SecurityLog.create({
           userId: String(orderDoc.userId),
           action: "webhook_amount_mismatch",
@@ -419,7 +434,10 @@ export const handleRazorpayWebhook = async (req, res) => {
         { ipAddress: req.ip, userAgent: req.headers["user-agent"] }
       );
 
-      if (!alreadyProcessed) {
+      if (alreadyProcessed) {
+        console.log(`[METRIC] webhook_duplicate_attempt | orderId: ${razorpay_order_id}`);
+      } else {
+        console.log(`[METRIC] webhook_payment_success | orderId: ${razorpay_order_id} | paymentId: ${razorpay_payment_id}`);
         runPostPaymentActions(
           order,
           String(orderDoc.userId),
@@ -433,7 +451,7 @@ export const handleRazorpayWebhook = async (req, res) => {
 
     res.json({ success: true, message: "Webhook processed" });
   } catch (err) {
-    console.error("Webhook processing error:", err);
+    console.error(`[METRIC] webhook_processing_failure | error: ${err.message}`);
     res.status(500).json({ success: false, message: "Webhook failed" });
   }
 };
