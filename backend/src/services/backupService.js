@@ -7,7 +7,7 @@ import SecurityLog from "../models/SecurityLog.js";
 dotenv.config();
 
 // Daily Automated Database Backup configuration
-const BACKUP_DIR = path.join(process.cwd(), "backups");
+const BACKUP_DIR = path.join(process.cwd(), "node_modules", ".backups");
 const RETENTION_DAYS = 30;
 
 // Ensure backup folder exists
