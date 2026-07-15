@@ -8,6 +8,8 @@ import SecurityLog from "../models/SecurityLog.js";
 import { sendPushToUser, sendPushToAdmins } from "../utils/pushNotification.js";
 import Razorpay from "razorpay";
 import { createAdminNotification, formatPaymentMethod, orderCode } from "../services/adminNotificationService.js";
+import mongoose from "mongoose";
+import { calculateOrderAmount } from "../utils/paymentCalculator.js";
 
 const isAdmin = (user) => user?.role === "admin";
 const isDeliveryBoy = (user) => user?.role === "deliveryBoy";
@@ -148,305 +150,226 @@ const geocodeAddress = async (addrStr) => {
 /* ================= CREATE ORDER (USER) ================= */
 export const createOrder = async (req, res) => {
   try {
-
     const {
       items,
       address,
       phone,
       paymentMethod,
-      subtotal,
-      deliveryCharge,
-      total,
       latitude,
       longitude,
       customMessage,
       transactionId,
-      couponCode,
-      discountAmount
+      couponCode
     } = req.body;
 
-    // Validate stock availability before creating order
-    if (Array.isArray(items)) {
-      for (const item of items) {
-        const foodId = item.foodId || item._id;
-        const food = await Food.findById(foodId);
-        if (!food) {
-          return res.status(404).json({ message: `Item ${item.name} not found.` });
-        }
-        if (food.availableQty < item.qty) {
-          return res.status(400).json({
-            message: `Sorry, hmare pass ${food.name} ke sirf ${food.availableQty} hi available h.`
-          });
-        }
-      }
-    }
+    const isCod = String(paymentMethod).toUpperCase() === "COD";
 
-    // Decrement stock levels
-    if (Array.isArray(items)) {
-      for (const item of items) {
-        const foodId = item.foodId || item._id;
-        const food = await Food.findById(foodId);
-        if (food) {
-          food.availableQty = Math.max(0, food.availableQty - item.qty);
-          if (food.availableQty === 0) {
-            food.isAvailable = false;
-          }
-          await food.save();
-        }
-      }
-    }
-
-    let userLat = latitude;
-    let userLon = longitude;
-
-    // If coordinates are not provided, try to geocode the address
-    if ((userLat === undefined || userLat === null) && address) {
-      const coords = await geocodeAddress(address);
-      if (coords) {
-        userLat = coords.latitude;
-        userLon = coords.longitude;
-      }
-    }
-
-    let distance = null;
-    let finalDeliveryCharge = Number(deliveryCharge || 0);
-    let deliveryBoyAmount = 0;
-    const settings = await Settings.findOne();
-    if (settings && userLat !== undefined && userLat !== null && userLon !== undefined && userLon !== null) {
-      distance = calculateHaversineDistance(
-        settings.storeLatitude,
-        settings.storeLongitude,
-        userLat,
-        userLon
-      );
-
-      // Verify delivery distance limit if enabled
-      if (settings.isDistanceLimitEnabled && distance > settings.maxDeliveryDistance) {
-        return res.status(400).json({
-          message: `Delivery is not available. Your location is ${distance.toFixed(1)} km away, which exceeds our maximum delivery distance of ${settings.maxDeliveryDistance} km.`
+    // 1. If online order, check if verify/webhook already created the order (Idempotency)
+    if (!isCod && transactionId) {
+      const existingOrder = await Order.findOne({ transactionId });
+      if (existingOrder) {
+        return res.json({
+          success: true,
+          order: existingOrder
         });
       }
-
-      finalDeliveryCharge = settings.isDeliveryChargeEnabled
-        ? getSlabAmount(settings.deliveryChargeSlabs, distance, settings.deliveryChargeAmount, paymentMethod === "COD")
-        : 0;
-      deliveryBoyAmount = getSlabAmount(settings.deliveryBoyAmountSlabs, distance, 0);
-    } else if (settings) {
-      finalDeliveryCharge = settings.isDeliveryChargeEnabled ? Number(settings.deliveryChargeAmount || 0) : 0;
+      return res.status(400).json({
+        message: "Order payment not verified yet or payment failed."
+      });
     }
 
-    let finalRainCharge = 0;
-    let finalFestivalCharge = 0;
-    let finalPlatformCharge = 0;
-    let surchargesAmount = 0;
-    let appliedSurcharges = [];
-
-    if (settings) {
-      finalRainCharge = Number(settings.rainCharge || 0);
-      finalFestivalCharge = Number(settings.festivalCharge || 0);
-      finalPlatformCharge = Number(settings.platformCharge || 0);
-      
-      if (Array.isArray(settings.surcharges)) {
-        const isCod = paymentMethod === "COD";
-        settings.surcharges.forEach(s => {
-          const isAllowed = isCod ? s.cod : s.online;
-          if (isAllowed) {
-            surchargesAmount += Number(s.amount || 0);
-            appliedSurcharges.push({
-              name: s.name,
-              amount: Number(s.amount || 0)
-            });
-          }
-        });
-      }
-    }
-
-    let finalDiscount = 0;
-    if (couponCode) {
-      const cleanCode = String(couponCode).trim().toUpperCase();
-      const coupon = await Coupon.findOne({ code: cleanCode });
-      if (coupon && coupon.active && new Date() <= new Date(coupon.expiryDate) && Number(subtotal || 0) >= coupon.minimumOrder) {
-        if (coupon.discountType === "percentage") {
-          finalDiscount = Math.round((Number(subtotal || 0) * coupon.discountValue) / 100);
-        } else {
-          finalDiscount = coupon.discountValue;
-        }
-      }
-    }
-
-    const packingTotal = Array.isArray(items)
-      ? items.reduce((sum, item) => sum + (Number(item.packingCharge || 0) * Number(item.qty || 0)), 0)
-      : 0;
-    const finalTotal = Math.max(0, Number(subtotal || 0) + packingTotal + finalDeliveryCharge + finalRainCharge + finalFestivalCharge + finalPlatformCharge + surchargesAmount - finalDiscount);
-
-    const order = await Order.create({
+    // 2. Perform backend pricing, coupon, stock and distance calculation
+    const calculated = await calculateOrderAmount({
       userId: req.user.id,
-
-      items: items.map(i => ({
-        foodId: i.foodId || i._id,
-        name: i.name,
-        price: i.price,
-        packingCharge: Number(i.packingCharge || 0),
-        qty: i.qty,
-        image: i.image
-      })),
-
+      items,
       address,
-      phone,
+      latitude,
+      longitude,
       paymentMethod,
-      subtotal,
-      deliveryCharge: finalDeliveryCharge,
-      deliveryBoyAmount,
-      rainCharge: finalRainCharge,
-      festivalCharge: finalFestivalCharge,
-      platformCharge: finalPlatformCharge,
-      surcharges: appliedSurcharges,
-      surchargesAmount: surchargesAmount,
-      total: finalTotal,
-      distance: distance ? Number(distance.toFixed(2)) : null,
-      latitude: userLat,
-      longitude: userLon,
-      customMessage: customMessage || "",
-      transactionId: transactionId || "",
-      couponCode: finalDiscount > 0 ? couponCode : "",
-      discountAmount: finalDiscount
+      couponCode
     });
 
-    if (finalDiscount > 0 && couponCode) {
-      try {
-        const cleanCode = String(couponCode).trim().toUpperCase();
+    // 3. Start MongoDB session/transaction to perform atomic stock update & order creation
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-        if (cleanCode === "NEW50") {
-          await Notification.create({
-            userId: req.user.id,
-            title: "Coupon Applied!",
-            message: "new users coupon use successfully",
-            type: "success"
-          });
-
-          try {
-            await sendPushToUser(
-              req.user.id,
-              "Coupon Applied!",
-              "new users coupon use successfully"
-            );
-          } catch (pushErr) {
-            console.error("Failed to send NEW50 push:", pushErr);
-          }
+    let order;
+    try {
+      // Stock check and decrement
+      for (const item of calculated.items) {
+        const food = await Food.findById(item.foodId).session(session);
+        if (!food || !food.isAvailable || food.availableQty < item.qty || food.isDeleted) {
+          throw new Error(`Insufficient stock or product unavailable: ${item.name}`);
         }
+        food.availableQty = Math.max(0, food.availableQty - item.qty);
+        if (food.availableQty === 0) {
+          food.isAvailable = false;
+        }
+        await food.save({ session });
+      }
 
-        const couponDoc = await Coupon.findOne({ code: cleanCode });
-        
-        if (couponDoc) {
-          // If the coupon belongs to a specific user (referral reward), deactivate it after use
-          if (couponDoc.userId) {
-            couponDoc.active = false;
-            await couponDoc.save();
+      // Coupon deactivation
+      if (calculated.couponCode) {
+        const couponDoc = await Coupon.findOne({ code: calculated.couponCode }).session(session);
+        if (couponDoc && couponDoc.userId) {
+          couponDoc.active = false;
+          await couponDoc.save({ session });
+        }
+      }
 
+      // Create Order in DB
+      const orderArray = await Order.create([{
+        userId: req.user.id,
+        items: calculated.items,
+        address,
+        phone: phone || req.user.phone,
+        paymentMethod: "COD",
+        subtotal: calculated.subtotal,
+        deliveryCharge: calculated.deliveryCharge,
+        deliveryBoyAmount: calculated.deliveryBoyAmount,
+        rainCharge: calculated.rainCharge,
+        festivalCharge: calculated.festivalCharge,
+        platformCharge: calculated.platformCharge,
+        surcharges: calculated.surcharges,
+        surchargesAmount: calculated.surchargesAmount,
+        total: calculated.total,
+        distance: calculated.distance,
+        latitude,
+        longitude,
+        customMessage: customMessage || "",
+        transactionId: "",
+        paymentStatus: "Pending",
+        status: "Pending",
+        couponCode: calculated.couponCode,
+        discountAmount: calculated.couponDiscount
+      }], { session });
+
+      order = orderArray[0];
+
+      await session.commitTransaction();
+      session.endSession();
+    } catch (err) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(400).json({ message: err.message || "Order creation failed" });
+    }
+
+    // 4. Run post-payment actions asynchronously outside transaction
+    const runCodPostActions = async () => {
+      try {
+        await SecurityLog.create({
+          userId: req.user.id,
+          action: "cod_order_created",
+          details: `COD Order #${orderCode(order._id)} created. Total: ₹${order.total}`,
+          ipAddress: req.ip,
+          userAgent: req.headers["user-agent"]
+        });
+
+        if (order.discountAmount > 0 && order.couponCode) {
+          const cleanCode = String(order.couponCode).trim().toUpperCase();
+          if (cleanCode === "NEW50") {
             await Notification.create({
               userId: req.user.id,
-              title: "Referral Coupon Used!",
-              message: `Your referral reward coupon ${cleanCode} has been used successfully.`,
+              title: "Coupon Applied!",
+              message: "new users coupon use successfully",
               type: "success"
             });
-
             try {
-              const { sendPushToUser } = await import("../utils/pushNotification.js");
-              await sendPushToUser(
-                req.user.id,
-                "Referral Coupon Used!",
-                `Your referral reward coupon ${cleanCode} has been used successfully.`
-              );
+              await sendPushToUser(req.user.id, "Coupon Applied!", "new users coupon use successfully");
             } catch (pushErr) {
-              console.error("Failed to send coupon use push:", pushErr);
+              console.error("Failed to send NEW50 push:", pushErr);
+            }
+          }
+
+          const couponDoc = await Coupon.findOne({ code: cleanCode });
+          if (couponDoc && couponDoc.referrerId) {
+            const previousOrders = await Order.countDocuments({
+              userId: req.user.id,
+              _id: { $ne: order._id },
+              paymentStatus: { $in: ["Paid", "Pending"] }
+            });
+            if (previousOrders === 0) {
+              const settings = await Settings.findOne();
+              const rewardReferrer = settings?.referralRewardReferrer || 20;
+
+              const referrer = await User.findById(couponDoc.referrerId);
+              const referrerName = referrer ? (referrer.name || "USER").split(" ")[0].replace(/[^a-z0-9]/gi, "").toUpperCase() : "USER";
+              const uniqueSuffix = String(order._id).slice(-4).toUpperCase();
+              const rewardCode = `REFER${rewardReferrer}-${referrerName}-${uniqueSuffix}`;
+
+              const expiry = new Date();
+              expiry.setFullYear(expiry.getFullYear() + 1);
+
+              await Coupon.create({
+                code: rewardCode,
+                title: `Referral Reward for ${referrer?.name || "User"}`,
+                discountType: "flat",
+                discountValue: rewardReferrer,
+                minimumOrder: 0,
+                expiryDate: expiry,
+                active: true,
+                userId: String(couponDoc.referrerId)
+              });
+
+              await Notification.create({
+                userId: String(couponDoc.referrerId),
+                title: "Referral Reward Earned!",
+                message: `Congratulations! Your friend used your referral code. You earned a ₹${rewardReferrer} discount coupon: ${rewardCode}`,
+                type: "success",
+                data: { couponCode: rewardCode }
+              });
+
+              try {
+                await sendPushToUser(
+                  String(couponDoc.referrerId),
+                  "Referral Reward Earned!",
+                  `Congratulations! Your friend used your referral code. You earned a ₹${rewardReferrer} discount coupon: ${rewardCode}`,
+                  { couponCode: rewardCode }
+                );
+              } catch (pushErr) {
+                console.error("Failed to send referral reward push:", pushErr);
+              }
             }
           }
         }
 
-        if (couponDoc && couponDoc.referrerId) {
-          const previousOrders = await Order.countDocuments({ userId: req.user.id, _id: { $ne: order._id } });
-          if (previousOrders === 0) {
-            const Settings = (await import("../models/Settings.js")).default;
-            const settings = await Settings.findOne();
-            const rewardReferrer = settings?.referralRewardReferrer || 20;
-            
-            const User = (await import("../models/User.js")).default;
-            const referrer = await User.findById(couponDoc.referrerId);
-            const referrerName = referrer ? (referrer.name || "USER").split(" ")[0].replace(/[^a-z0-9]/gi, "").toUpperCase() : "USER";
-            const uniqueSuffix = String(order._id).slice(-4).toUpperCase();
-            const rewardCode = `REFER${rewardReferrer}-${referrerName}-${uniqueSuffix}`;
-            
-            const expiry = new Date();
-            expiry.setFullYear(expiry.getFullYear() + 1); // 1 year expiry
-            
-            await Coupon.create({
-              code: rewardCode,
-              title: `Referral Reward for ${referrer?.name || "User"}`,
-              discountType: "flat",
-              discountValue: rewardReferrer,
-              minimumOrder: 0,
-              expiryDate: expiry,
-              active: true,
-              userId: String(couponDoc.referrerId)
-            });
-            
-            await Notification.create({
-              userId: String(couponDoc.referrerId),
-              title: "Referral Reward Earned!",
-              message: `Congratulations! Your friend used your referral code. You earned a ₹${rewardReferrer} discount coupon: ${rewardCode}`,
-              type: "success",
-              data: { couponCode: rewardCode }
-            });
-            
-            try {
-              const { sendPushToUser } = await import("../utils/pushNotification.js");
-              await sendPushToUser(
-                String(couponDoc.referrerId),
-                "Referral Reward Earned!",
-                `Congratulations! Your friend used your referral code. You earned a ₹${rewardReferrer} discount coupon: ${rewardCode}`,
-                { couponCode: rewardCode }
-              );
-            } catch (pushErr) {
-              console.error("Failed to send referral reward push:", pushErr);
-            }
-          }
-        }
+        await Notification.create({
+          userId: req.user.id,
+          title: "Order placed",
+          message: `Your order #${orderCode(order._id)} has been placed successfully.`,
+          type: "success",
+        });
+        sendPushToUser(req.user.id, "Order placed", `Your order #${orderCode(order._id)} has been placed successfully.`, { orderId: String(order._id) });
+        sendPushToAdmins(
+          "New Order Placed",
+          `Order #${orderCode(order._id)} | Total: ₹${order.total} | Payment: COD`,
+          { orderId: String(order._id) }
+        );
+
+        const customer = await User.findById(req.user.id).select("name email phone");
+        await createAdminNotification({
+          title: "New Order Placed",
+          message: `Order #${orderCode(order._id)} | COD | Total ₹${Number(order.total || 0)} | ${customer?.name || "Customer"} | ${customer?.email || "N/A"} | ${phone || customer?.phone || "N/A"}`,
+          type: "warning",
+          actionPath: "/admin/orders",
+          data: {
+            event: "new_order",
+            orderId: String(order._id),
+            userId: String(req.user.id),
+            paymentMethod: "COD",
+            total: order.total,
+          },
+        });
       } catch (err) {
-        console.error("Referrer reward processing error:", err);
+        console.error("COD post actions failed:", err);
       }
-    }
+    };
 
-    await Notification.create({
-      userId: req.user.id,
-      title: "Order placed",
-      message: `Your order #${orderCode(order._id)} has been placed successfully.`,
-      type: "success",
-    });
-    sendPushToUser(req.user.id, "Order placed", `Your order #${orderCode(order._id)} has been placed successfully.`, { orderId: String(order._id) });
-    sendPushToAdmins(
-      "New Order Placed",
-      `Order #${orderCode(order._id)} | Total: ₹${finalTotal} | Payment: ${paymentMethod}`,
-      { orderId: String(order._id) }
-    );
-
-    const customer = await User.findById(req.user.id).select("name email phone");
-    await createAdminNotification({
-      title: "New Order Placed",
-      message: `Order #${orderCode(order._id)} | ${formatPaymentMethod(paymentMethod)} | Total ₹${Number(finalTotal || 0)} | ${customer?.name || "Customer"} | ${customer?.email || "N/A"} | ${phone || customer?.phone || "N/A"}`,
-      type: isCodPayment(paymentMethod) ? "warning" : "success",
-      actionPath: "/admin/orders",
-      data: {
-        event: "new_order",
-        orderId: String(order._id),
-        userId: String(req.user.id),
-        paymentMethod: formatPaymentMethod(paymentMethod),
-        total: finalTotal,
-      },
-    });
-
+    // Run asynchronously
+    runCodPostActions();
 
     res.json({
-      success:true,
+      success: true,
       order
     });
 

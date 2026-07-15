@@ -86,7 +86,14 @@ const orderSchema = new mongoose.Schema(
   },
   customMessage:{ type: String, default: "" },
   couponCode: { type: String, default: "" },
-  discountAmount: { type: Number, default: 0 }
+  discountAmount: { type: Number, default: 0 },
+  razorpayOrderId: { type: String, default: null },
+  razorpayPaymentId: { type: String, default: null },
+  paymentStatus: {
+    type: String,
+    enum: ["Pending", "Paid", "Failed", "Refunded"],
+    default: "Pending"
+  }
 
 },
 {timestamps:true}
@@ -96,5 +103,13 @@ orderSchema.index({ userId: 1, createdAt: -1 });
 orderSchema.index({ assignedDeliveryBoy: 1, createdAt: -1 });
 orderSchema.index({ status: 1, createdAt: -1 });
 orderSchema.index({ assignedDeliveryBoy: 1, paymentMethod: 1, createdAt: -1 });
+orderSchema.index(
+  { razorpayOrderId: 1 },
+  { unique: true, partialFilterExpression: { razorpayOrderId: { $exists: true, $ne: null } } }
+);
+orderSchema.index(
+  { razorpayPaymentId: 1 },
+  { unique: true, partialFilterExpression: { razorpayPaymentId: { $exists: true, $ne: null } } }
+);
 
 export default mongoose.model("Order",orderSchema);

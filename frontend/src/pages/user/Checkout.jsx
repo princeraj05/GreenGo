@@ -493,7 +493,15 @@ export default function Checkout() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ amount: checkoutTotal }),
+          body: JSON.stringify({
+            items: cart,
+            address,
+            latitude: lat,
+            longitude: lon,
+            couponCode: appliedPromoCode,
+            customMessage,
+            phone
+          }),
         });
 
         const orderData = await orderRes.json();
