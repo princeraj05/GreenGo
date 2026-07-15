@@ -45,6 +45,16 @@ export default function Orders() {
   const [selectedReasons, setSelectedReasons] = useState([]);
   const [cancelCustomMessage, setCancelCustomMessage] = useState("");
 
+  // Toast notifications state
+  const [toast, setToast] = useState({ show: false, message: "", type: "success" });
+
+  const showToast = (message, type = "success") => {
+    setToast({ show: true, message, type });
+    setTimeout(() => {
+      setToast({ show: false, message: "", type: "success" });
+    }, 4000);
+  };
+
   /* --- EFFECTS & LIFECYCLE --- */
 
   // Load orders and user reviews on initialization and poll data updates every 10 seconds
@@ -197,6 +207,7 @@ export default function Orders() {
         setReviewModalOpen(false);
         loadUserReviews();
         loadOrders();
+        showToast(editingReviewId ? "Review updated successfully!" : "Review submitted successfully!");
       } else {
         const data = await res.json();
         alert(data.message || "Failed to submit review");
@@ -220,6 +231,7 @@ export default function Orders() {
       if (res.ok) {
         loadUserReviews();
         loadOrders();
+        showToast("Review deleted successfully!");
       }
     } catch (e) {
       console.error(e);
@@ -640,6 +652,25 @@ export default function Orders() {
               </div>
             </motion.div>
           </div>
+        )}
+      </AnimatePresence>
+
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {toast.show && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.9 }}
+            className={`fixed bottom-6 left-1/2 -translate-x-1/2 md:left-auto md:right-6 md:translate-x-0 z-[3000] px-5 py-3.5 rounded-2xl shadow-xl flex items-center gap-3 border font-extrabold text-sm ${
+              toast.type === "success"
+                ? "bg-emerald-500 text-white border-emerald-400"
+                : "bg-rose-500 text-white border-rose-400"
+            }`}
+          >
+            <CheckCircle size={20} className="shrink-0" />
+            <span>{toast.message}</span>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

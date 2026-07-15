@@ -1610,7 +1610,7 @@ export default function Menu() {
                     <p className="mt-1 text-sm font-semibold text-slate-500 dark:text-slate-400">Try another section or clear filters.</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-4">
                     {activeFoodCollection.items.map((food) =>
                       renderFoodCard(food, {
                         className: "min-w-0",
