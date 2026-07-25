@@ -22,6 +22,8 @@ import contactRoutes from "./routes/contactRoutes.js";
 import adminContactRoutes from "./routes/adminContactRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
 import settingsRoutes from "./routes/settingsRoutes.js";
+import { protect } from "./middleware/authMiddleware.js";
+import { createRazorpayOrderDirect, verifyRazorpayPaymentDirect } from "./controllers/paymentController.js";
 
 import dashboardRoutes from "./routes/dashboardRoutes.js";
 import adminAnalyticsRoutes from "./routes/adminAnalyticsRoutes.js";
@@ -120,6 +122,8 @@ app.use("/api/admin/contacts", adminContactRoutes);
 
 app.use("/api/contact", contactRoutes);
 app.use("/api/payment", paymentRoutes);
+app.post("/api/create-order", protect, createRazorpayOrderDirect);
+app.post("/api/verify-payment", protect, verifyRazorpayPaymentDirect);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/reviews", reviewRoutes);
 

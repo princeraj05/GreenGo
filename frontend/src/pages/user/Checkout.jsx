@@ -235,19 +235,37 @@ export default function Checkout() {
     };
   }, [navigate]);
 
-  // Requests browser geolocation permissions and extracts coordinates
+  // Requests browser geolocation permissions and extracts coordinates quickly with coarse fallback
   useEffect(() => {
     if (!navigator.geolocation || userCoords) return;
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
+
+    const requestLocation = (highAccuracy, timeoutMs) => {
+      return new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: highAccuracy,
+          timeout: timeoutMs,
+          maximumAge: 300000 // 5 minutes cache
+        });
+      });
+    };
+
+    requestLocation(true, 3000)
+      .then((position) => {
         setUserCoords({
           latitude: position.coords.latitude,
           longitude: position.coords.longitude
         });
-      },
-      () => {},
-      { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
-    );
+      })
+      .catch(() => {
+        requestLocation(false, 5000)
+          .then((position) => {
+            setUserCoords({
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude
+            });
+          })
+          .catch(() => {});
+      });
   }, [userCoords]);
 
   // Recalculates delivery fee once store settings, user coordinates, and payment method are loaded/changed
@@ -621,7 +639,18 @@ export default function Checkout() {
     }
     
     setLocationLoading(true);
-    navigator.geolocation.getCurrentPosition(async (position) => {
+
+    const requestLocation = (highAccuracy, timeoutMs) => {
+      return new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: highAccuracy,
+          timeout: timeoutMs,
+          maximumAge: 300000 // 5 minutes cache
+        });
+      });
+    };
+
+    const processPosition = async (position) => {
       try {
         const { latitude, longitude } = position.coords;
         setUserCoords({ latitude, longitude });
@@ -638,10 +667,20 @@ export default function Checkout() {
       } finally {
         setLocationLoading(false);
       }
-    }, () => {
-      alert("Unable to retrieve your location. Please check your browser permissions.");
-      setLocationLoading(false);
-    });
+    };
+
+    requestLocation(true, 3000)
+      .then(processPosition)
+      .catch((err) => {
+        console.warn("High-accuracy location timed out, trying low-accuracy:", err);
+        requestLocation(false, 5000)
+          .then(processPosition)
+          .catch((err2) => {
+            console.error("Location service failed:", err2);
+            alert("Unable to retrieve your location. Please check your device location settings or enter your address manually.");
+            setLocationLoading(false);
+          });
+      });
   };
 
   // Payment method options mapping helper
