@@ -12,20 +12,20 @@
 #   public *;
 #}
 
-# Preserve Capacitor Native bridge and Webview interface classes
+# Preserve Capacitor Native bridge, Webview interface, and annotations
 -keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod,SourceFile,LineNumberTable
--keep class com.getcapacitor.Bridge { *; }
--keep class com.getcapacitor.Plugin { *; }
--keep class com.getcapacitor.PluginCall { *; }
--keep class com.getcapacitor.PluginMethod { *; }
--keep class com.getcapacitor.JSObject { *; }
--keep class com.getcapacitor.JSArray { *; }
+
+-keep class com.getcapacitor.** { *; }
+-keep interface com.getcapacitor.** { *; }
+-keep @interface com.getcapacitor.** { *; }
+-keepclassmembers class com.getcapacitor.** { *; }
+
+-keep class com.capacitorjs.plugins.** { *; }
+-keep class com.capacitorjs.community.** { *; }
+
 -keep public class * extends com.getcapacitor.Plugin { *; }
--keep @com.getcapacitor.annotation.CapacitorPlugin public class * { 
-    @com.getcapacitor.annotation.PermissionCallback <methods>; 
-    @com.getcapacitor.annotation.ActivityCallback <methods>; 
-    @com.getcapacitor.annotation.Permission <fields>; 
-}
+-keepclassmembers class * extends com.getcapacitor.Plugin { *; }
+
 -keepclasseswithmembers class * {
   @android.webkit.JavascriptInterface <methods>;
 }
