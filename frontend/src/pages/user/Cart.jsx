@@ -8,6 +8,41 @@ import Card from "../../components/ui/Card";
 import Input from "../../components/ui/Input";
 import { getApiUrl, getImageUrl } from "../../utils/getApiUrl";
 
+function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Earth's radius in km
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+const getSlabAmount = (slabs = [], distance = null, fallback = 0, isCod = false) => {
+  const km = Number(distance || 0);
+  const sortedSlabs = Array.isArray(slabs)
+    ? slabs
+        .map((slab) => ({
+          upToKm: Number(slab?.upToKm || 0),
+          amount: Number(slab?.amount || 0),
+          cod: slab?.cod !== undefined ? Boolean(slab.cod) : true,
+          online: slab?.online !== undefined ? Boolean(slab.online) : true
+        }))
+        .filter((slab) => {
+          if (slab.upToKm <= 0) return false;
+          return isCod ? slab.cod : slab.online;
+        })
+        .sort((a, b) => a.upToKm - b.upToKm)
+    : [];
+  if (!sortedSlabs.length || !Number.isFinite(km) || km <= 0) return Number(fallback || 0);
+  const matchedSlab = sortedSlabs.find((slab) => km <= slab.upToKm) || sortedSlabs[sortedSlabs.length - 1];
+  return Number(matchedSlab?.amount || 0);
+};
+
 /**
  * Cart Component
  * 
@@ -27,6 +62,10 @@ export default function Cart() {
   const [promoDiscountValue, setPromoDiscountValue] = useState(0);
   const [appliedPromoCode, setAppliedPromoCode] = useState("");
   const [availableCoupons, setAvailableCoupons] = useState([]);
+  const [deliveryCharge, setDeliveryCharge] = useState(40);
+  const [settings, setSettings] = useState(null);
+  const [userCoords, setUserCoords] = useState(null);
+  const [address, setAddress] = useState("");
 
   /* --- DATA FETCHING & EFFECTS --- */
   useEffect(() => {
@@ -35,12 +74,31 @@ export default function Cart() {
     
     fetch(`${getApiUrl()}/api/settings`)
       .then(res => res.json())
-      .then(settings => {
-        setIsStoreOpen(settings.isStoreOpen !== false);
+      .then(settingsData => {
+        setSettings(settingsData);
+        setIsStoreOpen(settingsData.isStoreOpen !== false);
       })
       .catch(err => console.error("Error loading store settings in cart", err));
 
     const token = getToken();
+    if (token) {
+      fetch(`${getApiUrl()}/api/users/me`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      .then(res => res.json())
+      .then(userData => {
+        if (userData) {
+          const savedAddress = userData.deliveryDetails?.address || userData.address || "";
+          const finalAddress = savedAddress || localStorage.getItem("guest_address") || "";
+          if (finalAddress) setAddress(finalAddress);
+        }
+      })
+      .catch(err => console.error("Could not fetch user in cart", err));
+    } else {
+      const finalAddress = localStorage.getItem("guest_address") || "";
+      if (finalAddress) setAddress(finalAddress);
+    }
+
     if (token) {
       fetch(`${getApiUrl()}/api/coupons/active`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -85,6 +143,73 @@ export default function Cart() {
       }
     }
   }, []);
+
+  // Requests browser geolocation permissions
+  useEffect(() => {
+    if (!navigator.geolocation || userCoords) return;
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUserCoords({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude
+        });
+      },
+      (error) => {
+        console.warn("Fast geolocation retrieval failed in cart:", error.message);
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            setUserCoords({
+              latitude: pos.coords.latitude,
+              longitude: pos.coords.longitude
+            });
+          },
+          (err) => console.error("High accuracy fallback geolocation failed in cart:", err.message),
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+      },
+      { enableHighAccuracy: false, timeout: 2000, maximumAge: 300000 }
+    );
+  }, [userCoords]);
+
+  const updateDeliveryChargeByDistance = (settingsData, distance) => {
+    const nextCharge = (settingsData?.isDeliveryChargeEnabled !== false)
+      ? getSlabAmount(settingsData.deliveryChargeSlabs, distance, settingsData.deliveryChargeAmount, false)
+      : 0;
+    setDeliveryCharge(nextCharge);
+    return nextCharge;
+  };
+
+  // Recalculates delivery fee once store settings, user coordinates, address are loaded/changed
+  useEffect(() => {
+    if (!settings) return;
+
+    let lat = userCoords?.latitude;
+    let lon = userCoords?.longitude;
+
+    if (address) {
+      const latLngRegex = /Lat:\s*([-\d.]+),\s*Lng:\s*([-\d.]+)/i;
+      const match = address.match(latLngRegex);
+      if (match) {
+        lat = parseFloat(match[1]);
+        lon = parseFloat(match[2]);
+      }
+    }
+
+    if (lat !== undefined && lat !== null && lon !== undefined && lon !== null) {
+      const dist = calculateHaversineDistance(
+        settings.storeLatitude,
+        settings.storeLongitude,
+        lat,
+        lon
+      );
+      updateDeliveryChargeByDistance(settings, dist);
+    } else {
+      const fallbackCharge = (settings.isDeliveryChargeEnabled !== false)
+        ? Number(settings.deliveryChargeAmount || 0)
+        : 0;
+      setDeliveryCharge(fallbackCharge);
+    }
+  }, [settings, userCoords, address]);
 
   /* --- EVENT HANDLERS & HELPERS --- */
   const updateQty = (id, type) => {
@@ -164,7 +289,7 @@ export default function Cart() {
 
   const subtotal = cart.reduce((sum, item) => sum + Number(item.price || 0) * item.qty, 0);
   const packingCharges = cart.reduce((sum, item) => sum + Number(item.packingCharge || 0) * item.qty, 0);
-  const delivery = 40; 
+  const delivery = deliveryCharge; 
   
   // Calculate dynamic discount amount
   let discountAmount = 0;
