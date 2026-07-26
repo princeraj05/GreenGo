@@ -564,6 +564,11 @@ export default function Checkout() {
           },
           prefill: { contact: phone },
           theme: { color: "#f5410f" },
+          modal: {
+            ondismiss: function () {
+              setLoading(false);
+            }
+          },
         };
         const rzp1 = new window.Razorpay(options);
         
