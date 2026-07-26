@@ -338,7 +338,7 @@ export default function Checkout() {
    * updateDeliveryChargeByDistance: Recalculates next delivery charge slab
    */
   const updateDeliveryChargeByDistance = (settingsData, distance, isCodOrder = false) => {
-    const nextCharge = settingsData?.isDeliveryChargeEnabled
+    const nextCharge = (settingsData?.isDeliveryChargeEnabled !== false)
       ? getSlabAmount(settingsData.deliveryChargeSlabs, distance, settingsData.deliveryChargeAmount, isCodOrder)
       : 0;
     setDeliveryCharge(nextCharge);
@@ -504,7 +504,7 @@ export default function Checkout() {
       const settingsData = await settingsRes.json();
       let checkoutDeliveryCharge = deliveryCharge;
 
-      if (settingsData && settingsData.isDistanceLimitEnabled && lat !== undefined && lat !== null && lon !== undefined && lon !== null) {
+      if (settingsData && lat !== undefined && lat !== null && lon !== undefined && lon !== null) {
         const dist = calculateHaversineDistance(
           settingsData.storeLatitude,
           settingsData.storeLongitude,
@@ -512,7 +512,7 @@ export default function Checkout() {
           lon
         );
 
-        if (dist > settingsData.maxDeliveryDistance) {
+        if (settingsData.isDistanceLimitEnabled && dist > settingsData.maxDeliveryDistance) {
           alert(`Delivery is not available. Your location is ${dist.toFixed(1)} km away, which exceeds our maximum delivery distance of ${settingsData.maxDeliveryDistance} km.`);
           setLoading(false);
           return;
