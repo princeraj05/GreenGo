@@ -268,17 +268,37 @@ export default function Checkout() {
       });
   }, [userCoords]);
 
-  // Recalculates delivery fee once store settings, user coordinates, and payment method are loaded/changed
+  // Recalculates delivery fee once store settings, user coordinates, address, and payment method are loaded/changed
   useEffect(() => {
-    if (!settings || !userCoords?.latitude || !userCoords?.longitude) return;
-    const dist = calculateHaversineDistance(
-      settings.storeLatitude,
-      settings.storeLongitude,
-      userCoords.latitude,
-      userCoords.longitude
-    );
-    updateDeliveryChargeByDistance(settings, dist, paymentMethod === "COD");
-  }, [settings, userCoords, paymentMethod]);
+    if (!settings) return;
+
+    let lat = userCoords?.latitude;
+    let lon = userCoords?.longitude;
+
+    if (address) {
+      const latLngRegex = /Lat:\s*([-\d.]+),\s*Lng:\s*([-\d.]+)/i;
+      const match = address.match(latLngRegex);
+      if (match) {
+        lat = parseFloat(match[1]);
+        lon = parseFloat(match[2]);
+      }
+    }
+
+    if (lat !== undefined && lat !== null && lon !== undefined && lon !== null) {
+      const dist = calculateHaversineDistance(
+        settings.storeLatitude,
+        settings.storeLongitude,
+        lat,
+        lon
+      );
+      updateDeliveryChargeByDistance(settings, dist, paymentMethod === "COD");
+    } else {
+      const fallbackCharge = (settings.isDeliveryChargeEnabled !== false)
+        ? Number(settings.deliveryChargeAmount || 0)
+        : 0;
+      setDeliveryCharge(fallbackCharge);
+    }
+  }, [settings, userCoords, address, paymentMethod]);
 
   /* --- PRICE CALCULATION COMPUTATIONS --- */
   const taxes = 0;

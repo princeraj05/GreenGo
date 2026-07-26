@@ -128,13 +128,13 @@ export async function calculateOrderAmount({ userId, items, address, latitude, l
         );
       }
 
-      finalDeliveryCharge = settings.isDeliveryChargeEnabled
+      finalDeliveryCharge = (settings.isDeliveryChargeEnabled !== false)
         ? getSlabAmount(settings.deliveryChargeSlabs, distance, settings.deliveryChargeAmount, isCod)
         : 0;
       deliveryBoyAmount = getSlabAmount(settings.deliveryBoyAmountSlabs, distance, 0);
     } else {
       // Coordinates missing
-      finalDeliveryCharge = settings.isDeliveryChargeEnabled ? Number(settings.deliveryChargeAmount || 0) : 0;
+      finalDeliveryCharge = (settings.isDeliveryChargeEnabled !== false) ? Number(settings.deliveryChargeAmount || 0) : 0;
     }
   }
 
