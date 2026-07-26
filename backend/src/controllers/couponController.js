@@ -142,7 +142,7 @@ export const validateCoupon = async (req, res) => {
 
       // 2. Prevent using referral coupon on repeat orders (first order only)
       const Order = (await import("../models/Order.js")).default;
-      const orderCount = await Order.countDocuments({ userId: req.user.id });
+      const orderCount = await Order.countDocuments({ userId: req.user.id, status: { $ne: "PaymentPending" } });
       if (orderCount > 0) {
         return res.status(400).json({ message: "Referral coupons are only valid for your first order." });
       }

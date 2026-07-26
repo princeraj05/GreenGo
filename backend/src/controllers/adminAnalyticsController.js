@@ -25,13 +25,13 @@ export const getDashboardStats = async (req, res) => {
       todayDeliveredOrders,
       todayCancelledOrders,
     ] = await Promise.all([
-      Order.countDocuments(),
+      Order.countDocuments({ status: { $ne: "PaymentPending" } }),
       User.countDocuments(),
       Food.countDocuments(),
       Order.countDocuments({ status: "Pending" }),
       Order.countDocuments({ status: "Delivered" }),
       Order.countDocuments({ status: "Cancelled" }),
-      Order.countDocuments(todayQuery),
+      Order.countDocuments({ ...todayQuery, status: { $ne: "PaymentPending" } }),
       Order.countDocuments({ ...todayQuery, status: "Pending" }),
       Order.countDocuments({ ...todayQuery, status: "Preparing" }),
       Order.countDocuments({ ...todayQuery, status: { $in: ["Out for Delivery", "AcceptedByDeliveryBoy"] } }),
@@ -40,11 +40,12 @@ export const getDashboardStats = async (req, res) => {
     ]);
 
     const result = await Order.aggregate([
+      { $match: { status: { $ne: "PaymentPending" } } },
       { $group: { _id: null, totalRevenue: { $sum: "$total" } } }
     ]);
     const totalRevenue = result[0]?.totalRevenue || 0;
     const todayRevenueResult = await Order.aggregate([
-      { $match: { ...todayQuery, status: { $ne: "Cancelled" } } },
+      { $match: { ...todayQuery, status: { $nin: ["Cancelled", "PaymentPending"] } } },
       { $group: { _id: null, totalRevenue: { $sum: "$total" } } }
     ]);
     const todayRevenue = todayRevenueResult[0]?.totalRevenue || 0;

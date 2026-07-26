@@ -66,7 +66,7 @@ export const createRazorpayOrder = async (req, res) => {
       customMessage: customMessage || "",
       razorpayOrderId: razorpayOrder.id,
       paymentStatus: "Pending",
-      status: "Pending",
+      status: "PaymentPending",
       couponCode: calculated.couponCode,
       discountAmount: calculated.couponDiscount
     });
@@ -136,6 +136,7 @@ const processSuccessfulPayment = async (razorpayOrderId, razorpayPaymentId, expe
     order.paymentStatus = "Paid";
     order.transactionId = razorpayPaymentId;
     order.razorpayPaymentId = razorpayPaymentId;
+    order.status = "Pending";
     await order.save({ session });
 
     await session.commitTransaction();

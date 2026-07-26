@@ -5,7 +5,7 @@ import Food from "../models/Food.js";
 export const getAdminStats = async (req, res) => {
   try {
     const users = await User.countDocuments({ role: "customer" });
-    const orders = await Order.countDocuments();
+    const orders = await Order.countDocuments({ status: { $ne: "PaymentPending" } });
     const foods = await Food.countDocuments();
 
     const revenueAgg = await Order.aggregate([

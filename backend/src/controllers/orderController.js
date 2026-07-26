@@ -388,7 +388,7 @@ export const getAllOrders = async (req,res)=>{
   try {
     if (!isAdmin(req.user)) return res.status(403).json({ message: "Not admin" });
     const orders = await Order
-    .find()
+    .find({ status: { $ne: "PaymentPending" } })
     .populate("assignedDeliveryBoy", "name phone email role deliveryCredit")
     .populate("userId", "name phone email birthDate")
     .sort({createdAt:-1})
@@ -407,7 +407,7 @@ export const getAllOrders = async (req,res)=>{
 export const getMyOrders = async (req,res)=>{
 
   const orders = await Order
-  .find({userId:req.user.id})  // ✅ FIX
+  .find({userId:req.user.id, status: { $ne: "PaymentPending" }})  // ✅ FIX
   .sort({createdAt:-1})
   .lean();
 

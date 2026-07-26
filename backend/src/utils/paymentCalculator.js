@@ -197,7 +197,7 @@ export async function calculateOrderAmount({ userId, items, address, latitude, l
       userId,
       couponCode: cleanCode,
       paymentStatus: { $in: ["Paid", "Pending"] },
-      status: { $ne: "Cancelled" }
+      status: { $nin: ["Cancelled", "PaymentPending"] }
     });
 
     if (priorUses > 0) {
