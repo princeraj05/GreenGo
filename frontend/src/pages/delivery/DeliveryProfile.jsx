@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { CheckCircle2, LogOut, Mail, MapPin, Navigation, Phone, Save, User } from "lucide-react";
+import { CheckCircle, XCircle, CheckCircle2, LogOut, Mail, MapPin, Navigation, Phone, Save, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import API from "../../api/axios";
 import { clearSession } from "../../utils/authStorage";
@@ -62,6 +62,16 @@ export default function DeliveryProfile() {
     /\d/.test(password) &&
     /[^A-Za-z0-9]/.test(password)
   );
+
+  const passwordChecks = useMemo(() => {
+    const val = form.password || "";
+    return {
+      minLength: val.length >= 6,
+      hasAlphabet: /[A-Za-z]/.test(val),
+      hasNumber: /\d/.test(val),
+      hasSpecial: /[^A-Za-z0-9]/.test(val),
+    };
+  }, [form.password]);
 
   // --- API DATA FETCHING & EVENT HANDLERS ---
 
@@ -302,14 +312,72 @@ export default function DeliveryProfile() {
                     className="pl-11 rounded-xl"
                   />
                 </div>
-                 <p className="mt-1.5 text-[10px] font-semibold text-slate-400 dark:text-slate-500">
-                  Min 6 chars: alphabet, number, special character.
+              <div className="mt-2.5 space-y-2 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-2xl border border-slate-100 dark:border-slate-800">
+                <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                  Password Requirements:
                 </p>
-                {form.password && !/[^A-Za-z0-9]/.test(form.password) && (
-                  <p className="mt-1 text-xs font-bold text-rose-500 flex items-center gap-1 animate-pulse">
-                    <span>⚠️</span> Plz add a special character (e.g. @, #, $, %) to make it strong.
-                  </p>
-                )}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-xs font-semibold">
+                  <div className={`flex items-center gap-2 transition-colors duration-200 ${
+                    !form.password 
+                      ? "text-slate-400 dark:text-slate-500" 
+                      : passwordChecks.minLength 
+                        ? "text-emerald-600 dark:text-emerald-400" 
+                        : "text-rose-500 dark:text-rose-400"
+                  }`}>
+                    {form.password ? (
+                      passwordChecks.minLength ? <CheckCircle size={14} className="shrink-0" /> : <XCircle size={14} className="shrink-0" />
+                    ) : (
+                      <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-300 dark:border-slate-700 shrink-0" />
+                    )}
+                    <span>Min 6 characters</span>
+                  </div>
+
+                  <div className={`flex items-center gap-2 transition-colors duration-200 ${
+                    !form.password 
+                      ? "text-slate-400 dark:text-slate-500" 
+                      : passwordChecks.hasAlphabet 
+                        ? "text-emerald-600 dark:text-emerald-400" 
+                        : "text-rose-500 dark:text-rose-400"
+                  }`}>
+                    {form.password ? (
+                      passwordChecks.hasAlphabet ? <CheckCircle size={14} className="shrink-0" /> : <XCircle size={14} className="shrink-0" />
+                    ) : (
+                      <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-300 dark:border-slate-700 shrink-0" />
+                    )}
+                    <span>Alphabet letter</span>
+                  </div>
+
+                  <div className={`flex items-center gap-2 transition-colors duration-200 ${
+                    !form.password 
+                      ? "text-slate-400 dark:text-slate-500" 
+                      : passwordChecks.hasNumber 
+                        ? "text-emerald-600 dark:text-emerald-400" 
+                        : "text-rose-500 dark:text-rose-400"
+                  }`}>
+                    {form.password ? (
+                      passwordChecks.hasNumber ? <CheckCircle size={14} className="shrink-0" /> : <XCircle size={14} className="shrink-0" />
+                    ) : (
+                      <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-300 dark:border-slate-700 shrink-0" />
+                    )}
+                    <span>At least 1 number</span>
+                  </div>
+
+                  <div className={`flex items-center gap-2 transition-colors duration-200 ${
+                    !form.password 
+                      ? "text-slate-400 dark:text-slate-500" 
+                      : passwordChecks.hasSpecial 
+                        ? "text-emerald-600 dark:text-emerald-400" 
+                        : "text-rose-500 dark:text-rose-400"
+                  }`}>
+                    {form.password ? (
+                      passwordChecks.hasSpecial ? <CheckCircle size={14} className="shrink-0" /> : <XCircle size={14} className="shrink-0" />
+                    ) : (
+                      <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-300 dark:border-slate-700 shrink-0" />
+                    )}
+                    <span>Special character</span>
+                  </div>
+                </div>
+              </div>
               </div>
 
               <div className="rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-850 p-4 flex items-center justify-between">

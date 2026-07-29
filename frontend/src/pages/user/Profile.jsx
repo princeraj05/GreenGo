@@ -431,8 +431,21 @@ export default function Profile() {
   };
 
   const isStrongPassword = (password = "") => (
-    password.length >= 6
+    password.length >= 6 &&
+    /[A-Za-z]/.test(password) &&
+    /\d/.test(password) &&
+    /[^A-Za-z0-9]/.test(password)
   );
+
+  const passwordChecks = useMemo(() => {
+    const val = form.password || "";
+    return {
+      minLength: val.length >= 6,
+      hasAlphabet: /[A-Za-z]/.test(val),
+      hasNumber: /\d/.test(val),
+      hasSpecial: /[^A-Za-z0-9]/.test(val),
+    };
+  }, [form.password]);
 
   const saveProfile = async (override = {}, options = {}) => {
     if (options.requirePassword && !form.hasPassword && !form.password) {
@@ -440,7 +453,7 @@ export default function Profile() {
       return;
     }
     if (form.password && !isStrongPassword(form.password)) {
-      showMessage("Password must be at least 6 characters long.", "error");
+      showMessage("Password must be at least 6 characters and include alphabet, number, and special character.", "error");
       return;
     }
     setSaving(true);
@@ -600,9 +613,72 @@ export default function Profile() {
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
-              <p className="mt-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
-                Minimum 6 digits/characters.
-              </p>
+              <div className="mt-2.5 space-y-2 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-2xl border border-slate-100 dark:border-slate-800">
+                <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                  Password Requirements:
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-xs font-semibold">
+                  <div className={`flex items-center gap-2 transition-colors duration-200 ${
+                    !form.password 
+                      ? "text-slate-400 dark:text-slate-500" 
+                      : passwordChecks.minLength 
+                        ? "text-emerald-600 dark:text-emerald-400" 
+                        : "text-rose-500 dark:text-rose-400"
+                  }`}>
+                    {form.password ? (
+                      passwordChecks.minLength ? <CheckCircle size={14} className="shrink-0" /> : <XCircle size={14} className="shrink-0" />
+                    ) : (
+                      <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-300 dark:border-slate-700 shrink-0" />
+                    )}
+                    <span>Min 6 characters</span>
+                  </div>
+
+                  <div className={`flex items-center gap-2 transition-colors duration-200 ${
+                    !form.password 
+                      ? "text-slate-400 dark:text-slate-500" 
+                      : passwordChecks.hasAlphabet 
+                        ? "text-emerald-600 dark:text-emerald-400" 
+                        : "text-rose-500 dark:text-rose-400"
+                  }`}>
+                    {form.password ? (
+                      passwordChecks.hasAlphabet ? <CheckCircle size={14} className="shrink-0" /> : <XCircle size={14} className="shrink-0" />
+                    ) : (
+                      <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-300 dark:border-slate-700 shrink-0" />
+                    )}
+                    <span>Alphabet letter</span>
+                  </div>
+
+                  <div className={`flex items-center gap-2 transition-colors duration-200 ${
+                    !form.password 
+                      ? "text-slate-400 dark:text-slate-500" 
+                      : passwordChecks.hasNumber 
+                        ? "text-emerald-600 dark:text-emerald-400" 
+                        : "text-rose-500 dark:text-rose-400"
+                  }`}>
+                    {form.password ? (
+                      passwordChecks.hasNumber ? <CheckCircle size={14} className="shrink-0" /> : <XCircle size={14} className="shrink-0" />
+                    ) : (
+                      <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-300 dark:border-slate-700 shrink-0" />
+                    )}
+                    <span>At least 1 number</span>
+                  </div>
+
+                  <div className={`flex items-center gap-2 transition-colors duration-200 ${
+                    !form.password 
+                      ? "text-slate-400 dark:text-slate-500" 
+                      : passwordChecks.hasSpecial 
+                        ? "text-emerald-600 dark:text-emerald-400" 
+                        : "text-rose-500 dark:text-rose-400"
+                  }`}>
+                    {form.password ? (
+                      passwordChecks.hasSpecial ? <CheckCircle size={14} className="shrink-0" /> : <XCircle size={14} className="shrink-0" />
+                    ) : (
+                      <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-300 dark:border-slate-700 shrink-0" />
+                    )}
+                    <span>Special character</span>
+                  </div>
+                </div>
+              </div>
             </Field>
             <Field label="Birthday">
               <Input type="date" value={form.birthDate} onChange={(e) => setForm({ ...form, birthDate: e.target.value })} />
