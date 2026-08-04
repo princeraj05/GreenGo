@@ -8,6 +8,7 @@ import { SplashScreen } from "@capacitor/splash-screen";
 import { jwtDecode } from "jwt-decode";
 import API from "./api/axios";
 import { restoreSession, clearSession } from "./utils/authStorage";
+import PlayStoreBanner from "./components/PlayStoreBanner";
 
 export default function App() {
   const navigate = useNavigate();
@@ -15,6 +16,33 @@ export default function App() {
   const [isConnected, setIsConnected] = useState(true);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [customAlert, setCustomAlert] = useState(null);
+  const [showLaunchScreen, setShowLaunchScreen] = useState(true);
+  const [animationCompleted, setAnimationCompleted] = useState(false);
+
+  // Hide native splash screen as soon as React component mounts to reveal the animated Launch Screen
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      SplashScreen.hide().catch((err) => console.log("Splashscreen hide error", err));
+    }
+  }, []);
+
+  // Handle launch screen minimum display duration for the animation (2 seconds)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setAnimationCompleted(true);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Handle launch screen fade-out and destruction
+  useEffect(() => {
+    if (!checkingAuth && animationCompleted) {
+      const fadeTimer = setTimeout(() => {
+        setShowLaunchScreen(false);
+      }, 500); // matches the .animate-splash-fadeout animation duration of 0.5s
+      return () => clearTimeout(fadeTimer);
+    }
+  }, [checkingAuth, animationCompleted]);
   
   // Override window.alert globally
   useEffect(() => {
@@ -155,26 +183,21 @@ export default function App() {
     }
   }, [location, navigate]);
 
-  if (checkingAuth) {
-    return (
-      <div className="fixed inset-0 bg-[#1faf38] flex flex-col items-center justify-center p-6 text-center text-white z-[99999]">
-        <h1 className="text-5xl font-black tracking-tight text-white mb-2">
-          GreenGo
-        </h1>
-        <p className="text-white/85 text-xs font-bold tracking-widest uppercase mb-8">
-          Delivering Happiness
-        </p>
-        <div className="flex items-center gap-2.5 text-white/90 text-xs font-bold bg-white/10 px-4.5 py-2.5 rounded-full border border-white/20 shadow-lg">
-          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-          Loading...
-        </div>
-      </div>
-    );
-  }
-
   return (
     <>
-      <AppRoutes />
+      {!checkingAuth && <AppRoutes />}
+      <PlayStoreBanner />
+
+      {showLaunchScreen && (
+        <div className={`fixed inset-0 bg-[#1faf38] flex flex-col items-center justify-center p-6 text-center text-white z-[99999] ${(!checkingAuth && animationCompleted) ? "animate-splash-fadeout" : ""}`}>
+          <h1 className="animate-appname text-5xl font-black tracking-tight text-white mb-2 font-sans">
+            GreenGo
+          </h1>
+          <p className="animate-tagline text-white/85 text-xs font-bold tracking-widest uppercase font-sans">
+            Delivering Happiness
+          </p>
+        </div>
+      )}
       
       {/* Premium Custom Alert Modal */}
       {customAlert && (() => {
