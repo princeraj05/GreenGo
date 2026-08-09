@@ -66,6 +66,14 @@ export default function AuthPage() {
     return `${loginRedirectPath}${loginRedirectSearch}`;
   }, [loginRedirectPath, loginRedirectSearch]);
 
+  const handlePostLoginRedirect = useCallback((role) => {
+    if (role === "customer") {
+      navigate("/user/onboarding", { replace: true });
+    } else {
+      navigate("/notification-permission", { state: { redirect: getPostLoginPath(role) }, replace: true });
+    }
+  }, [navigate, getPostLoginPath]);
+
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentHeroSlide((prev) => (prev + 1) % loginSlides.length);
@@ -109,7 +117,7 @@ export default function AuthPage() {
         } catch {
           await saveSession(data.token, { email: user.email, phone: user.phoneNumber, role: data.role });
         }
-        navigate("/notification-permission", { state: { redirect: getPostLoginPath(data.role) }, replace: true });
+        handlePostLoginRedirect(data.role);
       } catch (err) {
         console.error("[FIREBASE AUTH] Session handler failed:", err);
         setError("Firebase authentication backend sync failed.");
@@ -166,7 +174,7 @@ export default function AuthPage() {
 
     checkRedirect();
     return () => unsubscribe();
-  }, [navigate, getPostLoginPath]);
+  }, [navigate, handlePostLoginRedirect]);
 
   const handleGoogleSignIn = async () => {
     console.log("[GOOGLE DEBUG] Button clicked");
@@ -209,7 +217,7 @@ export default function AuthPage() {
             await saveSession(data.token, { email: user.email, role: data.role });
           }
 
-          navigate("/notification-permission", { state: { redirect: getPostLoginPath(data.role) }, replace: true });
+          handlePostLoginRedirect(data.role);
         } catch (nativeErr) {
           console.warn("[GOOGLE DEBUG] Native Google Sign-In failed, falling back to web flow...", nativeErr);
           alert("Native Google Sign-In Error: " + (nativeErr.message || JSON.stringify(nativeErr)));
@@ -244,7 +252,7 @@ export default function AuthPage() {
           await saveSession(data.token, { email: user.email, role: data.role });
         }
         
-        navigate("/notification-permission", { state: { redirect: getPostLoginPath(data.role) }, replace: true });
+        handlePostLoginRedirect(data.role);
       }
     } catch (err) {
       console.error("Google sign in failed:", err);
@@ -293,7 +301,7 @@ export default function AuthPage() {
           await saveSession(data.token, { phone, role: data.role });
         }
 
-        navigate("/notification-permission", { state: { redirect: getPostLoginPath(data.role) }, replace: true });
+        handlePostLoginRedirect(data.role);
         return;
       }
 
@@ -337,7 +345,7 @@ export default function AuthPage() {
         } catch {
           await saveSession(data.token, { email, role: data.role });
         }
-        navigate("/notification-permission", { state: { redirect: getPostLoginPath(data.role) }, replace: true });
+        handlePostLoginRedirect(data.role);
         return;
       }
 
@@ -361,7 +369,7 @@ export default function AuthPage() {
       } catch {
         await saveSession(data.token, { phone: phone, role: data.role });
       }
-      navigate("/notification-permission", { state: { redirect: getPostLoginPath(data.role) }, replace: true });
+      handlePostLoginRedirect(data.role);
     } catch (err) {
       console.error("[AUTH] Verification error:", err);
       setError(err.response?.data?.message || err.message || "Invalid or expired OTP. Please try again.");
