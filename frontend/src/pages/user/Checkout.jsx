@@ -108,15 +108,36 @@ export default function Checkout() {
     return String(primaryAddress?.details || userData?.address || "").trim();
   };
 
-  // Triggers alert and routes user to root route with checkout origin context if details are missing
+  const isProfileComplete = (userData) => {
+    if (!userData) return false;
+    const editProfileCompleted = Boolean(
+      String(userData.name || "").trim() &&
+      String(userData.phone || "").trim()
+    );
+    const addressCompleted = (Array.isArray(userData.addresses) && userData.addresses.some((addr) => String(addr?.details || "").trim())) || String(userData.address || "").trim();
+    return editProfileCompleted && addressCompleted;
+  };
+
+  // Triggers alert and routes user to root route or profile page with checkout origin context if details are missing
   const redirectToLoginForDeliveryDetails = () => {
-    alert("Please login first and complete your profile address before placing an order.");
-    navigate("/", {
-      state: {
-        from: { pathname: "/user/checkout" },
-        loginRequired: true,
-      },
-    });
+    const token = getToken();
+    if (token) {
+      alert("Please complete your profile details and saved address to continue with your order.");
+      navigate("/user/profile", {
+        state: {
+          from: { pathname: "/user/checkout" },
+          profileRequired: true,
+        },
+      });
+    } else {
+      alert("Please login first and complete your profile address before placing an order.");
+      navigate("/", {
+        state: {
+          from: { pathname: "/user/checkout" },
+          loginRequired: true,
+        },
+      });
+    }
   };
 
   /* --- DATA FETCHING & EFFECTS --- */
@@ -222,7 +243,18 @@ export default function Checkout() {
           const finalAddress = savedAddress || localStorage.getItem("guest_address") || "";
           if (finalPhone) setPhone(finalPhone);
           if (finalAddress) setAddress(finalAddress);
-          setProfileDeliveryReady(Boolean(finalPhone && finalAddress));
+          
+          const complete = isProfileComplete(userData);
+          setProfileDeliveryReady(complete);
+
+          if (!complete) {
+            navigate("/user/profile", {
+              state: {
+                from: { pathname: "/user/checkout" },
+                profileRequired: true,
+              },
+            });
+          }
         }
       })
       .catch(err => console.error("Could not fetch user", err));

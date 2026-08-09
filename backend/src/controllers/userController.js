@@ -181,7 +181,7 @@ const hasUsableAddress = (user) => {
 
 const normalizeCustomerProfileCompletion = (user) => {
   if (user.role === "deliveryBoy" || user.role === "admin") return;
-  const editProfileCompleted = Boolean(String(user.name || "").trim() && String(user.phone || "").trim() && user.password);
+  const editProfileCompleted = Boolean(String(user.name || "").trim() && String(user.phone || "").trim());
   const addressCompleted = hasUsableAddress(user);
   const completionPercent = (editProfileCompleted ? 50 : 0) + (addressCompleted ? 50 : 0);
   user.profileCompletion = {

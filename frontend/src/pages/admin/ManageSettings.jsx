@@ -26,8 +26,8 @@ export default function ManageSettings() {
     deliveryChargeAmount: 40,
     isDeliveryChargeEnabled: true,
     maxDeliveryDistance: 10,
-    storeLatitude: 25.5941,
-    storeLongitude: 85.1376,
+    storeLatitude: 25.512098,
+    storeLongitude: 86.552263,
     isDistanceLimitEnabled: true,
     deliveryChargeSlabs: [{ upToKm: 10, amount: 50 }, { upToKm: 50, amount: 100 }],
     deliveryBoyAmountSlabs: [{ upToKm: 10, amount: 50 }, { upToKm: 100, amount: 100 }],
@@ -143,8 +143,8 @@ export default function ManageSettings() {
           deliveryChargeAmount: data.deliveryChargeAmount,
           isDeliveryChargeEnabled: data.isDeliveryChargeEnabled,
           maxDeliveryDistance: data.maxDeliveryDistance !== undefined ? data.maxDeliveryDistance : 10,
-          storeLatitude: data.storeLatitude !== undefined ? data.storeLatitude : 25.5941,
-          storeLongitude: data.storeLongitude !== undefined ? data.storeLongitude : 85.1376,
+          storeLatitude: data.storeLatitude !== undefined ? data.storeLatitude : 25.512098,
+          storeLongitude: data.storeLongitude !== undefined ? data.storeLongitude : 86.552263,
           isDistanceLimitEnabled: data.isDistanceLimitEnabled !== undefined ? data.isDistanceLimitEnabled : true,
           deliveryChargeSlabs: Array.isArray(data.deliveryChargeSlabs) && data.deliveryChargeSlabs.length
             ? data.deliveryChargeSlabs.map(s => ({
@@ -405,6 +405,29 @@ export default function ManageSettings() {
             <h3 className="font-extrabold text-slate-800 dark:text-white mb-4 uppercase tracking-wider text-xs">Distance & Location Limits</h3>
             
             <div className="space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">Cafe Latitude</label>
+                  <input
+                    type="number"
+                    step="0.000001"
+                    value={form.storeLatitude}
+                    onChange={(e) => setForm({ ...form, storeLatitude: e.target.value === "" ? "" : Number(e.target.value) })}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-slate-800 dark:text-white font-medium text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">Cafe Longitude</label>
+                  <input
+                    type="number"
+                    step="0.000001"
+                    value={form.storeLongitude}
+                    onChange={(e) => setForm({ ...form, storeLongitude: e.target.value === "" ? "" : Number(e.target.value) })}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-slate-800 dark:text-white font-medium text-sm"
+                  />
+                </div>
+              </div>
+
               <div className="flex items-center justify-between p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900">
                 <div>
                   <h3 className="font-bold text-slate-800 dark:text-white">Enable Distance Limit Check</h3>

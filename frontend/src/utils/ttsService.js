@@ -11,6 +11,7 @@ import { App as CapApp } from "@capacitor/app";
 // Voice configuration for order statuses
 export const ORDER_STATUS_VOICES = {
   Pending: "Your order has been placed successfully.",
+  RestaurantAccepted: "Your order has been accepted by the restaurant.",
   Preparing: "Good news. Your order has been confirmed and is being prepared.",
   CancellationRequested: "Your cancellation request has been submitted. Please wait for admin approval.",
   Cancelled: "Your order has been cancelled."
@@ -115,7 +116,7 @@ export const speakText = async (text) => {
 export const playOrderStatusVoice = async (orderId, status, updatedAt) => {
   if (!orderId || !status) return;
 
-  const validStatuses = ["Pending", "Preparing", "CancellationRequested", "Cancelled"];
+  const validStatuses = ["Pending", "RestaurantAccepted", "Preparing", "CancellationRequested", "Cancelled"];
   if (!validStatuses.includes(status)) return;
 
   // Only announce if the order was updated recently (within last 2 minutes) to prevent playing old/stale orders
@@ -152,7 +153,7 @@ export const playOrderStatusVoice = async (orderId, status, updatedAt) => {
 
 // Legacy compatibility exports for index/others
 export const playOrderConfirmationVoice = async (orderId, status, updatedAt) => {
-  if (status === "Pending" || status === "Preparing") {
+  if (status === "Pending" || status === "Preparing" || status === "RestaurantAccepted") {
     await playOrderStatusVoice(orderId, status, updatedAt);
   }
 };

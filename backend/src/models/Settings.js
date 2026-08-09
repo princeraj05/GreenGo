@@ -14,8 +14,8 @@ const settingsSchema = new mongoose.Schema({
     amount: { type: Number, default: 0 }
   }],
   maxDeliveryDistance: { type: Number, default: 10 },
-  storeLatitude: { type: Number, default: 25.5941 },
-  storeLongitude: { type: Number, default: 85.1376 },
+  storeLatitude: { type: Number, default: 25.512098 },
+  storeLongitude: { type: Number, default: 86.552263 },
   isDistanceLimitEnabled: { type: Boolean, default: true },
   isStoreOpen: { type: Boolean, default: false },
   rainCharge: { type: Number, default: 0 },

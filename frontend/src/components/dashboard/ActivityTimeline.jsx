@@ -1,13 +1,17 @@
 export default function ActivityTimeline({ activeOrder }) {
   if (!activeOrder) return null;
 
-  const steps = ["Pending", "Preparing", "Out for Delivery", "Delivered"];
+  const steps = ["Placed", "Accepted", "Preparing", "Rider Accepted", "On the Way", "Delivered"];
   
-  // A simple mapping of our statuses to steps. 
-  // If backend only has "Pending", "Preparing", "Delivered", we adapt it.
-  const currentStep = activeOrder.status === "Delivered" ? 3 : 
-                      activeOrder.status === "Preparing" ? 1 : 
-                      activeOrder.status === "Out for Delivery" ? 2 : 0;
+  const stepMap = {
+    Pending: 0,
+    RestaurantAccepted: 1,
+    Preparing: 2,
+    AcceptedByDeliveryBoy: 3,
+    "Out for Delivery": 4,
+    Delivered: 5
+  };
+  const currentStep = stepMap[activeOrder.status] ?? 0;
 
   return (
     <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 border border-slate-100 dark:border-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)] mb-10 transition-colors">

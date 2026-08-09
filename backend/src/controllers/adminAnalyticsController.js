@@ -33,7 +33,7 @@ export const getDashboardStats = async (req, res) => {
       Order.countDocuments({ status: "Cancelled" }),
       Order.countDocuments({ ...todayQuery, status: { $ne: "PaymentPending" } }),
       Order.countDocuments({ ...todayQuery, status: "Pending" }),
-      Order.countDocuments({ ...todayQuery, status: "Preparing" }),
+      Order.countDocuments({ ...todayQuery, status: { $in: ["RestaurantAccepted", "Preparing"] } }),
       Order.countDocuments({ ...todayQuery, status: { $in: ["Out for Delivery", "AcceptedByDeliveryBoy"] } }),
       Order.countDocuments({ ...todayQuery, status: "Delivered" }),
       Order.countDocuments({ ...todayQuery, status: "Cancelled" }),

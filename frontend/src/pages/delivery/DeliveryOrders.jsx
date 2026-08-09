@@ -146,6 +146,12 @@ export default function DeliveryOrders() {
     if (updated) startSharing(order._id);
   };
 
+  // Transition status to Out for Delivery and start sharing location
+  const startDeliveryAction = async (order) => {
+    const updated = await runAction(order._id, "start-delivery");
+    if (updated) startSharing(order._id);
+  };
+
   // Stops active tracking broadcasts and triggers delivery resolution state
   const markDelivered = async (orderId) => {
     stopSharing(orderId);
@@ -291,11 +297,15 @@ export default function DeliveryOrders() {
                     </button>
                   </>
                 )}
-                {order.status === "AcceptedByDeliveryBoy" && (
+                {(order.status === "AcceptedByDeliveryBoy" || order.status === "Out for Delivery") && (
                   <>
-                    {!sharingOrders[order._id] ? (
-                      <Button onClick={() => startSharing(order._id)} className="min-h-11 w-full sm:w-auto rounded-xl gap-2">
+                    {order.status === "AcceptedByDeliveryBoy" ? (
+                      <Button onClick={() => startDeliveryAction(order)} className="min-h-11 w-full sm:w-auto rounded-xl gap-2">
                         <Navigation size={16} /> Start Delivery
+                      </Button>
+                    ) : !sharingOrders[order._id] ? (
+                      <Button onClick={() => startSharing(order._id)} className="min-h-11 w-full sm:w-auto rounded-xl gap-2">
+                        <Navigation size={16} /> Start Sharing
                       </Button>
                     ) : (
                       <button type="button" onClick={() => stopSharing(order._id)} className="min-h-11 w-full sm:w-auto px-4 py-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-300 font-black text-sm flex items-center justify-center gap-2">

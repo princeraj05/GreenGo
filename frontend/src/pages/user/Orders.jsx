@@ -1,13 +1,27 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Package, Clock, CheckCircle, ChefHat, Truck, ShoppingBag, Star, Edit3, Trash2, X, Navigation } from "lucide-react";
+import { Package, Clock, CheckCircle, ChefHat, Truck, ShoppingBag, Star, Edit3, Trash2, X, Navigation, Store, UserCheck, Bike } from "lucide-react";
 import { getToken } from "../../utils/getToken";
 import Card from "../../components/ui/Card";
 import Badge from "../../components/ui/Badge";
 import { getApiUrl, getImageUrl } from "../../utils/getApiUrl";
 import Button from "../../components/ui/Button";
 import { playOrderStatusVoice } from "../../utils/ttsService";
+
+const getStatusLabel = (status) => {
+  const labels = {
+    Pending: "Order Placed",
+    RestaurantAccepted: "Restaurant Accepted",
+    Preparing: "Preparing",
+    AcceptedByDeliveryBoy: "Delivery Partner Accepted",
+    "Out for Delivery": "On The Way",
+    Delivered: "Delivered",
+    Cancelled: "Cancelled",
+    CancellationRequested: "Cancellation Requested"
+  };
+  return labels[status] || status;
+};
 
 /**
  * Orders Component
@@ -75,7 +89,7 @@ export default function Orders() {
   // internally within playOrderConfirmationVoice using persistent preferences.
   useEffect(() => {
     if (orders && orders.length > 0) {
-      const targetStatuses = ["Pending", "Preparing", "CancellationRequested", "Cancelled"];
+      const targetStatuses = ["Pending", "RestaurantAccepted", "Preparing", "CancellationRequested", "Cancelled"];
       orders.forEach((order) => {
         if (targetStatuses.includes(order.status)) {
           playOrderStatusVoice(order._id, order.status, order.updatedAt || order.createdAt);
@@ -264,10 +278,11 @@ export default function Orders() {
    */
   const getProgress = (status) => {
     if (status === "Delivered") return 100;
-    if (status === "Out for Delivery") return 75;
-    if (status === "AcceptedByDeliveryBoy") return 65;
-    if (status === "Preparing") return 50;
-    return 25; // Pending
+    if (status === "Out for Delivery") return 90;
+    if (status === "AcceptedByDeliveryBoy") return 75;
+    if (status === "Preparing") return 60;
+    if (status === "RestaurantAccepted") return 40;
+    return 20; // Pending
   };
 
   /**
@@ -275,9 +290,10 @@ export default function Orders() {
    */
   const getStatusIcon = (status) => {
     if (status === "Delivered") return <CheckCircle size={16} />;
-    if (status === "Out for Delivery") return <Truck size={16} />;
+    if (status === "Out for Delivery") return <Bike size={16} />;
+    if (status === "AcceptedByDeliveryBoy") return <UserCheck size={16} />;
     if (status === "Preparing") return <ChefHat size={16} />;
-    if (status === "AcceptedByDeliveryBoy") return <CheckCircle size={16} />;
+    if (status === "RestaurantAccepted") return <Store size={16} />;
     return <Clock size={16} />;
   };
 
@@ -337,7 +353,7 @@ export default function Orders() {
                   </div>
                   <Badge variant={o.status === "Delivered" ? "success" : "brand"} className="px-3 py-1.5 text-xs gap-1.5 uppercase tracking-wide w-fit">
                     {getStatusIcon(o.status)}
-                    {o.status === "AcceptedByDeliveryBoy" ? "Assigned" : o.status}
+                    {getStatusLabel(o.status)}
                   </Badge>
                 </div>
 
@@ -369,9 +385,9 @@ export default function Orders() {
                       />
                     </div>
                     <div className="flex justify-between text-[10px] font-bold text-slate-400 px-0.5 uppercase tracking-wider">
-                      <span className={getProgress(o.status) >= 25 ? "text-brand-600" : ""}>Placed</span>
-                      <span className={getProgress(o.status) >= 50 ? "text-brand-600" : ""}>Preparing</span>
-                      <span className={getProgress(o.status) >= 75 ? "text-brand-600" : ""}>On the way</span>
+                      <span className={getProgress(o.status) >= 20 ? "text-brand-600" : ""}>Placed</span>
+                      <span className={getProgress(o.status) >= 60 ? "text-brand-600" : ""}>Preparing</span>
+                      <span className={getProgress(o.status) >= 90 ? "text-brand-600" : ""}>On the way</span>
                       <span className={getProgress(o.status) >= 100 ? "text-emerald-600" : ""}>Delivered</span>
                     </div>
                   </div>

@@ -14,7 +14,6 @@ const isCustomerProfileComplete = (user) => Boolean(
   (
     String(user?.name || "").trim() &&
     String(user?.phone || "").trim() &&
-    Boolean(user?.profileCompletion?.passwordSet || user?.profileCompletion?.editProfileCompleted) &&
     hasSavedAddress(user)
   )
 );

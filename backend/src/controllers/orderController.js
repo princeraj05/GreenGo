@@ -53,6 +53,15 @@ const canViewTracking = (order, user) => {
 const buildTrackingResponse = (order) => ({
   orderId: order._id,
   status: order.status,
+  paymentMethod: order.paymentMethod,
+  total: order.total,
+  etaMinutes: order.etaMinutes,
+  items: order.items,
+  customerPhone: order.phone,
+  assignedDeliveryBoy: order.assignedDeliveryBoy ? {
+    name: order.assignedDeliveryBoy.name,
+    phone: order.assignedDeliveryBoy.phone
+  } : null,
   customerLocation: {
     address: order.address || "",
     lat: order.latitude ?? null,
@@ -65,6 +74,7 @@ const buildTrackingResponse = (order) => ({
         updatedAt: order.tracking.riderLocation.updatedAt
       }
     : null,
+  createdAt: order.createdAt,
   updatedAt: order.tracking?.riderLocation?.updatedAt || order.updatedAt
 });
 
@@ -419,9 +429,9 @@ export const getMyOrders = async (req,res)=>{
 
 export const getOrderTracking = async (req, res) => {
   try {
-    const order = await Order.findById(req.params.id).select(
-      "userId status address latitude longitude assignedDeliveryBoy tracking updatedAt"
-    ).lean();
+    const order = await Order.findById(req.params.id)
+      .populate("assignedDeliveryBoy", "name phone")
+      .lean();
     if (!order) return res.status(404).json({ message: "Order not found" });
     if (!canViewTracking(order, req.user)) return res.status(403).json({ message: "Not authorized to view tracking" });
 
@@ -498,14 +508,20 @@ export const updateOrderStatus = async (req, res) => {
     if (req.body.etaMinutes !== undefined) {
       update.etaMinutes = Number(req.body.etaMinutes);
       update.etaSetAt = new Date();
+      if (order.status === "Pending" || order.status === "RestaurantAccepted") {
+        update.status = "Preparing";
+      }
     }
 
     await Order.findByIdAndUpdate(orderId, update);
 
-    if (status && status !== previousStatus) {
+    const finalStatus = update.status || status;
+    if (finalStatus && finalStatus !== previousStatus) {
       const statusMessages = {
         Pending: "Your order is pending confirmation.",
+        RestaurantAccepted: "Your order has been accepted by the restaurant.",
         Preparing: "Your order is now being prepared.",
+        AcceptedByDeliveryBoy: "Your delivery partner has accepted your order and is heading to the restaurant.",
         "Out for Delivery": "Your order is out for delivery.",
         Delivered: "Your order has been delivered. Enjoy your meal!",
         Cancelled: `Your order has been cancelled: ${cancellationReason || "Cancelled by Admin"}`,
@@ -513,15 +529,15 @@ export const updateOrderStatus = async (req, res) => {
 
       await Notification.create({
         userId: order.userId,
-        title: `Order ${status}`,
-        message: `Order #${orderCode(order._id)}: ${statusMessages[status] || `Status changed to ${status}.`}`,
-        type: status === "Cancelled" ? "danger" : status === "Delivered" ? "success" : "info",
+        title: `Order ${finalStatus}`,
+        message: `Order #${orderCode(order._id)}: ${statusMessages[finalStatus] || `Status changed to ${finalStatus}.`}`,
+        type: finalStatus === "Cancelled" ? "danger" : finalStatus === "Delivered" ? "success" : "info",
       });
       sendPushToUser(
         order.userId,
-        `Order ${status}`,
-        `Order #${orderCode(order._id)}: ${statusMessages[status] || `Status changed to ${status}.`}`,
-        { orderId: String(order._id), status: status }
+        `Order ${finalStatus}`,
+        `Order #${orderCode(order._id)}: ${statusMessages[finalStatus] || `Status changed to ${finalStatus}.`}`,
+        { orderId: String(order._id), status: finalStatus }
       );
 
       if (status === "Delivered") {
@@ -576,6 +592,11 @@ export const assignDeliveryBoy = async (req, res) => {
     order.assignmentStatus = "Assigned";
     order.rejectionReason = "";
     order.rejectedAt = null;
+
+    if (order.status === "Pending") {
+      order.status = "RestaurantAccepted";
+    }
+
     await order.save();
 
     await Notification.create({
@@ -590,6 +611,21 @@ export const assignDeliveryBoy = async (req, res) => {
       `Order #${orderCode(order._id)} has been assigned to you.`,
       { orderId: String(order._id) }
     );
+
+    if (order.status === "RestaurantAccepted") {
+      await Notification.create({
+        userId: order.userId,
+        title: "Restaurant Accepted",
+        message: `Order #${orderCode(order._id)}: The restaurant has accepted your order and is assigning a delivery partner.`,
+        type: "info",
+      });
+      sendPushToUser(
+        order.userId,
+        "Restaurant Accepted",
+        `Order #${orderCode(order._id)}: The restaurant has accepted your order and is assigning a delivery partner.`,
+        { orderId: String(order._id), status: "RestaurantAccepted" }
+      );
+    }
 
     res.json({ success: true, order });
   } catch (err) {
@@ -771,6 +807,37 @@ export const markAssignedOrderDelivered = async (req, res) => {
 
     res.json({ success: true, order });
   } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const startDelivery = async (req, res) => {
+  try {
+    const deliveryUser = await requireDeliveryProfile(req, res);
+    if (!deliveryUser) return;
+    const order = await Order.findOne({ _id: req.params.id, assignedDeliveryBoy: req.user.id });
+    if (!order) return res.status(404).json({ message: "Order not found" });
+    if (order.status === "Delivered") return res.status(400).json({ message: "Order already delivered" });
+
+    order.status = "Out for Delivery";
+    await order.save();
+
+    await Notification.create({
+      userId: order.userId,
+      title: "Order out for delivery",
+      message: `Order #${orderCode(order._id)}: Out for delivery / On the way!`,
+      type: "info",
+    });
+    sendPushToUser(
+      order.userId,
+      "Order out for delivery",
+      `Order #${orderCode(order._id)}: Out for delivery / On the way!`,
+      { orderId: String(order._id), status: "Out for Delivery" }
+    );
+
+    res.json({ success: true, order });
+  } catch (err) {
+    console.error("Start delivery error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };

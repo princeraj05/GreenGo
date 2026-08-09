@@ -185,13 +185,13 @@ export default function Profile() {
           notifications: userData.notifications || "",
           birthDate: userData.birthDate ? new Date(userData.birthDate).toISOString().slice(0, 10) : "",
           password: "",
-          hasPassword: Boolean(userData.profileCompletion?.passwordSet || userData.profileCompletion?.editProfileCompleted),
+          hasPassword: true,
         };
         setForm(nextForm);
         setFavorites(userData.favorites || []);
 
         if (location.state?.profileRequired) {
-          const isEditDone = Boolean(String(userData.name || "").trim() && String(userData.phone || "").trim() && (userData.profileCompletion?.passwordSet || userData.profileCompletion?.editProfileCompleted));
+          const isEditDone = Boolean(String(userData.name || "").trim() && String(userData.phone || "").trim());
           if (!isEditDone) {
             setActiveSection("edit");
           } else {
@@ -329,7 +329,7 @@ export default function Profile() {
     [foods, favorites]
   );
 
-  const editProfileCompleted = Boolean(String(form.name || "").trim() && String(form.phone || "").trim() && form.hasPassword);
+  const editProfileCompleted = Boolean(String(form.name || "").trim() && String(form.phone || "").trim());
   const addressCompleted = getCleanAddresses(form.addresses).length > 0 || Boolean(String(form.address || "").trim());
   const profileCompletionPercent = (editProfileCompleted ? 50 : 0) + (addressCompleted ? 50 : 0);
 
@@ -339,7 +339,7 @@ export default function Profile() {
       return;
     }
     if (activeSection === "edit") {
-      speakText("Please complete your profile. Add your name, phone number, password, and birthday date.");
+      speakText("Please complete your profile. Add your name and phone number.");
     } else if (activeSection === "addresses") {
       speakText("Please fill your address. Choose current location or any location.");
     } else {
@@ -448,9 +448,22 @@ export default function Profile() {
   }, [form.password]);
 
   const saveProfile = async (override = {}, options = {}) => {
-    if (options.requirePassword && !form.hasPassword && !form.password) {
-      showMessage("Please set password to complete profile.", "error");
-      return;
+    if (options.requireFields !== false) {
+      if (!String(form.name || "").trim()) {
+        showMessage("Please enter your full name.", "error");
+        return;
+      }
+      if (!String(form.phone || "").trim()) {
+        showMessage("Please enter your mobile number.", "error");
+        return;
+      }
+    }
+    if (activeSection === "addresses" && location.state?.profileRequired) {
+      const cleanedAddresses = getCleanAddresses(form.addresses);
+      if (cleanedAddresses.length === 0) {
+        showMessage("Please add and save at least one valid address to complete your profile.", "error");
+        return;
+      }
     }
     if (form.password && !isStrongPassword(form.password)) {
       showMessage("Password must be at least 6 characters and include alphabet, number, and special character.", "error");
@@ -488,7 +501,7 @@ export default function Profile() {
         addresses: normalizeAddresses(userData),
         birthDate: userData.birthDate ? new Date(userData.birthDate).toISOString().slice(0, 10) : payload.birthDate,
         password: "",
-        hasPassword: Boolean(userData.profileCompletion?.passwordSet || userData.profileCompletion?.editProfileCompleted || payload.password),
+        hasPassword: true,
       };
       setForm(nextForm);
       showMessage("Profile updated successfully");
@@ -498,8 +511,11 @@ export default function Profile() {
           setActiveSection("addresses");
         } else if (activeSection === "addresses") {
           setActiveSection(null);
-          const redirectPath = location.state?.from || "/user/menu";
-          navigate(redirectPath, { replace: true });
+          const redirectPath = typeof location.state?.from === "string"
+            ? location.state.from
+            : (location.state?.from?.pathname || "/user/menu");
+          const search = location.state?.from?.search || "";
+          navigate(`${redirectPath}${search}`, { replace: true });
         }
       } else {
         if (activeSection === "edit" || activeSection === "addresses") {
@@ -595,95 +611,10 @@ export default function Profile() {
             <Field label="Mobile Number">
               <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="Enter Number" />
             </Field>
-            <Field label={form.hasPassword ? "Set New Password" : "Set Password"}>
-              <div className="relative">
-                <Input
-                  type={showPassword ? "text" : "password"}
-                  value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  placeholder="Enter Password"
-                  className="pr-12"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((value) => !value)}
-                  className="absolute inset-y-0 right-3 flex items-center text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-              <div className="mt-2.5 space-y-2 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-2xl border border-slate-100 dark:border-slate-800">
-                <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                  Password Requirements:
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-xs font-semibold">
-                  <div className={`flex items-center gap-2 transition-colors duration-200 ${
-                    !form.password 
-                      ? "text-slate-400 dark:text-slate-500" 
-                      : passwordChecks.minLength 
-                        ? "text-emerald-600 dark:text-emerald-400" 
-                        : "text-rose-500 dark:text-rose-400"
-                  }`}>
-                    {form.password ? (
-                      passwordChecks.minLength ? <CheckCircle size={14} className="shrink-0" /> : <XCircle size={14} className="shrink-0" />
-                    ) : (
-                      <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-300 dark:border-slate-700 shrink-0" />
-                    )}
-                    <span>Min 6 characters</span>
-                  </div>
-
-                  <div className={`flex items-center gap-2 transition-colors duration-200 ${
-                    !form.password 
-                      ? "text-slate-400 dark:text-slate-500" 
-                      : passwordChecks.hasAlphabet 
-                        ? "text-emerald-600 dark:text-emerald-400" 
-                        : "text-rose-500 dark:text-rose-400"
-                  }`}>
-                    {form.password ? (
-                      passwordChecks.hasAlphabet ? <CheckCircle size={14} className="shrink-0" /> : <XCircle size={14} className="shrink-0" />
-                    ) : (
-                      <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-300 dark:border-slate-700 shrink-0" />
-                    )}
-                    <span>Alphabet letter</span>
-                  </div>
-
-                  <div className={`flex items-center gap-2 transition-colors duration-200 ${
-                    !form.password 
-                      ? "text-slate-400 dark:text-slate-500" 
-                      : passwordChecks.hasNumber 
-                        ? "text-emerald-600 dark:text-emerald-400" 
-                        : "text-rose-500 dark:text-rose-400"
-                  }`}>
-                    {form.password ? (
-                      passwordChecks.hasNumber ? <CheckCircle size={14} className="shrink-0" /> : <XCircle size={14} className="shrink-0" />
-                    ) : (
-                      <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-300 dark:border-slate-700 shrink-0" />
-                    )}
-                    <span>At least 1 number</span>
-                  </div>
-
-                  <div className={`flex items-center gap-2 transition-colors duration-200 ${
-                    !form.password 
-                      ? "text-slate-400 dark:text-slate-500" 
-                      : passwordChecks.hasSpecial 
-                        ? "text-emerald-600 dark:text-emerald-400" 
-                        : "text-rose-500 dark:text-rose-400"
-                  }`}>
-                    {form.password ? (
-                      passwordChecks.hasSpecial ? <CheckCircle size={14} className="shrink-0" /> : <XCircle size={14} className="shrink-0" />
-                    ) : (
-                      <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-300 dark:border-slate-700 shrink-0" />
-                    )}
-                    <span>Special character</span>
-                  </div>
-                </div>
-              </div>
-            </Field>
             <Field label="Birthday">
               <Input type="date" value={form.birthDate} onChange={(e) => setForm({ ...form, birthDate: e.target.value })} />
             </Field>
-            <Button onClick={() => saveProfile({}, { requirePassword: true })} disabled={saving} className="w-full rounded-2xl py-3 gap-2">
+            <Button onClick={() => saveProfile({}, { requireFields: true })} disabled={saving} className="w-full rounded-2xl py-3 gap-2">
               <Save size={18} />
               {saving ? "Saving..." : "Save Profile"}
             </Button>

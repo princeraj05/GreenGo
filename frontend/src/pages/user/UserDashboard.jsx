@@ -117,7 +117,7 @@ export default function UserDashboard() {
   };
 
   /* --- MEMOIZED / DERIVED VARIABLES --- */
-  const activeOrders = orders.filter(o => o.status === "Pending" || o.status === "Preparing" || o.status === "Out for Delivery");
+  const activeOrders = orders.filter(o => ["Pending", "RestaurantAccepted", "Preparing", "AcceptedByDeliveryBoy", "Out for Delivery", "CancellationRequested"].includes(o.status));
   const activeOrdersCount = activeOrders.length;
   const mostRecentActiveOrder = activeOrders.length > 0 ? activeOrders[0] : null;
   

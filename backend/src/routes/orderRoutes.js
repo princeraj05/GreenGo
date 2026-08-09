@@ -16,6 +16,7 @@ import {
   rejectAssignedOrder,
   updateRiderLocation,
   updateOrderStatus,
+  startDelivery,
   cancelOrder,
   approveCancelOrder,
   rejectCancelOrder
@@ -42,6 +43,7 @@ router.get("/delivery/assigned",protect,getAssignedOrders);
 router.get("/delivery/earnings",protect,getDeliveryEarnings);
 router.put("/delivery/:id/accept",protect,acceptAssignedOrder);
 router.put("/delivery/:id/reject",protect,rejectAssignedOrder);
+router.put("/delivery/:id/start-delivery",protect,startDelivery);
 router.put("/delivery/:id/delivered",protect,markAssignedOrderDelivered);
 
 /* TRACKING */
