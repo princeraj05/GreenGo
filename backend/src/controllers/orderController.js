@@ -732,25 +732,52 @@ export const rejectAssignedOrder = async (req, res) => {
     if (!order) return res.status(404).json({ message: "Order not found" });
 
     const reason = String(req.body.reason || "").trim();
-    order.status = "RejectedByDeliveryBoy";
+    const deliveryBoyName = deliveryUser.name || "Delivery Partner";
+
+    // Set reject details
     order.assignmentStatus = "Rejected";
     order.rejectedAt = new Date();
     order.rejectionReason = reason;
+
+    // Roll back order status so it doesn't get cancelled/marked as rejected for the customer
+    order.status = order.etaMinutes ? "Preparing" : "RestaurantAccepted";
+
+    // Clear assigned rider to make the order available for re-assignment and remove from rider's view
+    order.assignedDeliveryBoy = null;
     await order.save();
 
+    // Notify Admin via DB notifications
     await Notification.create({
       title: "Order rejected by delivery boy",
-      message: `Order #${orderCode(order._id)} was rejected${reason ? `: ${reason}` : "."}`,
+      message: `Rider ${deliveryBoyName} rejected Order #${orderCode(order._id)}${reason ? `: ${reason}` : "."}`,
       type: "warning",
     });
+
+    // Create Admin notification in service
+    await createAdminNotification({
+      title: "Order Assignment Rejected",
+      message: `Rider ${deliveryBoyName} rejected Order #${orderCode(order._id)}. Reason: ${reason || "None"}. Please reassign a new partner.`,
+      type: "danger",
+      actionPath: "/admin/orders",
+      data: {
+        event: "delivery_reject",
+        orderId: String(order._id),
+        deliveryBoyId: String(req.user.id),
+        deliveryBoyName,
+        reason
+      }
+    });
+
+    // Send Push Notification to admins
     sendPushToAdmins(
-      "Order rejected by delivery boy",
-      `Order #${orderCode(order._id)} was rejected${reason ? `: ${reason}` : "."}`,
+      "Order Assignment Rejected",
+      `Rider ${deliveryBoyName} rejected Order #${orderCode(order._id)}. Please reassign.`,
       { orderId: String(order._id) }
     );
 
     res.json({ success: true, order });
   } catch (err) {
+    console.error("Reject order error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };

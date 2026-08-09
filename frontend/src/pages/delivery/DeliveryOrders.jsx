@@ -5,6 +5,20 @@ import API from "../../api/axios";
 import Button from "../../components/ui/Button";
 import Badge from "../../components/ui/Badge";
 
+const getStatusLabel = (status) => {
+  const labels = {
+    Pending: "Order Placed",
+    RestaurantAccepted: "Restaurant Accepted",
+    Preparing: "Preparing",
+    AcceptedByDeliveryBoy: "Accepted",
+    "Out for Delivery": "On The Way",
+    Delivered: "Delivered",
+    Cancelled: "Cancelled",
+    CancellationRequested: "Cancellation Requested"
+  };
+  return labels[status] || status;
+};
+
 export default function DeliveryOrders() {
   // --- REACT STATE, REFS & ROUTER HOOKS ---
   
@@ -233,8 +247,8 @@ export default function DeliveryOrders() {
               {/* Order identifier header featuring order status Badge */}
               <div className="flex items-start justify-between gap-3">
                 <h3 className="text-lg font-black break-all">#{String(order._id).slice(-6).toUpperCase()}</h3>
-                <Badge variant={order.status === "Delivered" ? "success" : order.status === "RejectedByDeliveryBoy" ? "danger" : "warning"}>
-                  {order.status}
+                <Badge variant={order.status === "Delivered" ? "success" : (order.status === "RejectedByDeliveryBoy" || order.status === "Cancelled") ? "danger" : "warning"}>
+                  {getStatusLabel(order.status)}
                 </Badge>
               </div>
 
