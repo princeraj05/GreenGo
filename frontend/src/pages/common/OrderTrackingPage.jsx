@@ -75,6 +75,37 @@ const statusConfig = {
   }
 };
 
+const getStepIndex = (status) => {
+  const stepMap = {
+    Pending: 0,
+    RestaurantAccepted: 1,
+    Preparing: 2,
+    AcceptedByDeliveryBoy: 3,
+    "Out for Delivery": 4,
+    Delivered: 5
+  };
+  return stepMap[status] ?? 0;
+};
+
+const getEstimatedDeliveryTime = (status, etaMinutes) => {
+  if (status === "Delivered") return "Delivered";
+  if (status === "Cancelled") return "Cancelled";
+  if (etaMinutes) return `${etaMinutes} Mins`;
+  
+  switch (status) {
+    case "Pending":
+    case "RestaurantAccepted":
+    case "Preparing":
+      return "30-40 Mins";
+    case "AcceptedByDeliveryBoy":
+      return "20-30 Mins";
+    case "Out for Delivery":
+      return "10-15 Mins";
+    default:
+      return "30-40 Mins";
+  }
+};
+
 function distanceKm(a, b) {
   if (!a || !b || a.lat == null || a.lng == null || b.lat == null || b.lng == null) return null;
   const R = 6371;
@@ -267,7 +298,7 @@ export default function OrderTrackingPage({ role = "user" }) {
                   </div>
                   <div>
                     <p className="text-lg font-black text-slate-900 dark:text-white">
-                      {tracking?.status === "Delivered" ? "Delivered" : tracking?.etaMinutes ? `${tracking.etaMinutes} Mins` : "30-40 Mins"}
+                      {getEstimatedDeliveryTime(tracking?.status, tracking?.etaMinutes)}
                     </p>
                     <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mt-0.5">Approximate Time</p>
                   </div>
@@ -297,31 +328,48 @@ export default function OrderTrackingPage({ role = "user" }) {
           <Card className="p-6 sm:p-8 rounded-3xl border-slate-100">
             <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-6 text-center">Tracking Steps</h3>
             
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-y-6 gap-x-2 relative">
-              {steps.map((step, idx) => {
-                const isActive = active[step.key];
-                return (
-                  <div key={step.key} className="flex flex-col items-center text-center space-y-2 relative group">
-                    {/* Circle Indicator */}
-                    <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
-                      isActive 
-                        ? "bg-brand-600 border-brand-600 text-white shadow-md shadow-brand-500/20" 
-                        : "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-400"
-                    }`}>
-                      {createElement(step.icon, { size: 18, className: "shrink-0" })}
+            <div className="relative mt-6 mb-2 px-5">
+              {/* Stepper progress connector lines */}
+              <div className="absolute top-5 left-5 right-5 h-1 bg-slate-100 dark:bg-slate-800 -translate-y-1/2 rounded-full">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: `${(getStepIndex(tracking?.status) / 5) * 100}%` }}
+                  transition={{ duration: 1, ease: "easeOut" }}
+                  className="h-full bg-brand-500 rounded-full"
+                />
+              </div>
+
+              <div className="relative flex justify-between w-full">
+                {steps.map((step, idx) => {
+                  const stepIdx = getStepIndex(tracking?.status);
+                  const isCompleted = idx <= stepIdx;
+                  const isCurrent = idx === stepIdx;
+                  return (
+                    <div key={step.key} className="flex flex-col items-center text-center space-y-2 relative z-10">
+                      {/* Circle Indicator */}
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold border-2 transition-all duration-300 ${
+                        isCompleted 
+                          ? "bg-brand-600 border-brand-600 text-white shadow-md shadow-brand-500/20" 
+                          : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-400"
+                      } ${isCurrent ? 'ring-4 ring-brand-500/20 scale-110' : ''}`}>
+                        {isCompleted ? (
+                          <span className="text-sm font-bold">✓</span>
+                        ) : (
+                          <span className="text-sm font-bold">{idx + 1}</span>
+                        )}
+                      </div>
+                      {/* Step label */}
+                      <div className="space-y-0.5">
+                        <p className={`text-[9px] md:text-xs font-black uppercase tracking-wider leading-tight max-w-[70px] sm:max-w-[90px] mx-auto transition-colors ${
+                          isCompleted ? "text-brand-700 dark:text-brand-400" : "text-slate-400"
+                        }`}>
+                          {step.label}
+                        </p>
+                      </div>
                     </div>
-                    {/* Step label */}
-                    <div className="space-y-0.5">
-                      <p className="text-[10px] font-black leading-none text-slate-400 dark:text-slate-500">{idx + 1}</p>
-                      <p className={`text-[10px] md:text-xs font-black uppercase tracking-wider leading-tight max-w-[90px] mx-auto transition-colors ${
-                        isActive ? "text-brand-700 dark:text-brand-400" : "text-slate-400"
-                      }`}>
-                        {step.label}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           </Card>
 

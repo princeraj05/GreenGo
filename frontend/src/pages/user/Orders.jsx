@@ -23,6 +23,46 @@ const getStatusLabel = (status) => {
   return labels[status] || status;
 };
 
+const steps = [
+  { key: "placed", label: "Order Placed" },
+  { key: "restaurant_accepted", label: "Restaurant Accepted" },
+  { key: "preparing", label: "Preparing" },
+  { key: "delivery_accepted", label: "Delivery Partner Accepted" },
+  { key: "on_the_way", label: "On The Way" },
+  { key: "delivered", label: "Delivered" }
+];
+
+const getStepIndex = (status) => {
+  const stepMap = {
+    Pending: 0,
+    RestaurantAccepted: 1,
+    Preparing: 2,
+    AcceptedByDeliveryBoy: 3,
+    "Out for Delivery": 4,
+    Delivered: 5
+  };
+  return stepMap[status] ?? 0;
+};
+
+const getEstimatedDeliveryTime = (status, etaMinutes) => {
+  if (status === "Delivered") return "Delivered";
+  if (status === "Cancelled") return "Cancelled";
+  if (etaMinutes) return `${etaMinutes} Mins`;
+  
+  switch (status) {
+    case "Pending":
+    case "RestaurantAccepted":
+    case "Preparing":
+      return "30-40 Mins";
+    case "AcceptedByDeliveryBoy":
+      return "20-30 Mins";
+    case "Out for Delivery":
+      return "10-15 Mins";
+    default:
+      return "30-40 Mins";
+  }
+};
+
 /**
  * Orders Component
  * 
@@ -374,21 +414,43 @@ export default function Orders() {
                     )}
                   </div>
                 ) : (
-                  /* --- PROGRESS TRACKER BAR --- */
-                  <div className="mb-6 md:mb-10 relative">
-                    <div className="overflow-hidden h-2.5 mb-3 text-xs flex rounded-full bg-slate-100 shadow-inner">
+                  /* --- PROGRESS TRACKER BAR (6-STAGE STEPPER) --- */
+                  <div className="mb-6 md:mb-10 relative px-5">
+                    {/* Stepper progress connector lines */}
+                    <div className="absolute top-5 left-5 right-5 h-1 bg-slate-100 dark:bg-slate-800 -translate-y-1/2 rounded-full">
                       <motion.div 
                         initial={{ width: 0 }}
-                        animate={{ width: `${getProgress(o.status)}%` }}
+                        animate={{ width: `${(getStepIndex(o.status) / 5) * 100}%` }}
                         transition={{ duration: 1, ease: "easeOut" }}
-                        className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-brand-400 to-brand-600" 
+                        className="h-full bg-brand-500 rounded-full"
                       />
                     </div>
-                    <div className="flex justify-between text-[10px] font-bold text-slate-400 px-0.5 uppercase tracking-wider">
-                      <span className={getProgress(o.status) >= 20 ? "text-brand-600" : ""}>Placed</span>
-                      <span className={getProgress(o.status) >= 60 ? "text-brand-600" : ""}>Preparing</span>
-                      <span className={getProgress(o.status) >= 90 ? "text-brand-600" : ""}>On the way</span>
-                      <span className={getProgress(o.status) >= 100 ? "text-emerald-600" : ""}>Delivered</span>
+
+                    <div className="relative flex justify-between w-full">
+                      {steps.map((step, idx) => {
+                        const stepIdx = getStepIndex(o.status);
+                        const isCompleted = idx <= stepIdx;
+                        const isCurrent = idx === stepIdx;
+                        
+                        return (
+                          <div key={step.key} className="flex flex-col items-center text-center space-y-2 relative z-10">
+                            {/* Circle Indicator */}
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold border-2 transition-all duration-300 ${
+                              isCompleted 
+                                ? 'bg-brand-600 border-brand-600 text-white shadow-md shadow-brand-500/20' 
+                                : 'bg-white dark:bg-slate-905 border-slate-200 dark:border-slate-800 text-slate-400'
+                            } ${isCurrent ? 'ring-4 ring-brand-500/20 scale-110' : ''}`}>
+                              {isCompleted ? '✓' : idx + 1}
+                            </div>
+                            {/* Step label */}
+                            <span className={`text-[8px] sm:text-[10px] font-black uppercase tracking-wider leading-tight max-w-[70px] sm:max-w-[85px] mx-auto transition-colors ${
+                              isCompleted ? 'text-brand-700 dark:text-brand-400' : 'text-slate-400'
+                            }`}>
+                              {step.label}
+                            </span>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -460,6 +522,14 @@ export default function Orders() {
                     {o.distance !== undefined && o.distance !== null && (
                       <p className="text-slate-500 text-xs md:text-sm font-medium">
                         Distance: <span className="text-slate-900 dark:text-white font-bold">{o.distance} km</span>
+                      </p>
+                    )}
+                    {o.status !== "Delivered" && o.status !== "Cancelled" && (
+                      <p className="text-slate-500 text-xs md:text-sm font-medium flex items-center gap-1.5 mt-1">
+                        <span>Estimated Delivery:</span>
+                        <span className="text-brand-600 dark:text-brand-400 font-extrabold px-2 py-0.5 rounded-lg bg-brand-50 dark:bg-brand-950/40 border border-brand-100 dark:border-brand-900/40">
+                          {getEstimatedDeliveryTime(o.status, o.etaMinutes)}
+                        </span>
                       </p>
                     )}
                   </div>

@@ -25,7 +25,7 @@ export default function ActivityTimeline({ activeOrder }) {
       <div className="relative mt-8 mb-4">
         <div className="absolute top-1/2 left-0 w-full h-1 bg-slate-100 dark:bg-slate-800 -translate-y-1/2 rounded-full"></div>
         <div 
-          className="absolute top-1/2 left-0 h-1 bg-orange-500 -translate-y-1/2 rounded-full transition-all duration-500"
+          className="absolute top-1/2 left-0 h-1 bg-brand-600 -translate-y-1/2 rounded-full transition-all duration-500"
           style={{ width: `${(currentStep / (steps.length - 1)) * 100}%` }}
         ></div>
         
@@ -36,8 +36,8 @@ export default function ActivityTimeline({ activeOrder }) {
             return (
               <div key={idx} className="flex flex-col items-center group">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold border-4 transition-all duration-300 z-10 ${
-                  isCompleted ? 'bg-orange-500 border-orange-100 dark:border-orange-950/40 text-white' : 'bg-white dark:bg-slate-950 border-slate-100 dark:border-slate-800 text-slate-400'
-                } ${isCurrent ? 'ring-4 ring-orange-500/20 scale-110' : ''}`}>
+                  isCompleted ? 'bg-brand-600 border-brand-100 dark:border-brand-950/40 text-white' : 'bg-white dark:bg-slate-950 border-slate-100 dark:border-slate-800 text-slate-400'
+                } ${isCurrent ? 'ring-4 ring-brand-500/20 scale-110' : ''}`}>
                   {isCompleted ? '✓' : idx + 1}
                 </div>
                 <span className={`mt-3 text-xs md:text-sm font-bold absolute top-12 whitespace-nowrap transition-colors ${
@@ -50,8 +50,8 @@ export default function ActivityTimeline({ activeOrder }) {
           })}
         </div>
       </div>
-      <div className="mt-14 p-4 bg-orange-50 dark:bg-orange-950/20 rounded-xl border border-orange-100 dark:border-orange-900/40 text-sm font-medium text-orange-800 dark:text-orange-350 flex items-center gap-2">
-        <svg className="w-5 h-5 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+      <div className="mt-14 p-4 bg-brand-50 dark:bg-brand-950/20 rounded-xl border border-brand-100 dark:border-brand-900/40 text-sm font-medium text-brand-700 dark:text-brand-400 flex items-center gap-2">
+        <svg className="w-5 h-5 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
         Your order is currently: {steps[currentStep]}.
       </div>
     </div>
