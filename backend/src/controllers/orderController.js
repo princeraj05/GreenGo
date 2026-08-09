@@ -663,7 +663,10 @@ export const getAssignedOrders = async (req, res) => {
   try {
     const user = await requireDeliveryProfile(req, res);
     if (!user) return;
-    const orders = await Order.find({ assignedDeliveryBoy: req.user.id })
+    const orders = await Order.find({
+      assignedDeliveryBoy: req.user.id,
+      status: { $nin: ["Cancelled", "Delivered", "RejectedByDeliveryBoy"] }
+    })
       .populate("userId", "name phone email birthDate")
       .sort({ createdAt: -1 })
       .lean();
@@ -680,6 +683,7 @@ export const acceptAssignedOrder = async (req, res) => {
     const order = await Order.findOne({ _id: req.params.id, assignedDeliveryBoy: req.user.id });
     if (!order) return res.status(404).json({ message: "Order not found" });
     if (order.status === "Delivered") return res.status(400).json({ message: "Order already delivered" });
+    if (order.status === "Cancelled") return res.status(400).json({ message: "Order is already cancelled" });
 
     order.status = "AcceptedByDeliveryBoy";
     order.assignmentStatus = "Accepted";
@@ -730,6 +734,8 @@ export const rejectAssignedOrder = async (req, res) => {
     if (!deliveryUser) return;
     const order = await Order.findOne({ _id: req.params.id, assignedDeliveryBoy: req.user.id });
     if (!order) return res.status(404).json({ message: "Order not found" });
+    if (order.status === "Cancelled") return res.status(400).json({ message: "Order is already cancelled" });
+    if (order.status === "Delivered") return res.status(400).json({ message: "Order is already delivered" });
 
     const reason = String(req.body.reason || "").trim();
     const deliveryBoyName = deliveryUser.name || "Delivery Partner";
@@ -789,6 +795,7 @@ export const markAssignedOrderDelivered = async (req, res) => {
     const order = await Order.findOne({ _id: req.params.id, assignedDeliveryBoy: req.user.id });
     if (!order) return res.status(404).json({ message: "Order not found" });
     if (order.status === "Delivered") return res.json({ success: true, order });
+    if (order.status === "Cancelled") return res.status(400).json({ message: "Order is already cancelled" });
 
     await addDeliveredStats(order);
     await creditDeliveryBoyForCod(order);
@@ -845,6 +852,7 @@ export const startDelivery = async (req, res) => {
     const order = await Order.findOne({ _id: req.params.id, assignedDeliveryBoy: req.user.id });
     if (!order) return res.status(404).json({ message: "Order not found" });
     if (order.status === "Delivered") return res.status(400).json({ message: "Order already delivered" });
+    if (order.status === "Cancelled") return res.status(400).json({ message: "Order is already cancelled" });
 
     order.status = "Out for Delivery";
     await order.save();
