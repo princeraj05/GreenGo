@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import { ThemeProvider } from "./context/ThemeContext";
+import { LanguageProvider } from "./context/LanguageContext";
 import './index.css'
 
 // Global diagnostics store is initialized inline in index.html to capture bundle parse/syntax exceptions.
@@ -106,9 +107,11 @@ class ErrorBoundary extends Component {
 ReactDOM.createRoot(document.getElementById("root")).render(
   <BrowserRouter>
     <ThemeProvider>
-      <ErrorBoundary>
-        <App />
-      </ErrorBoundary>
+      <LanguageProvider>
+        <ErrorBoundary>
+          <App />
+        </ErrorBoundary>
+      </LanguageProvider>
     </ThemeProvider>
   </BrowserRouter>
 );

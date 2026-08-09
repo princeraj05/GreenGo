@@ -10,6 +10,7 @@ import { getApiUrl } from "../../utils/getApiUrl";
 import { clearSession } from "../../utils/authStorage";
 import { cn } from "../../utils/cn";
 import { useTheme } from "../../context/ThemeContext";
+import { useTranslation } from "../../context/LanguageContext";
 import { Capacitor } from "@capacitor/core";
 import { PushNotifications } from "@capacitor/push-notifications";
 
@@ -23,6 +24,7 @@ const MotionDiv = motion.div;
  */
 export default function UserLayout() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   /* --- STATE DECLARATIONS --- */
   // name: Logged-in profile user's name
@@ -274,26 +276,26 @@ export default function UserLayout() {
 
   /* --- NAVIGATION LINKS CONFIGS --- */
   const desktopNavLinks = [
-    { to: "/user/menu", label: "Menu", icon: <Home size={20} /> },
-    { to: "/user/wishlist", label: "Wishlist", icon: <Heart size={20} /> },
-    { to: "/user/cart", label: "Cart", icon: <ShoppingCart size={20} /> },
-    { to: "/user/orders", label: "Orders", icon: <Clock size={20} /> },
-    { to: "/user/notifications", label: "Notifications", icon: <Bell size={20} /> },
-    { to: "/user/contact", label: "Contact", icon: <MessageCircle size={20} /> },
+    { to: "/user/menu", label: t("menu"), icon: <Home size={20} /> },
+    { to: "/user/wishlist", label: t("wishlist"), icon: <Heart size={20} /> },
+    { to: "/user/cart", label: t("cart"), icon: <ShoppingCart size={20} /> },
+    { to: "/user/orders", label: t("orders"), icon: <Clock size={20} /> },
+    { to: "/user/notifications", label: t("notifications"), icon: <Bell size={20} /> },
+    { to: "/user/contact", label: t("contact"), icon: <MessageCircle size={20} /> },
   ];
 
   const bottomNavLinks = [
-    { to: "/user/menu", label: "Menu", icon: <Home size={20} /> },
-    { to: "/user/orders", label: "Orders", icon: <Clock size={20} />, badge: pendingCount },
-    { to: "/user/cart", label: "Cart", icon: <ShoppingCart size={20} />, badge: cartCount },
-    { to: "/user/profile", label: "Profile", icon: <User size={20} /> },
+    { to: "/user/menu", label: t("menu"), icon: <Home size={20} /> },
+    { to: "/user/orders", label: t("orders"), icon: <Clock size={20} />, badge: pendingCount },
+    { to: "/user/cart", label: t("cart"), icon: <ShoppingCart size={20} />, badge: cartCount },
+    { to: "/user/profile", label: t("profile"), icon: <User size={20} /> },
   ];
 
   const moreLinks = [
-    { to: "/user/wishlist", label: "Wishlist", icon: <Heart size={20} /> },
-    { to: "/user/notifications", label: "Notifications", icon: <Bell size={20} /> },
-    { to: "/user/contact", label: "Contact", icon: <MessageCircle size={20} /> },
-    ...(isLoggedIn ? [{ label: "Sign Out", icon: <LogOut size={20} />, action: () => { setOpen(false); setShowLogoutConfirm(true); }, danger: true }] : [])
+    { to: "/user/wishlist", label: t("wishlist"), icon: <Heart size={20} /> },
+    { to: "/user/notifications", label: t("notifications"), icon: <Bell size={20} /> },
+    { to: "/user/contact", label: t("contact"), icon: <MessageCircle size={20} /> },
+    ...(isLoggedIn ? [{ label: t("logout"), icon: <LogOut size={20} />, action: () => { setOpen(false); setShowLogoutConfirm(true); }, danger: true }] : [])
   ];
 
   return (
@@ -362,7 +364,7 @@ export default function UserLayout() {
               className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-red-50 dark:bg-red-950/20 hover:bg-red-100/80 dark:hover:bg-red-950/30 text-red-650 dark:text-red-400 font-bold transition-colors"
             >
               <LogOut size={16} />
-              Logout
+              {t("logout")}
             </button>
           ) : (
             <button

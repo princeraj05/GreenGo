@@ -8,28 +8,29 @@ import Badge from "../../components/ui/Badge";
 import { getApiUrl, getImageUrl } from "../../utils/getApiUrl";
 import Button from "../../components/ui/Button";
 import { playOrderStatusVoice } from "../../utils/ttsService";
+import { useTranslation } from "../../context/LanguageContext";
 
-const getStatusLabel = (status) => {
+const getStatusLabel = (status, t) => {
   const labels = {
-    Pending: "Order Placed",
-    RestaurantAccepted: "Restaurant Accepted",
-    Preparing: "Preparing",
-    AcceptedByDeliveryBoy: "Delivery Partner Accepted",
-    "Out for Delivery": "On The Way",
-    Delivered: "Delivered",
-    Cancelled: "Cancelled",
+    Pending: t("order_placed"),
+    RestaurantAccepted: t("restaurant_accepted"),
+    Preparing: t("preparing"),
+    AcceptedByDeliveryBoy: t("delivery_partner_accepted"),
+    "Out for Delivery": t("on_the_way"),
+    Delivered: t("delivered"),
+    Cancelled: t("cancelled"),
     CancellationRequested: "Cancellation Requested"
   };
   return labels[status] || status;
 };
 
 const steps = [
-  { key: "placed", label: "Order Placed" },
-  { key: "restaurant_accepted", label: "Restaurant Accepted" },
-  { key: "preparing", label: "Preparing" },
-  { key: "delivery_accepted", label: "Delivery Partner Accepted" },
-  { key: "on_the_way", label: "On The Way" },
-  { key: "delivered", label: "Delivered" }
+  { key: "placed", labelKey: "order_placed" },
+  { key: "restaurant_accepted", labelKey: "restaurant_accepted" },
+  { key: "preparing", labelKey: "preparing" },
+  { key: "delivery_accepted", labelKey: "delivery_partner_accepted" },
+  { key: "on_the_way", labelKey: "on_the_way" },
+  { key: "delivered", labelKey: "delivered" }
 ];
 
 const getStepIndex = (status) => {
@@ -70,6 +71,7 @@ const getEstimatedDeliveryTime = (status, etaMinutes) => {
  * and reviewing dishes through a custom write/edit star rating feedback popup.
  */
 export default function Orders() {
+  const { t } = useTranslation();
   
   /* --- STATE DECLARATIONS --- */
   // orders: Array of customer checkout records retrieved from database
@@ -393,7 +395,7 @@ export default function Orders() {
                   </div>
                   <Badge variant={o.status === "Delivered" ? "success" : "brand"} className="px-3 py-1.5 text-xs gap-1.5 uppercase tracking-wide w-fit">
                     {getStatusIcon(o.status)}
-                    {getStatusLabel(o.status)}
+                    {getStatusLabel(o.status, t)}
                   </Badge>
                 </div>
 
@@ -446,7 +448,7 @@ export default function Orders() {
                             <span className={`text-[8px] sm:text-[10px] font-black uppercase tracking-wider leading-tight max-w-[70px] sm:max-w-[85px] mx-auto transition-colors ${
                               isCompleted ? 'text-brand-700 dark:text-brand-400' : 'text-slate-400'
                             }`}>
-                              {step.label}
+                              {t(step.labelKey)}
                             </span>
                           </div>
                         );

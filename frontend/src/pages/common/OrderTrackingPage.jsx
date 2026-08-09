@@ -7,14 +7,15 @@ import Button from "../../components/ui/Button";
 import Card from "../../components/ui/Card";
 import TrackingMap from "../../components/tracking/TrackingMap";
 import { playOrderConfirmationVoice } from "../../utils/ttsService";
+import { useTranslation } from "../../context/LanguageContext";
 
 const steps = [
-  { key: "placed", label: "Order Placed", icon: Package },
-  { key: "restaurant_accepted", label: "Restaurant Accepted", icon: Store },
-  { key: "preparing", label: "Preparing", icon: Clock },
-  { key: "delivery_accepted", label: "Delivery Partner Accepted", icon: UserCheck },
-  { key: "on_the_way", label: "On The Way", icon: Bike },
-  { key: "delivered", label: "Delivered", icon: CheckCircle }
+  { key: "placed", labelKey: "order_placed", icon: Package },
+  { key: "restaurant_accepted", labelKey: "restaurant_accepted", icon: Store },
+  { key: "preparing", labelKey: "preparing", icon: Clock },
+  { key: "delivery_accepted", labelKey: "delivery_partner_accepted", icon: UserCheck },
+  { key: "on_the_way", labelKey: "on_the_way", icon: Bike },
+  { key: "delivered", labelKey: "delivered", icon: CheckCircle }
 ];
 
 const statusConfig = {
@@ -132,15 +133,15 @@ function activeSteps(status, riderLocation) {
   };
 }
 
-const getStatusLabel = (status) => {
+const getStatusLabel = (status, t) => {
   const labels = {
-    Pending: "Order Placed",
-    RestaurantAccepted: "Restaurant Accepted",
-    Preparing: "Preparing",
-    AcceptedByDeliveryBoy: "Delivery Partner Accepted",
-    "Out for Delivery": "On The Way",
-    Delivered: "Delivered",
-    Cancelled: "Cancelled",
+    Pending: t("order_placed"),
+    RestaurantAccepted: t("restaurant_accepted"),
+    Preparing: t("preparing"),
+    AcceptedByDeliveryBoy: t("delivery_partner_accepted"),
+    "Out for Delivery": t("on_the_way"),
+    Delivered: t("delivered"),
+    Cancelled: t("cancelled"),
     CancellationRequested: "Cancellation Requested"
   };
   return labels[status] || status;
@@ -148,6 +149,7 @@ const getStatusLabel = (status) => {
 
 export default function OrderTrackingPage({ role = "user" }) {
   const { id } = useParams();
+  const { t } = useTranslation();
   const [tracking, setTracking] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -364,7 +366,7 @@ export default function OrderTrackingPage({ role = "user" }) {
                         <p className={`text-[9px] md:text-xs font-black uppercase tracking-wider leading-tight max-w-[70px] sm:max-w-[90px] mx-auto transition-colors ${
                           isCompleted ? "text-brand-700 dark:text-brand-400" : "text-slate-400"
                         }`}>
-                          {step.label}
+                          {t(step.labelKey)}
                         </p>
                       </div>
                     </div>

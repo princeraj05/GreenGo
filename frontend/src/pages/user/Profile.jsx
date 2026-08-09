@@ -31,7 +31,8 @@ import {
   Smartphone,
   ShieldCheck,
   Download,
-  Trash2
+  Trash2,
+  Globe
 } from "lucide-react";
 import { getToken } from "../../utils/getToken";
 import { clearSession } from "../../utils/authStorage";
@@ -40,6 +41,7 @@ import Input from "../../components/ui/Input";
 import Card from "../../components/ui/Card";
 import { getApiUrl, getImageUrl } from "../../utils/getApiUrl";
 import { speakText, stopSpeaking } from "../../utils/ttsService";
+import { useTranslation } from "../../context/LanguageContext";
 import { version } from "../../../package.json";
 
 const API = getApiUrl();
@@ -50,6 +52,7 @@ const emptyAddress = { label: "Home", details: "", city: "", state: "", isPrimar
 export default function Profile() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { language, changeLanguage, t } = useTranslation();
 
   const [form, setForm] = useState({
     name: "",
@@ -582,21 +585,66 @@ export default function Profile() {
   };
 
   const menuItems = [
-    { id: "edit", label: "Edit Profile", icon: UserPen },
-    { id: "addresses", label: "Saved Addresses", icon: MapPin },
-    { id: "favorites", label: "My Favorite Foods", icon: Heart },
-    { id: "privacy", label: "Privacy & Security", icon: ShieldCheck },
-    { id: "sessions", label: "Session Management", icon: Smartphone },
-    { id: "refer", label: "Refer & Earn", icon: Users },
-    { id: "coupons", label: "Coupons", icon: TicketPercent },
-    { id: "suggestions", label: "Suggestions", icon: MessageSquare },
-    { id: "support", label: "Help & Support", icon: LifeBuoy },
-    { id: "about", label: "About GreenGo", icon: Info },
-    { id: "developer", label: "About Developer", icon: User },
+    { id: "edit", label: t("edit_profile"), icon: UserPen },
+    { id: "addresses", label: t("saved_addresses"), icon: MapPin },
+    { id: "favorites", label: t("favorite_foods"), icon: Heart },
+    { id: "privacy", label: t("privacy_security"), icon: ShieldCheck },
+    { id: "sessions", label: t("session_management"), icon: Smartphone },
+    { id: "refer", label: t("refer_earn"), icon: Users },
+    { id: "coupons", label: t("coupons"), icon: TicketPercent },
+    { id: "suggestions", label: t("suggestions"), icon: MessageSquare },
+    { id: "support", label: t("help_support"), icon: LifeBuoy },
+    { id: "about", label: t("about_greengo"), icon: Info },
+    { id: "developer", label: t("about_developer"), icon: User },
+    { id: "language", label: t("language_settings"), icon: Globe }
   ];
 
   const renderSection = () => {
     if (!activeSection) return null;
+
+    if (activeSection === "language") {
+      return (
+        <Section title={t("language_settings")} onClose={() => setActiveSection(null)}>
+          <div className="space-y-4">
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+              {t("change_lang_desc")}:
+            </p>
+            <div className="grid grid-cols-1 gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  changeLanguage("en");
+                  showMessage("Language changed to English");
+                }}
+                className={`flex items-center justify-between p-4 rounded-2xl border font-black text-sm transition-all ${
+                  language === "en"
+                    ? "bg-brand-50 border-brand-500 text-brand-700 dark:bg-brand-950/20"
+                    : "bg-slate-50 border-slate-100 text-slate-700 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-200"
+                }`}
+              >
+                <span>{t("english")}</span>
+                {language === "en" && <CheckCircle size={18} className="text-brand-650" />}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  changeLanguage("hi");
+                  showMessage("भाषा बदलकर हिन्दी कर दी गई है");
+                }}
+                className={`flex items-center justify-between p-4 rounded-2xl border font-black text-sm transition-all ${
+                  language === "hi"
+                    ? "bg-brand-50 border-brand-500 text-brand-700 dark:bg-brand-950/20"
+                    : "bg-slate-50 border-slate-100 text-slate-700 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-200"
+                }`}
+              >
+                <span>{t("hindi")}</span>
+                {language === "hi" && <CheckCircle size={18} className="text-brand-650" />}
+              </button>
+            </div>
+          </div>
+        </Section>
+      );
+    }
 
     if (activeSection === "edit") {
       return (
