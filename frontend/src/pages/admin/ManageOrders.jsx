@@ -98,6 +98,18 @@ export default function ManageOrders() {
     }
   };
 
+  const acceptOrder = async (orderId) => {
+    try {
+      const token = await getToken();
+      await API.put(`/api/orders/${orderId}/status`, { status: "RestaurantAccepted" }, { headers: { Authorization: `Bearer ${token}` } });
+      alert("Order accepted by restaurant!");
+      loadOrders();
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.message || "Failed to accept order");
+    }
+  };
+
   const updateETA = async (orderId) => {
     const mins = etaInput[orderId];
     if (mins === undefined || mins === "") return;
@@ -389,6 +401,11 @@ export default function ManageOrders() {
 
 
                 <div className="flex flex-wrap gap-2 mb-4 md:mb-6">
+                  {o.status === "Pending" && (
+                    <Button variant="brand" className="rounded-xl text-sm bg-emerald-600 hover:bg-emerald-700 text-white font-bold" onClick={() => acceptOrder(o._id)}>
+                      ✓ Accept Order
+                    </Button>
+                  )}
                   <Link to={`/admin/orders/${o._id}/tracking`} className="inline-flex">
                     <Button variant="secondary" className="rounded-xl gap-2 text-sm">
                       <Navigation size={16} /> Track Delivery
