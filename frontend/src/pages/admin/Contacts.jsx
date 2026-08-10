@@ -331,8 +331,33 @@ export default function Contacts() {
                 </div>
 
                 {/* --- ADMIN REPLY OUTLET --- */}
-                <div className="flex justify-start">
-                  {contact.reply ? (
+                {contact.replies && contact.replies.length > 0 ? (
+                  contact.replies.map((replyObj, idx) => (
+                    <div key={replyObj._id || idx} className="flex justify-start">
+                      <div className="max-w-[85%] rounded-2xl rounded-tl-sm border border-slate-200/80 bg-white p-3.5 text-slate-800 shadow-sm transition-colors dark:border-slate-800/80 dark:bg-slate-900 dark:text-slate-200 sm:max-w-[80%]">
+                        <div className="mb-1.5 flex items-center gap-1.5">
+                          <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-600 text-[8px] font-black text-white shadow-sm">
+                            A
+                          </div>
+                          <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">Admin Support</span>
+                        </div>
+                        <p className="mt-1 text-xs font-medium leading-relaxed sm:text-sm">{replyObj.reply}</p>
+                        <div className="mt-2 flex flex-wrap items-center gap-2">
+                          {replyObj.emailReplyStatus && replyObj.emailReplyStatus !== "not_required" && (
+                            <span className="rounded-full bg-emerald-50 px-2 py-1 text-[9px] font-black uppercase text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300">
+                              <CheckCircle2 className="mr-1 inline h-3 w-3" />
+                              {getEmailStatusText(replyObj)}
+                            </span>
+                          )}
+                          <span className="text-[9px] font-bold text-slate-400">
+                            {formatTime(replyObj.repliedAt || contact.createdAt)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : contact.reply ? (
+                  <div className="flex justify-start">
                     <div className="max-w-[85%] rounded-2xl rounded-tl-sm border border-slate-200/80 bg-white p-3.5 text-slate-800 shadow-sm transition-colors dark:border-slate-800/80 dark:bg-slate-900 dark:text-slate-200 sm:max-w-[80%]">
                       <div className="mb-1.5 flex items-center gap-1.5">
                         <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-600 text-[8px] font-black text-white shadow-sm">
@@ -342,17 +367,21 @@ export default function Contacts() {
                       </div>
                       <p className="mt-1 text-xs font-medium leading-relaxed sm:text-sm">{contact.reply}</p>
                       <div className="mt-2 flex flex-wrap items-center gap-2">
-                        <span className="rounded-full bg-emerald-50 px-2 py-1 text-[9px] font-black uppercase text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300">
-                          <CheckCircle2 className="mr-1 inline h-3 w-3" />
-                          {getEmailStatusText(contact)}
-                        </span>
+                        {contact.emailReplyStatus && contact.emailReplyStatus !== "not_required" && (
+                          <span className="rounded-full bg-emerald-50 px-2 py-1 text-[9px] font-black uppercase text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300">
+                            <CheckCircle2 className="mr-1 inline h-3 w-3" />
+                            {getEmailStatusText(contact)}
+                          </span>
+                        )}
                         <span className="text-[9px] font-bold text-slate-400">
                           {formatTime(contact.repliedAt || contact.createdAt)}
                         </span>
                       </div>
                     </div>
-                  ) : (
-                    /* --- WAITING PLACEHOLDER --- */
+                  </div>
+                ) : (
+                  /* --- WAITING PLACEHOLDER --- */
+                  <div className="flex justify-start">
                     <div className="flex items-center gap-2 rounded-2xl rounded-tl-sm border border-slate-200/80 bg-white p-3 text-slate-500 shadow-sm transition-colors dark:border-slate-800/80 dark:bg-slate-900 dark:text-slate-400">
                       <div className="flex items-center gap-1">
                         <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-brand-500 [animation-delay:-0.3s]" />
@@ -361,8 +390,8 @@ export default function Contacts() {
                       </div>
                       <span className="text-[10px] font-semibold tracking-wide">Waiting for admin reply...</span>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
 
               </div>
             ))

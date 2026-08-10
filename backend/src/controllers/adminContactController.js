@@ -49,9 +49,34 @@ export const replyToContact = async (req, res) => {
 
     const shouldSendEmail = !contact.uid || contact.source === "public";
 
+    // Initialize or migrate legacy reply to the replies array
+    if (!contact.replies) {
+      contact.replies = [];
+    }
+    if (contact.reply && contact.replies.length === 0) {
+      contact.replies.push({
+        reply: contact.reply,
+        repliedAt: contact.repliedAt || contact.updatedAt || new Date(),
+        replyDelivery: contact.replyDelivery || "chat",
+        emailReplyStatus: contact.emailReplyStatus || "not_required",
+        emailReplyError: contact.emailReplyError || "",
+      });
+    }
+
+    const newReplyObj = {
+      reply: cleanReply,
+      repliedAt: new Date(),
+      replyDelivery: shouldSendEmail ? "email" : "chat",
+      emailReplyStatus: shouldSendEmail ? "pending" : "not_required",
+      emailReplyError: "",
+    };
+
+    contact.replies.push(newReplyObj);
+
+    // Maintain legacy fields for compatibility
     contact.reply = cleanReply;
-    contact.repliedAt = new Date();
-    contact.replyDelivery = shouldSendEmail ? "email" : "chat";
+    contact.repliedAt = newReplyObj.repliedAt;
+    contact.replyDelivery = newReplyObj.replyDelivery;
     contact.status = "Replied";
 
     if (shouldSendEmail) {
@@ -65,9 +90,20 @@ export const replyToContact = async (req, res) => {
         });
         contact.emailReplyStatus = "sent";
         contact.emailReplyError = "";
+
+        // Also update status details inside the replies array
+        const lastIdx = contact.replies.length - 1;
+        contact.replies[lastIdx].emailReplyStatus = "sent";
+        contact.replies[lastIdx].emailReplyError = "";
       } catch (emailErr) {
         contact.emailReplyStatus = "failed";
         contact.emailReplyError = getSafeEmailError(emailErr);
+
+        // Also update status details inside the replies array
+        const lastIdx = contact.replies.length - 1;
+        contact.replies[lastIdx].emailReplyStatus = "failed";
+        contact.replies[lastIdx].emailReplyError = contact.emailReplyError;
+
         await contact.save();
         return res.json({
           success: true,
@@ -79,6 +115,10 @@ export const replyToContact = async (req, res) => {
     } else {
       contact.emailReplyStatus = "not_required";
       contact.emailReplyError = "";
+
+      const lastIdx = contact.replies.length - 1;
+      contact.replies[lastIdx].emailReplyStatus = "not_required";
+      contact.replies[lastIdx].emailReplyError = "";
     }
 
     await contact.save();

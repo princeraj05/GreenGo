@@ -27,6 +27,23 @@ const contactSchema = new mongoose.Schema(
       default: "",
     },
     emailReplyError: { type: String, default: "" },
+    replies: [
+      {
+        reply: { type: String, required: true },
+        repliedAt: { type: Date, default: Date.now },
+        replyDelivery: {
+          type: String,
+          enum: ["chat", "email", ""],
+          default: "",
+        },
+        emailReplyStatus: {
+          type: String,
+          enum: ["not_required", "pending", "sent", "failed", ""],
+          default: "",
+        },
+        emailReplyError: { type: String, default: "" },
+      },
+    ],
     status: {
       type: String,
       enum: ["Pending", "Replied"],
@@ -44,6 +61,13 @@ contactSchema.pre("save", function (next) {
   if (this.isModified("reply") && this.reply) {
     this.reply = encryptText(this.reply);
   }
+  if (this.replies && this.replies.length > 0) {
+    this.replies.forEach((r) => {
+      if (r.reply && r.reply.split(":").length !== 3) {
+        r.reply = encryptText(r.reply);
+      }
+    });
+  }
   next();
 });
 
@@ -54,6 +78,13 @@ contactSchema.post("init", function (doc) {
   }
   if (doc.reply) {
     doc.reply = decryptText(doc.reply);
+  }
+  if (doc.replies && doc.replies.length > 0) {
+    doc.replies.forEach((r) => {
+      if (r.reply) {
+        r.reply = decryptText(r.reply);
+      }
+    });
   }
 });
 

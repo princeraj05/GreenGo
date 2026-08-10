@@ -181,8 +181,22 @@ export default function Contact() {
                 </div>
 
                 {/* Incoming Message Received From Support Agent */}
-                <div className="flex justify-start">
-                  {contact.reply ? (
+                {contact.replies && contact.replies.length > 0 ? (
+                  contact.replies.map((replyObj, idx) => (
+                    <div key={replyObj._id || idx} className="flex justify-start">
+                      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 text-slate-800 dark:text-slate-200 p-3.5 rounded-2xl rounded-tl-sm max-w-[85%] sm:max-w-[80%] shadow-sm transition-colors">
+                        <div className="flex items-center gap-1.5 mb-1.5">
+                          <div className="w-4.5 h-4.5 rounded-full bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white text-[8px] font-black shadow-sm shrink-0">
+                            B
+                          </div>
+                          <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">GreenGo Support</span>
+                        </div>
+                        <p className="text-xs sm:text-sm leading-relaxed mt-1 font-medium">{replyObj.reply}</p>
+                      </div>
+                    </div>
+                  ))
+                ) : contact.reply ? (
+                  <div className="flex justify-start">
                     <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 text-slate-800 dark:text-slate-200 p-3.5 rounded-2xl rounded-tl-sm max-w-[85%] sm:max-w-[80%] shadow-sm transition-colors">
                       <div className="flex items-center gap-1.5 mb-1.5">
                         <div className="w-4.5 h-4.5 rounded-full bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white text-[8px] font-black shadow-sm shrink-0">
@@ -192,8 +206,10 @@ export default function Contact() {
                       </div>
                       <p className="text-xs sm:text-sm leading-relaxed mt-1 font-medium">{contact.reply}</p>
                     </div>
-                  ) : (
-                    /* Typing placeholder animation when reply is absent */
+                  </div>
+                ) : (
+                  /* Typing placeholder animation when reply is absent */
+                  <div className="flex justify-start">
                     <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 text-slate-500 dark:text-slate-400 p-3 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-2 transition-colors">
                       <div className="flex items-center gap-1">
                         <span className="w-1.5 h-1.5 bg-brand-500 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
@@ -202,8 +218,8 @@ export default function Contact() {
                       </div>
                       <span className="text-[10px] font-semibold tracking-wide">Support is typing...</span>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
                 
               </div>
             ))
