@@ -474,6 +474,11 @@ export default function Checkout() {
       return;
     }
 
+    if (settings && settings.minOrderAmount && subtotal < settings.minOrderAmount) {
+      alert(`Minimum ₹${settings.minOrderAmount} ka order karein tabhi order accept kiya jayega.`);
+      return;
+    }
+
     const token = await getToken();
     if (!token) {
       localStorage.setItem("guest_address", address);

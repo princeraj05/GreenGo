@@ -36,6 +36,9 @@ export default function ManageOrders() {
   // Pagination count limit indicator
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
+  // Active sub-navigation filter indicator ("new" | "delivered" | "cancelled")
+  const [statusFilter, setStatusFilter] = useState("new");
+
   // ==========================================
   // DATA FETCHING & EVENT HANDLERS
   // ==========================================
@@ -121,6 +124,34 @@ export default function ManageOrders() {
     } catch (err) {
       console.error(err);
       alert("Failed to update ETA");
+    }
+  };
+
+  const handleApproveCancellation = async (orderId) => {
+    if (!window.confirm("Are you sure you want to APPROVE this cancellation request? This will cancel the order and process refund if paid online.")) return;
+    try {
+      const token = await getToken();
+      const res = await API.put(`/api/orders/${orderId}/approve-cancel`, {}, { headers: { Authorization: `Bearer ${token}` } });
+      alert(res.data.message || "Cancellation approved.");
+      loadOrders();
+    } catch (err) {
+      console.error("Approve cancel error:", err);
+      alert(err.response?.data?.message || "Failed to approve cancellation");
+    }
+  };
+
+  const handleRejectCancellation = async (orderId) => {
+    const defaultMsg = "Order cancel nahi kr skte h food prepsered ho gya";
+    const message = window.prompt("Enter rejection reason for customer:", defaultMsg);
+    if (message === null) return;
+    try {
+      const token = await getToken();
+      const res = await API.put(`/api/orders/${orderId}/reject-cancel`, { message: message || defaultMsg }, { headers: { Authorization: `Bearer ${token}` } });
+      alert(res.data.message || "Cancellation rejected.");
+      loadOrders();
+    } catch (err) {
+      console.error("Reject cancel error:", err);
+      alert(err.response?.data?.message || "Failed to reject cancellation");
     }
   };
 
@@ -252,11 +283,44 @@ export default function ManageOrders() {
     printWindow.document.close();
   };
 
+  // Memoized filter logic for different order statuses
+  const filteredOrders = useMemo(() => {
+    return orders.filter((o) => {
+      if (statusFilter === "delivered") {
+        return o.status === "Delivered";
+      } else if (statusFilter === "cancelled") {
+        return o.status === "Cancelled" || o.status === "CancellationRequested";
+      } else {
+        // "new" orders: everything that is NOT Delivered, Cancelled, or CancellationRequested
+        return o.status !== "Delivered" && o.status !== "Cancelled" && o.status !== "CancellationRequested";
+      }
+    });
+  }, [orders, statusFilter]);
+
+  // Counts of orders categorized by statuses
+  const counts = useMemo(() => {
+    let newCount = 0;
+    let deliveredCount = 0;
+    let cancelledCount = 0;
+
+    orders.forEach((o) => {
+      if (o.status === "Delivered") {
+        deliveredCount++;
+      } else if (o.status === "Cancelled" || o.status === "CancellationRequested") {
+        cancelledCount++;
+      } else {
+        newCount++;
+      }
+    });
+
+    return { newCount, deliveredCount, cancelledCount };
+  }, [orders]);
+
   // Slice orders array down to current pagination limits
-  const visibleOrders = useMemo(() => orders.slice(0, visibleCount), [orders, visibleCount]);
+  const visibleOrders = useMemo(() => filteredOrders.slice(0, visibleCount), [filteredOrders, visibleCount]);
 
   // Denotes if more unrendered orders exist
-  const hasMoreOrders = visibleOrders.length < orders.length;
+  const hasMoreOrders = visibleOrders.length < filteredOrders.length;
 
   return (
     // Outer wrap container
@@ -275,6 +339,106 @@ export default function ManageOrders() {
         </div>
       </div>
       {/* --- END HEADER SECTION --- */}
+
+      {/* --- STATS SUMMARY CARDS --- */}
+      <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="rounded-2xl border border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-950 p-4 flex items-center gap-3 sm:gap-4 shadow-sm">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
+            <Clock size={22} className="sm:w-6 sm:h-6" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">New Orders</p>
+            <p className="text-xl sm:text-2xl font-black text-slate-950 dark:text-white mt-0.5">{counts.newCount}</p>
+          </div>
+        </div>
+        <div className="rounded-2xl border border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-950 p-4 flex items-center gap-3 sm:gap-4 shadow-sm">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 flex items-center justify-center text-emerald-600 dark:text-emerald-450 shrink-0">
+            <CheckCircle size={22} className="sm:w-6 sm:h-6" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">Delivered</p>
+            <p className="text-xl sm:text-2xl font-black text-slate-950 dark:text-white mt-0.5">{counts.deliveredCount}</p>
+          </div>
+        </div>
+        <div className="rounded-2xl border border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-950 p-4 flex items-center gap-3 sm:gap-4 shadow-sm">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-red-50 dark:bg-red-950/30 flex items-center justify-center text-red-500 dark:text-red-400 shrink-0">
+            <Package size={22} className="sm:w-6 sm:h-6" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">Cancelled</p>
+            <p className="text-xl sm:text-2xl font-black text-slate-950 dark:text-white mt-0.5">{counts.cancelledCount}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* --- SUB-NAVIGATION BUTTONS / TABS --- */}
+      <div className="mb-6 flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() => {
+            setStatusFilter("new");
+            setVisibleCount(PAGE_SIZE);
+          }}
+          className={`rounded-2xl border px-4 py-2 text-sm font-black transition-all flex items-center gap-2 cursor-pointer ${
+            statusFilter === "new"
+              ? "border-brand-500 bg-brand-50 text-brand-700 dark:bg-brand-950/30 dark:text-brand-300"
+              : "border-slate-200 bg-white text-slate-600 hover:border-brand-200 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300"
+          }`}
+        >
+          <span>New Orders</span>
+          <span className={`px-2 py-0.5 text-xs font-black rounded-full transition-all ${
+            statusFilter === "new"
+              ? "bg-brand-100 text-brand-800 dark:bg-brand-900/50 dark:text-brand-300"
+              : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+          }`}>
+            {counts.newCount}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setStatusFilter("delivered");
+            setVisibleCount(PAGE_SIZE);
+          }}
+          className={`rounded-2xl border px-4 py-2 text-sm font-black transition-all flex items-center gap-2 cursor-pointer ${
+            statusFilter === "delivered"
+              ? "border-brand-500 bg-brand-50 text-brand-700 dark:bg-brand-950/30 dark:text-brand-300"
+              : "border-slate-200 bg-white text-slate-600 hover:border-brand-200 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300"
+          }`}
+        >
+          <span>Delivered Orders</span>
+          <span className={`px-2 py-0.5 text-xs font-black rounded-full transition-all ${
+            statusFilter === "delivered"
+              ? "bg-brand-100 text-brand-800 dark:bg-brand-900/50 dark:text-brand-300"
+              : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+          }`}>
+            {counts.deliveredCount}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setStatusFilter("cancelled");
+            setVisibleCount(PAGE_SIZE);
+          }}
+          className={`rounded-2xl border px-4 py-2 text-sm font-black transition-all flex items-center gap-2 cursor-pointer ${
+            statusFilter === "cancelled"
+              ? "border-brand-500 bg-brand-50 text-brand-700 dark:bg-brand-950/30 dark:text-brand-300"
+              : "border-slate-200 bg-white text-slate-600 hover:border-brand-200 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300"
+          }`}
+        >
+          <span>Cancelled Orders</span>
+          <span className={`px-2 py-0.5 text-xs font-black rounded-full transition-all ${
+            statusFilter === "cancelled"
+              ? "bg-brand-100 text-brand-800 dark:bg-brand-900/50 dark:text-brand-300"
+              : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+          }`}>
+            {counts.cancelledCount}
+          </span>
+        </button>
+      </div>
 
       {/* --- ORDERS CARDS GRID --- */}
       {/* Employs responsive breakpoints md:grid-cols-2 and lg:grid-cols-3 to arrange order cards */}
@@ -297,61 +461,108 @@ export default function ManageOrders() {
                 </div>
 
                 {/* --- DELIVERY BOY ASSIGNMENT SECTION --- */}
-                <div className="mb-4 md:mb-6 rounded-2xl border border-emerald-100 dark:border-emerald-900/40 bg-emerald-50/50 dark:bg-emerald-950/20 p-3">
-                   <div className="flex justify-between items-center mb-2 gap-2">
-                     <label className="block text-xs font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider">Assign Delivery Boy</label>
-                     <button
-                       onClick={() => printOrderKOT(o)}
-                       className="px-2 py-1 bg-emerald-600 hover:bg-emerald-750 text-white font-extrabold text-[10px] rounded-lg flex items-center gap-1 transition-all active:scale-95 cursor-pointer shrink-0"
-                     >
-                       🖨️ Print KOT
-                     </button>
-                   </div>
-                  {o.assignedDeliveryBoy && (
-                    <p className="text-xs font-black text-slate-700 dark:text-slate-200 mb-2">
-                      Assigned: {o.assignedDeliveryBoy.name || o.assignedDeliveryBoy.email || "Delivery Boy"} ({o.assignmentStatus || "Assigned"})
-                    </p>
-                  )}
-                  <div className="flex gap-2">
-                    <select
-                      value={assignInput[o._id] || o.assignedDeliveryBoy?._id || ""}
-                      onChange={(e) => setAssignInput({ ...assignInput, [o._id]: e.target.value })}
-                      className="min-w-0 flex-1 px-3 py-2.5 rounded-xl border border-emerald-100 dark:border-emerald-900/50 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-bold text-sm outline-none"
-                    >
-                      <option value="">Select delivery boy</option>
-                      {deliveryBoys.map((boy) => (
-                        <option key={boy._id} value={boy._id}>
-                          {boy.name || boy.phone || boy.email || "Delivery Boy"}
-                        </option>
-                      ))}
-                    </select>
-                    <Button onClick={() => assignDeliveryBoy(o._id)} className="rounded-xl px-4 bg-emerald-600 hover:bg-emerald-700 text-sm">
-                      Assign
-                    </Button>
-                  </div>
-                </div>
-
-                {/* --- TIME ESTIMATION (ETA) SETTING --- */}
-                <div className="mb-4 md:mb-6 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 p-3">
-                  <div className="flex justify-between items-center mb-2">
-                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Set Prep Time Estimation (ETA)</label>
-                    {o.etaMinutes && (
-                      <span className="text-xs font-black text-emerald-600 dark:text-emerald-450">{o.etaMinutes} mins set</span>
+                {o.status !== "Cancelled" && o.status !== "CancellationRequested" && (
+                  <div className="mb-4 md:mb-6 rounded-2xl border border-emerald-100 dark:border-emerald-900/40 bg-emerald-50/50 dark:bg-emerald-950/20 p-3">
+                     <div className="flex justify-between items-center mb-2 gap-2">
+                       <label className="block text-xs font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider">
+                         {o.status === "Delivered" ? "Delivered By" : "Assign Delivery Boy"}
+                       </label>
+                       {o.status !== "Delivered" && (
+                         <button
+                           onClick={() => printOrderKOT(o)}
+                           className="px-2 py-1 bg-emerald-600 hover:bg-emerald-750 text-white font-extrabold text-[10px] rounded-lg flex items-center gap-1 transition-all active:scale-95 cursor-pointer shrink-0"
+                         >
+                           🖨️ Print KOT
+                         </button>
+                       )}
+                     </div>
+                    {o.assignedDeliveryBoy && (
+                      <p className="text-xs font-black text-slate-700 dark:text-slate-200 mb-2">
+                        Assigned: {o.assignedDeliveryBoy.name || o.assignedDeliveryBoy.email || "Delivery Boy"} ({o.assignmentStatus || "Assigned"})
+                      </p>
+                    )}
+                    {o.status !== "Delivered" && (
+                      <div className="flex gap-2">
+                        <select
+                          value={assignInput[o._id] || o.assignedDeliveryBoy?._id || ""}
+                          onChange={(e) => setAssignInput({ ...assignInput, [o._id]: e.target.value })}
+                          className="min-w-0 flex-1 px-3 py-2.5 rounded-xl border border-emerald-100 dark:border-emerald-900/50 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-bold text-sm outline-none"
+                        >
+                          <option value="">Select delivery boy</option>
+                          {deliveryBoys.map((boy) => (
+                            <option key={boy._id} value={boy._id}>
+                              {boy.name || boy.phone || boy.email || "Delivery Boy"}
+                            </option>
+                          ))}
+                        </select>
+                        <Button onClick={() => assignDeliveryBoy(o._id)} className="rounded-xl px-4 bg-emerald-600 hover:bg-emerald-700 text-sm">
+                          Assign
+                        </Button>
+                      </div>
                     )}
                   </div>
-                  <div className="flex gap-2">
-                    <input
-                      type="number"
-                      placeholder="e.g. 25 mins"
-                      value={etaInput[o._id] !== undefined ? etaInput[o._id] : o.etaMinutes || ""}
-                      onChange={(e) => setEtaInput({ ...etaInput, [o._id]: e.target.value })}
-                      className="min-w-0 flex-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-bold text-sm outline-none"
-                    />
-                    <Button onClick={() => updateETA(o._id)} className="rounded-xl px-4 bg-slate-900 dark:bg-slate-800 text-sm">
-                      Update
-                    </Button>
+                )}
+
+                {/* --- TIME ESTIMATION (ETA) SETTING --- */}
+                {o.status !== "Cancelled" && o.status !== "CancellationRequested" && o.status !== "Delivered" && (
+                  <div className="mb-4 md:mb-6 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 p-3">
+                    <div className="flex justify-between items-center mb-2">
+                      <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Set Prep Time Estimation (ETA)</label>
+                      {o.etaMinutes && (
+                        <span className="text-xs font-black text-emerald-600 dark:text-emerald-450">{o.etaMinutes} mins set</span>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <input
+                        type="number"
+                        placeholder="e.g. 25 mins"
+                        value={etaInput[o._id] !== undefined ? etaInput[o._id] : o.etaMinutes || ""}
+                        onChange={(e) => setEtaInput({ ...etaInput, [o._id]: e.target.value })}
+                        className="min-w-0 flex-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-bold text-sm outline-none"
+                      />
+                      <Button onClick={() => updateETA(o._id)} className="rounded-xl px-4 bg-slate-900 dark:bg-slate-800 text-sm">
+                        Update
+                      </Button>
+                    </div>
                   </div>
-                </div>
+                )}
+
+                {/* --- CANCELLATION DETAILS --- */}
+                {o.status === "Cancelled" && (
+                  <div className="mb-4 md:mb-6 rounded-2xl border border-red-100 dark:border-red-900/40 bg-red-50/50 dark:bg-red-950/20 p-3">
+                    <p className="text-xs font-black text-red-650 dark:text-red-400 uppercase tracking-wider">Cancellation Reason</p>
+                    <p className="text-sm font-bold text-slate-700 dark:text-slate-200 mt-1">{o.cancellationReason || "No reason specified"}</p>
+                    {o.cancellationCustomMessage && (
+                      <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1 italic">"{o.cancellationCustomMessage}"</p>
+                    )}
+                  </div>
+                )}
+
+                {/* --- CANCELLATION REQUEST SECTION --- */}
+                {o.status === "CancellationRequested" && (
+                  <div className="mb-4 md:mb-6 rounded-2xl border border-amber-100 dark:border-amber-900/40 bg-amber-50/50 dark:bg-amber-950/20 p-3">
+                    <p className="text-xs font-black text-amber-700 dark:text-amber-405 uppercase tracking-wider">Cancellation Requested</p>
+                    <p className="text-sm font-bold text-slate-700 dark:text-slate-200 mt-1">Reason: {o.cancellationReason || "No reason specified"}</p>
+                    {o.cancellationCustomMessage && (
+                      <p className="text-xs font-medium text-slate-500 dark:text-slate-405 mt-1 italic">"{o.cancellationCustomMessage}"</p>
+                    )}
+                    <div className="mt-3 flex gap-2">
+                      <Button
+                        onClick={() => handleApproveCancellation(o._id)}
+                        className="bg-emerald-600 hover:bg-emerald-700 text-xs py-1.5 px-3 rounded-xl flex items-center gap-1 shrink-0 text-white font-bold"
+                      >
+                        Approve
+                      </Button>
+                      <Button
+                        onClick={() => handleRejectCancellation(o._id)}
+                        variant="danger"
+                        className="text-xs py-1.5 px-3 rounded-xl flex items-center gap-1 shrink-0 font-bold"
+                      >
+                        Reject
+                      </Button>
+                    </div>
+                  </div>
+                )}
 
                 {/* --- CUSTOMER INFO SECTION --- */}
                 <div className="bg-slate-50 dark:bg-slate-900/60 rounded-2xl p-3 md:p-4 border border-slate-100 dark:border-slate-800/50 space-y-1.5 mb-3">
@@ -406,12 +617,14 @@ export default function ManageOrders() {
                       ✓ Accept Order
                     </Button>
                   )}
-                  <Link to={`/admin/orders/${o._id}/tracking`} className="inline-flex">
-                    <Button variant="secondary" className="rounded-xl gap-2 text-sm">
-                      <Navigation size={16} /> Track Delivery
-                    </Button>
-                  </Link>
-                  {o.status !== "Cancelled" && o.status !== "Delivered" && (
+                  {o.status !== "Cancelled" && o.status !== "CancellationRequested" && (
+                    <Link to={`/admin/orders/${o._id}/tracking`} className="inline-flex">
+                      <Button variant="secondary" className="rounded-xl gap-2 text-sm">
+                        <Navigation size={16} /> Track Delivery
+                      </Button>
+                    </Link>
+                  )}
+                  {o.status !== "Cancelled" && o.status !== "Delivered" && o.status !== "CancellationRequested" && (
                     <Button variant="danger" className="rounded-xl text-sm" onClick={() => cancelOrderDirectly(o._id)}>
                       Cancel Order
                     </Button>
@@ -422,7 +635,7 @@ export default function ManageOrders() {
                 <div className="space-y-2 mb-4 md:mb-6 flex-1">
                   {o.items.map((i, idx) => (
                     <div key={idx} className="flex justify-between items-start gap-3 text-xs md:text-sm font-medium text-slate-600 dark:text-slate-400 py-1 border-b border-slate-50 dark:border-slate-800/40 last:border-0">
-                      <span>{i.name} <span className="text-emerald-600 dark:text-emerald-400 font-bold ml-1">×{i.qty}</span></span>
+                      <span>{i.name} <span className="text-emerald-600 dark:text-emerald-455 font-bold ml-1">×{i.qty}</span></span>
                       <span className="font-bold text-slate-900 dark:text-white font-black">₹{i.price * i.qty}</span>
                     </div>
                   ))}
@@ -439,6 +652,15 @@ export default function ManageOrders() {
               </Card>
             </div>
           ))}
+          {filteredOrders.length === 0 && (
+            <div className="col-span-full py-20 text-center text-slate-500 dark:text-slate-400 flex flex-col items-center justify-center">
+              <div className="w-16 h-16 bg-slate-50 dark:bg-slate-900 rounded-2xl flex items-center justify-center mb-4 text-slate-350 dark:text-slate-700">
+                <Package size={32} />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">No orders found</h3>
+              <p className="text-sm font-medium mt-1">There are no orders in this category right now.</p>
+            </div>
+          )}
       </div>
       {/* --- END ORDERS CARDS GRID --- */}
 
@@ -450,7 +672,7 @@ export default function ManageOrders() {
             onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}
             className="rounded-2xl px-6"
           >
-            Show More Orders ({orders.length - visibleOrders.length})
+            Show More Orders ({filteredOrders.length - visibleOrders.length})
           </Button>
         </div>
       )}

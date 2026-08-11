@@ -199,6 +199,13 @@ export const createOrder = async (req, res) => {
       couponCode
     });
 
+    const settings = await Settings.findOne();
+    if (settings && settings.minOrderAmount && calculated.subtotal < settings.minOrderAmount) {
+      return res.status(400).json({
+        message: `Minimum ₹${settings.minOrderAmount} ka order karein tabhi order accept kiya jayega.`
+      });
+    }
+
     // 3. Start MongoDB session/transaction to perform atomic stock update & order creation
     const session = await mongoose.startSession();
     session.startTransaction();

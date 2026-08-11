@@ -91,6 +91,21 @@ export default function ManageUsers({
     );
   }, [roleFilter, searchQuery, users]);
 
+  // Count total customers and delivery boys from all fetched users
+  const customerCount = useMemo(() => {
+    return users.filter((user) => {
+      const role = user.role === "user" || !user.role ? "customer" : user.role;
+      return role === "customer";
+    }).length;
+  }, [users]);
+
+  const deliveryBoyCount = useMemo(() => {
+    return users.filter((user) => {
+      const role = user.role === "user" || !user.role ? "customer" : user.role;
+      return role === "deliveryBoy";
+    }).length;
+  }, [users]);
+
   // Slices filtered list to match pagination visibleCount limit
   const visibleUsers = useMemo(() => filteredUsers.slice(0, visibleCount), [filteredUsers, visibleCount]);
 
@@ -132,27 +147,71 @@ export default function ManageUsers({
       </div>
       {/* --- END HEADER & SEARCH BAR SECTION --- */}
 
+      {/* --- STATS SUMMARY CARDS --- */}
+      <div className="grid grid-cols-2 gap-4 mb-6 max-w-2xl">
+        <div className="rounded-2xl border border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-950 p-4 flex items-center gap-4 shadow-sm">
+          <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
+            <Users size={24} />
+          </div>
+          <div>
+            <p className="text-xs font-bold text-slate-500 dark:text-slate-405 uppercase tracking-wider">Total Customers</p>
+            <p className="text-2xl font-black text-slate-950 dark:text-white mt-0.5">{customerCount}</p>
+          </div>
+        </div>
+        <div className="rounded-2xl border border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-950 p-4 flex items-center gap-4 shadow-sm">
+          <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+            <Bike size={24} />
+          </div>
+          <div>
+            <p className="text-xs font-bold text-slate-500 dark:text-slate-405 uppercase tracking-wider">Total Delivery Boys</p>
+            <p className="text-2xl font-black text-slate-950 dark:text-white mt-0.5">{deliveryBoyCount}</p>
+          </div>
+        </div>
+      </div>
+
       {/* --- SUB-NAVIGATION BUTTONS --- */}
       <div className="mb-5 flex flex-wrap gap-2">
         <NavLink
           to="/admin/users/customers"
-          className={({ isActive }) => `rounded-2xl border px-4 py-2 text-sm font-black transition-all ${
+          className={({ isActive }) => `rounded-2xl border px-4 py-2 text-sm font-black transition-all flex items-center gap-2 ${
             isActive
               ? "border-brand-500 bg-brand-50 text-brand-700 dark:bg-brand-950/30 dark:text-brand-300"
               : "border-slate-200 bg-white text-slate-600 hover:border-brand-200 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300"
           }`}
         >
-          Customers
+          {({ isActive }) => (
+            <>
+              <span>Customers</span>
+              <span className={`px-2 py-0.5 text-xs font-black rounded-full transition-all ${
+                isActive
+                  ? "bg-brand-100 text-brand-800 dark:bg-brand-900/50 dark:text-brand-300"
+                  : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+              }`}>
+                {customerCount}
+              </span>
+            </>
+          )}
         </NavLink>
         <NavLink
           to="/admin/users/delivery-boys"
-          className={({ isActive }) => `rounded-2xl border px-4 py-2 text-sm font-black transition-all ${
+          className={({ isActive }) => `rounded-2xl border px-4 py-2 text-sm font-black transition-all flex items-center gap-2 ${
             isActive
               ? "border-brand-500 bg-brand-50 text-brand-700 dark:bg-brand-950/30 dark:text-brand-300"
               : "border-slate-200 bg-white text-slate-600 hover:border-brand-200 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300"
           }`}
         >
-          Delivery Boys
+          {({ isActive }) => (
+            <>
+              <span>Delivery Boys</span>
+              <span className={`px-2 py-0.5 text-xs font-black rounded-full transition-all ${
+                isActive
+                  ? "bg-brand-100 text-brand-800 dark:bg-brand-900/50 dark:text-brand-300"
+                  : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+              }`}>
+                {deliveryBoyCount}
+              </span>
+            </>
+          )}
         </NavLink>
       </div>
       {/* --- END SUB-NAVIGATION BUTTONS --- */}

@@ -521,9 +521,19 @@ export default function Cart() {
                   <span className="text-lg font-black text-slate-900 dark:text-white">₹{total.toFixed(2)}</span>
                 </div>
 
+                {settings && settings.minOrderAmount > 0 && subtotal < settings.minOrderAmount && (
+                  <p className="text-[11px] font-bold text-red-500 text-center mb-3 bg-red-50 dark:bg-red-950/20 p-2 rounded-xl border border-red-100 dark:border-red-900/20">
+                    ⚠️ Minimum ₹{settings.minOrderAmount} ka order mandatory h. Checkout krne ke liye ₹{(settings.minOrderAmount - subtotal).toFixed(0)} ka food aur add krein.
+                  </p>
+                )}
+
                 <Button
                   disabled={!isStoreOpen}
                   onClick={() => {
+                    if (settings && settings.minOrderAmount && subtotal < settings.minOrderAmount) {
+                      alert(`Minimum ₹${settings.minOrderAmount} ka order karein tabhi order accept kiya jayega.`);
+                      return;
+                    }
                     navigate("/user/checkout");
                   }}
                   className="w-full gap-1.5 rounded-xl py-2.5 text-xs font-bold shadow-brand-500/20"

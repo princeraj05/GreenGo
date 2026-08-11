@@ -40,7 +40,8 @@ export default function ManageSettings() {
       online: true
     },
     referralRewardFriend: 50,
-    referralRewardReferrer: 20
+    referralRewardReferrer: 20,
+    minOrderAmount: 0
   });
 
   // ==========================================
@@ -163,7 +164,8 @@ export default function ManageSettings() {
           platformCharge: data.platformCharge !== undefined ? data.platformCharge : 0,
           enabledPaymentMethods: data.enabledPaymentMethods || { cod: true, online: true },
           referralRewardFriend: data.referralRewardFriend !== undefined ? data.referralRewardFriend : 50,
-          referralRewardReferrer: data.referralRewardReferrer !== undefined ? data.referralRewardReferrer : 20
+          referralRewardReferrer: data.referralRewardReferrer !== undefined ? data.referralRewardReferrer : 20,
+          minOrderAmount: data.minOrderAmount !== undefined ? data.minOrderAmount : 0
         });
       }
     } catch (err) {
@@ -186,7 +188,8 @@ export default function ManageSettings() {
         deliveryChargeAmount: Number(form.deliveryChargeSlabs?.[0]?.amount || form.deliveryChargeAmount || 0),
         surcharges: (form.surcharges || []).filter(s => s.name.trim() !== ""),
         referralRewardFriend: Number(form.referralRewardFriend || 0),
-        referralRewardReferrer: Number(form.referralRewardReferrer || 0)
+        referralRewardReferrer: Number(form.referralRewardReferrer || 0),
+        minOrderAmount: Number(form.minOrderAmount || 0)
       };
       await API.put("/api/settings", payload, {
         headers: { Authorization: `Bearer ${token}` },
@@ -484,6 +487,24 @@ export default function ManageSettings() {
                   className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-slate-800 dark:text-white font-medium text-sm"
                 />
               </div>
+            </div>
+          </div>
+
+          {/* Minimum Order Settings Section */}
+          <div className="border-t border-slate-100 dark:border-slate-800/80 pt-6">
+            <h3 className="font-extrabold text-slate-800 dark:text-white mb-4 uppercase tracking-wider text-xs">Order Settings</h3>
+            <div>
+              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">Minimum Order Amount (₹)</label>
+              <input
+                type="number"
+                min="0"
+                value={form.minOrderAmount}
+                onChange={(e) => setForm({ ...form, minOrderAmount: e.target.value === "" ? "" : Number(e.target.value) })}
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-slate-800 dark:text-white font-medium text-sm"
+              />
+              <p className="mt-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                Isse kam value ke orders customer place nahi kar payenge. Default 0 set rahega toh koi minimum limit nahi hogi.
+              </p>
             </div>
           </div>
           

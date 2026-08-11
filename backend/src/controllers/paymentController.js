@@ -31,6 +31,14 @@ export const createRazorpayOrder = async (req, res) => {
       couponCode
     });
 
+    const settings = await Settings.findOne();
+    if (settings && settings.minOrderAmount && calculated.subtotal < settings.minOrderAmount) {
+      return res.status(400).json({
+        success: false,
+        message: `Minimum ₹${settings.minOrderAmount} ka order karein tabhi order accept kiya jayega.`
+      });
+    }
+
     const razorpay = new Razorpay({
       key_id: process.env.RAZORPAY_KEY_ID,
       key_secret: process.env.RAZORPAY_KEY_SECRET,
