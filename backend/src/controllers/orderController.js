@@ -981,6 +981,16 @@ export const cancelOrder = async (req, res) => {
       message: `Your cancellation request for order #${orderCode(order._id)} has been sent to the admin.`,
       type: "info",
     });
+    try {
+      await sendPushToUser(
+        req.user.id,
+        "Cancellation Requested",
+        `Your cancellation request for order #${orderCode(order._id)} has been sent to the admin.`,
+        { orderId: String(order._id) }
+      );
+    } catch (pushErr) {
+      console.error("Failed to send cancellation requested push to user:", pushErr);
+    }
     sendPushToAdmins(
       "Cancellation Request",
       `Cancellation requested for Order #${orderCode(order._id)}. Reason: ${reason}`,
