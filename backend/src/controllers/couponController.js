@@ -84,6 +84,63 @@ export const validateCoupon = async (req, res) => {
   try {
     const { code, cartTotal } = req.body;
     const cleanCode = String(code || "").trim().toUpperCase();
+
+    if (cleanCode === "BIRTHDAY") {
+      const Settings = (await import("../models/Settings.js")).default;
+      const settings = await Settings.findOne();
+      if (!settings || !settings.isBirthdayOfferEnabled) {
+        return res.status(400).json({ message: "Birthday offer is not active." });
+      }
+
+      if (!req.user || !req.user.id) {
+        return res.status(400).json({ message: "User not authenticated." });
+      }
+
+      const User = (await import("../models/User.js")).default;
+      const user = await User.findById(req.user.id);
+      if (!user || !user.birthDate) {
+        return res.status(400).json({ message: "Birth date not set in your profile." });
+      }
+
+      const today = new Date();
+      const birthDate = new Date(user.birthDate);
+      const isBirthdayToday = today.getMonth() === birthDate.getMonth() && today.getDate() === birthDate.getDate();
+      if (!isBirthdayToday) {
+        return res.status(400).json({ message: "Today is not your birthday." });
+      }
+
+      if (cartTotal < (settings.minOrderAmount || 0)) {
+        return res.status(400).json({ message: `Minimum order amount of ₹${settings.minOrderAmount || 0} is required.` });
+      }
+
+      // Check one-time use today
+      const Order = (await import("../models/Order.js")).default;
+      const startOfToday = new Date();
+      startOfToday.setHours(0, 0, 0, 0);
+      const endOfToday = new Date();
+      endOfToday.setHours(23, 59, 59, 999);
+
+      const priorUses = await Order.countDocuments({
+        userId: req.user.id,
+        couponCode: "BIRTHDAY",
+        createdAt: { $gte: startOfToday, $lte: endOfToday },
+        paymentStatus: { $in: ["Paid", "Pending"] },
+        status: { $nin: ["Cancelled", "PaymentPending"] }
+      });
+
+      if (priorUses > 0) {
+        return res.status(400).json({ message: "You have already used your birthday coupon today." });
+      }
+
+      return res.json({
+        success: true,
+        coupon: {
+          code: "BIRTHDAY",
+          discountType: "flat",
+          discountValue: settings.birthdayCouponAmount || 50
+        }
+      });
+    }
     
     const coupon = await Coupon.findOne({ code: cleanCode });
     
@@ -181,6 +238,49 @@ export const getActiveCoupons = async (req, res) => {
       });
       if (hasUsedNew50) {
         filteredCoupons = coupons.filter(c => c.code.toUpperCase() !== "NEW50");
+      }
+    }
+
+    // Prepend dynamic birthday coupon if birthday is today and enabled
+    const Settings = (await import("../models/Settings.js")).default;
+    const settings = await Settings.findOne();
+    if (settings && settings.isBirthdayOfferEnabled && req.user && req.user.id) {
+      const User = (await import("../models/User.js")).default;
+      const user = await User.findById(req.user.id);
+      if (user && user.birthDate) {
+        const today = new Date();
+        const birthDate = new Date(user.birthDate);
+        const isBirthdayToday = today.getMonth() === birthDate.getMonth() && today.getDate() === birthDate.getDate();
+        if (isBirthdayToday) {
+          const Order = (await import("../models/Order.js")).default;
+          const startOfToday = new Date();
+          startOfToday.setHours(0, 0, 0, 0);
+          const endOfToday = new Date();
+          endOfToday.setHours(23, 59, 59, 999);
+
+          const priorUses = await Order.countDocuments({
+            userId: req.user.id,
+            couponCode: "BIRTHDAY",
+            createdAt: { $gte: startOfToday, $lte: endOfToday },
+            paymentStatus: { $in: ["Paid", "Pending"] },
+            status: { $nin: ["Cancelled", "PaymentPending"] }
+          });
+
+          if (priorUses === 0) {
+            const bdayCoupon = {
+              _id: "virtual-birthday-coupon",
+              title: "🎂 Birthday Special Offer",
+              code: "BIRTHDAY",
+              discountType: "flat",
+              discountValue: settings.birthdayCouponAmount || 50,
+              minimumOrder: settings.minOrderAmount || 0,
+              expiryDate: endOfToday,
+              active: true,
+              isBirthday: true
+            };
+            filteredCoupons = [bdayCoupon, ...filteredCoupons];
+          }
+        }
       }
     }
 

@@ -123,13 +123,23 @@ export default function UserDashboard() {
   
   const totalOrders = orders.length;
   const totalSpent = orders.reduce((sum, o) => sum + (o.total || 0), 0);
-
   // Filters out expired and user-dismissed alerts
   const activeNotifications = notifications.filter(n => {
     const isDismissed = dismissedNotifs.includes(n._id);
     const isExpired = n.expiresAt && new Date(n.expiresAt) <= new Date();
     return !isDismissed && !isExpired;
   });
+
+  /* --- BIRTHDAY LOGIC --- */
+  const today = new Date();
+  const isBirthdayToday = user.birthDate && (
+    new Date(user.birthDate).getMonth() === today.getMonth() &&
+    new Date(user.birthDate).getDate() === today.getDate()
+  );
+  
+  const birthdayOffer = offers.find(o => o.code === "BIRTHDAY");
+  const birthdayDiscountAmount = birthdayOffer ? birthdayOffer.discountValue : 50;
+  const birthdayMinOrder = birthdayOffer ? birthdayOffer.minimumOrder : 0;
 
   if (loading) {
     return (
@@ -198,6 +208,45 @@ export default function UserDashboard() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* --- BIRTHDAY CELEBRATION BANNER --- */}
+      {isBirthdayToday && (
+        <div className="mx-4 sm:mx-0 mb-6 p-6 rounded-3xl bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-white shadow-xl relative overflow-hidden group">
+          {/* Confetti & Background Sparkles */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl pointer-events-none translate-x-1/3 -translate-y-1/3 group-hover:scale-110 transition-transform duration-700" />
+          <div className="absolute bottom-0 left-0 w-32 h-32 bg-pink-400/20 rounded-full blur-2xl pointer-events-none -translate-x-1/4 translate-y-1/4" />
+          
+          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6 md:gap-8">
+            <div className="flex items-center gap-4 text-center md:text-left flex-col md:flex-row">
+              <span className="text-5xl md:text-6xl animate-bounce select-none">🎂</span>
+              <div className="space-y-1 flex-1 min-w-0">
+                <h2 className="text-2xl md:text-3xl font-black tracking-tight drop-shadow-sm">
+                  Happy Birthday, {user.name || "Customer"}! 🎉
+                </h2>
+                <p className="text-sm md:text-base font-semibold text-pink-100 max-w-lg leading-relaxed">
+                  {birthdayDiscountAmount > 0 
+                    ? `GreenGo wishes you a wonderful day filled with joy and delicious food! 🥳 To celebrate, we have credited a special birthday coupon just for you!`
+                    : `GreenGo wishes you a wonderful day filled with joy, love, and delicious food! 🥳 Have a fantastic birthday celebration! 🍰`
+                  }
+                </p>
+              </div>
+            </div>
+            
+            {/* Special Coupon Details Box */}
+            {birthdayDiscountAmount > 0 && (
+              <div className="bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-2xl flex flex-col items-center justify-center shrink-0 min-w-[200px] shadow-inner text-center">
+                <span className="text-[10px] font-extrabold tracking-widest text-pink-200 uppercase">Your Gift Code</span>
+                <span className="text-2xl font-black tracking-wider text-yellow-350 select-all my-1">BIRTHDAY</span>
+                <span className="text-xs font-bold text-white bg-pink-600/50 px-2.5 py-0.5 rounded-full mt-1">₹{birthdayDiscountAmount} Flat Discount</span>
+                <span className="text-[10px] text-pink-100 font-semibold mt-1.5 opacity-90">
+                  {birthdayMinOrder > 0 ? `Valid on orders above ₹${birthdayMinOrder}` : "No minimum order limit"}
+                </span>
+                <span className="text-[10px] text-pink-100 font-semibold opacity-75 mt-0.5">Expires at 11:59 PM tonight</span>
+              </div>
+            )}
+          </div>
         </div>
       )}
 

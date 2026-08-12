@@ -70,6 +70,62 @@ const ensureTodayBirthdayNotifications = async () => {
   }
 };
 
+const ensureUserBirthdayNotification = async (userId) => {
+  try {
+    const Settings = (await import("../models/Settings.js")).default;
+    const settings = await Settings.findOne();
+    if (!settings || !settings.isBirthdayOfferEnabled) return;
+
+    const today = new Date();
+    const month = today.getMonth();
+    const day = today.getDate();
+    const key = todayKey();
+
+    const user = await User.findById(userId);
+    if (!user || !user.birthDate || user.role === "admin" || user.role === "deliveryBoy") return;
+
+    const birthDate = new Date(user.birthDate);
+    if (birthDate.getMonth() !== month || birthDate.getDate() !== day) return;
+
+    const exists = await Notification.exists({
+      userId,
+      "data.event": "user_birthday_today",
+      "data.date": key
+    });
+    if (exists) return;
+
+    const title = `🎂 Happy Birthday, ${user.name || "Customer"}! 🥳`;
+    const couponAmt = settings.birthdayCouponAmount || 0;
+    const minOrderAmt = settings.minOrderAmount || 0;
+    let message = `GreenGo wishes you a very Happy Birthday! 🎉 Have a wonderful day filled with joy, love, and delicious food! 🍰`;
+    if (couponAmt > 0) {
+      message = `GreenGo wishes you a very Happy Birthday! 🎉 As a special gift, we have credited a ₹${couponAmt} special coupon code "BIRTHDAY" to your account. It is valid for 24 hours (until 11:59 PM tonight) on orders above ₹${minOrderAmt}. Enjoy your day! 🍰`;
+    }
+
+    await Notification.create({
+      userId,
+      audience: "user",
+      title,
+      message,
+      type: "success",
+      actionPath: "/user/menu",
+      data: {
+        event: "user_birthday_today",
+        date: key,
+        discountValue: couponAmt
+      }
+    });
+
+    sendPushToUser(userId, title, message, {
+      event: "user_birthday_today",
+      date: key,
+      discountValue: String(couponAmt)
+    });
+  } catch (err) {
+    console.error("Error ensuring user birthday notification:", err);
+  }
+};
+
 /* ================= CREATE NOTIFICATION ================= */
 export const createNotification = async (req, res) => {
   try {
@@ -122,6 +178,9 @@ export const getAllNotifications = async (req, res) => {
 /* ================= GET MY NOTIFICATIONS (USER) ================= */
 export const getMyNotifications = async (req, res) => {
   try {
+    if (req.user && req.user.id) {
+      await ensureUserBirthdayNotification(req.user.id);
+    }
     const notifications = await Notification.find({
       $and: [
         { audience: { $ne: "admin" } },

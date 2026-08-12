@@ -36,7 +36,9 @@ const settingsSchema = new mongoose.Schema({
   },
   referralRewardFriend: { type: Number, default: 50 },
   referralRewardReferrer: { type: Number, default: 20 },
-  minOrderAmount: { type: Number, default: 0 }
+  minOrderAmount: { type: Number, default: 0 },
+  isBirthdayOfferEnabled: { type: Boolean, default: true },
+  birthdayCouponAmount: { type: Number, default: 50 }
 }, { timestamps: true });
 
 export default mongoose.model("Settings", settingsSchema);

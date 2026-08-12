@@ -170,15 +170,58 @@ export async function calculateOrderAmount({ userId, items, address, latitude, l
 
   if (couponCode) {
     const cleanCode = String(couponCode).trim().toUpperCase();
-    const coupon = await Coupon.findOne({ code: cleanCode });
+    if (cleanCode === "BIRTHDAY") {
+      const settingsDoc = settings || await Settings.findOne().lean();
+      if (!settingsDoc || !settingsDoc.isBirthdayOfferEnabled) {
+        throw new Error("Birthday offer is not active.");
+      }
 
-    if (!coupon) {
-      throw new Error("Invalid coupon code.");
-    }
+      const User = (await import("../models/User.js")).default;
+      const user = await User.findById(userId);
+      if (!user || !user.birthDate) {
+        throw new Error("Your birth date is not set in your profile.");
+      }
 
-    if (!coupon.active) {
-      throw new Error("Coupon is inactive.");
-    }
+      const today = new Date();
+      const birthDate = new Date(user.birthDate);
+      const isBirthdayToday = today.getMonth() === birthDate.getMonth() && today.getDate() === birthDate.getDate();
+      if (!isBirthdayToday) {
+        throw new Error("Today is not your birthday.");
+      }
+
+      if (subtotal < (settingsDoc.minOrderAmount || 0)) {
+        throw new Error(`Minimum order amount of ₹${settingsDoc.minOrderAmount || 0} is required for this coupon.`);
+      }
+
+      const startOfToday = new Date();
+      startOfToday.setHours(0, 0, 0, 0);
+      const endOfToday = new Date();
+      endOfToday.setHours(23, 59, 59, 999);
+
+      const priorUses = await Order.countDocuments({
+        userId,
+        couponCode: "BIRTHDAY",
+        createdAt: { $gte: startOfToday, $lte: endOfToday },
+        paymentStatus: { $in: ["Paid", "Pending"] },
+        status: { $nin: ["Cancelled", "PaymentPending"] }
+      });
+
+      if (priorUses > 0) {
+        throw new Error("You have already used your birthday coupon today.");
+      }
+
+      finalDiscount = settingsDoc.birthdayCouponAmount || 50;
+      validCouponCode = "BIRTHDAY";
+    } else {
+      const coupon = await Coupon.findOne({ code: cleanCode });
+
+      if (!coupon) {
+        throw new Error("Invalid coupon code.");
+      }
+
+      if (!coupon.active) {
+        throw new Error("Coupon is inactive.");
+      }
 
     if (new Date() > new Date(coupon.expiryDate)) {
       throw new Error("Coupon has expired.");
@@ -211,6 +254,7 @@ export async function calculateOrderAmount({ userId, items, address, latitude, l
     }
 
     validCouponCode = cleanCode;
+    }
   }
 
   // 6. Calculate Final Total

@@ -49,6 +49,8 @@ export default function UserLayout() {
   const [pendingCount, setPendingCount] = useState(0);
   // unreadCount: Total unread notifications count
   const [unreadCount, setUnreadCount] = useState(0);
+  // activePushToast: Banner toast shown at top matching native Android push appearance
+  const [activePushToast, setActivePushToast] = useState(null);
   const [user, setUser] = useState({});
   const [showAddressPicker, setShowAddressPicker] = useState(false);
   const [newAddress, setNewAddress] = useState({ label: "Home", details: "", city: "", state: "" });
@@ -266,8 +268,21 @@ export default function UserLayout() {
       });
       if (res.ok) {
         const items = await res.json();
-        const unread = Array.isArray(items) ? items.filter((item) => !(item.read || item.isRead)).length : 0;
-        setUnreadCount(unread);
+        const unreadItems = Array.isArray(items) ? items.filter((item) => !(item.read || item.isRead)) : [];
+        setUnreadCount(unreadItems.length);
+
+        // Check if there is an unread birthday notification to show as a push toast
+        const birthdayNotif = unreadItems.find(item => item.data?.event === "user_birthday_today" || item.title.includes("Birthday") || item.title.includes("🎂"));
+        if (birthdayNotif) {
+          const shownKey = `bday_toast_shown_${birthdayNotif._id}`;
+          if (!sessionStorage.getItem(shownKey)) {
+            sessionStorage.setItem(shownKey, "true");
+            setActivePushToast(birthdayNotif);
+            setTimeout(() => {
+              setActivePushToast(null);
+            }, 8000);
+          }
+        }
       }
     } catch (err) {
       console.error("Failed to load user notifications:", err);
@@ -606,6 +621,42 @@ export default function UserLayout() {
               </div>
             </MotionDiv>
           </>
+        )}
+      </AnimatePresence>
+
+      {/* --- GOOGLE/ANDROID SYSTEM PUSH TOAST --- */}
+      <AnimatePresence>
+        {activePushToast && (
+          <motion.div
+            initial={{ opacity: 0, y: -50, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            className="fixed top-4 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-white/95 dark:bg-slate-900/95 border border-slate-200/85 dark:border-slate-800 shadow-2xl rounded-2xl p-4 z-[99999] backdrop-blur-md flex gap-3 cursor-pointer select-none"
+            onClick={() => {
+              navigate("/user/notifications");
+              setActivePushToast(null);
+            }}
+          >
+            {/* App Logo */}
+            <div className="w-10 h-10 rounded-xl overflow-hidden shadow-md border border-brand-105 dark:border-brand-900 shrink-0 bg-white">
+              <img src="/logo/final-logo.png" alt="GreenGo" className="w-full h-full object-cover" />
+            </div>
+            
+            {/* Content */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-2 mb-1">
+                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">GreenGo • Just Now</span>
+                <span className="w-1.5 h-1.5 bg-brand-500 rounded-full animate-pulse" />
+              </div>
+              <h4 className="font-extrabold text-slate-950 dark:text-white text-sm leading-snug">
+                {activePushToast.title}
+              </h4>
+              <p className="text-xs font-semibold text-slate-650 dark:text-slate-350 leading-relaxed mt-0.5 line-clamp-3">
+                {activePushToast.message}
+              </p>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
 

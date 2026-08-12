@@ -56,7 +56,9 @@ export const updateSettings = async (req, res) => {
       surcharges,
       referralRewardFriend,
       referralRewardReferrer,
-      minOrderAmount
+      minOrderAmount,
+      isBirthdayOfferEnabled,
+      birthdayCouponAmount
     } = req.body;
     let settings = await Settings.findOne();
     
@@ -100,6 +102,8 @@ export const updateSettings = async (req, res) => {
     if (referralRewardFriend !== undefined) settings.referralRewardFriend = Number(referralRewardFriend);
     if (referralRewardReferrer !== undefined) settings.referralRewardReferrer = Number(referralRewardReferrer);
     if (minOrderAmount !== undefined) settings.minOrderAmount = Number(minOrderAmount);
+    if (isBirthdayOfferEnabled !== undefined) settings.isBirthdayOfferEnabled = Boolean(isBirthdayOfferEnabled);
+    if (birthdayCouponAmount !== undefined) settings.birthdayCouponAmount = Number(birthdayCouponAmount);
     
     await settings.save();
     res.json(settings);

@@ -41,7 +41,9 @@ export default function ManageSettings() {
     },
     referralRewardFriend: 50,
     referralRewardReferrer: 20,
-    minOrderAmount: 0
+    minOrderAmount: 0,
+    isBirthdayOfferEnabled: true,
+    birthdayCouponAmount: 50
   });
 
   // ==========================================
@@ -165,7 +167,9 @@ export default function ManageSettings() {
           enabledPaymentMethods: data.enabledPaymentMethods || { cod: true, online: true },
           referralRewardFriend: data.referralRewardFriend !== undefined ? data.referralRewardFriend : 50,
           referralRewardReferrer: data.referralRewardReferrer !== undefined ? data.referralRewardReferrer : 20,
-          minOrderAmount: data.minOrderAmount !== undefined ? data.minOrderAmount : 0
+          minOrderAmount: data.minOrderAmount !== undefined ? data.minOrderAmount : 0,
+          isBirthdayOfferEnabled: data.isBirthdayOfferEnabled !== undefined ? data.isBirthdayOfferEnabled : true,
+          birthdayCouponAmount: data.birthdayCouponAmount !== undefined ? data.birthdayCouponAmount : 50
         });
       }
     } catch (err) {
@@ -189,7 +193,9 @@ export default function ManageSettings() {
         surcharges: (form.surcharges || []).filter(s => s.name.trim() !== ""),
         referralRewardFriend: Number(form.referralRewardFriend || 0),
         referralRewardReferrer: Number(form.referralRewardReferrer || 0),
-        minOrderAmount: Number(form.minOrderAmount || 0)
+        minOrderAmount: Number(form.minOrderAmount || 0),
+        isBirthdayOfferEnabled: Boolean(form.isBirthdayOfferEnabled),
+        birthdayCouponAmount: Number(form.birthdayCouponAmount || 0)
       };
       await API.put("/api/settings", payload, {
         headers: { Authorization: `Bearer ${token}` },
@@ -504,6 +510,40 @@ export default function ManageSettings() {
               />
               <p className="mt-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
                 Isse kam value ke orders customer place nahi kar payenge. Default 0 set rahega toh koi minimum limit nahi hogi.
+              </p>
+            </div>
+          </div>
+
+          {/* Birthday Special Offer Settings Section */}
+          <div className="border-t border-slate-100 dark:border-slate-800/80 pt-6 space-y-4">
+            <h3 className="font-extrabold text-slate-800 dark:text-white uppercase tracking-wider text-xs">Birthday Special Offer Settings</h3>
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Configure birthday coupon rewards for customers on their birthday.</p>
+            
+            <div className="flex items-center justify-between p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900">
+              <div>
+                <h3 className="font-bold text-slate-800 dark:text-white">Enable Birthday Special Offer</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400">Show birthday wishes and credit ₹ coupon to customer for 24h</p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" className="sr-only peer" 
+                  checked={form.isBirthdayOfferEnabled}
+                  onChange={(e) => setForm({ ...form, isBirthdayOfferEnabled: e.target.checked })} 
+                />
+                <div className="w-11 h-6 bg-gray-300 dark:bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-350 dark:after:border-slate-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+              </label>
+            </div>
+
+            <div className={`${!form.isBirthdayOfferEnabled ? "opacity-50 pointer-events-none" : "transition-opacity"}`}>
+              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">Birthday Coupon Amount (₹)</label>
+              <input
+                type="number"
+                min="0"
+                value={form.birthdayCouponAmount}
+                onChange={(e) => setForm({ ...form, birthdayCouponAmount: e.target.value === "" ? "" : Number(e.target.value) })}
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-slate-800 dark:text-white font-medium text-sm"
+              />
+              <p className="mt-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                Customer ke birthday par use dynamic "BIRTHDAY" coupon code milega jo 24 ghante ke liye valid rahega (रात 12 AM से रात 11:59 PM तक)।
               </p>
             </div>
           </div>

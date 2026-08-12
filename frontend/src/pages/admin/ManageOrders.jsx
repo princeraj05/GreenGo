@@ -273,7 +273,7 @@ export default function ManageOrders() {
           </div>
 
           <div style="margin-top: 25px; text-align: center;" class="no-print">
-            <button onclick="window.close()" style="padding: 8px 20px; font-weight: bold; background: #10b981; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 12px; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2);">
+            <button onclick="window.close(); setTimeout(function() { window.location.href = '${window.location.origin}/admin/orders'; }, 100);" style="padding: 8px 20px; font-weight: bold; background: #10b981; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 12px; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2);">
               &larr; Back to Admin
             </button>
           </div>
