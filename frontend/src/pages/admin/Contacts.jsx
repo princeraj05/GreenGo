@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CheckCircle2, MessageCircle, Search, Send, Mail, Phone, User, ArrowLeft } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
+import io from "socket.io-client";
+import { getApiUrl } from "../../utils/getApiUrl";
 import API from "../../api/axios";
 import { getToken } from "../../utils/getToken";
 
@@ -131,10 +133,51 @@ export default function Contacts() {
     }
   }
 
+  const socketRef = useRef(null);
+
   // Load support submissions and user list on initial mount
   useEffect(() => {
     loadContacts();
     loadAllUsers();
+
+    let socket;
+    const initSocket = async () => {
+      const token = await getToken();
+      if (!token) return;
+
+      socket = io(getApiUrl(), {
+        auth: { token },
+        transports: ["websocket", "polling"],
+      });
+      socketRef.current = socket;
+
+      socket.on("connect", () => {
+        console.log("[Socket] Admin connected to support real-time");
+      });
+
+      socket.on("support:new-message", (incomingContact) => {
+        console.log("[Socket] Admin received support message:", incomingContact);
+
+        setContacts((prevContacts) => {
+          const exists = prevContacts.some((c) => c._id === incomingContact._id);
+          if (exists) {
+            return prevContacts.map((c) =>
+              c._id === incomingContact._id ? incomingContact : c
+            );
+          } else {
+            return [incomingContact, ...prevContacts];
+          }
+        });
+      });
+    };
+
+    initSocket();
+
+    return () => {
+      if (socket) {
+        socket.disconnect();
+      }
+    };
   }, []);
 
   /**

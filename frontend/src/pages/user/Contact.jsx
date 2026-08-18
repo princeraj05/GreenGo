@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { MessageCircle, RefreshCw, Send } from "lucide-react";
+import io from "socket.io-client";
+import { getApiUrl } from "../../utils/getApiUrl";
 import API from "../../api/axios";
 
 /**
@@ -21,8 +23,10 @@ export default function Contact() {
   const [loading, setLoading] = useState(false);
 
   /* --- REFS --- */
-  // chatEndRef: Tracks the bottom of the support message stream to automatically focus latest messages
-  const chatEndRef = useRef(null);
+  // chatContainerRef: Scroll container of the support message stream
+  const chatContainerRef = useRef(null);
+  // socketRef: Keeps track of the active Socket.IO connection
+  const socketRef = useRef(null);
 
   /* --- DATA FETCHING & EFFECTS --- */
 
@@ -57,7 +61,7 @@ export default function Contact() {
     }
   }
 
-  // Load account properties and user message threads on mount
+  // Load account properties and user message threads on mount, initialize Socket.IO
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -71,11 +75,45 @@ export default function Contact() {
     }
     loadUserProfile();
     loadMyContacts();
+
+    // Connect socket
+    const socket = io(getApiUrl(), {
+      auth: { token },
+      transports: ["websocket", "polling"],
+    });
+    socketRef.current = socket;
+
+    socket.on("connect", () => {
+      console.log("[Socket] Customer connected to support real-time");
+    });
+
+    socket.on("support:new-message", (incomingContact) => {
+      console.log("[Socket] Customer received support message:", incomingContact);
+
+      setContacts((prevContacts) => {
+        const exists = prevContacts.some((c) => c._id === incomingContact._id);
+        if (exists) {
+          return prevContacts.map((c) =>
+            c._id === incomingContact._id ? incomingContact : c
+          );
+        } else {
+          return [...prevContacts, incomingContact];
+        }
+      });
+    });
+
+    return () => {
+      if (socket) {
+        socket.disconnect();
+      }
+    };
   }, []);
 
   // Scrolls support inbox stream down when a new message or reply is updated
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
   }, [contacts]);
 
   /* --- EVENT HANDLERS --- */
@@ -157,7 +195,7 @@ export default function Contact() {
         </div>
 
         {/* Live Messages List View */}
-        <div className="flex-1 p-4 md:p-6 overflow-y-auto space-y-4 md:space-y-5 bg-slate-50/50 dark:bg-slate-950/25 scrollbar-thin">
+        <div ref={chatContainerRef} className="flex-1 p-4 md:p-6 overflow-y-auto space-y-4 md:space-y-5 bg-slate-50/50 dark:bg-slate-950/25 scrollbar-thin">
           {contacts.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 gap-2 font-medium text-xs sm:text-sm">
               <span>💬</span>
@@ -224,7 +262,6 @@ export default function Contact() {
               </div>
             ))
           )}
-          <div ref={chatEndRef} />
         </div>
         
       </div>

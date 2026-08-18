@@ -3,6 +3,9 @@ import cors from "cors";
 import path from "path";
 import dotenv from "dotenv";
 import dns from "dns";
+import { createServer } from "http";
+import { Server } from "socket.io";
+import jwt from "jsonwebtoken";
 
 if (dns.setDefaultResultOrder) {
   dns.setDefaultResultOrder("ipv4first");
@@ -161,7 +164,66 @@ import { runPaymentCleanupJob } from "./services/paymentCleanupService.js";
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+const server = createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+      const isAllowed = 
+        allowedOrigins.includes(origin) || 
+        /^https:\/\/.*\.vercel\.app$/.test(origin) ||
+        origin.includes("green-go.in") ||
+        origin.includes("localhost");
+      if (isAllowed) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "Accept", "Origin", "X-Requested-With"]
+  }
+});
+
+// Attach io to express app
+app.set("io", io);
+
+// Socket.IO authentication middleware
+io.use((socket, next) => {
+  const token = socket.handshake.auth?.token || socket.handshake.query?.token;
+  if (!token) {
+    console.log("[Socket] Connection rejected: No token provided");
+    return next(new Error("Authentication error: No token provided"));
+  }
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "SECRET123");
+    socket.user = decoded;
+    next();
+  } catch (err) {
+    console.log("[Socket] Connection rejected: Invalid token");
+    return next(new Error("Authentication error: Invalid token"));
+  }
+});
+
+io.on("connection", (socket) => {
+  console.log(`[Socket] Connected: user=${socket.user.id || socket.user._id}, role=${socket.user.role}`);
+
+  // User joins their own room
+  socket.join(`user:${socket.user.id || socket.user._id}`);
+
+  // If admin, join "admins" room
+  if (socket.user.role === "admin") {
+    socket.join("admins");
+    console.log(`[Socket] Admin joined admins room: user=${socket.user.id || socket.user._id}`);
+  }
+
+  socket.on("disconnect", () => {
+    console.log(`[Socket] Disconnected: user=${socket.user.id || socket.user._id}`);
+  });
+});
+
+server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   
   // Run tasks immediately on startup, then periodically

@@ -37,6 +37,11 @@ export const createContact = async (req, res) => {
       { contactId: String(contact._id) }
     );
 
+    const io = req.app.get("io");
+    if (io) {
+      io.to("admins").emit("support:new-message", contact);
+    }
+
     res.json({
       success: true,
       message: "Message sent successfully",

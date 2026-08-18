@@ -139,6 +139,14 @@ export const replyToContact = async (req, res) => {
       );
     }
 
+    const io = req.app.get("io");
+    if (io) {
+      if (contact.uid) {
+        io.to(`user:${contact.uid}`).emit("support:new-message", contact);
+      }
+      io.to("admins").emit("support:new-message", contact);
+    }
+
     res.json({
       success: true,
       emailSent: shouldSendEmail,
@@ -210,6 +218,12 @@ export const initiateContact = async (req, res) => {
       `${cleanMessage.slice(0, 120)}${cleanMessage.length > 120 ? "..." : ""}`,
       { contactId: String(contact._id) }
     );
+
+    const io = req.app.get("io");
+    if (io) {
+      io.to(`user:${user._id}`).emit("support:new-message", contact);
+      io.to("admins").emit("support:new-message", contact);
+    }
 
     res.json({ success: true, contact });
   } catch (err) {
