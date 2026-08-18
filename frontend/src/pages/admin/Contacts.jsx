@@ -178,6 +178,37 @@ export default function Contacts() {
     return conversations[0] || null;
   }, [conversations, selectedKey, selectedUser]);
 
+  // Set of active conversation keys to quickly check if a user already has an active thread
+  const conversationsKeys = useMemo(() => {
+    return new Set(conversations.map((c) => c.key));
+  }, [conversations]);
+
+  // Filtered active conversations matching the search input
+  const filteredConversations = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return conversations;
+    return conversations.filter(
+      (c) =>
+        (c.name || "").toLowerCase().includes(q) ||
+        (c.email || "").toLowerCase().includes(q)
+    );
+  }, [conversations, search]);
+
+  // Filtered users matching the search input who do not yet have an active conversation
+  const filteredNewUsers = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return [];
+    return users.filter((u) => {
+      const userKey = String(u.email || u.uid || u._id || "unknown").toLowerCase();
+      if (conversationsKeys.has(userKey)) return false;
+      return (
+        (u.name || "").toLowerCase().includes(q) ||
+        (u.email || "").toLowerCase().includes(q) ||
+        (u.phone || "").toLowerCase().includes(q)
+      );
+    });
+  }, [users, search, conversationsKeys]);
+
   // Auto-scrolls chat interface to the bottom whenever conversation messages change
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -337,97 +368,151 @@ export default function Contacts() {
 
       {/* --- APP MESSAGE TAB --- */}
       {activeTab === "appMessage" && (
-        <div className="flex flex-col gap-6 lg:flex-row lg:gap-8 animate-fade-in">
-          {/* --- LEFT HAND: COMPOSE REPLY FORM --- */}
-          <div className="flex-1">
-            <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-premium transition-colors dark:border-slate-800/60 dark:bg-slate-950 md:p-8">
-              <div className="space-y-4">
-                
-                {/* Search & Select User */}
-                <div>
-                  <label className="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-300 sm:text-sm">
-                    Customer
-                  </label>
-                  <div className="relative">
-                    <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                    <input
-                      value={search}
-                      onChange={(event) => setSearch(event.target.value)}
-                      placeholder="Type name or email to search..."
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-10 pr-4 text-sm font-semibold text-slate-900 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-2 focus:ring-brand-500/10 dark:border-slate-800 dark:bg-slate-900 dark:text-white dark:focus:bg-slate-950"
-                    />
-                  </div>
-                  
-                  <select
-                    value={selectedUser?._id || ""}
-                    onChange={(event) => handleUserSelect(event.target.value)}
-                    className="mt-3 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/10 dark:border-slate-800 dark:bg-slate-900 dark:text-white"
-                  >
-                    <option value="">-- Select Customer --</option>
-                    {users
-                      .filter((u) => {
-                        const q = search.trim().toLowerCase();
-                        if (!q) return true;
-                        return (
-                          (u.name || "").toLowerCase().includes(q) ||
-                          (u.email || "").toLowerCase().includes(q)
-                        );
-                      })
-                      .map((u) => (
-                        <option key={u._id} value={u._id}>
-                          {u.name || "Customer"} ({u.email || u.phone || "No contact"})
-                        </option>
-                      ))}
-                  </select>
-                </div>
-
-                {/* Message TextArea */}
-                <div>
-                  <label className="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-300 sm:text-sm">
-                    Message
-                  </label>
-                  <textarea
-                    value={selectedConversation ? replyText[selectedConversation.key] || "" : ""}
-                    onChange={(event) =>
-                      selectedConversation &&
-                      setReplyText({ ...replyText, [selectedConversation.key]: event.target.value })
-                    }
-                    onKeyDown={handleKeyDown}
-                    disabled={!selectedConversation}
-                    className="h-28 w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs font-medium text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:bg-white focus:ring-2 focus:ring-brand-500/10 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-800/80 dark:bg-slate-900 dark:text-white dark:placeholder:text-slate-500 dark:focus:bg-slate-950 sm:text-sm md:h-32"
-                    placeholder={selectedConversation ? "Type admin reply..." : "No customer selected"}
-                  />
-                </div>
-
-                {error && (
-                  <p className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-xs font-bold text-red-600 dark:border-red-900/40 dark:bg-red-950/20 dark:text-red-300">
-                    {error}
-                  </p>
-                )}
-
-                <button
-                  type="button"
-                  disabled={sending || !selectedConversation || !replyText[selectedConversation.key]?.trim()}
-                  onClick={sendReply}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 py-3 text-xs font-bold text-white shadow-md shadow-brand-500/20 transition-all hover:from-brand-650 hover:to-brand-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 sm:text-sm md:py-4"
-                >
-                  {sending ? "Sending..." : "Send Message"}
-                  <Send className="h-4 w-4" />
-                </button>
+        <div className="flex flex-col lg:flex-row gap-6 lg:h-[600px] md:lg:h-[650px] animate-fade-in w-full">
+          {/* --- LEFT SIDEBAR: ACTIVE CHATS & SEARCH --- */}
+          <div className="w-full lg:w-80 xl:w-96 flex flex-col rounded-3xl border border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-950 shadow-premium overflow-hidden h-[300px] lg:h-full shrink-0">
+            {/* Search header */}
+            <div className="p-4 border-b border-slate-100 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-900/40">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Search chats or customers..."
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-4 text-xs font-semibold text-slate-900 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-2 focus:ring-brand-500/10 dark:border-slate-800 dark:bg-slate-900 dark:text-white dark:focus:bg-slate-950"
+                />
               </div>
+            </div>
+
+            {/* Scrollable Conversation List */}
+            <div className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60">
+              {/* Active Conversations */}
+              {filteredConversations.length > 0 && (
+                <div>
+                  <div className="px-4 py-2 text-[9px] font-extrabold uppercase tracking-wider text-slate-400 bg-slate-50/20 dark:bg-slate-950/20">
+                    Conversations
+                  </div>
+                  {filteredConversations.map((c) => {
+                    const isSelected = selectedConversation?.key === c.key;
+                    const lastMsg = c.latest?.message || c.latest?.reply || "";
+                    return (
+                      <button
+                        key={c.key}
+                        onClick={() => {
+                          setSelectedKey(c.key);
+                          setSelectedUser(null);
+                          setSearch("");
+                        }}
+                        className={`w-full text-left px-4 py-3.5 flex items-center gap-3 transition-colors ${
+                          isSelected
+                            ? "bg-brand-50/60 dark:bg-brand-950/20 border-l-4 border-brand-500"
+                            : "hover:bg-slate-50 dark:hover:bg-slate-900/50 border-l-4 border-transparent"
+                        }`}
+                      >
+                        <div className="w-10 h-10 rounded-full bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-450 flex items-center justify-center font-bold text-sm shrink-0 shadow-sm border border-brand-100/50 dark:border-brand-900/30">
+                          {initialsFor(c.name)}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex justify-between items-baseline">
+                            <h4 className="font-bold text-xs text-slate-900 dark:text-white truncate">
+                              {c.name}
+                            </h4>
+                            <span className="text-[9px] text-slate-400 dark:text-slate-500 shrink-0 font-medium ml-1">
+                              {formatTime(c.latest?.createdAt)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center gap-1.5 mt-0.5">
+                            <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                              {lastMsg}
+                            </p>
+                            {c.pendingCount > 0 && (
+                              <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-500 px-1 text-[9px] font-bold text-white shrink-0">
+                                {c.pendingCount}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Start New Chat List */}
+              {filteredNewUsers.length > 0 && (
+                <div>
+                  <div className="px-4 py-2 text-[9px] font-extrabold uppercase tracking-wider text-slate-400 bg-slate-50/20 dark:bg-slate-950/20">
+                    Start New Chat
+                  </div>
+                  {filteredNewUsers.map((u) => {
+                    const userKey = String(u.email || u.uid || u._id || "unknown").toLowerCase();
+                    const isSelected = selectedConversation?.key === `new-user-${u._id}` || selectedConversation?.key === userKey;
+                    return (
+                      <button
+                        key={u._id}
+                        onClick={() => {
+                          handleUserSelect(u._id);
+                          setSearch("");
+                        }}
+                        className={`w-full text-left px-4 py-3.5 flex items-center gap-3 transition-colors ${
+                          isSelected
+                            ? "bg-brand-50/60 dark:bg-brand-950/20 border-l-4 border-brand-500"
+                            : "hover:bg-slate-50 dark:hover:bg-slate-900/50 border-l-4 border-transparent"
+                        }`}
+                      >
+                        <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 flex items-center justify-center font-bold text-sm shrink-0 border border-slate-200/50 dark:border-slate-800/50">
+                          {initialsFor(u.name)}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h4 className="font-bold text-xs text-slate-900 dark:text-white truncate">
+                            {u.name || "Customer"}
+                          </h4>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                            {u.phone || "Click to start conversation"}
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {filteredConversations.length === 0 && filteredNewUsers.length === 0 && (
+                <div className="p-8 text-center text-slate-400 dark:text-slate-500 font-medium text-xs">
+                  No conversations or users found.
+                </div>
+              )}
             </div>
           </div>
 
-          {/* --- RIGHT HAND: SUPPORT LIVE INBOX CHAT WINDOW --- */}
-          <div className="flex h-[450px] flex-1 flex-col overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-premium transition-colors dark:border-slate-800/60 dark:bg-slate-950 md:h-[600px]">
+          {/* --- RIGHT SIDEBAR: LIVE CHAT WINDOW --- */}
+          <div className="flex-1 flex flex-col rounded-3xl border border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-950 shadow-premium overflow-hidden h-[450px] lg:h-full">
+            {/* Chat header */}
             <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50 p-4 transition-colors dark:border-slate-800/60 dark:bg-slate-900/80 md:p-5">
-              <h3 className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-slate-900 dark:text-white">
-                <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-450 opacity-75" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-                </span>
-                Support Live Inbox
-              </h3>
+              {selectedConversation ? (
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-450 flex items-center justify-center font-bold text-sm shrink-0 shadow-sm border border-brand-100/50 dark:border-brand-900/30">
+                    {initialsFor(selectedConversation.name)}
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">
+                      {selectedConversation.name}
+                    </h3>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500">
+                      {selectedConversation.isNewConversation ? "New Chat Thread" : "Live Chat Session"}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <h3 className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-slate-900 dark:text-white">
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-450 opacity-75" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                  </span>
+                  Support Live Inbox
+                </h3>
+              )}
+
               {selectedConversation && !selectedConversation.isNewConversation && (
                 <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase text-slate-500 shadow-sm dark:bg-slate-950 dark:text-slate-300">
                   {selectedConversation.pendingCount} pending
@@ -435,6 +520,7 @@ export default function Contacts() {
               )}
             </div>
 
+            {/* Chat History Messages */}
             <div className="scrollbar-thin flex-1 space-y-4 overflow-y-auto bg-slate-50/50 p-4 dark:bg-slate-950/25 md:space-y-5 md:p-6">
               {!selectedConversation ? (
                 <div className="flex h-full flex-col items-center justify-center gap-2 text-xs font-medium text-slate-400 dark:text-slate-500 sm:text-sm">
@@ -531,6 +617,42 @@ export default function Contacts() {
               )}
               <div ref={chatEndRef} />
             </div>
+
+            {/* Chat Reply Area */}
+            {selectedConversation && (
+              <div className="p-4 border-t border-slate-100 bg-slate-50 dark:border-slate-800/60 dark:bg-slate-900/40">
+                {error && (
+                  <p className="mb-3 rounded-xl border border-red-100 bg-red-50 px-4 py-2.5 text-[11px] font-bold text-red-600 dark:border-red-900/40 dark:bg-red-950/20 dark:text-red-300">
+                    {error}
+                  </p>
+                )}
+                <div className="flex items-center gap-3">
+                  <div className="flex-1">
+                    <textarea
+                      value={replyText[selectedConversation.key] || ""}
+                      onChange={(event) =>
+                        setReplyText({ ...replyText, [selectedConversation.key]: event.target.value })
+                      }
+                      onKeyDown={handleKeyDown}
+                      className="w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-3 text-xs font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/10 dark:border-slate-800 dark:bg-slate-900 dark:text-white dark:placeholder:text-slate-500 h-16 scrollbar-thin"
+                      placeholder={`Reply to ${selectedConversation.name}...`}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    disabled={sending || !replyText[selectedConversation.key]?.trim()}
+                    onClick={sendReply}
+                    className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-r from-brand-500 to-brand-600 text-white shadow-md shadow-brand-500/20 transition-all hover:from-brand-650 hover:to-brand-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 shrink-0"
+                  >
+                    {sending ? (
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    ) : (
+                      <Send className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
