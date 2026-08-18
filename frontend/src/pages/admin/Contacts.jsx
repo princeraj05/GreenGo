@@ -601,7 +601,7 @@ export default function Contacts() {
             {/* Mobile Chat Header (Only visible on mobile when chat is open) */}
             {selectedConversation && (
               <div 
-                className="flex items-center justify-between px-4 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 lg:hidden shrink-0"
+                className="flex items-center justify-between px-4 bg-slate-900 dark:bg-slate-950 border-b border-slate-800/60 lg:hidden shrink-0 text-white"
                 style={{
                   paddingTop: "env(safe-area-inset-top)",
                   height: "calc(4rem + env(safe-area-inset-top))"
@@ -617,26 +617,30 @@ export default function Contacts() {
                       setSelectedUser(null);
                       setSearchParams({}, { replace: true });
                     }}
-                    className="p-1 rounded-lg text-slate-600 dark:text-slate-350 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    className="w-10 h-10 flex items-center justify-center rounded-full text-slate-350 hover:text-white hover:bg-slate-800 active:bg-slate-800/50 transition-colors"
+                    aria-label="Back to contacts"
                   >
-                    <ArrowLeft size={20} />
+                    <ArrowLeft size={24} />
                   </button>
                   
-                  <div className="w-9 h-9 rounded-full bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-450 flex items-center justify-center font-bold text-sm shrink-0 border border-brand-100/50 dark:border-brand-900/30">
+                  <div className="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center font-extrabold text-sm shrink-0 shadow-sm border border-emerald-450/30">
                     {initialsFor(selectedConversation.name)}
                   </div>
                   <div>
-                    <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">
-                      {selectedConversation.name}
-                    </h3>
-                    <p className="text-[9px] text-slate-400 dark:text-slate-500">
+                    <div className="flex items-center gap-1.5">
+                      <h3 className="text-sm font-extrabold text-white leading-tight">
+                        {selectedConversation.name}
+                      </h3>
+                      <span className="h-2 w-2 rounded-full bg-emerald-500 inline-block shrink-0 animate-pulse"></span>
+                    </div>
+                    <p className="text-[9px] text-slate-400 font-semibold mt-0.5">
                       {selectedConversation.isNewConversation ? "New Chat Thread" : "Live Chat Session"}
                     </p>
                   </div>
                 </div>
 
                 {!selectedConversation.isNewConversation && (
-                  <span className="rounded-full bg-white dark:bg-slate-950 px-3 py-1 text-[9px] font-black uppercase text-slate-500 dark:text-slate-300 shadow-sm">
+                  <span className="rounded-full bg-slate-800 dark:bg-slate-900 border border-slate-700/50 px-3 py-1 text-[9px] font-black uppercase text-emerald-400 shadow-sm">
                     {selectedConversation.pendingCount} pending
                   </span>
                 )}
