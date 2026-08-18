@@ -214,11 +214,12 @@ export default function OrderTrackingPage({ role = "user" }) {
   return (
     <div className="max-w-4xl mx-auto w-full pb-16 px-4 md:px-0 space-y-6 animate-fade-in text-slate-900 dark:text-white">
       
-      {/* --- HEADER --- */}
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-            <span className="text-brand-500 font-extrabold">&larr;</span> 
+            <Link to={backPath} className="text-brand-500 hover:text-brand-600 transition-colors font-extrabold mr-1">
+              &larr;
+            </Link>
             <span className="text-brand-600 dark:text-brand-400 font-black">GreenGO</span> Order Tracker
           </h1>
           <p className="text-xs sm:text-sm font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
@@ -230,7 +231,7 @@ export default function OrderTrackingPage({ role = "user" }) {
             <RefreshCw size={12} className="animate-spin-slow" /> Refresh
           </Button>
           <Link to={backPath}>
-            <Button variant="ghost" size="sm" className="rounded-xl text-xs">Back</Button>
+            <Button variant="secondary" size="sm" className="rounded-xl text-xs px-4">Back</Button>
           </Link>
         </div>
       </div>
