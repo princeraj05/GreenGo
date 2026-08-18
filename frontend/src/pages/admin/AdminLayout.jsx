@@ -334,8 +334,8 @@ export default function AdminLayout() {
         {/* Hidden on desktop using md:hidden */}
         <div 
           className={cn(
-            "sticky top-0 z-40 flex items-center justify-between px-4 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 md:hidden transition-colors duration-300",
-            isChatOpenOnMobile && "hidden pointer-events-none"
+            "sticky top-0 z-40 items-center justify-between px-4 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 md:hidden transition-colors duration-300",
+            isChatOpenOnMobile ? "hidden pointer-events-none" : "flex"
           )}
           style={{
             paddingTop: "env(safe-area-inset-top)",
@@ -424,7 +424,7 @@ export default function AdminLayout() {
       {/* Pinned permanently to bottom viewport edge. Respects safe area bottom inset. */}
       <div className={cn(
         "fixed bottom-0 left-0 right-0 z-[800] md:hidden bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-xl border-t border-slate-800/50 shadow-[0_-4px_20px_rgba(15,23,42,0.25)] pb-[env(safe-area-inset-bottom)] transition-all duration-300",
-        isChatOpenOnMobile && "hidden pointer-events-none"
+        isChatOpenOnMobile ? "hidden pointer-events-none" : "block"
       )}>
         <nav className="flex items-center justify-around py-2.5 px-2 h-16">
           {mobileNavLinks.map(({ to, end, label, icon }) => (

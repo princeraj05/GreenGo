@@ -314,7 +314,7 @@ export default function Contacts() {
       const key = String(u.email || u.uid || u._id || "unknown").toLowerCase();
       setSearchParams({ user: u._id, chat: key });
     } else {
-      setSearchParams({});
+      setSearchParams({}, { replace: true });
     }
   };
 
@@ -615,7 +615,7 @@ export default function Contacts() {
                       }
                       setSelectedKey("");
                       setSelectedUser(null);
-                      setSearchParams({});
+                      setSearchParams({}, { replace: true });
                     }}
                     className="p-1 rounded-lg text-slate-600 dark:text-slate-350 hover:bg-slate-100 dark:hover:bg-slate-800"
                   >
@@ -844,7 +844,7 @@ export default function Contacts() {
                     if (u) {
                       setSearchParams({ user: u._id });
                     } else {
-                      setSearchParams({});
+                      setSearchParams({}, { replace: true });
                     }
                   }}
                   className="mt-3 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/10 dark:border-slate-800 dark:bg-slate-900 dark:text-white"

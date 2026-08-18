@@ -159,8 +159,17 @@ export default function App() {
       // Handle Android back button
       const backButtonListener = CapApp.addListener("backButton", () => {
         const currentPath = location.pathname;
-        // Exit app if the user is on the main entry/dashboard screens
-        if (currentPath === "/" || currentPath === "/user" || currentPath === "/admin" || currentPath === "/login") {
+        const searchParams = new URLSearchParams(location.search);
+        
+        if (currentPath === "/admin/contacts" && searchParams.has("chat")) {
+          // If support chat is open on mobile, back button should close it first
+          navigate("/admin/contacts", { replace: true });
+        } else if (
+          currentPath === "/" ||
+          currentPath === "/user" ||
+          currentPath === "/admin" ||
+          currentPath === "/login"
+        ) {
           CapApp.exitApp();
         } else {
           navigate(-1);
