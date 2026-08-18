@@ -1,4 +1,4 @@
-import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
+import { Outlet, NavLink, useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { useCallback, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -25,8 +25,8 @@ const MotionDiv = motion.div;
 export default function AdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const searchParams = new URLSearchParams(location.search);
-  const isChatOpenOnMobile = location.pathname === "/admin/contacts" && searchParams.has("chat");
+  const [searchParams] = useSearchParams();
+  const isChatOpenOnMobile = location.pathname.toLowerCase().replace(/\/$/, "") === "/admin/contacts" && searchParams.has("chat");
 
   // ==========================================
   // STATE DECLARATIONS
