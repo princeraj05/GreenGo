@@ -39,10 +39,6 @@ export default function UserLayout() {
   const isLoggedIn = Boolean(localStorage.getItem("token") && localStorage.getItem("auth_state") === "logged_in");
 
   // Bottom Navigation state & badges
-  // showBottomNav: Toggles bottom nav on scrolls
-  const [showBottomNav, setShowBottomNav] = useState(true);
-  // lastScrollY: Remembers previous window scroll pixel offset
-  const [lastScrollY, setLastScrollY] = useState(0);
   // cartCount: Quantity totals shown above Cart icons
   const [cartCount, setCartCount] = useState(0);
   // pendingCount: Active order quantities shown above Orders icons
@@ -56,25 +52,6 @@ export default function UserLayout() {
   const [newAddress, setNewAddress] = useState({ label: "Home", details: "", city: "", state: "" });
 
   /* --- EFFECTS & LIFECYCLE --- */
-
-  // Scroll listener tracking scroll direction: hides bottom navigation on scroll down, reveals it on scroll up
-  useEffect(() => {
-    const handleScroll = () => {
-      if (typeof window !== "undefined") {
-        if (window.scrollY > lastScrollY && window.scrollY > 80) {
-          setShowBottomNav(false);
-        } else {
-          setShowBottomNav(true);
-        }
-        setLastScrollY(window.scrollY);
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, [lastScrollY]);
 
   // Performs user details downloads, loads cart quantities, registers custom event triggers
   useEffect(() => {
@@ -497,20 +474,17 @@ export default function UserLayout() {
         </div>
 
         {/* Page Content Panel */}
-        <div className="flex-1 p-4 sm:p-6 lg:p-8 pb-28 md:pb-8 overflow-x-hidden">
+        <div className="flex-1 p-4 sm:p-6 lg:p-8 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-8 overflow-x-hidden">
           <div className="w-full min-h-full max-w-7xl mx-auto animate-fade-in">
             <Outlet />
           </div>
         </div>
       </div>
 
-      {/* --- 3. FLOATING BOTTOM NAVIGATION BAR (MOBILE ONLY) --- */}
-      {/* Tailwind: fixed bottom-4 pins floating bar above bottom margins. md:hidden removes layout on larger displays */}
-      <div className={cn(
-        "fixed bottom-4 left-4 right-4 z-50 transition-all duration-300 transform md:hidden",
-        showBottomNav ? "translate-y-0 opacity-100" : "translate-y-28 opacity-0 pointer-events-none"
-      )}>
-        <nav className="bg-white/85 dark:bg-slate-950/90 backdrop-blur-xl border border-white/40 dark:border-slate-800/70 shadow-[0_8px_32px_rgba(15,23,42,0.16)] rounded-2xl flex items-center justify-around py-2.5 px-2">
+      {/* --- 3. FIXED BOTTOM NAVIGATION BAR (MOBILE ONLY) --- */}
+      {/* Pinned permanently to bottom viewport edge. Respects safe area bottom inset. */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white/90 dark:bg-slate-950/95 backdrop-blur-xl border-t border-slate-200/80 dark:border-slate-800/80 shadow-[0_-4px_20px_rgba(15,23,42,0.06)] pb-[env(safe-area-inset-bottom)] transition-all duration-300">
+        <nav className="flex items-center justify-around py-2.5 px-2 h-16">
           {bottomNavLinks.map(({ to, end, label, icon, badge }) => (
             <NavLink
               key={to}

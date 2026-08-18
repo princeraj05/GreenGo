@@ -44,10 +44,6 @@ export default function AdminLayout() {
   // Flag to reveal or hide Logout Confirmation dialog popup
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
-  // Mobile Bottom Navigation display flags on scroll triggers
-  const [showBottomNav, setShowBottomNav] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
-
   // Mobile bottom-sheet 'More' options drawer toggle
   const [moreOpen, setMoreOpen] = useState(false);
 
@@ -68,23 +64,6 @@ export default function AdminLayout() {
     await clearSession();
     navigate("/login", { replace: true });
   };
-
-  // Listens to scroll events to hide the Mobile Bottom Nav bar on scroll-down
-  useEffect(() => {
-    const handleScroll = () => {
-      if (typeof window !== "undefined") {
-        if (window.scrollY > lastScrollY && window.scrollY > 80) {
-          setShowBottomNav(false);
-        } else {
-          setShowBottomNav(true);
-        }
-        setLastScrollY(window.scrollY);
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [lastScrollY]);
 
   /**
    * Loads authenticated admin details (e.g. name, role) from API
@@ -421,7 +400,7 @@ export default function AdminLayout() {
 
         {/* --- DYNAMIC PAGE OUTLET --- */}
         {/* Relative placement containing backdrop blobs */}
-        <div className="flex-1 p-4 sm:p-6 lg:p-10 pb-24 md:pb-10 relative overflow-x-hidden bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
+        <div className="flex-1 p-4 sm:p-6 lg:p-10 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-10 relative overflow-x-hidden bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
            {/* Decorative Background Elements */}
            <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-brand-50 dark:bg-transparent rounded-full blur-[120px] -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
            <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-50/50 dark:bg-transparent rounded-full blur-[100px] translate-y-1/2 -translate-x-1/3 pointer-events-none"></div>
@@ -435,13 +414,10 @@ export default function AdminLayout() {
       </div>
       {/* --- END MAIN CONTENT FRAME --- */}
 
-      {/* --- MOBILE FLOATING BOTTOM NAVIGATION --- */}
-      {/* Uses translate-y transition logic for showing/hiding bottom nav elements during active scrolls */}
-      <div className={cn(
-        "fixed bottom-4 left-4 right-4 z-[800] transition-all duration-300 transform md:hidden",
-        showBottomNav ? "translate-y-0 opacity-100" : "translate-y-28 opacity-0 pointer-events-none"
-      )}>
-        <nav className="bg-slate-900/85 dark:bg-slate-950/95 backdrop-blur-xl border border-slate-800/70 shadow-[0_8px_32px_rgba(15,23,42,0.35)] rounded-2xl flex items-center justify-around py-2.5 px-2">
+      {/* --- MOBILE FIXED BOTTOM NAVIGATION --- */}
+      {/* Pinned permanently to bottom viewport edge. Respects safe area bottom inset. */}
+      <div className="fixed bottom-0 left-0 right-0 z-[800] md:hidden bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-xl border-t border-slate-800/50 shadow-[0_-4px_20px_rgba(15,23,42,0.25)] pb-[env(safe-area-inset-bottom)] transition-all duration-300">
+        <nav className="flex items-center justify-around py-2.5 px-2 h-16">
           {mobileNavLinks.map(({ to, end, label, icon }) => (
             <NavLink
               key={to}
@@ -472,7 +448,7 @@ export default function AdminLayout() {
           </button>
         </nav>
       </div>
-      {/* --- END MOBILE FLOATING BOTTOM NAVIGATION --- */}
+      {/* --- END MOBILE FIXED BOTTOM NAVIGATION --- */}
 
       {/* --- MOBILE MORE OPTIONS DRAWER / BOTTOM SHEET --- */}
       <AnimatePresence>
