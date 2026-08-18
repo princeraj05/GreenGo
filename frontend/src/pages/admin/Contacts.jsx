@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CheckCircle2, MessageCircle, Search, Send, Mail, Phone, User } from "lucide-react";
+import { CheckCircle2, MessageCircle, Search, Send, Mail, Phone, User, ArrowLeft } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 import API from "../../api/axios";
 import { getToken } from "../../utils/getToken";
 
@@ -76,6 +77,24 @@ export default function Contacts() {
 
   // Ref container targeting the scrollable chat history container
   const chatContainerRef = useRef(null);
+
+  // URL search parameter hooks
+  const [searchParams, setSearchParams] = useSearchParams();
+  const chatParam = searchParams.get("chat") || "";
+  const userParam = searchParams.get("user") || "";
+
+  // Mobile layout detection
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  // Save scroll position for conversation list
+  const conversationListRef = useRef(null);
+  const [savedScrollTop, setSavedScrollTop] = useState(0);
 
   // ==========================================
   // DATA FETCHING & EVENT HANDLERS
@@ -216,14 +235,43 @@ export default function Contacts() {
     }
   }, [selectedConversation?.messages]);
 
-  const handleUserSelect = (userId) => {
-    const u = users.find((usr) => usr._id === userId);
-    setSelectedUser(u || null);
-    if (u) {
-      const key = String(u.email || u.uid || u._id || "unknown").toLowerCase();
-      setSelectedKey(key);
+  // Sync URL search parameters with selection states
+  useEffect(() => {
+    if (chatParam) {
+      setSelectedKey(chatParam);
+    } else if (!isMobile && conversations.length > 0) {
+      setSelectedKey(conversations[0].key);
     } else {
       setSelectedKey("");
+    }
+  }, [chatParam, isMobile, conversations]);
+
+  useEffect(() => {
+    if (userParam) {
+      const u = users.find((usr) => usr._id === userParam);
+      setSelectedUser(u || null);
+    } else {
+      setSelectedUser(null);
+    }
+  }, [userParam, users]);
+
+  // Restore scroll position when list is shown
+  useEffect(() => {
+    if (!chatParam && conversationListRef.current && savedScrollTop > 0) {
+      const listEl = conversationListRef.current;
+      requestAnimationFrame(() => {
+        listEl.scrollTop = savedScrollTop;
+      });
+    }
+  }, [chatParam, savedScrollTop]);
+
+  const handleUserSelect = (userId) => {
+    const u = users.find((usr) => usr._id === userId);
+    if (u) {
+      const key = String(u.email || u.uid || u._id || "unknown").toLowerCase();
+      setSearchParams({ user: u._id, chat: key });
+    } else {
+      setSearchParams({});
     }
   };
 
@@ -252,7 +300,7 @@ export default function Contacts() {
 
         if (res.data?.contact) {
           const key = String(res.data.contact.email || res.data.contact.uid || res.data.contact._id).toLowerCase();
-          setSelectedKey(key);
+          setSearchParams({ chat: key });
         }
       } else {
         const target =
@@ -370,9 +418,13 @@ export default function Contacts() {
 
       {/* --- APP MESSAGE TAB --- */}
       {activeTab === "appMessage" && (
-        <div className="flex flex-col lg:flex-row gap-6 lg:h-[600px] md:lg:h-[650px] animate-fade-in w-full">
+        <div className="flex flex-col lg:flex-row gap-6 lg:h-[600px] md:lg:h-[650px] animate-fade-in w-full relative">
           {/* --- LEFT SIDEBAR: ACTIVE CHATS & SEARCH --- */}
-          <div className="w-full lg:w-80 xl:w-96 flex flex-col rounded-3xl border border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-950 shadow-premium overflow-hidden h-[300px] lg:h-full shrink-0">
+          <div 
+            className={`w-full lg:w-80 xl:w-96 flex flex-col rounded-3xl border border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-950 shadow-premium overflow-hidden h-[300px] lg:h-full shrink-0 ${
+              selectedConversation ? "hidden lg:flex" : "flex"
+            }`}
+          >
             {/* Search header */}
             <div className="p-4 border-b border-slate-100 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-900/40">
               <div className="relative">
@@ -387,7 +439,7 @@ export default function Contacts() {
             </div>
 
             {/* Scrollable Conversation List */}
-            <div className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60">
+            <div ref={conversationListRef} className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60">
               {/* Active Conversations */}
               {filteredConversations.length > 0 && (
                 <div>
@@ -401,9 +453,13 @@ export default function Contacts() {
                       <button
                         key={c.key}
                         onClick={() => {
+                          if (conversationListRef.current) {
+                            setSavedScrollTop(conversationListRef.current.scrollTop);
+                          }
                           setSelectedKey(c.key);
                           setSelectedUser(null);
                           setSearch("");
+                          setSearchParams({ chat: c.key });
                         }}
                         className={`w-full text-left px-4 py-3.5 flex items-center gap-3 transition-colors ${
                           isSelected
@@ -453,6 +509,9 @@ export default function Contacts() {
                       <button
                         key={u._id}
                         onClick={() => {
+                          if (conversationListRef.current) {
+                            setSavedScrollTop(conversationListRef.current.scrollTop);
+                          }
                           handleUserSelect(u._id);
                           setSearch("");
                         }}
@@ -462,7 +521,7 @@ export default function Contacts() {
                             : "hover:bg-slate-50 dark:hover:bg-slate-900/50 border-l-4 border-transparent"
                         }`}
                       >
-                        <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 flex items-center justify-center font-bold text-sm shrink-0 border border-slate-200/50 dark:border-slate-800/50">
+                        <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-450 flex items-center justify-center font-bold text-sm shrink-0 border border-slate-200/50 dark:border-slate-800/50">
                           {initialsFor(u.name)}
                         </div>
                         <div className="min-w-0 flex-1">
@@ -488,9 +547,61 @@ export default function Contacts() {
           </div>
 
           {/* --- RIGHT SIDEBAR: LIVE CHAT WINDOW --- */}
-          <div className="flex-1 flex flex-col rounded-3xl border border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-950 shadow-premium overflow-hidden h-[450px] lg:h-full">
-            {/* Chat header */}
-            <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50 p-4 transition-colors dark:border-slate-800/60 dark:bg-slate-900/80 md:p-5">
+          {/* On mobile, this will overlay as a full-screen screen when a chat is open. */}
+          <div 
+            className={`fixed inset-0 z-[900] bg-white dark:bg-slate-950 flex flex-col transition-all duration-300 ease-in-out lg:relative lg:inset-auto lg:z-auto lg:flex-1 lg:rounded-3xl lg:border lg:border-slate-100 lg:dark:border-slate-800/60 lg:shadow-premium lg:h-full ${
+              selectedConversation 
+                ? "translate-x-0 opacity-100" 
+                : "translate-x-full opacity-0 pointer-events-none lg:opacity-100 lg:translate-x-0 lg:flex"
+            }`}
+          >
+            {/* Mobile Chat Header (Only visible on mobile when chat is open) */}
+            {selectedConversation && (
+              <div 
+                className="flex items-center justify-between px-4 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 lg:hidden shrink-0"
+                style={{
+                  paddingTop: "env(safe-area-inset-top)",
+                  height: "calc(4rem + env(safe-area-inset-top))"
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  <button 
+                    onClick={() => {
+                      if (conversationListRef.current) {
+                        setSavedScrollTop(conversationListRef.current.scrollTop);
+                      }
+                      setSelectedKey("");
+                      setSelectedUser(null);
+                      setSearchParams({});
+                    }}
+                    className="p-1 rounded-lg text-slate-600 dark:text-slate-350 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  >
+                    <ArrowLeft size={20} />
+                  </button>
+                  
+                  <div className="w-9 h-9 rounded-full bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-450 flex items-center justify-center font-bold text-sm shrink-0 border border-brand-100/50 dark:border-brand-900/30">
+                    {initialsFor(selectedConversation.name)}
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">
+                      {selectedConversation.name}
+                    </h3>
+                    <p className="text-[9px] text-slate-400 dark:text-slate-500">
+                      {selectedConversation.isNewConversation ? "New Chat Thread" : "Live Chat Session"}
+                    </p>
+                  </div>
+                </div>
+
+                {!selectedConversation.isNewConversation && (
+                  <span className="rounded-full bg-white dark:bg-slate-950 px-3 py-1 text-[9px] font-black uppercase text-slate-500 dark:text-slate-300 shadow-sm">
+                    {selectedConversation.pendingCount} pending
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* Desktop Chat Header */}
+            <div className="hidden lg:flex items-center justify-between border-b border-slate-100 bg-slate-50 p-4 transition-colors dark:border-slate-800/60 dark:bg-slate-900/80 md:p-5">
               {selectedConversation ? (
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-450 flex items-center justify-center font-bold text-sm shrink-0 shadow-sm border border-brand-100/50 dark:border-brand-900/30">
@@ -516,7 +627,7 @@ export default function Contacts() {
               )}
 
               {selectedConversation && !selectedConversation.isNewConversation && (
-                <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase text-slate-500 shadow-sm dark:bg-slate-950 dark:text-slate-300">
+                <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase text-slate-500 dark:text-slate-300 shadow-sm">
                   {selectedConversation.pendingCount} pending
                 </span>
               )}
@@ -621,7 +732,7 @@ export default function Contacts() {
 
             {/* Chat Reply Area */}
             {selectedConversation && (
-              <div className="p-4 border-t border-slate-100 bg-slate-50 dark:border-slate-800/60 dark:bg-slate-900/40">
+              <div className="p-4 border-t border-slate-100 bg-slate-50 dark:border-slate-800/60 dark:bg-slate-900/40 pb-[calc(1rem+env(safe-area-inset-bottom))] lg:pb-4">
                 {error && (
                   <p className="mb-3 rounded-xl border border-red-100 bg-red-50 px-4 py-2.5 text-[11px] font-bold text-red-600 dark:border-red-900/40 dark:bg-red-950/20 dark:text-red-300">
                     {error}
@@ -687,7 +798,11 @@ export default function Contacts() {
                   value={selectedUser?._id || ""}
                   onChange={(event) => {
                     const u = users.find((usr) => usr._id === event.target.value);
-                    setSelectedUser(u || null);
+                    if (u) {
+                      setSearchParams({ user: u._id });
+                    } else {
+                      setSearchParams({});
+                    }
                   }}
                   className="mt-3 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/10 dark:border-slate-800 dark:bg-slate-900 dark:text-white"
                 >
