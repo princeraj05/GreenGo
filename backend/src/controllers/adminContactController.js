@@ -1,7 +1,8 @@
 import Contact from "../models/Contact.js";
 import Notification from "../models/Notification.js";
-import { sendContactReplyEmail } from "../services/emailService.js";
+import { sendContactReplyEmail, sendEmail } from "../services/emailService.js";
 import { sendPushToUser } from "../utils/pushNotification.js";
+import User from "../models/User.js";
 
 const getSafeEmailError = (error) => {
   console.error("Original email sending error details:", error);
@@ -147,5 +148,119 @@ export const replyToContact = async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ message: "Failed to send reply" });
+  }
+};
+
+export const initiateContact = async (req, res) => {
+  try {
+    const { userId, message } = req.body;
+    const cleanMessage = String(message || "").trim();
+
+    if (!userId || !cleanMessage) {
+      return res.status(400).json({ message: "userId and message are required" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Check if there is already an active contact for this user
+    let contact = await Contact.findOne({ uid: String(user._id) }).sort({ createdAt: -1 });
+    if (!contact) {
+      contact = await Contact.create({
+        uid: String(user._id),
+        source: "user",
+        name: user.name || "Customer",
+        email: user.email || "No email",
+        message: "Conversation initiated by Support",
+        emailReplyStatus: "not_required",
+      });
+    }
+
+    if (!contact.replies) {
+      contact.replies = [];
+    }
+
+    contact.replies.push({
+      reply: cleanMessage,
+      repliedAt: new Date(),
+      replyDelivery: "chat",
+      emailReplyStatus: "not_required",
+      emailReplyError: "",
+    });
+
+    contact.reply = cleanMessage;
+    contact.repliedAt = new Date();
+    contact.replyDelivery = "chat";
+    contact.status = "Replied";
+
+    await contact.save();
+
+    await Notification.create({
+      userId: String(user._id),
+      title: "Support reply",
+      message: `${cleanMessage.slice(0, 120)}${cleanMessage.length > 120 ? "..." : ""}`,
+      type: "info",
+    });
+
+    sendPushToUser(
+      String(user._id),
+      "Support reply",
+      `${cleanMessage.slice(0, 120)}${cleanMessage.length > 120 ? "..." : ""}`,
+      { contactId: String(contact._id) }
+    );
+
+    res.json({ success: true, contact });
+  } catch (err) {
+    console.error("Failed to initiate contact message:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const sendAdminEmail = async (req, res) => {
+  try {
+    const { userId, subject, message } = req.body;
+    const cleanSubject = String(subject || "").trim();
+    const cleanMessage = String(message || "").trim();
+
+    if (!userId || !cleanSubject || !cleanMessage) {
+      return res.status(400).json({ message: "userId, subject, and message are required" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (!user.email) {
+      return res.status(400).json({ message: "User does not have a registered email address" });
+    }
+
+    const sender = process.env.SMTP_USER || process.env.EMAIL_USER || process.env.MAIL_USER;
+    const replyTo = process.env.ADMIN_REPLY_TO || sender || "support@greengo.app";
+
+    const emailHtml = `
+      <div style="font-family: Arial, sans-serif; color: #111827; line-height: 1.6;">
+        <h2 style="color:#22c55e;">GreenGo Support</h2>
+        <p>Hi ${user.name || "there"},</p>
+        <p>${cleanMessage.replace(/\n/g, "<br />")}</p>
+        <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;" />
+        <p style="color:#6b7280;font-size:12px;">This is a message from GreenGo Support. If you have any queries, please reply directly to this email.</p>
+        <p>Regards,<br />GreenGo Support</p>
+      </div>
+    `;
+
+    await sendEmail({
+      to: user.email,
+      subject: `GreenGo: ${cleanSubject}`,
+      text: cleanMessage,
+      html: emailHtml,
+    });
+
+    res.json({ success: true, message: `Email sent successfully to ${user.email}` });
+  } catch (err) {
+    console.error("Failed to send admin email:", err);
+    res.status(500).json({ message: "Failed to send email. Check SMTP settings." });
   }
 };
