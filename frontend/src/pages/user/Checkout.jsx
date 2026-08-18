@@ -93,6 +93,46 @@ export default function Checkout() {
   const [promo, setPromo] = useState("");
   const [promoLoading, setPromoLoading] = useState(false);
   const [discountAmount, setDiscountAmount] = useState(0);
+
+  // Address validation and autocomplete states
+  const [suggestions, setSuggestions] = useState([]);
+  const [suggestionLoading, setSuggestionLoading] = useState(false);
+  const [addressError, setAddressError] = useState("");
+  const [detectedDistance, setDetectedDistance] = useState(null);
+
+  // Debounced autocomplete search
+  useEffect(() => {
+    if (!address || address.length < 4 || address.includes("Lat:") || address.includes("Lng:")) {
+      setSuggestions([]);
+      return;
+    }
+
+    const delayDebounce = setTimeout(async () => {
+      setSuggestionLoading(true);
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=5&countrycodes=in`, {
+          headers: { "User-Agent": "GreenGo-FoodDelivery-App/1.0" }
+        });
+        const data = await res.json();
+        setSuggestions(data || []);
+      } catch (err) {
+        console.error("Autocomplete fetch failed:", err);
+      } finally {
+        setSuggestionLoading(false);
+      }
+    }, 600);
+
+    return () => clearTimeout(delayDebounce);
+  }, [address]);
+
+  const handleSelectSuggestion = (item) => {
+    const lat = parseFloat(item.lat);
+    const lon = parseFloat(item.lon);
+    const formatted = `${item.display_name} (Lat: ${lat}, Lng: ${lon})`;
+    setAddress(formatted);
+    setUserCoords({ latitude: lat, longitude: lon });
+    setSuggestions([]);
+  };
   const [appliedPromoCode, setAppliedPromoCode] = useState("");
   const [promoMinOrder, setPromoMinOrder] = useState(0);
   const [promoDiscountType, setPromoDiscountType] = useState("");
@@ -323,12 +363,27 @@ export default function Checkout() {
         lat,
         lon
       );
+      setDetectedDistance(dist);
       updateDeliveryChargeByDistance(settings, dist, paymentMethod === "COD");
+
+      if (settings.isDistanceLimitEnabled && dist > settings.maxDeliveryDistance) {
+        setAddressError(`✕ This location is outside our delivery area. Please select a location within ${settings.maxDeliveryDistance} km. (Distance: ${dist.toFixed(1)} km)`);
+      } else {
+        setAddressError("✓ Delivery available");
+      }
     } else {
       const fallbackCharge = (settings.isDeliveryChargeEnabled !== false)
         ? Number(settings.deliveryChargeAmount || 0)
         : 0;
       setDeliveryCharge(fallbackCharge);
+      
+      if (address && address.trim().length > 0 && !address.includes("Lat:")) {
+        setAddressError("✕ Please select a valid delivery location from suggestions.");
+        setDetectedDistance(null);
+      } else {
+        setAddressError("");
+        setDetectedDistance(null);
+      }
     }
   }, [settings, userCoords, address, paymentMethod]);
 
@@ -536,12 +591,18 @@ export default function Checkout() {
         }
       }
 
+      if (lat == null || lon == null || isNaN(lat) || isNaN(lon)) {
+        alert("Please select a valid delivery location.");
+        setLoading(false);
+        return;
+      }
+
       // Fetch store settings to calculate & validate distance
       const settingsRes = await fetch(`${getApiUrl()}/api/settings`);
       const settingsData = await settingsRes.json();
       let checkoutDeliveryCharge = deliveryCharge;
 
-      if (settingsData && lat !== undefined && lat !== null && lon !== undefined && lon !== null) {
+      if (settingsData) {
         const dist = calculateHaversineDistance(
           settingsData.storeLatitude,
           settingsData.storeLongitude,
@@ -550,13 +611,11 @@ export default function Checkout() {
         );
 
         if (settingsData.isDistanceLimitEnabled && dist > settingsData.maxDeliveryDistance) {
-          alert(`Delivery is not available. Your location is ${dist.toFixed(1)} km away, which exceeds our maximum delivery distance of ${settingsData.maxDeliveryDistance} km.`);
+          alert("This delivery location is outside our service area.");
           setLoading(false);
           return;
         }
         checkoutDeliveryCharge = updateDeliveryChargeByDistance(settingsData, dist, paymentMethod === "COD");
-      } else if (settingsData) {
-        checkoutDeliveryCharge = updateDeliveryChargeByDistance(settingsData, null, paymentMethod === "COD");
       }
 
       const checkoutTotal = Math.max(0, subtotal + packingCharges + checkoutDeliveryCharge + taxes - discountAmount);
@@ -932,6 +991,7 @@ export default function Checkout() {
                       Use Current Location
                     </Button>
                   </div>
+                <div className="relative">
                   <textarea
                     placeholder="Enter your full delivery address (House No, Street, Landmark...)"
                     value={address}
@@ -941,6 +1001,33 @@ export default function Checkout() {
                     }}
                     className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-brand-500/15 focus:border-brand-500 transition-all outline-none resize-y min-h-[90px] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder:text-slate-500 text-sm font-medium shadow-sm"
                   />
+                  {suggestions.length > 0 && (
+                    <div className="absolute z-50 left-0 right-0 mt-1 max-h-60 overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-lg text-sm">
+                      {suggestions.map((item) => (
+                        <div
+                          key={item.place_id || `${item.lat}-${item.lon}`}
+                          onClick={() => handleSelectSuggestion(item)}
+                          className="px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-900 cursor-pointer border-b border-slate-100 dark:border-slate-800/60 last:border-0 text-slate-800 dark:text-slate-200 transition-colors"
+                        >
+                          {item.display_name}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {suggestionLoading && (
+                    <div className="text-xs text-slate-450 mt-1 flex items-center gap-1.5 font-bold">
+                      <div className="w-3.5 h-3.5 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
+                      Searching suggestions...
+                    </div>
+                  )}
+
+                  {addressError && (
+                    <div className={`mt-2 text-xs font-black uppercase tracking-wider flex items-center gap-1 ${addressError.includes("✓") ? "text-emerald-600 dark:text-emerald-450" : "text-rose-600 dark:text-rose-450"}`}>
+                      {addressError}
+                    </div>
+                  )}
+                </div>
                 </div>
 
                 <div>

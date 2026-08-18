@@ -192,6 +192,11 @@ const userSchema = new mongoose.Schema(
     default: "customer"
   },
   
+  isOnline: {
+    type: Boolean,
+    default: false
+  },
+  
   fcmTokens: {
     type: [String],
     default: []

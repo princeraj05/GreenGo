@@ -281,7 +281,7 @@ export default function AdminDashboard() {
   // Daily statistics card configuration including labels, icons, gradient badges and interactions
   const dailyCards = [
     { label: "Today's Orders", value: stats.todayOrders, icon: <Package size={28} className="text-blue-600" />, bg: "bg-blue-100", accent: "from-blue-500 to-blue-600" },
-    { label: "Today's Revenue", value: `Rs.${stats.todayRevenue}`, icon: <IndianRupee size={28} className="text-emerald-600" />, bg: "bg-emerald-100", accent: "from-emerald-500 to-emerald-600" },
+    { label: "Today's Net Sales", value: `₹${stats.todayRevenue}`, icon: <IndianRupee size={28} className="text-emerald-600" />, bg: "bg-emerald-100", accent: "from-emerald-500 to-emerald-600" },
     { label: "Pending Orders", value: stats.todayPendingOrders, icon: <Clock3 size={28} className="text-orange-600" />, bg: "bg-orange-100", accent: "from-orange-500 to-orange-600" },
     { label: "Preparing Orders", value: stats.todayPreparingOrders, icon: <UtensilsCrossed size={28} className="text-purple-600" />, bg: "bg-purple-100", accent: "from-purple-500 to-purple-600" },
     { label: "Out For Delivery", value: stats.todayOutForDeliveryOrders, icon: <Truck size={28} className="text-cyan-600" />, bg: "bg-cyan-100", accent: "from-cyan-500 to-cyan-600" },

@@ -66,26 +66,118 @@ function isNonVegFood(food) {
   return food.veg === false || food.veg === "false" || cat.includes("non-veg") || cat.includes("chicken") || name.includes("chicken") || name.includes("mutton");
 }
 
-/**
- * distanceRank: Scores how close a food item's text matches the search query.
- * Lower scores denote closer matches (e.g. 0 for exact match, up to 5 for no prefix match).
- */
-function distanceRank(food, query) {
-  const name = normalize(food.name);
-  const q = normalize(query);
-  if (!q) return 0;
-  if (name === q) return 0;
-  if (name.startsWith(q)) return 1;
+const ALIASES = {
+  "panir": "paneer",
+  "panner": "paneer",
+  "piza": "pizza",
+  "burgar": "burger",
+  "chiken": "chicken",
+  "biryni": "biryani",
+  "momos": "momo",
+  "roll": "rolls",
+  "roti": "nan",
+  "nun": "nan",
+  "naan": "nan",
+  "dal": "daal"
+};
 
-  const categories = Array.isArray(food?.categories) && food.categories.length
+function levenshteinDistance(s1, s2) {
+  if (s1 === s2) return 0;
+  if (s1.length === 0) return s2.length;
+  if (s2.length === 0) return s1.length;
+
+  let v0 = new Array(s2.length + 1);
+  let v1 = new Array(s2.length + 1);
+
+  for (let i = 0; i < v0.length; i++) v0[i] = i;
+
+  for (let i = 0; i < s1.length; i++) {
+    v1[0] = i + 1;
+
+    for (let j = 0; j < s2.length; j++) {
+      const cost = (s1[i] === s2[j]) ? 0 : 1;
+      v1[j + 1] = Math.min(v1[j] + 1, v0[j + 1] + 1, v0[j] + cost);
+    }
+
+    for (let j = 0; j < v0.length; j++) v0[j] = v1[j];
+  }
+
+  return v0[s2.length];
+}
+
+function getSearchMatch(food, query) {
+  const q = normalize(query);
+  if (!q) return { matches: true, score: 0 };
+
+  const name = normalize(food.name);
+  const desc = normalize(food.description || "");
+  
+  const rawCategories = Array.isArray(food?.categories) && food.categories.length
     ? food.categories
     : [food?.category].filter(Boolean);
-  const foodCategories = categories.map((item) => normalize(item));
+  const categories = rawCategories.map(c => normalize(c));
 
-  if (foodCategories.some(cat => cat.startsWith(q))) return 2;
-  if (name.includes(q)) return 3;
-  if (foodCategories.some(cat => cat.includes(q))) return 4;
-  return 5;
+  // 1. Check exact/substring queries for high-priority matching
+  if (name === q) return { matches: true, score: 0 };
+  if (name.startsWith(q)) return { matches: true, score: 1 };
+  if (categories.some(cat => cat.startsWith(q))) return { matches: true, score: 2 };
+  if (name.includes(q)) return { matches: true, score: 3 };
+  if (categories.some(cat => cat.includes(q))) return { matches: true, score: 4 };
+
+  // 2. Tokenized & Typo-Tolerant/Fuzzy matching
+  const qTokens = q.split(/\s+/).filter(Boolean);
+  const nameTokens = name.split(/\s+/).filter(Boolean);
+  const catTokens = categories.flatMap(cat => cat.split(/\s+/).filter(Boolean));
+
+  let totalScore = 0;
+  let matchesAll = true;
+
+  for (const qToken of qTokens) {
+    let bestTokenScore = Infinity;
+
+    const targets = [...nameTokens, ...catTokens];
+    for (const target of targets) {
+      if (qToken === target) {
+        bestTokenScore = Math.min(bestTokenScore, 0);
+      } else if (target.startsWith(qToken)) {
+        bestTokenScore = Math.min(bestTokenScore, 1);
+      } else if (ALIASES[qToken] === target || ALIASES[target] === qToken) {
+        bestTokenScore = Math.min(bestTokenScore, 2);
+      } else if (target.includes(qToken)) {
+        bestTokenScore = Math.min(bestTokenScore, 3);
+      } else {
+        const dist = levenshteinDistance(qToken, target);
+        const maxAllowedDist = qToken.length >= 4 ? 2 : 1;
+        if (dist <= maxAllowedDist) {
+          bestTokenScore = Math.min(bestTokenScore, 4 + dist);
+        }
+      }
+    }
+
+    if (desc.includes(qToken)) {
+      bestTokenScore = Math.min(bestTokenScore, 5);
+    }
+
+    if (bestTokenScore === Infinity) {
+      matchesAll = false;
+      break;
+    } else {
+      totalScore += bestTokenScore;
+    }
+  }
+
+  const lengthPenalty = name.length * 0.01;
+
+  if (matchesAll) {
+    return { matches: true, score: 5 + totalScore + lengthPenalty };
+  }
+
+  return { matches: false, score: Infinity };
+}
+
+function distanceRank(food, query) {
+  const match = getSearchMatch(food, query);
+  return match.matches ? match.score : 999;
 }
 
 /**
@@ -466,14 +558,11 @@ export default function FoodSearch() {
     const q = normalize(query);
     if (!q || !showSuggestions) return [];
     const dishSuggestions = foods
-      .filter((food) => {
-        const foodCategories = getFoodCategories(food).map((item) => normalize(item));
-        return normalize(food.name).includes(q) || foodCategories.some(cat => cat.includes(q));
-      })
+      .filter((food) => getSearchMatch(food, query).matches)
       .sort((a, b) => distanceRank(a, query) - distanceRank(b, query))
       .slice(0, 6);
     const categorySuggestions = categories
-      .filter((cat) => cat.name !== "All Food" && normalize(cat.name).includes(q))
+      .filter((cat) => cat.name !== "All Food" && (normalize(cat.name).includes(q) || ALIASES[q] === normalize(cat.name)))
       .slice(0, 3)
       .map((cat) => ({ _id: `category-${cat.name}`, name: cat.name, category: "Category", image: cat.image, isCategory: true }));
     return [...dishSuggestions, ...categorySuggestions];
@@ -483,10 +572,7 @@ export default function FoodSearch() {
   const matchingCategories = useMemo(() => {
     const q = normalize(query);
     const source = q
-      ? foods.filter((food) => {
-          const foodCategories = getFoodCategories(food).map((item) => normalize(item));
-          return normalize(food.name).includes(q) || foodCategories.some(cat => cat.includes(q)) || normalize(food.description).includes(q);
-        })
+      ? foods.filter((food) => getSearchMatch(food, query).matches)
       : foods;
     const queryWords = q.split(/\s+/).filter(Boolean);
     const derivedNames = source.map((food) => {
@@ -504,8 +590,6 @@ export default function FoodSearch() {
     const q = normalize(query);
     return foods
       .filter((food) => {
-        const foodCategories = getFoodCategories(food).map((item) => normalize(item));
-        const matchesQuery = !q || q === "all food" || normalize(food.name).includes(q) || foodCategories.some(cat => cat.includes(q)) || normalize(food.description).includes(q);
         const active = normalize(activeCategory);
         let matchesCategory = false;
         if (activeCategory === "All" || activeCategory === "All Food") {
@@ -515,8 +599,12 @@ export default function FoodSearch() {
         } else if (active === "non-veg") {
           matchesCategory = isNonVegFood(food);
         } else {
+          const foodCategories = getFoodCategories(food).map((item) => normalize(item));
           matchesCategory = foodCategories.includes(active) || foodCategories.some(cat => cat.includes(active)) || normalize(food.name).includes(active) || (food.foodType === "combo" && active === "combo");
         }
+        
+        const matchInfo = getSearchMatch(food, query);
+        const matchesQuery = !q || q === "all food" || matchInfo.matches;
         
         // Apply rupee filter <= 100
         if (filterUnder100 && Number(food.price) > 100) {

@@ -10,6 +10,64 @@ import Razorpay from "razorpay";
 import { createAdminNotification, formatPaymentMethod, orderCode } from "../services/adminNotificationService.js";
 import mongoose from "mongoose";
 import { calculateOrderAmount } from "../utils/paymentCalculator.js";
+import { generateInvoicePdfBuffer } from "../utils/invoiceGenerator.js";
+import { sendEmail } from "../services/emailService.js";
+
+const triggerInvoiceAndEmail = async (orderId) => {
+  try {
+    const order = await Order.findById(orderId);
+    if (!order) return;
+    
+    if (order.invoiceGenerated) {
+      console.log(`[INVOICE] Invoice already generated for order ${orderId}, skipping.`);
+      return;
+    }
+
+    order.invoiceGenerated = true;
+    await order.save();
+
+    const customer = await User.findById(order.userId);
+    if (!customer || !customer.email) {
+      console.warn(`[INVOICE] Customer or email missing for order ${orderId}, cannot email invoice.`);
+      return;
+    }
+
+    console.log(`[INVOICE] Generating PDF invoice for order ${orderId}...`);
+    const pdfBuffer = await generateInvoicePdfBuffer(order, customer);
+
+    const subject = `GreenGo Order Invoice - #${String(order._id).slice(-6).toUpperCase()}`;
+    const text = `Hi ${customer.name || "there"},\n\nThank you for ordering from GreenGo! Please find your invoice attached to this email.\n\nRegards,\nGreenGo Team`;
+    const html = `
+      <div style="font-family: Arial, sans-serif; color: #111827; line-height: 1.6;">
+        <h2 style="color:#059669;">GreenGo Order Invoice</h2>
+        <p>Hi ${customer.name || "there"},</p>
+        <p>Thank you for ordering from GreenGo! Your order has been successfully delivered.</p>
+        <p>Please find your attached invoice for order <strong>#${String(order._id).toUpperCase()}</strong>.</p>
+        <p>If you have any questions, please contact our support team.</p>
+        <br />
+        <p>Regards,<br />GreenGo Team</p>
+      </div>
+    `;
+
+    console.log(`[INVOICE] Emailing invoice PDF to ${customer.email}...`);
+    await sendEmail({
+      to: customer.email,
+      subject,
+      text,
+      html,
+      attachments: [
+        {
+          filename: `invoice-${String(order._id).toUpperCase()}.pdf`,
+          content: pdfBuffer,
+          contentType: "application/pdf"
+        }
+      ]
+    });
+    console.log(`[INVOICE] Invoice emailed successfully to ${customer.email}.`);
+  } catch (err) {
+    console.error(`[INVOICE ERROR] Failed to generate/email invoice for order ${orderId}:`, err);
+  }
+};
 
 const isAdmin = (user) => user?.role === "admin";
 const isDeliveryBoy = (user) => user?.role === "deliveryBoy";
@@ -548,6 +606,7 @@ export const updateOrderStatus = async (req, res) => {
       );
 
       if (status === "Delivered") {
+        triggerInvoiceAndEmail(order._id);
         await createAdminNotification({
           title: "Order Delivered",
           message: `Order #${orderCode(order._id)} delivered by admin update | ${formatPaymentMethod(order.paymentMethod)} | Total ₹${Number(order.total || 0)}`,
@@ -574,7 +633,7 @@ export const getDeliveryBoys = async (req, res) => {
   try {
     if (!isAdmin(req.user)) return res.status(403).json({ message: "Not admin" });
     const users = await User.find({ role: "deliveryBoy", blocked: { $ne: true } })
-      .select("name phone email role deliveryCredit createdAt")
+      .select("name phone email role deliveryCredit isOnline createdAt")
       .sort({ name: 1, createdAt: -1 })
       .lean();
     res.json(users);
@@ -812,6 +871,8 @@ export const markAssignedOrderDelivered = async (req, res) => {
     order.assignmentStatus = "Delivered";
     order.deliveredAt = new Date();
     await order.save();
+
+    triggerInvoiceAndEmail(order._id);
 
     await Notification.create({
       userId: order.userId,
@@ -1140,5 +1201,33 @@ export const rejectCancelOrder = async (req, res) => {
   } catch (err) {
     console.error("Reject cancel error:", err);
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const getOrderInvoice = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    const isUserOwner = String(order.userId) === String(req.user.id);
+    const isUserAdmin = req.user.role === "admin";
+    if (!isUserOwner && !isUserAdmin) {
+      return res.status(403).json({ message: "You are not authorized to access this invoice." });
+    }
+
+    const customer = await User.findById(order.userId);
+    const pdfBuffer = await generateInvoicePdfBuffer(order, customer);
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="invoice-${String(order._id).toUpperCase()}.pdf"`
+    );
+    res.send(pdfBuffer);
+  } catch (err) {
+    console.error("Failed to download invoice:", err);
+    res.status(500).json({ message: "Failed to generate invoice." });
   }
 };

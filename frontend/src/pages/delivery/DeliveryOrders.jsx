@@ -292,45 +292,84 @@ export default function DeliveryOrders() {
               <div className="space-y-2">
                 {order.items?.map((item, index) => (
                   <div key={index} className="flex justify-between gap-3 text-xs font-bold text-slate-500 dark:text-slate-400">
-                    <span>{item.name} x {item.qty}</span>
+                    <span>{item.name}{item.variant ? ` - ${item.variant}` : (item.variantName ? ` - ${item.variantName}` : '')} x {item.qty}</span>
                     <span>Rs. {Number(item.price || 0) * Number(item.qty || 0)}</span>
                   </div>
                 ))}
               </div>
 
-              {/* --- CARD ACTIONS GRID / FLEX WRAPPER --- */}
-              {/* Context-aware buttons rendering state-specific transition actions */}
               <div className="grid grid-cols-1 sm:flex sm:flex-wrap gap-2 pt-2">
                 {order.assignmentStatus === "Assigned" && (
                   <>
-                    <Button disabled={actionLoading === `${order._id}-accept`} onClick={() => acceptAndShare(order)} className="min-h-11 w-full sm:w-auto rounded-xl gap-2">
-                      <CheckCircle size={16} /> Accept & Start Delivery
+                    <Button disabled={!!actionLoading} onClick={() => acceptAndShare(order)} className="min-h-11 w-full sm:w-auto rounded-xl gap-2">
+                      {actionLoading === `${order._id}-accept` ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          Accepting...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle size={16} /> Accept & Start Delivery
+                        </>
+                      )}
                     </Button>
-                    <button type="button" onClick={() => runAction(order._id, "reject", { reason: prompt("Reject reason (optional)") || "" })} className="min-h-11 w-full sm:w-auto px-4 py-2.5 rounded-xl bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 font-black text-sm flex items-center justify-center gap-2">
-                      <XCircle size={16} /> Reject
+                    <button
+                      type="button"
+                      disabled={!!actionLoading}
+                      onClick={() => runAction(order._id, "reject", { reason: prompt("Reject reason (optional)") || "" })}
+                      className="min-h-11 w-full sm:w-auto px-4 py-2.5 rounded-xl bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 font-black text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {actionLoading === `${order._id}-reject` ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
+                          Rejecting...
+                        </>
+                      ) : (
+                        <>
+                          <XCircle size={16} /> Reject
+                        </>
+                      )}
                     </button>
                   </>
                 )}
                 {(order.status === "AcceptedByDeliveryBoy" || order.status === "Out for Delivery") && (
                   <>
                     {order.status === "AcceptedByDeliveryBoy" ? (
-                      <Button onClick={() => startDeliveryAction(order)} className="min-h-11 w-full sm:w-auto rounded-xl gap-2">
-                        <Navigation size={16} /> Start Delivery
+                      <Button disabled={!!actionLoading} onClick={() => startDeliveryAction(order)} className="min-h-11 w-full sm:w-auto rounded-xl gap-2">
+                        {actionLoading === `${order._id}-start-delivery` ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            Starting...
+                          </>
+                        ) : (
+                          <>
+                            <Navigation size={16} /> Start Delivery
+                          </>
+                        )}
                       </Button>
                     ) : !sharingOrders[order._id] ? (
-                      <Button onClick={() => startSharing(order._id)} className="min-h-11 w-full sm:w-auto rounded-xl gap-2">
+                      <Button disabled={!!actionLoading} onClick={() => startSharing(order._id)} className="min-h-11 w-full sm:w-auto rounded-xl gap-2">
                         <Navigation size={16} /> Start Sharing
                       </Button>
                     ) : (
-                      <button type="button" onClick={() => stopSharing(order._id)} className="min-h-11 w-full sm:w-auto px-4 py-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-300 font-black text-sm flex items-center justify-center gap-2">
+                      <button type="button" disabled={!!actionLoading} onClick={() => stopSharing(order._id)} className="min-h-11 w-full sm:w-auto px-4 py-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-300 font-black text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
                         <Navigation size={16} /> Stop Sharing
                       </button>
                     )}
-                    <button type="button" onClick={() => openMaps(order)} className="min-h-11 w-full sm:w-auto px-4 py-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-300 font-black text-sm flex items-center justify-center gap-2">
+                    <button type="button" disabled={!!actionLoading} onClick={() => openMaps(order)} className="min-h-11 w-full sm:w-auto px-4 py-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-300 font-black text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
                       <MapPin size={16} /> Open Map
                     </button>
-                    <Button disabled={actionLoading === `${order._id}-delivered`} onClick={() => markDelivered(order._id)} className="min-h-11 w-full sm:w-auto rounded-xl gap-2 bg-emerald-600 hover:bg-emerald-700">
-                      <Clock size={16} /> Mark As Delivered
+                    <Button disabled={!!actionLoading} onClick={() => markDelivered(order._id)} className="min-h-11 w-full sm:w-auto rounded-xl gap-2 bg-emerald-600 hover:bg-emerald-700">
+                      {actionLoading === `${order._id}-delivered` ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          Delivering...
+                        </>
+                      ) : (
+                        <>
+                          <Clock size={16} /> Mark As Delivered
+                        </>
+                      )}
                     </Button>
                   </>
                 )}

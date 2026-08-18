@@ -103,7 +103,7 @@ const getTransporter = async () => {
   };
 };
 
-const sendMailViaNodemailer = async ({ from, to, replyTo, subject, text, html }) => {
+const sendMailViaNodemailer = async ({ from, to, replyTo, subject, text, html, attachments }) => {
   const nodemailer = await getNodemailer();
   const { transporter, host: activeHost, port: activePort } = await getTransporter();
 
@@ -116,6 +116,7 @@ const sendMailViaNodemailer = async ({ from, to, replyTo, subject, text, html })
       subject,
       text,
       html,
+      attachments
     });
   } catch (err) {
     console.warn(`SMTP send failed on ${activeHost}:${activePort}:`, err.message);
@@ -181,6 +182,7 @@ const sendMailViaNodemailer = async ({ from, to, replyTo, subject, text, html })
         subject,
         text,
         html,
+        attachments
       });
     } catch (fallbackErr) {
       console.error(`SMTP fallback also failed:`, fallbackErr.message);
@@ -318,7 +320,7 @@ export const sendContactReplyEmail = async ({
 
 /* ================= GENERIC SEND EMAIL ================= */
 
-export const sendEmail = async ({ to, subject, text, html }) => {
+export const sendEmail = async ({ to, subject, text, html, attachments }) => {
   const sender = process.env.SMTP_USER || process.env.EMAIL_USER || process.env.MAIL_USER;
   const from = process.env.MAIL_FROM || `"GreenGo Support" <${sender || "support@greengo.app"}>`;
   const replyTo = process.env.ADMIN_REPLY_TO || sender || "support@greengo.app";
@@ -335,6 +337,12 @@ export const sendEmail = async ({ to, subject, text, html }) => {
       if (isPublicEmailDomain(senderEmail)) {
         cleanFrom = `"GreenGo Support" <onboarding@resend.dev>`;
       }
+
+      const resendAttachments = attachments?.map(att => ({
+        filename: att.filename,
+        content: Buffer.isBuffer(att.content) ? att.content : Buffer.from(att.content)
+      }));
+
       const response = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
@@ -348,6 +356,7 @@ export const sendEmail = async ({ to, subject, text, html }) => {
           subject,
           text,
           html,
+          attachments: resendAttachments
         }),
       });
       const resData = await response.json();
@@ -368,6 +377,11 @@ export const sendEmail = async ({ to, subject, text, html }) => {
   if (brevoKey) {
     console.log("Attempting to send generic email via Brevo API...");
     try {
+      const brevoAttachments = attachments?.map(att => ({
+        name: att.filename,
+        content: Buffer.isBuffer(att.content) ? att.content.toString('base64') : Buffer.from(att.content).toString('base64')
+      }));
+
       const response = await fetch("https://api.brevo.com/v3/smtp/email", {
         method: "POST",
         headers: {
@@ -382,6 +396,7 @@ export const sendEmail = async ({ to, subject, text, html }) => {
           subject,
           textContent: text,
           htmlContent: html,
+          attachment: brevoAttachments
         }),
       });
       const resData = await response.json();
@@ -405,6 +420,11 @@ export const sendEmail = async ({ to, subject, text, html }) => {
     subject,
     text,
     html,
+    attachments: attachments?.map(att => ({
+      filename: att.filename,
+      content: att.content,
+      contentType: att.contentType
+    }))
   });
 };
 

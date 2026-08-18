@@ -20,7 +20,9 @@ import {
   revokeAllSessions,
   getSecurityLogs,
   saveFcmToken,
-  removeFcmToken
+  removeFcmToken,
+  refreshToken,
+  updateDeliveryStatus
 } from "../controllers/userController.js";
 
 import { protect } from "../middleware/authMiddleware.js";
@@ -31,6 +33,9 @@ const router = express.Router();
 router.post("/register", registerUser);
 router.post("/login", loginUser);
 router.post("/login-phone", rateLimitLogin, loginWithPhonePassword);
+router.post("/refresh-token", refreshToken);
+router.post("/delivery/status", protect, updateDeliveryStatus);
+router.put("/delivery/status", protect, updateDeliveryStatus);
 router.get("/me", protect, getMe);
 router.put("/profile", protect, updateProfile);
 router.post("/favorites/toggle", protect, toggleFavorite);

@@ -394,9 +394,10 @@ export const handleRazorpayWebhook = async (req, res) => {
       return res.status(400).json({ success: false, message: "Missing webhook signature or config." });
     }
 
+    const rawBody = req.rawBody || JSON.stringify(req.body);
     const expectedSignature = crypto
       .createHmac("sha256", webhookSecret)
-      .update(JSON.stringify(req.body))
+      .update(rawBody)
       .digest("hex");
 
     if (expectedSignature !== webhookSignature) {
@@ -411,7 +412,7 @@ export const handleRazorpayWebhook = async (req, res) => {
     }
 
     const { event, payload } = req.body;
-    if (event === "payment.captured") {
+    if (event === "payment.captured" || event === "order.paid") {
       const payment = payload.payment.entity;
       const razorpay_order_id = payment.order_id;
       const razorpay_payment_id = payment.id;
@@ -455,6 +456,32 @@ export const handleRazorpayWebhook = async (req, res) => {
           razorpay_order_id,
           razorpay_payment_id
         );
+      }
+    } else if (event === "payment.failed") {
+      const payment = payload.payment.entity;
+      const razorpay_order_id = payment.order_id;
+      const orderDoc = await Order.findOne({ razorpayOrderId: razorpay_order_id });
+      if (orderDoc) {
+        if (orderDoc.paymentStatus !== "Paid" && orderDoc.status !== "Cancelled") {
+          orderDoc.paymentStatus = "Failed";
+          orderDoc.status = "Cancelled";
+          orderDoc.cancellationReason = payment.error_description || "Payment failed at Razorpay checkout.";
+          await orderDoc.save();
+          console.log(`[METRIC] webhook_payment_failed | orderId: ${razorpay_order_id} | error: ${payment.error_description}`);
+        }
+      }
+    } else if (event === "refund.created" || event === "refund.processed") {
+      const refund = payload.refund.entity;
+      const razorpay_payment_id = refund.payment_id;
+      const orderDoc = await Order.findOne({ 
+        $or: [{ razorpayPaymentId: razorpay_payment_id }, { transactionId: razorpay_payment_id }] 
+      });
+      if (orderDoc) {
+        orderDoc.paymentStatus = "Refunded";
+        orderDoc.status = "Cancelled";
+        orderDoc.cancellationReason = `Order refunded. Refund ID: ${refund.id}.`;
+        await orderDoc.save();
+        console.log(`[METRIC] webhook_refund_processed | paymentId: ${razorpay_payment_id} | refundId: ${refund.id}`);
       }
     }
 

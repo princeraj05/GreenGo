@@ -19,7 +19,8 @@ import {
   startDelivery,
   cancelOrder,
   approveCancelOrder,
-  rejectCancelOrder
+  rejectCancelOrder,
+  getOrderInvoice
 } from "../controllers/orderController.js";
 
 const router = express.Router();
@@ -27,6 +28,7 @@ const router = express.Router();
 /* USER */
 router.post("/",protect,createOrder);
 router.get("/my",protect,getMyOrders);
+router.get("/:id/invoice",protect,getOrderInvoice);
 router.put("/:id/cancel",protect,cancelOrder);
 
 /* ADMIN */

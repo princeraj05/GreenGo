@@ -46,14 +46,31 @@ API.interceptors.request.use(
   }
 );
 
+import { Preferences } from "@capacitor/preferences";
+
+let isRefreshing = false;
+let refreshSubscribers = [];
+
+const subscribeTokenRefresh = (cb) => {
+  refreshSubscribers.push(cb);
+};
+
+const onRefreshed = (token) => {
+  refreshSubscribers.forEach((cb) => cb(token));
+  refreshSubscribers = [];
+};
+
 // Response Interceptor
 API.interceptors.response.use(
   (response) => {
     console.log(`[AXIOS RESPONSE SUCCESS] Status: ${response.status} from ${response.config.url}`);
-    console.log(`[AXIOS RESPONSE BODY]`, sanitizePayload(response.data));
+    if (response.data && response.data.refreshToken) {
+      localStorage.setItem("refresh_token", response.data.refreshToken);
+      Preferences.set({ key: "refresh_token", value: response.data.refreshToken }).catch(() => {});
+    }
     return response;
   },
-  (error) => {
+  async (error) => {
     console.error(`[AXIOS EXCEPTION]`, {
       message: error.message,
       code: error.code,
@@ -61,7 +78,72 @@ API.interceptors.response.use(
       url: `${error.config?.baseURL || ""}${error.config?.url || ""}`,
       method: error.config?.method,
     });
-    console.error(`[AXIOS RESPONSE ERROR BODY]`, sanitizePayload(error.response?.data));
+
+    const originalRequest = error.config;
+    
+    if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url?.includes("/refresh-token")) {
+      const refreshToken = localStorage.getItem("refresh_token") || (await Preferences.get({ key: "refresh_token" })).value;
+      const oldToken = localStorage.getItem("token") || (await Preferences.get({ key: "token" })).value;
+
+      if (refreshToken && oldToken) {
+        if (isRefreshing) {
+          return new Promise((resolve) => {
+            subscribeTokenRefresh((token) => {
+              originalRequest.headers.Authorization = `Bearer ${token}`;
+              resolve(API(originalRequest));
+            });
+          });
+        }
+
+        originalRequest._retry = true;
+        isRefreshing = true;
+
+        return new Promise((resolve, reject) => {
+          axios
+            .post(`${getApiUrl()}/api/users/refresh-token`, { token: oldToken, refreshToken })
+            .then(async ({ data }) => {
+              isRefreshing = false;
+              if (data.success && data.token) {
+                localStorage.setItem("token", data.token);
+                await Preferences.set({ key: "token", value: data.token });
+                if (data.refreshToken) {
+                  localStorage.setItem("refresh_token", data.refreshToken);
+                  await Preferences.set({ key: "refresh_token", value: data.refreshToken });
+                }
+                onRefreshed(data.token);
+                originalRequest.headers.Authorization = `Bearer ${data.token}`;
+                resolve(API(originalRequest));
+              } else {
+                // Refresh failed
+                localStorage.removeItem("token");
+                localStorage.removeItem("user_data");
+                localStorage.removeItem("auth_state");
+                localStorage.removeItem("refresh_token");
+                await Preferences.remove({ key: "token" });
+                await Preferences.remove({ key: "user_data" });
+                await Preferences.remove({ key: "auth_state" });
+                await Preferences.remove({ key: "refresh_token" });
+                window.location.href = "/login";
+                reject(error);
+              }
+            })
+            .catch(async (err) => {
+              isRefreshing = false;
+              localStorage.removeItem("token");
+              localStorage.removeItem("user_data");
+              localStorage.removeItem("auth_state");
+              localStorage.removeItem("refresh_token");
+              await Preferences.remove({ key: "token" });
+              await Preferences.remove({ key: "user_data" });
+              await Preferences.remove({ key: "auth_state" });
+              await Preferences.remove({ key: "refresh_token" });
+              window.location.href = "/login";
+              reject(err);
+            });
+        });
+      }
+    }
+
     if (!error.response) {
       console.error(`[AXIOS NETWORK EXCEPTION]`, error);
     }

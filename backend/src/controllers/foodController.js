@@ -54,8 +54,146 @@ const normalizeLevel = (value, fallback = "Medium") => {
 };
 
 export const getFoods = async (req, res) => {
-  const foods = await Food.find().sort({ createdAt: -1 }).lean();
-  res.json(foods);
+  try {
+    const { q } = req.query;
+    if (!q) {
+      const foods = await Food.find().sort({ createdAt: -1 }).lean();
+      return res.json(foods);
+    }
+
+    const queryStr = String(q).trim().toLowerCase();
+    
+    // Split search query into tokens
+    const tokens = queryStr.split(/\s+/).filter(Boolean);
+    if (tokens.length === 0) {
+      const foods = await Food.find().sort({ createdAt: -1 }).lean();
+      return res.json(foods);
+    }
+
+    // Levenshtein helper on backend
+    const levenshteinDistance = (s1, s2) => {
+      if (s1 === s2) return 0;
+      if (s1.length === 0) return s2.length;
+      if (s2.length === 0) return s1.length;
+      let v0 = new Array(s2.length + 1);
+      let v1 = new Array(s2.length + 1);
+      for (let i = 0; i < v0.length; i++) v0[i] = i;
+      for (let i = 0; i < s1.length; i++) {
+        v1[0] = i + 1;
+        for (let j = 0; j < s2.length; j++) {
+          const cost = (s1[i] === s2[j]) ? 0 : 1;
+          v1[j + 1] = Math.min(v1[j] + 1, v0[j + 1] + 1, v0[j] + cost);
+        }
+        for (let j = 0; j < v0.length; j++) v0[j] = v1[j];
+      }
+      return v0[s2.length];
+    };
+
+    const ALIASES = {
+      "panir": "paneer",
+      "panner": "paneer",
+      "piza": "pizza",
+      "burgar": "burger",
+      "chiken": "chicken",
+      "biryni": "biryani",
+      "momos": "momo",
+      "roll": "rolls",
+      "roti": "nan",
+      "nun": "nan",
+      "naan": "nan",
+      "dal": "daal"
+    };
+
+    // Build database query for candidates
+    const dbQueryOrs = [];
+    for (const t of tokens) {
+      const regexList = [new RegExp(t, "i")];
+      if (ALIASES[t]) {
+        regexList.push(new RegExp(ALIASES[t], "i"));
+      }
+      dbQueryOrs.push({
+        $or: [
+          { name: { $in: regexList } },
+          { category: { $in: regexList } },
+          { categories: { $in: regexList } },
+          { description: { $in: regexList } }
+        ]
+      });
+    }
+
+    // Retrieve candidate items matching the tokens
+    const candidates = await Food.find({ $or: dbQueryOrs.map(cond => cond.$or).flat() }).lean();
+
+    const scoredFoods = candidates.map(food => {
+      const name = String(food.name || "").toLowerCase().trim();
+      const desc = String(food.description || "").toLowerCase().trim();
+      const categories = [food.category, ...(food.categories || [])]
+        .map(c => String(c || "").toLowerCase().trim())
+        .filter(Boolean);
+
+      // Exact full string match
+      if (name === queryStr) return { food, matches: true, score: 0 };
+      if (name.startsWith(queryStr)) return { food, matches: true, score: 1 };
+      if (categories.some(cat => cat.startsWith(queryStr))) return { food, matches: true, score: 2 };
+      if (name.includes(queryStr)) return { food, matches: true, score: 3 };
+      if (categories.some(cat => cat.includes(queryStr))) return { food, matches: true, score: 4 };
+
+      let totalScore = 0;
+      let matchesAll = true;
+
+      for (const qToken of tokens) {
+        let bestTokenScore = Infinity;
+        const nameTokens = name.split(/\s+/).filter(Boolean);
+        const catTokens = categories.flatMap(cat => cat.split(/\s+/).filter(Boolean));
+        const targets = [...nameTokens, ...catTokens];
+
+        for (const target of targets) {
+          if (qToken === target) {
+            bestTokenScore = Math.min(bestTokenScore, 0);
+          } else if (target.startsWith(qToken)) {
+            bestTokenScore = Math.min(bestTokenScore, 1);
+          } else if (ALIASES[qToken] === target || ALIASES[target] === qToken) {
+            bestTokenScore = Math.min(bestTokenScore, 2);
+          } else if (target.includes(qToken)) {
+            bestTokenScore = Math.min(bestTokenScore, 3);
+          } else {
+            const dist = levenshteinDistance(qToken, target);
+            const maxAllowedDist = qToken.length >= 4 ? 2 : 1;
+            if (dist <= maxAllowedDist) {
+              bestTokenScore = Math.min(bestTokenScore, 4 + dist);
+            }
+          }
+        }
+
+        if (desc.includes(qToken)) {
+          bestTokenScore = Math.min(bestTokenScore, 5);
+        }
+
+        if (bestTokenScore === Infinity) {
+          matchesAll = false;
+          break;
+        } else {
+          totalScore += bestTokenScore;
+        }
+      }
+
+      const lengthPenalty = name.length * 0.01;
+      if (matchesAll) {
+        return { food, matches: true, score: 5 + totalScore + lengthPenalty };
+      }
+      return { food, matches: false, score: Infinity };
+    });
+
+    const results = scoredFoods
+      .filter(item => item.matches)
+      .sort((a, b) => a.score - b.score)
+      .map(item => item.food);
+
+    res.json(results);
+  } catch (err) {
+    console.error("Fuzzy search failed on backend:", err);
+    res.status(500).json({ message: "Server error during search" });
+  }
 };
 
 export const addFood = async (req, res) => {

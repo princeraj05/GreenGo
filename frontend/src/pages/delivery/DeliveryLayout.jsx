@@ -96,6 +96,20 @@ export default function DeliveryLayout() {
     }
   }, [profile, location.pathname, navigate]);
 
+  const handleToggleOnline = async () => {
+    try {
+      const nextOnline = !profile.isOnline;
+      const res = await API.post("/api/users/delivery/status", { isOnline: nextOnline });
+      if (res.data.success) {
+        setProfile(p => ({ ...p, isOnline: res.data.isOnline }));
+        window.dispatchEvent(new Event("delivery-profile-updated"));
+      }
+    } catch (err) {
+      console.error("Failed to toggle online status:", err);
+      alert("Failed to update status. Please try again.");
+    }
+  };
+
   // Performs session teardown, cookie/storage clearance and pushes back to /login
   const logout = async () => {
     await clearSession();
@@ -220,6 +234,21 @@ export default function DeliveryLayout() {
               <p className="hidden sm:block text-[10px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-300">Complete profile first</p>
             )}
             <div className="flex items-center gap-2">
+            {profileComplete && (
+              <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 px-2.5 py-1.5 rounded-xl shadow-sm mr-1">
+                <span className={`w-2.5 h-2.5 rounded-full ${profile.isOnline ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`}></span>
+                <span className="hidden xs:inline text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-355">
+                  {profile.isOnline ? "Online" : "Offline"}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleToggleOnline}
+                  className={`w-9 h-5 rounded-full p-0.5 transition-colors duration-300 outline-none relative shrink-0 ${profile.isOnline ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`}
+                >
+                  <div className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform duration-300 ${profile.isOnline ? 'translate-x-4' : 'translate-x-0'}`}></div>
+                </button>
+              </div>
+            )}
             <button type="button" onClick={toggleTheme} className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors border border-slate-100 dark:border-slate-800 shadow-sm" aria-label="Toggle theme">
               {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
             </button>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Package, Clock, CheckCircle, ChefHat, Truck, ShoppingBag, Star, Edit3, Trash2, X, Navigation, Store, UserCheck, Bike } from "lucide-react";
+import { Package, Clock, CheckCircle, ChefHat, Truck, ShoppingBag, Star, Edit3, Trash2, X, Navigation, Store, UserCheck, Bike, Download } from "lucide-react";
 import { getToken } from "../../utils/getToken";
 import Card from "../../components/ui/Card";
 import Badge from "../../components/ui/Badge";
@@ -150,6 +150,30 @@ export default function Orders() {
     if (["Delivered", "Out for Delivery", "Cancelled", "CancellationRequested"].includes(o.status)) return false;
     const timeDiff = Date.now() - new Date(o.createdAt).getTime();
     return timeDiff <= 5 * 60 * 1000;
+  };
+
+  const handleDownloadInvoice = async (orderId) => {
+    try {
+      const token = await getToken();
+      const res = await fetch(`${getApiUrl()}/api/orders/${orderId}/invoice`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      if (!res.ok) throw new Error("Invoice download failed");
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `invoice-${orderId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to download invoice. Please try again.");
+    }
   };
 
   /**
@@ -468,7 +492,7 @@ export default function Orders() {
                         alt={i.name}
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="font-bold text-sm sm:text-base text-slate-900 dark:text-white truncate">{i.name}</p>
+                        <p className="font-bold text-sm sm:text-base text-slate-900 dark:text-white truncate">{i.name}{i.variant ? ` - ${i.variant}` : (i.variantName ? ` - ${i.variantName}` : '')}</p>
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-0.5 text-xs font-medium">
                           <span className="text-slate-500">Qty: {i.qty}</span>
                           
@@ -539,6 +563,16 @@ export default function Orders() {
                     <p className="text-slate-500 dark:text-slate-400 text-xs font-medium mb-0.5">Total Amount</p>
                     <h3 className="text-xl sm:text-2xl md:text-3xl font-black text-brand-600">₹{o.total}</h3>
                     <div className="flex gap-2 justify-end">
+                      {o.status === "Delivered" && (
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          className="rounded-xl gap-1.5 font-bold"
+                          onClick={() => handleDownloadInvoice(o._id)}
+                        >
+                          <Download size={14} /> Invoice
+                        </Button>
+                      )}
                       {canCancel(o) && (
                         <Button size="sm" variant="danger" className="rounded-xl" onClick={() => openCancelDialog(o._id)}>
                           Cancel Order

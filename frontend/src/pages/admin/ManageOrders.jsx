@@ -166,7 +166,7 @@ export default function ManageOrders() {
     const estTime = o.etaMinutes ? `${o.etaMinutes} mins` : "15 - 20 mins";
     const itemsHtml = o.items.map(item => `
       <div style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 6px;">
-        <span>${item.qty} x ${item.name}</span>
+        <span>${item.qty} x ${item.name}${item.variant ? ` - ${item.variant}` : (item.variantName ? ` - ${item.variantName}` : '')}</span>
         <span>₹${item.price * item.qty}</span>
       </div>
     `).join("");
@@ -489,9 +489,9 @@ export default function ManageOrders() {
                           className="min-w-0 flex-1 px-3 py-2.5 rounded-xl border border-emerald-100 dark:border-emerald-900/50 bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-bold text-sm outline-none"
                         >
                           <option value="">Select delivery boy</option>
-                          {deliveryBoys.map((boy) => (
+                          {deliveryBoys.slice().sort((a, b) => (b.isOnline ? 1 : 0) - (a.isOnline ? 1 : 0)).map((boy) => (
                             <option key={boy._id} value={boy._id}>
-                              {boy.name || boy.phone || boy.email || "Delivery Boy"}
+                              {boy.name || boy.phone || boy.email || "Delivery Boy"} ({boy.isOnline ? "Online" : "Offline"})
                             </option>
                           ))}
                         </select>
@@ -635,7 +635,7 @@ export default function ManageOrders() {
                 <div className="space-y-2 mb-4 md:mb-6 flex-1">
                   {o.items.map((i, idx) => (
                     <div key={idx} className="flex justify-between items-start gap-3 text-xs md:text-sm font-medium text-slate-600 dark:text-slate-400 py-1 border-b border-slate-50 dark:border-slate-800/40 last:border-0">
-                      <span>{i.name} <span className="text-emerald-600 dark:text-emerald-455 font-bold ml-1">×{i.qty}</span></span>
+                      <span>{i.name}{i.variant ? ` - ${i.variant}` : (i.variantName ? ` - ${i.variantName}` : '')} <span className="text-emerald-600 dark:text-emerald-455 font-bold ml-1">×{i.qty}</span></span>
                       <span className="font-bold text-slate-900 dark:text-white font-black">₹{i.price * i.qty}</span>
                     </div>
                   ))}

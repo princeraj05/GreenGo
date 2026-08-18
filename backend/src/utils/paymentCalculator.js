@@ -3,6 +3,35 @@ import Coupon from "../models/Coupon.js";
 import Settings from "../models/Settings.js";
 import Order from "../models/Order.js";
 
+const geocodeCache = new Map();
+
+const geocodeAddress = async (addrStr) => {
+  if (!addrStr || typeof addrStr !== 'string') return null;
+  const cleanAddr = addrStr.trim().toLowerCase();
+  if (geocodeCache.has(cleanAddr)) {
+    return geocodeCache.get(cleanAddr);
+  }
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addrStr)}&limit=1`;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    const res = await fetch(url, {
+      headers: { "User-Agent": "GreenGo-FoodDelivery-App/1.0" },
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+    const data = await res.json();
+    if (data && data.length > 0) {
+      const coords = { latitude: parseFloat(data[0].lat), longitude: parseFloat(data[0].lon) };
+      geocodeCache.set(cleanAddr, coords);
+      return coords;
+    }
+  } catch (err) {
+    console.error("Geocoding failed on backend:", err);
+  }
+  return null;
+};
+
 // Helper function to calculate Haversine distance
 export function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
   const R = 6371; // Earth's radius in km
@@ -100,6 +129,7 @@ export async function calculateOrderAmount({ userId, items, address, latitude, l
       packingCharge: food.packingCharge || 0,
       qty: item.qty,
       image: food.image,
+      variant: item.variantName || "",
       variantName: item.variantName || ""
     });
   }
@@ -109,33 +139,55 @@ export async function calculateOrderAmount({ userId, items, address, latitude, l
   let finalDeliveryCharge = 0;
   let deliveryBoyAmount = 0;
 
-  let userLat = latitude;
-  let userLon = longitude;
+  let userLat = null;
+  let userLon = null;
+
+  if (address) {
+    const latLngRegex = /Lat:\s*([-\d.]+),\s*Lng:\s*([-\d.]+)/i;
+    const match = String(address).match(latLngRegex);
+    if (match) {
+      userLat = parseFloat(match[1]);
+      userLon = parseFloat(match[2]);
+    } else {
+      // Manual text address - geocode on the backend
+      const geocoded = await geocodeAddress(address);
+      if (geocoded) {
+        userLat = geocoded.latitude;
+        userLon = geocoded.longitude;
+      }
+    }
+  }
+
+  // Strictly validate delivery coordinates on backend
+  if (
+    userLat === undefined || userLat === null || isNaN(userLat) ||
+    userLon === undefined || userLon === null || isNaN(userLon) ||
+    userLat === 0 || userLon === 0 ||
+    userLat < -90 || userLat > 90 ||
+    userLon < -180 || userLon > 180
+  ) {
+    throw new Error("Please select a valid delivery location within our service area.");
+  }
 
   if (settings) {
-    if (userLat !== undefined && userLat !== null && userLon !== undefined && userLon !== null) {
-      distance = calculateHaversineDistance(
-        settings.storeLatitude,
-        settings.storeLongitude,
-        userLat,
-        userLon
+    distance = calculateHaversineDistance(
+      settings.storeLatitude,
+      settings.storeLongitude,
+      userLat,
+      userLon
+    );
+
+    // Verify delivery distance limit if enabled
+    if (settings.isDistanceLimitEnabled && distance > settings.maxDeliveryDistance) {
+      throw new Error(
+        `This delivery location is outside our service area. Maximum delivery distance is ${settings.maxDeliveryDistance} km. (Your location: ${distance.toFixed(1)} km)`
       );
-
-      // Verify delivery distance limit if enabled
-      if (settings.isDistanceLimitEnabled && distance > settings.maxDeliveryDistance) {
-        throw new Error(
-          `Delivery location (${distance.toFixed(1)} km) exceeds our maximum delivery distance of ${settings.maxDeliveryDistance} km.`
-        );
-      }
-
-      finalDeliveryCharge = (settings.isDeliveryChargeEnabled !== false)
-        ? getSlabAmount(settings.deliveryChargeSlabs, distance, settings.deliveryChargeAmount, isCod)
-        : 0;
-      deliveryBoyAmount = getSlabAmount(settings.deliveryBoyAmountSlabs, distance, 0);
-    } else {
-      // Coordinates missing
-      finalDeliveryCharge = (settings.isDeliveryChargeEnabled !== false) ? Number(settings.deliveryChargeAmount || 0) : 0;
     }
+
+    finalDeliveryCharge = (settings.isDeliveryChargeEnabled !== false)
+      ? getSlabAmount(settings.deliveryChargeSlabs, distance, settings.deliveryChargeAmount, isCod)
+      : 0;
+    deliveryBoyAmount = getSlabAmount(settings.deliveryBoyAmountSlabs, distance, 0);
   }
 
   // 4. Surcharges (Rain, Festival, Platform, Custom Surcharges)

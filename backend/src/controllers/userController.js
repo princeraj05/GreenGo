@@ -1601,4 +1601,75 @@ export const removeFcmToken = async (req, res) => {
   }
 };
 
+export const refreshToken = async (req, res) => {
+  try {
+    const { token: oldToken, refreshToken } = req.body;
+    if (!refreshToken || !oldToken) {
+      return res.status(400).json({ success: false, message: "Access token and refresh token are required" });
+    }
+
+    const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET || "SECRET123");
+    const user = await User.findById(decoded.id);
+    if (!user || user.isDeleted) {
+      return res.status(401).json({ success: false, message: "User account inactive or deleted" });
+    }
+
+    if (user.lockoutUntil && user.lockoutUntil > new Date()) {
+      return res.status(403).json({ success: false, message: "Account is temporarily locked" });
+    }
+
+    const session = await Session.findOne({ token: oldToken, userId: user._id.toString() });
+    if (!session) {
+      return res.status(401).json({ success: false, message: "Session expired or revoked" });
+    }
+
+    // Generate new tokens
+    const newToken = jwt.sign(
+      { id: user._id, email: user.email, role: user.role },
+      process.env.JWT_SECRET || "SECRET123",
+      { expiresIn: "7d" }
+    );
+    const newRefreshToken = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET || "SECRET123",
+      { expiresIn: "30d" }
+    );
+
+    // Rotate token in session database
+    session.token = newToken;
+    session.lastActivity = new Date();
+    session.expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    await session.save();
+
+    res.json({
+      success: true,
+      token: newToken,
+      refreshToken: newRefreshToken,
+      role: user.role
+    });
+  } catch (err) {
+    console.error("Refresh token error:", err.message);
+    res.status(401).json({ success: false, message: "Invalid refresh token" });
+  }
+};
+
+export const updateDeliveryStatus = async (req, res) => {
+  try {
+    const { isOnline } = req.body;
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+    if (user.role !== "deliveryBoy") {
+      return res.status(403).json({ success: false, message: "Only delivery boys can update availability status." });
+    }
+    user.isOnline = Boolean(isOnline);
+    await user.save();
+    res.json({ success: true, isOnline: user.isOnline });
+  } catch (err) {
+    console.error("Failed to update delivery status:", err.message);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
 

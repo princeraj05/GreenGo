@@ -5,10 +5,9 @@ import Food from "../models/Food.js";
 /* ================= DASHBOARD ANALYTICS ================= */
 export const getDashboardStats = async (req, res) => {
   try {
-    const startOfToday = new Date();
-    startOfToday.setHours(0, 0, 0, 0);
-    const endOfToday = new Date(startOfToday);
-    endOfToday.setDate(endOfToday.getDate() + 1);
+    // Current time in IST to formulate India business day boundaries
+    const startOfToday = new Date(new Date().toLocaleDateString("en-US", { timeZone: "Asia/Kolkata" }) + " 00:00:00 GMT+0530");
+    const endOfToday = new Date(startOfToday.getTime() + 24 * 60 * 60 * 1000);
     const todayQuery = { createdAt: { $gte: startOfToday, $lt: endOfToday } };
 
     const [
@@ -40,12 +39,30 @@ export const getDashboardStats = async (req, res) => {
     ]);
 
     const result = await Order.aggregate([
-      { $match: { status: { $ne: "PaymentPending" } } },
+      {
+        $match: {
+          $or: [
+            { paymentMethod: "Online", paymentStatus: "Paid", status: { $nin: ["Cancelled"] } },
+            { paymentMethod: "COD", status: "Delivered" }
+          ],
+          status: { $ne: "PaymentPending" }
+        }
+      },
       { $group: { _id: null, totalRevenue: { $sum: "$total" } } }
     ]);
     const totalRevenue = result[0]?.totalRevenue || 0;
+
     const todayRevenueResult = await Order.aggregate([
-      { $match: { ...todayQuery, status: { $nin: ["Cancelled", "PaymentPending"] } } },
+      {
+        $match: {
+          ...todayQuery,
+          $or: [
+            { paymentMethod: "Online", paymentStatus: "Paid", status: { $nin: ["Cancelled"] } },
+            { paymentMethod: "COD", status: "Delivered" }
+          ],
+          status: { $ne: "PaymentPending" }
+        }
+      },
       { $group: { _id: null, totalRevenue: { $sum: "$total" } } }
     ]);
     const todayRevenue = todayRevenueResult[0]?.totalRevenue || 0;

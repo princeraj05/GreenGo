@@ -142,7 +142,7 @@ export default function CancelledOrders() {
                           }}
                         />
                         <span className="text-xs font-bold text-slate-700 dark:text-slate-355 leading-tight">
-                          {item.name} <span className="text-brand-500 dark:text-brand-400 font-black">×{item.qty}</span>
+                          {item.name}{item.variant ? ` - ${item.variant}` : (item.variantName ? ` - ${item.variantName}` : '')} <span className="text-brand-500 dark:text-brand-400 font-black">×{item.qty}</span>
                         </span>
                       </div>
                     ))}
@@ -287,7 +287,7 @@ export default function CancelledOrders() {
                               onError={(e) => { e.target.src = "https://placehold.co/80x80?text=Food"; }}
                             />
                             <span className="text-xs font-bold text-slate-700 dark:text-slate-355 leading-tight">
-                              {item.name} <span className="text-brand-500 dark:text-brand-400 font-black">×{item.qty}</span>
+                              {item.name}{item.variant ? ` - ${item.variant}` : (item.variantName ? ` - ${item.variantName}` : '')} <span className="text-brand-500 dark:text-brand-400 font-black">×{item.qty}</span>
                             </span>
                           </div>
                         ))}
