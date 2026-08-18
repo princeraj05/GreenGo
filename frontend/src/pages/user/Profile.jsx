@@ -1072,9 +1072,9 @@ export default function Profile() {
   }
 
   return (
-    <div className="w-full max-w-5xl mx-auto pb-10 px-0 sm:px-4">
+    <div className="w-[calc(100%+2rem)] -mx-4 sm:mx-auto sm:w-full max-w-5xl pb-10 px-0 sm:px-4">
       
-      <div className="relative overflow-hidden bg-white dark:bg-slate-950 sm:rounded-[2rem] shadow-[0_12px_40px_rgba(0,0,0,0.06)] border border-slate-100 dark:border-slate-800 min-h-[calc(100vh-7rem)]">
+      <div className="relative overflow-hidden bg-white dark:bg-slate-950 rounded-none sm:rounded-[2rem] shadow-none sm:shadow-[0_12px_40px_rgba(0,0,0,0.06)] border-y border-x-0 sm:border border-slate-100 dark:border-slate-800 min-h-[calc(100vh-7rem)]">
         
         {/* Decorative background glassmorphic shapes for outstanding look */}
         <div className="absolute top-0 right-0 w-80 h-80 bg-brand-500/10 rounded-full blur-[80px] -translate-y-1/3 translate-x-1/3 pointer-events-none" />
@@ -1166,7 +1166,7 @@ export default function Profile() {
           </div>
         </div>
 
-        <div className="px-5 py-5 pb-24 sm:pb-16 relative">
+        <div className="px-5 py-5 pb-[calc(6.5rem+env(safe-area-inset-bottom))] sm:pb-16 relative">
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {menuItems.map((item) => (
               <button
