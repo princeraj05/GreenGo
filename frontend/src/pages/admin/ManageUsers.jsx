@@ -234,7 +234,13 @@ export default function ManageUsers({
                   </div>
                   <div className="min-w-0 flex-1">
                     <h3 className="font-black text-slate-950 dark:text-white truncate">{u.name || "GreenGo User"}</h3>
-                    <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 break-all">{u.email || u.phone || "No contact"}</p>
+                    {u.email && <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 break-all">{u.email}</p>}
+                    {u.role !== "deliveryBoy" && u.phone && (
+                      <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1.5">
+                        <Phone size={13} className="text-brand-500 shrink-0" /> {u.phone}
+                      </p>
+                    )}
+                    {!u.email && !u.phone && <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">No contact</p>}
                     <div className="mt-2 flex flex-wrap gap-2">
                       <Badge variant={u.role === "admin" ? "danger" : u.role === "deliveryBoy" ? "blue" : "gray"} className="uppercase">
                         {u.role === "user" ? "customer" : u.role || "customer"}
@@ -247,8 +253,17 @@ export default function ManageUsers({
                 </div>
 
                 <div className="mt-4 grid grid-cols-2 gap-2">
-                  <InfoPill label="Spent" value={`₹${u.totalSpent || 0}`} />
-                  <InfoPill label="Orders" value={u.totalOrders || 0} />
+                  {u.role === "deliveryBoy" ? (
+                    <>
+                      <InfoPill label="Total Earnings" value={`₹${u.totalEarnings || 0}`} />
+                      <InfoPill label="Delivered Orders" value={u.deliveredOrdersCount || 0} />
+                    </>
+                  ) : (
+                    <>
+                      <InfoPill label="Spent" value={`₹${u.totalSpent || 0}`} />
+                      <InfoPill label="Orders" value={u.totalOrders || 0} />
+                    </>
+                  )}
                 </div>
 
                 {u.role === "deliveryBoy" && (
@@ -309,8 +324,12 @@ export default function ManageUsers({
               <thead>
                 <tr className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800/60">
                   <th className="text-left px-4 md:px-8 py-4 md:py-5 text-[10px] md:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">User Details</th>
-                  <th className="text-left px-4 md:px-8 py-4 md:py-5 text-[10px] md:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Spent</th>
-                  <th className="text-left px-4 md:px-8 py-4 md:py-5 text-[10px] md:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Orders</th>
+                  <th className="text-left px-4 md:px-8 py-4 md:py-5 text-[10px] md:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    {roleFilter === "deliveryBoys" ? "Total Earnings" : "Total Spent"}
+                  </th>
+                  <th className="text-left px-4 md:px-8 py-4 md:py-5 text-[10px] md:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    {roleFilter === "deliveryBoys" ? "Delivered Orders" : "Total Orders"}
+                  </th>
                   <th className="text-left px-4 md:px-8 py-4 md:py-5 text-[10px] md:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Role</th>
                   <th className="text-left px-4 md:px-8 py-4 md:py-5 text-[10px] md:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
                   <th className="text-right px-4 md:px-8 py-4 md:py-5 text-[10px] md:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Actions</th>
@@ -330,7 +349,14 @@ export default function ManageUsers({
                           </div>
                           <div className="min-w-0">
                             <div className="font-bold text-slate-950 dark:text-white text-sm md:text-base truncate max-w-[210px]">{u.name || "GreenGo User"}</div>
-                            <div className="text-slate-500 dark:text-slate-400 font-medium truncate max-w-[230px]">{u.email || u.phone || "No contact"}</div>
+                            {u.email && <div className="text-slate-500 dark:text-slate-400 font-medium truncate max-w-[230px]">{u.email}</div>}
+                            {u.role !== "deliveryBoy" && u.phone && (
+                              <div className="text-slate-500 dark:text-slate-400 text-[11px] font-bold mt-1 flex items-center gap-1.5">
+                                <Phone size={12} className="text-brand-500" />
+                                {u.phone}
+                              </div>
+                            )}
+                            {!u.email && !u.phone && <div className="text-slate-500 dark:text-slate-400 font-medium">No contact</div>}
                             {u.role === "deliveryBoy" && (
                               <div className="mt-2 space-y-1 text-[11px] font-bold text-slate-500 dark:text-slate-400">
                                 <p className="flex items-center gap-1.5">
@@ -350,10 +376,18 @@ export default function ManageUsers({
                         </div>
                       </td>
                       <td className="px-4 md:px-8 py-4 md:py-5">
-                        <span className="font-black text-slate-950 dark:text-white text-base">₹{u.totalSpent || 0}</span>
+                        {u.role === "deliveryBoy" ? (
+                          <span className="font-black text-slate-950 dark:text-white text-base">₹{u.totalEarnings || 0}</span>
+                        ) : (
+                          <span className="font-black text-slate-950 dark:text-white text-base">₹{u.totalSpent || 0}</span>
+                        )}
                       </td>
                       <td className="px-4 md:px-8 py-4 md:py-5">
-                        <span className="font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-900 px-3 py-1 rounded-lg">{u.totalOrders || 0}</span>
+                        {u.role === "deliveryBoy" ? (
+                          <span className="font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-900 px-3 py-1 rounded-lg">{u.deliveredOrdersCount || 0}</span>
+                        ) : (
+                          <span className="font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-900 px-3 py-1 rounded-lg">{u.totalOrders || 0}</span>
+                        )}
                       </td>
                       <td className="px-4 md:px-8 py-4 md:py-5">
                         <Badge variant={u.role === "admin" ? "danger" : u.role === "deliveryBoy" ? "blue" : "gray"} className="uppercase tracking-wider">

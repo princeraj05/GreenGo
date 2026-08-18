@@ -1,26 +1,50 @@
 import User from "../models/User.js";
+import Order from "../models/Order.js";
 
 const normalizeRole = (role) => (role === "user" ? "customer" : role);
 
-export const getAllUsers = async (req,res)=>{
+export const getAllUsers = async (req, res) => {
+  try {
+    const [users, orderStats] = await Promise.all([
+      User.find({})
+        .select("-password -resetPasswordToken")
+        .sort({ createdAt: -1 })
+        .lean(),
+      Order.aggregate([
+        { $match: { status: "Delivered", assignedDeliveryBoy: { $ne: null } } },
+        {
+          $group: {
+            _id: "$assignedDeliveryBoy",
+            deliveredOrdersCount: { $sum: 1 },
+            totalEarnings: { $sum: { $ifNull: ["$deliveryBoyAmount", 0] } }
+          }
+        }
+      ])
+    ]);
 
-try{
+    const statsMap = {};
+    orderStats.forEach((stat) => {
+      statsMap[String(stat._id)] = {
+        deliveredOrdersCount: stat.deliveredOrdersCount,
+        totalEarnings: stat.totalEarnings
+      };
+    });
 
-const users = await User.find({})
-.select("-password -resetPasswordToken")
-.sort({createdAt:-1})
-.lean();
+    const enrichedUsers = users.map((u) => {
+      const stats = statsMap[String(u._id)] || { deliveredOrdersCount: 0, totalEarnings: 0 };
+      return {
+        ...u,
+        deliveredOrdersCount: stats.deliveredOrdersCount,
+        totalEarnings: stats.totalEarnings
+      };
+    });
 
-res.json(users);
-
-}catch(err){
-
-res.status(500).json({
-message:"Server error"
-});
-
-}
-
+    res.json(enrichedUsers);
+  } catch (err) {
+    res.status(500).json({
+      message: "Server error"
+    });
+  }
 };
 
 export const updateUserStatus = async (req,res)=>{
