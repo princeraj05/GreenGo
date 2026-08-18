@@ -74,8 +74,8 @@ export default function Contacts() {
   const [emailSending, setEmailSending] = useState(false);
   const [emailStatus, setEmailStatus] = useState(null);
 
-  // Ref container targeting the bottom scroll target in the chat window
-  const chatEndRef = useRef(null);
+  // Ref container targeting the scrollable chat history container
+  const chatContainerRef = useRef(null);
 
   // ==========================================
   // DATA FETCHING & EVENT HANDLERS
@@ -209,9 +209,11 @@ export default function Contacts() {
     });
   }, [users, search, conversationsKeys]);
 
-  // Auto-scrolls chat interface to the bottom whenever conversation messages change
+  // Local scroll to the bottom of the chat history container when messages change
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
   }, [selectedConversation?.messages]);
 
   const handleUserSelect = (userId) => {
@@ -521,7 +523,7 @@ export default function Contacts() {
             </div>
 
             {/* Chat History Messages */}
-            <div className="scrollbar-thin flex-1 space-y-4 overflow-y-auto bg-slate-50/50 p-4 dark:bg-slate-950/25 md:space-y-5 md:p-6">
+            <div ref={chatContainerRef} className="scrollbar-thin flex-1 space-y-4 overflow-y-auto bg-slate-50/50 p-4 dark:bg-slate-950/25 md:space-y-5 md:p-6">
               {!selectedConversation ? (
                 <div className="flex h-full flex-col items-center justify-center gap-2 text-xs font-medium text-slate-400 dark:text-slate-500 sm:text-sm">
                   <MessageCircle className="h-8 w-8" />
@@ -615,7 +617,6 @@ export default function Contacts() {
                   </div>
                 ))
               )}
-              <div ref={chatEndRef} />
             </div>
 
             {/* Chat Reply Area */}
