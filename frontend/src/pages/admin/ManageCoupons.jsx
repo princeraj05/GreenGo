@@ -49,7 +49,12 @@ export default function ManageCoupons() {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
-      setCoupons(Array.isArray(data) ? data : []);
+      if (Array.isArray(data)) {
+        const filtered = data.filter(c => !(c.title && c.title.toLowerCase().includes("referral")));
+        setCoupons(filtered);
+      } else {
+        setCoupons([]);
+      }
     } catch (err) {
       console.error(err);
     } finally {
