@@ -592,7 +592,6 @@ export default function Profile() {
     { id: "sessions", label: t("session_management"), icon: Smartphone },
     { id: "refer", label: t("refer_earn"), icon: Users },
     { id: "coupons", label: t("coupons"), icon: TicketPercent },
-    { id: "suggestions", label: t("suggestions"), icon: MessageSquare },
     { id: "support", label: t("help_support"), icon: LifeBuoy },
     { id: "about", label: t("about_greengo"), icon: Info },
     { id: "developer", label: t("about_developer"), icon: User },
@@ -1175,6 +1174,8 @@ export default function Profile() {
                 onClick={() => {
                   if (item.id === "favorites") {
                     navigate("/user/wishlist");
+                  } else if (item.id === "support") {
+                    navigate("/user/contact");
                   } else {
                     setActiveSection(item.id);
                   }
