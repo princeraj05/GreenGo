@@ -26,7 +26,7 @@ export default function AdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const isChatOpenOnMobile = location.pathname.toLowerCase().replace(/\/$/, "") === "/admin/contacts" && searchParams.has("chat");
+  const isChatOpenOnMobile = location.pathname.toLowerCase().replace(/\/$/, "") === "/admin/contacts" && location.search.toLowerCase().includes("chat=");
 
   // ==========================================
   // STATE DECLARATIONS
