@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { getToken } from "../../utils/getToken";
 import { getApiUrl } from "../../utils/getApiUrl";
 import Button from "../../components/ui/Button";
-import Card from "../../components/ui/Card";
 import Input from "../../components/ui/Input";
 import { Edit3, Trash2, Megaphone, Calendar, X, AlertTriangle, Bell, CheckCircle } from "lucide-react";
 
@@ -251,7 +250,7 @@ export default function ManageNotifications() {
         {activeTab === "send" ? (
           /* --- GLOBAL BROADCAST FORM PANEL --- */
           <div className="max-w-2xl mx-auto w-full">
-            <Card className="p-6 md:p-8 border-slate-100 dark:border-slate-800/60 shadow-premium">
+            <div className="p-6 md:p-8">
               <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6 border-b border-slate-100 dark:border-slate-800 pb-4">
                 {editingId ? "Edit Broadcast Message" : "Send Global Broadcast"}
               </h2>
@@ -320,12 +319,12 @@ export default function ManageNotifications() {
                   </Button>
                 </div>
               </form>
-            </Card>
+            </div>
           </div>
         ) : (
           /* --- RECENT NOTIFICATIONS LIST PANEL --- */
           <div className="w-full">
-            <Card className="p-6 md:p-8 border-slate-100 dark:border-slate-800/60 shadow-premium flex flex-col">
+            <div className="p-6 md:p-8 flex flex-col">
               <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6 border-b border-slate-100 dark:border-slate-800 pb-4">
                 Recent Notifications
               </h2>
@@ -428,7 +427,7 @@ export default function ManageNotifications() {
                   })
                 )}
               </div>
-            </Card>
+            </div>
           </div>
         )}
       </div>

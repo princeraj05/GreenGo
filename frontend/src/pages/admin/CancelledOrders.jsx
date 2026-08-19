@@ -82,7 +82,7 @@ export default function CancelledOrders() {
     }
 
     return (
-      <div className="w-full overflow-x-auto rounded-2xl border border-slate-100 dark:border-slate-850 bg-white dark:bg-slate-950 shadow-sm">
+      <div className="w-full overflow-x-auto">
         <table className="w-full border-collapse text-left text-xs sm:text-sm">
           <thead>
             <tr className="border-b border-slate-100 dark:border-slate-850 bg-slate-50/70 dark:bg-slate-900/30 text-[10px] sm:text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
@@ -242,7 +242,7 @@ export default function CancelledOrders() {
             <p className="mt-1 text-xs font-semibold text-slate-500 dark:text-slate-400">There are no pending order cancellation requests.</p>
           </div>
         ) : (
-          <div className="w-full overflow-x-auto rounded-2xl border border-slate-100 dark:border-slate-850 bg-white dark:bg-slate-950 shadow-sm">
+          <div className="w-full overflow-x-auto">
             <table className="w-full border-collapse text-left text-xs sm:text-sm">
               <thead>
                 <tr className="border-b border-slate-100 dark:border-slate-850 bg-slate-50/70 dark:bg-slate-900/30 text-[10px] sm:text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">

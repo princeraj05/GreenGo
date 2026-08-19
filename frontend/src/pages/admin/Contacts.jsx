@@ -294,12 +294,10 @@ export default function Contacts() {
   useEffect(() => {
     if (chatParam) {
       setSelectedKey(chatParam);
-    } else if (!isMobile && conversations.length > 0) {
-      setSelectedKey(conversations[0].key);
     } else {
       setSelectedKey("");
     }
-  }, [chatParam, isMobile, conversations]);
+  }, [chatParam]);
 
   useEffect(() => {
     if (userParam) {
@@ -663,6 +661,20 @@ export default function Contacts() {
             <div className="hidden lg:flex items-center justify-between border-b border-slate-100 bg-slate-50 p-4 transition-colors dark:border-slate-800/60 dark:bg-slate-900/80 md:p-5">
               {selectedConversation ? (
                 <div className="flex items-center gap-3">
+                  <button 
+                    onClick={() => {
+                      if (conversationListRef.current) {
+                        setSavedScrollTop(conversationListRef.current.scrollTop);
+                      }
+                      setSelectedKey("");
+                      setSelectedUser(null);
+                      setSearchParams({}, { replace: true });
+                    }}
+                    className="w-10 h-10 flex items-center justify-center rounded-full text-slate-455 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 active:bg-slate-300 dark:active:bg-slate-700/50 transition-colors mr-1 shrink-0"
+                    aria-label="Back to contacts"
+                  >
+                    <ArrowLeft size={20} />
+                  </button>
                   <div className="w-10 h-10 rounded-full bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-450 flex items-center justify-center font-bold text-sm shrink-0 shadow-sm border border-brand-100/50 dark:border-brand-900/30">
                     {initialsFor(selectedConversation.name)}
                   </div>
@@ -820,7 +832,7 @@ export default function Contacts() {
       {/* --- EMAIL TAB --- */}
       {activeTab === "email" && (
         <div className="max-w-2xl mx-auto w-full animate-fade-in">
-          <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-premium transition-colors dark:border-slate-800/60 dark:bg-slate-950 md:p-8">
+          <div className="p-5 md:p-8">
             <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
               <Mail className="h-5 w-5 text-brand-500" />
               Send Email Message

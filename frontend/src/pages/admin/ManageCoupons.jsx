@@ -138,7 +138,7 @@ export default function ManageCoupons() {
         
         {/* --- FORM PANEL SECTION --- */}
         {/* Col span 1 handles creation form layout dimensions */}
-        <div className="lg:col-span-1 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm h-fit transition-colors">
+        <div className="lg:col-span-1 p-6 h-fit transition-colors">
           <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">New Coupon</h2>
           <form onSubmit={handleCreate} className="flex flex-col gap-4">
             <input 
