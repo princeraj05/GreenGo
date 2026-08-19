@@ -772,20 +772,7 @@ export default function Contacts() {
                           </div>
                         </div>
                       </div>
-                    ) : (
-                      cIdx === selectedConversation.messages.length - 1 && (
-                        <div className="flex justify-start">
-                          <div className="flex items-center gap-2 rounded-2xl rounded-tl-sm border border-slate-200/80 bg-white p-3 text-slate-500 shadow-sm transition-colors dark:border-slate-800/80 dark:bg-slate-900 dark:text-slate-400">
-                            <div className="flex items-center gap-1">
-                              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-brand-500 [animation-delay:-0.3s]" />
-                              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-brand-500 [animation-delay:-0.15s]" />
-                              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-brand-500" />
-                            </div>
-                            <span className="text-[10px] font-semibold tracking-wide">Waiting for admin reply...</span>
-                          </div>
-                        </div>
-                      )
-                    )}
+                    ) : null}
                   </div>
                 ))
               )}
