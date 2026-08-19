@@ -138,76 +138,74 @@ export default function Contact() {
   };
 
   return (
-    /* --- MAIN PAGE LAYOUT --- */
-    /* Tailwind: lg:flex-row arranges support form side-by-side with live inbox on larger screens; vertical flex-col on mobile */
-    <div className="max-w-6xl mx-auto w-full animate-fade-in pb-10 flex flex-col lg:flex-row gap-6 md:gap-8 bg-transparent">
-      
-      {/* --- SUPPORT REQUEST FORM PANEL --- */}
-      <div className="flex-1">
-        <div className="mb-6 md:mb-8">
+    <div className="max-w-3xl mx-auto w-full animate-fade-in pb-10 px-4 md:px-0 bg-transparent">
+      {/* Chat Title / Heading */}
+      <div className="mb-6 md:mb-8 flex items-center justify-between">
+        <div>
           <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-2.5">
             <MessageCircle className="w-6 h-6 md:w-8 md:h-8 text-brand-500" />
             Support
           </h2>
-          <p className="text-slate-500 dark:text-slate-400 mt-1 text-xs sm:text-sm md:text-base font-medium">We're here to help. Send our team a message.</p>
+          <p className="text-slate-500 dark:text-slate-400 mt-1 text-xs sm:text-sm font-medium">
+            We're here to help. Chat with our support team.
+          </p>
         </div>
-
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white dark:bg-slate-950 rounded-3xl p-5 md:p-8 border border-slate-100 dark:border-slate-800/60 shadow-premium transition-colors"
-        >
-          <div className="space-y-4">
-            <div>
-              <label className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5 block">Message</label>
-              <textarea
-                required
-                name="message"
-                value={form.message}
-                onChange={(event) => setForm({ ...form, message: event.target.value })}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-brand-500/10 focus:border-brand-500 transition-all outline-none h-28 md:h-32 resize-none font-medium text-xs sm:text-sm"
-                placeholder="How can we help you today?"
-              />
-            </div>
-            <button
-              disabled={loading}
-              className="w-full py-3 md:py-4 bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-650 hover:to-brand-700 text-white font-bold rounded-xl shadow-md shadow-brand-500/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed text-xs sm:text-sm"
-            >
-              {loading ? "Sending..." : "Send Message"}
-              <Send className="w-4 h-4" />
-            </button>
-          </div>
-        </form>
       </div>
 
-      {/* --- SUPPORT LIVE INBOX PANEL --- */}
-      {/* Tailwind: h-[450px] md:h-[600px] establishes fixed window limits to trigger inner message scrollbars */}
-      <div className="flex-1 bg-white dark:bg-slate-950 rounded-3xl border border-slate-100 dark:border-slate-800/60 shadow-premium overflow-hidden flex flex-col h-[450px] md:h-[600px] transition-colors">
+      {/* --- COMBINED CHAT WINDOW CONTAINER (WhatsApp/Instagram Style) --- */}
+      <div className="bg-white dark:bg-slate-950 rounded-3xl border border-slate-100 dark:border-slate-800/60 shadow-premium overflow-hidden flex flex-col h-[500px] md:h-[600px] transition-colors">
         
-        {/* Inbox Header */}
-        <div className="bg-slate-50 dark:bg-slate-900/80 border-b border-slate-100 dark:border-slate-800/60 p-4 md:p-5 flex items-center justify-between transition-colors">
-          <h3 className="font-extrabold text-slate-900 dark:text-white flex items-center gap-2 text-xs uppercase tracking-wider">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-450 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
-            Support Live Inbox
-          </h3>
+        {/* Chat Window Header */}
+        <div className="bg-slate-50 dark:bg-slate-900/80 border-b border-slate-100 dark:border-slate-800/60 p-4 flex items-center justify-between transition-colors">
+          <div className="flex items-center gap-3">
+            {/* Avatar */}
+            <div className="relative">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-brand-500 to-brand-600 flex items-center justify-center text-white font-bold shadow-sm shrink-0">
+                GG
+              </div>
+              <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900"></span>
+            </div>
+            
+            {/* Active support representative name & status */}
+            <div className="flex flex-col">
+              <span className="font-extrabold text-slate-900 dark:text-white text-xs sm:text-sm leading-tight">
+                GreenGo Support
+              </span>
+              <span className="text-[10px] text-emerald-500 font-semibold flex items-center gap-1">
+                Online
+              </span>
+            </div>
+          </div>
+
+          {/* Refresh Action */}
+          <button 
+            type="button"
+            onClick={loadMyContacts}
+            disabled={loading}
+            className="p-2 text-slate-500 dark:text-slate-400 hover:text-brand-500 dark:hover:text-brand-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors disabled:opacity-50"
+            title="Refresh chat"
+          >
+            <RefreshCw className={`w-4.5 h-4.5 ${loading ? "animate-spin" : ""}`} />
+          </button>
         </div>
 
-        {/* Live Messages List View */}
-        <div ref={chatContainerRef} className="flex-1 p-4 md:p-6 overflow-y-auto space-y-4 md:space-y-5 bg-slate-50/50 dark:bg-slate-950/25 scrollbar-thin">
+        {/* Message Stream */}
+        <div 
+          ref={chatContainerRef} 
+          className="flex-1 p-4 md:p-6 overflow-y-auto space-y-4 bg-slate-50/20 dark:bg-slate-950/10 scrollbar-thin"
+        >
           {contacts.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 gap-2 font-medium text-xs sm:text-sm">
               <span>💬</span>
-              <span>No support messages yet.</span>
+              <span>No messages yet. Send a message to start the conversation!</span>
             </div>
           ) : (
-            contacts.map((contact) => (
-              <div key={contact._id} className="flex flex-col gap-3 md:gap-4 animate-fade-in">
+            contacts.map((contact, cIdx) => (
+              <div key={contact._id || cIdx} className="flex flex-col gap-3 md:gap-4 animate-fade-in">
                 
-                {/* Outgoing Message Sent By User */}
+                {/* Outgoing User Message */}
                 <div className="flex justify-end">
-                  <div className="bg-brand-500 text-white p-3.5 rounded-2xl rounded-tr-sm max-w-[85%] sm:max-w-[80%] shadow-md shadow-brand-500/10">
+                  <div className="bg-brand-500 text-white p-3.5 rounded-2xl rounded-tr-none max-w-[85%] sm:max-w-[80%] shadow-sm">
                     <p className="text-xs sm:text-sm leading-relaxed font-medium">{contact.message}</p>
                     <p className="text-[9px] text-brand-100 text-right mt-1 font-semibold">
                       {new Date(contact.createdAt || Date.now()).toLocaleTimeString([], {
@@ -218,27 +216,35 @@ export default function Contact() {
                   </div>
                 </div>
 
-                {/* Incoming Message Received From Support Agent */}
+                {/* Support Agent Replies */}
                 {contact.replies && contact.replies.length > 0 ? (
                   contact.replies.map((replyObj, idx) => (
                     <div key={replyObj._id || idx} className="flex justify-start">
-                      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 text-slate-800 dark:text-slate-200 p-3.5 rounded-2xl rounded-tl-sm max-w-[85%] sm:max-w-[80%] shadow-sm transition-colors">
+                      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 text-slate-800 dark:text-slate-200 p-3.5 rounded-2xl rounded-tl-none max-w-[85%] sm:max-w-[80%] shadow-sm transition-colors">
                         <div className="flex items-center gap-1.5 mb-1.5">
                           <div className="w-4.5 h-4.5 rounded-full bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white text-[8px] font-black shadow-sm shrink-0">
-                            B
+                            GG
                           </div>
                           <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">GreenGo Support</span>
                         </div>
                         <p className="text-xs sm:text-sm leading-relaxed mt-1 font-medium">{replyObj.reply}</p>
+                        {replyObj.createdAt && (
+                          <p className="text-[9px] text-slate-400 dark:text-slate-500 text-right mt-1 font-semibold">
+                            {new Date(replyObj.createdAt).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </p>
+                        )}
                       </div>
                     </div>
                   ))
                 ) : contact.reply ? (
                   <div className="flex justify-start">
-                    <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 text-slate-800 dark:text-slate-200 p-3.5 rounded-2xl rounded-tl-sm max-w-[85%] sm:max-w-[80%] shadow-sm transition-colors">
+                    <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 text-slate-800 dark:text-slate-200 p-3.5 rounded-2xl rounded-tl-none max-w-[85%] sm:max-w-[80%] shadow-sm transition-colors">
                       <div className="flex items-center gap-1.5 mb-1.5">
                         <div className="w-4.5 h-4.5 rounded-full bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white text-[8px] font-black shadow-sm shrink-0">
-                          B
+                          GG
                         </div>
                         <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">GreenGo Support</span>
                       </div>
@@ -246,27 +252,54 @@ export default function Contact() {
                     </div>
                   </div>
                 ) : (
-                  /* Typing placeholder animation when reply is absent */
-                  <div className="flex justify-start">
-                    <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 text-slate-500 dark:text-slate-400 p-3 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-2 transition-colors">
-                      <div className="flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 bg-brand-500 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                        <span className="w-1.5 h-1.5 bg-brand-500 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                        <span className="w-1.5 h-1.5 bg-brand-500 rounded-full animate-bounce"></span>
+                  /* Typing placeholder animation when reply is absent and it's the last message */
+                  cIdx === contacts.length - 1 && (
+                    <div className="flex justify-start">
+                      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 text-slate-500 dark:text-slate-400 p-3 rounded-2xl rounded-tl-none shadow-sm flex items-center gap-2 transition-colors">
+                        <div className="flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 bg-brand-500 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                          <span className="w-1.5 h-1.5 bg-brand-500 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                          <span className="w-1.5 h-1.5 bg-brand-500 rounded-full animate-bounce"></span>
+                        </div>
+                        <span className="text-[10px] font-semibold tracking-wide">Support is typing...</span>
                       </div>
-                      <span className="text-[10px] font-semibold tracking-wide">Support is typing...</span>
                     </div>
-                  </div>
+                  )
                 )}
-                
+
               </div>
             ))
           )}
         </div>
-        
+
+        {/* Input Bar (WhatsApp/Instagram Style) */}
+        <form
+          onSubmit={handleSubmit}
+          className="p-3 bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-900/60 flex items-center gap-2.5 transition-colors"
+        >
+          <input
+            required
+            type="text"
+            name="message"
+            value={form.message}
+            onChange={(event) => setForm({ ...form, message: event.target.value })}
+            placeholder="Type a message..."
+            className="flex-1 px-4 py-3 rounded-full border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-brand-500/10 focus:border-brand-500 transition-all outline-none text-xs sm:text-sm font-medium"
+            disabled={loading}
+          />
+          <button
+            type="submit"
+            disabled={loading || !form.message.trim()}
+            className="bg-brand-500 hover:bg-brand-600 active:scale-95 text-white p-3 rounded-full shadow-md transition-all shrink-0 flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {loading ? (
+              <RefreshCw className="w-4.5 h-4.5 animate-spin" />
+            ) : (
+              <Send className="w-4.5 h-4.5" />
+            )}
+          </button>
+        </form>
       </div>
     </div>
   );
 }
-
-
