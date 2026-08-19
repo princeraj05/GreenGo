@@ -203,13 +203,25 @@ export default function Contacts() {
       .map((conversation) => {
         const messages = [...conversation.messages].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
         const latest = messages[messages.length - 1];
+        
+        let pendingCount = 0;
+        for (let i = messages.length - 1; i >= 0; i--) {
+          const msg = messages[i];
+          const hasReply = msg.reply || (msg.replies && msg.replies.length > 0);
+          if (!hasReply) {
+            pendingCount++;
+          } else {
+            break;
+          }
+        }
+
         return {
           ...conversation,
           name: latest?.name || conversation.name,
           email: latest?.email || conversation.email,
           latest,
           messages,
-          pendingCount: messages.filter((message) => !message.reply).length,
+          pendingCount,
         };
       })
       .sort((a, b) => new Date(b.latest?.createdAt || 0) - new Date(a.latest?.createdAt || 0));
@@ -639,7 +651,7 @@ export default function Contacts() {
                   </div>
                 </div>
 
-                {!selectedConversation.isNewConversation && (
+                {!selectedConversation.isNewConversation && selectedConversation.pendingCount > 0 && (
                   <span className="rounded-full bg-slate-800 dark:bg-slate-900 border border-slate-700/50 px-3 py-1 text-[9px] font-black uppercase text-emerald-400 shadow-sm">
                     {selectedConversation.pendingCount} pending
                   </span>
@@ -673,7 +685,7 @@ export default function Contacts() {
                 </h3>
               )}
 
-              {selectedConversation && !selectedConversation.isNewConversation && (
+              {selectedConversation && !selectedConversation.isNewConversation && selectedConversation.pendingCount > 0 && (
                 <span className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase text-slate-500 dark:text-slate-300 shadow-sm">
                   {selectedConversation.pendingCount} pending
                 </span>
@@ -693,7 +705,7 @@ export default function Contacts() {
                   <span>No prior messages. Send a message to start a conversation with {selectedConversation.name}.</span>
                 </div>
               ) : (
-                selectedConversation.messages.map((contact) => (
+                selectedConversation.messages.map((contact, cIdx) => (
                   <div key={contact._id} className="flex animate-fade-in flex-col gap-3 md:gap-4">
                     
                     {/* Outgoing from user */}
@@ -710,7 +722,7 @@ export default function Contacts() {
                         </p>
                       </div>
                     </div>
-
+ 
                     {/* Replies from support */}
                     {contact.replies && contact.replies.length > 0 ? (
                       contact.replies.map((replyObj, idx) => (
@@ -750,9 +762,9 @@ export default function Contacts() {
                           <div className="mt-2 flex flex-wrap items-center gap-2">
                             {contact.emailReplyStatus && contact.emailReplyStatus !== "not_required" && (
                               <span className="rounded-full bg-emerald-50 px-2 py-1 text-[9px] font-black uppercase text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300">
-                                <CheckCircle2 className="mr-1 inline h-3 w-3" />
-                                {getEmailStatusText(contact)}
-                              </span>
+                                  <CheckCircle2 className="mr-1 inline h-3 w-3" />
+                                  {getEmailStatusText(contact)}
+                                </span>
                             )}
                             <span className="text-[9px] font-bold text-slate-400">
                               {formatTime(contact.repliedAt || contact.createdAt)}
@@ -761,16 +773,18 @@ export default function Contacts() {
                         </div>
                       </div>
                     ) : (
-                      <div className="flex justify-start">
-                        <div className="flex items-center gap-2 rounded-2xl rounded-tl-sm border border-slate-200/80 bg-white p-3 text-slate-500 shadow-sm transition-colors dark:border-slate-800/80 dark:bg-slate-900 dark:text-slate-400">
-                          <div className="flex items-center gap-1">
-                            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-brand-500 [animation-delay:-0.3s]" />
-                            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-brand-500 [animation-delay:-0.15s]" />
-                            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-brand-500" />
+                      cIdx === selectedConversation.messages.length - 1 && (
+                        <div className="flex justify-start">
+                          <div className="flex items-center gap-2 rounded-2xl rounded-tl-sm border border-slate-200/80 bg-white p-3 text-slate-500 shadow-sm transition-colors dark:border-slate-800/80 dark:bg-slate-900 dark:text-slate-400">
+                            <div className="flex items-center gap-1">
+                              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-brand-500 [animation-delay:-0.3s]" />
+                              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-brand-500 [animation-delay:-0.15s]" />
+                              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-brand-500" />
+                            </div>
+                            <span className="text-[10px] font-semibold tracking-wide">Waiting for admin reply...</span>
                           </div>
-                          <span className="text-[10px] font-semibold tracking-wide">Waiting for admin reply...</span>
                         </div>
-                      </div>
+                      )
                     )}
                   </div>
                 ))
