@@ -5,11 +5,15 @@ import express from "express";
 import {
   createContact,
   getMyContacts,
+  markAllRepliesAsRead,
 } from "../controllers/contactController.js";
 import { protect, optionalProtect } from "../middleware/authMiddleware.js";
 import { chatUpload } from "../middleware/upload.js";
 
 const router = express.Router();
+
+// mark all admin replies as read
+router.patch("/read", protect, markAllRepliesAsRead);
 
 // send contact
 router.post("/", optionalProtect, createContact);

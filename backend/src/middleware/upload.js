@@ -58,7 +58,7 @@ export const upload = multer({
 
 const chatStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
-  params: async (req, file) => {
+  params: (req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
     const cleanName = path.basename(file.originalname, ext)
       .replace(/[^a-zA-Z0-9]/g, "_")
@@ -67,18 +67,18 @@ const chatStorage = new CloudinaryStorage({
     const isImage = ["image/jpeg", "image/png", "image/webp", "image/jpg"].includes(file.mimetype);
 
     if (isImage) {
-      return {
+      cb(null, {
         folder: "greengo_support_attachments",
         format: "webp",
         resource_type: "image",
         public_id: publicId
-      };
+      });
     } else {
-      return {
+      cb(null, {
         folder: "greengo_support_attachments",
         resource_type: "raw",
         public_id: `${publicId}${ext}`
-      };
+      });
     }
   }
 });

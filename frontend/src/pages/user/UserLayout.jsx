@@ -65,6 +65,7 @@ export default function UserLayout() {
       updateCartCount();
       loadPendingOrdersCount();
       loadNotifications();
+      loadUnreadSupportCount();
     });
 
     // Background push notifications sync
@@ -95,16 +96,20 @@ export default function UserLayout() {
     // Listen to custom cart updates
     window.addEventListener("cart-updated", updateCartCount);
     window.addEventListener("address-updated", loadUser);
+    window.addEventListener("support-read", loadUnreadSupportCount);
 
     // Poll pending orders count
     const interval = setInterval(loadPendingOrdersCount, 60000);
     const notifInterval = setInterval(loadNotifications, 60000);
+    const supportInterval = setInterval(loadUnreadSupportCount, 60000);
 
     return () => {
       window.removeEventListener("cart-updated", updateCartCount);
       window.removeEventListener("address-updated", loadUser);
+      window.removeEventListener("support-read", loadUnreadSupportCount);
       clearInterval(interval);
       clearInterval(notifInterval);
+      clearInterval(supportInterval);
     };
   }, []);
 
@@ -233,9 +238,6 @@ export default function UserLayout() {
     }
   };
 
-  /**
-   * loadNotifications: Fetches unread notifications count
-   */
   const loadNotifications = async () => {
     const token = await getToken();
     if (!token) return;
@@ -266,14 +268,45 @@ export default function UserLayout() {
     }
   };
 
-  /* --- NAVIGATION LINKS CONFIGS --- */
+  const [unreadSupportCount, setUnreadSupportCount] = useState(0);
+
+  const loadUnreadSupportCount = async () => {
+    const token = await getToken();
+    if (!token) return;
+    try {
+      const res = await fetch(`${getApiUrl()}/api/contact/my`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const contacts = await res.json();
+        let unreadRepliesCount = 0;
+        if (Array.isArray(contacts)) {
+          contacts.forEach((msg) => {
+            if (msg.replies && msg.replies.length > 0) {
+              msg.replies.forEach((r) => {
+                if (r.read === false) {
+                  unreadRepliesCount++;
+                }
+              });
+            } else if (msg.reply && msg.replyRead === false) {
+              unreadRepliesCount++;
+            }
+          });
+        }
+        setUnreadSupportCount(unreadRepliesCount);
+      }
+    } catch (e) {
+      console.error("Failed to load unread support count:", e);
+    }
+  };
+
   const desktopNavLinks = [
     { to: "/user/menu", label: t("menu"), icon: <Home size={20} /> },
     { to: "/user/wishlist", label: t("wishlist"), icon: <Heart size={20} /> },
     { to: "/user/cart", label: t("cart"), icon: <ShoppingCart size={20} /> },
     { to: "/user/orders", label: t("orders"), icon: <Clock size={20} /> },
     { to: "/user/notifications", label: t("notifications"), icon: <Bell size={20} /> },
-    { to: "/user/contact", label: t("contact"), icon: <MessageCircle size={20} /> },
+    { to: "/user/contact", label: t("contact"), icon: <MessageCircle size={20} />, badge: unreadSupportCount },
   ];
 
   const bottomNavLinks = [
@@ -286,7 +319,7 @@ export default function UserLayout() {
   const moreLinks = [
     { to: "/user/wishlist", label: t("wishlist"), icon: <Heart size={20} /> },
     { to: "/user/notifications", label: t("notifications"), icon: <Bell size={20} /> },
-    { to: "/user/contact", label: t("contact"), icon: <MessageCircle size={20} /> },
+    { to: "/user/contact", label: t("contact"), icon: <MessageCircle size={20} />, badge: unreadSupportCount },
     ...(isLoggedIn ? [{ label: t("logout"), icon: <LogOut size={20} />, action: () => { setOpen(false); setShowLogoutConfirm(true); }, danger: true }] : [])
   ];
 
@@ -330,20 +363,27 @@ export default function UserLayout() {
 
         {/* Desktop navigation link block */}
         <nav className="flex-1 px-4 py-6 flex flex-col gap-1.5 overflow-y-auto custom-scrollbar">
-          {desktopNavLinks.map(({ to, end, label, icon }) => (
+          {desktopNavLinks.map(({ to, end, label, icon, badge }) => (
             <NavLink
               key={to}
               to={to}
               end={end}
               className={({ isActive }) => cn(
-                "flex items-center gap-3 px-4.5 py-3 rounded-xl text-sm font-bold transition-all duration-300",
+                "flex items-center justify-between px-4.5 py-3 rounded-xl text-sm font-bold transition-all duration-300",
                 isActive
                   ? "bg-gradient-to-r from-brand-500 to-brand-600 text-white shadow-md shadow-brand-500/20"
                   : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/50 hover:text-slate-900 dark:hover:text-white hover:pl-6"
               )}
             >
-              {icon}
-              {label}
+              <div className="flex items-center gap-3">
+                {icon}
+                {label}
+              </div>
+              {badge !== undefined && badge > 0 && (
+                <span className="bg-brand-500 text-white text-[10px] font-black h-5 min-w-[20px] px-1.5 rounded-full flex items-center justify-center border border-white dark:border-slate-950 shadow-sm shrink-0">
+                  {badge}
+                </span>
+              )}
             </NavLink>
           ))}
         </nav>
@@ -558,11 +598,16 @@ export default function UserLayout() {
 
               {/* Grid content displaying links in a 3-column layout */}
               <div className="grid grid-cols-3 gap-y-8 gap-x-4 mb-4">
-                {moreLinks.map(({ label, icon, to, action, danger }) => {
+                {moreLinks.map(({ label, icon, to, action, danger, badge }) => {
                   const content = (
                     <div className="flex flex-col items-center justify-center relative p-3 rounded-2xl bg-slate-900/60 border border-slate-900/80 hover:border-slate-800 hover:bg-slate-900 active:scale-95 transition-all text-center">
                       <div className="relative text-slate-300">
                         {icon}
+                        {badge !== undefined && badge > 0 && (
+                          <span className="absolute -top-1.5 -right-2 bg-brand-500 text-white text-[9px] font-black h-4 min-w-[16px] px-1 rounded-full flex items-center justify-center border border-slate-900 shadow-sm shrink-0">
+                            {badge}
+                          </span>
+                        )}
                       </div>
                       <span className={cn(
                         "text-[11px] font-semibold mt-2 tracking-tight select-none truncate w-full",

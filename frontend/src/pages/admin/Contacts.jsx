@@ -196,13 +196,41 @@ export default function Contacts() {
           }
         });
       });
+      socket.on("support:read-status", ({ key, readBy }) => {
+        console.log("[Socket] Admin received read-status:", { key, readBy });
+        if (readBy === "user") {
+          setContacts((prevContacts) =>
+            prevContacts.map((c) => {
+              const contactKey = String(c.email || c.uid || c._id || "unknown").toLowerCase();
+              if (contactKey === key) {
+                const updatedReplies = c.replies ? c.replies.map((r) => ({ ...r, read: true })) : [];
+                return { ...c, replies: updatedReplies, replyRead: true };
+              }
+              return c;
+            })
+          );
+        } else if (readBy === "admin") {
+          setContacts((prevContacts) =>
+            prevContacts.map((c) => {
+              const contactKey = String(c.email || c.uid || c._id || "unknown").toLowerCase();
+              if (contactKey === key) {
+                return { ...c, read: true };
+              }
+              return c;
+            })
+          );
+        }
+      });
     };
 
     initSocket();
 
     return () => {
-      if (socket) {
-        socket.disconnect();
+      if (socketRef.current) {
+        socketRef.current.off("connect");
+        socketRef.current.off("support:new-message");
+        socketRef.current.off("support:read-status");
+        socketRef.current.disconnect();
       }
     };
   }, []);
@@ -231,14 +259,30 @@ export default function Contacts() {
         const messages = [...conversation.messages].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
         const latest = messages[messages.length - 1];
         
-        let pendingCount = 0;
-        for (let i = messages.length - 1; i >= 0; i--) {
-          const msg = messages[i];
-          const hasReply = msg.reply || (msg.replies && msg.replies.length > 0);
-          if (!hasReply) {
-            pendingCount++;
+        const pendingCount = messages.filter((m) => m.read === false).length;
+
+        let latestMsgObj = null;
+        if (messages.length > 0) {
+          const lastContact = messages[messages.length - 1];
+          if (lastContact.replies && lastContact.replies.length > 0) {
+            const lastReply = lastContact.replies[lastContact.replies.length - 1];
+            latestMsgObj = {
+              text: lastReply.reply,
+              attachment: lastReply.attachment,
+              createdAt: lastReply.repliedAt || lastReply.createdAt || lastContact.createdAt,
+            };
+          } else if (lastContact.reply) {
+            latestMsgObj = {
+              text: lastContact.reply,
+              attachment: lastContact.attachment,
+              createdAt: lastContact.repliedAt || lastContact.createdAt,
+            };
           } else {
-            break;
+            latestMsgObj = {
+              text: lastContact.message,
+              attachment: lastContact.attachment,
+              createdAt: lastContact.createdAt,
+            };
           }
         }
 
@@ -247,11 +291,12 @@ export default function Contacts() {
           name: latest?.name || conversation.name,
           email: latest?.email || conversation.email,
           latest,
+          latestMsgObj,
           messages,
           pendingCount,
         };
       })
-      .sort((a, b) => new Date(b.latest?.createdAt || 0) - new Date(a.latest?.createdAt || 0));
+      .sort((a, b) => new Date(b.latestMsgObj?.createdAt || 0) - new Date(a.latestMsgObj?.createdAt || 0));
   }, [contacts]);
 
   // Evaluates which conversation object is currently selected based on selectedKey / selectedUser
@@ -307,6 +352,7 @@ export default function Contacts() {
             createdAt: replyObj.repliedAt || msg.createdAt,
             emailReplyStatus: replyObj.emailReplyStatus,
             attachment: replyObj.attachment || null,
+            read: replyObj.read,
           });
         });
       } else if (msg.reply) {
@@ -317,6 +363,7 @@ export default function Contacts() {
           createdAt: msg.repliedAt || msg.createdAt,
           emailReplyStatus: msg.emailReplyStatus,
           attachment: msg.attachment || null,
+          read: msg.replyRead,
         });
       }
     });
@@ -362,6 +409,34 @@ export default function Contacts() {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
   }, [selectedConversation?.messages]);
+
+  // Automatically mark customer messages as read when selecting a conversation
+  useEffect(() => {
+    if (!selectedConversation || selectedConversation.isNewConversation) return;
+
+    const hasUnreadCustomer = selectedConversation.messages.some(m => m.read === false);
+
+    if (hasUnreadCustomer) {
+      const key = selectedConversation.key;
+      getToken().then((token) => {
+        API.patch(
+          "/api/admin/contacts/read",
+          { key },
+          { headers: { Authorization: `Bearer ${token}` } }
+        ).then(() => {
+          setContacts((prev) =>
+            prev.map((c) => {
+              const contactKey = String(c.email || c.uid || c._id || "unknown").toLowerCase();
+              if (contactKey === key) {
+                return { ...c, read: true };
+              }
+              return c;
+            })
+          );
+        }).catch(console.error);
+      });
+    }
+  }, [selectedConversation]);
 
   // Sync URL search parameters with selection states
   useEffect(() => {
@@ -435,7 +510,7 @@ export default function Contacts() {
   };
 
   const renderAttachment = (attachment, type) => {
-    if (!attachment) return null;
+    if (!attachment || !attachment.url) return null;
     const isImage = attachment.type === "image" || attachment.mimeType?.startsWith("image/");
     if (isImage) {
       return (
@@ -688,13 +763,13 @@ export default function Contacts() {
                   </div>
                   {filteredConversations.map((c) => {
                     const isSelected = selectedConversation?.key === c.key;
-                    const lastMsg = c.latest?.message 
-                      ? c.latest.message 
-                      : c.latest?.attachment 
-                        ? (c.latest.attachment.type === "image" ? "📷 Image" : `📄 ${c.latest.attachment.fileName || "File"}`)
-                        : c.latest?.reply 
-                          ? c.latest.reply 
-                          : "";
+                    const latestMsgObj = c.latestMsgObj;
+                    const hasAttachment = latestMsgObj?.attachment && latestMsgObj.attachment.url;
+                    const lastMsg = latestMsgObj?.text
+                      ? latestMsgObj.text
+                      : hasAttachment
+                        ? (latestMsgObj.attachment.type === "image" || latestMsgObj.attachment.mimeType?.startsWith("image/") ? "📷 Image" : `📄 ${latestMsgObj.attachment.fileName || "File"}`)
+                        : "";
                     return (
                       <button
                         key={c.key}
@@ -723,7 +798,7 @@ export default function Contacts() {
                               {c.name}
                             </h4>
                             <span className="text-[9px] text-slate-400 dark:text-slate-500 shrink-0 font-medium ml-1">
-                              {formatTime(c.latest?.createdAt)}
+                              {formatTime(latestMsgObj?.createdAt)}
                             </span>
                           </div>
                           <div className="flex justify-between items-center gap-1.5 mt-0.5">
@@ -942,7 +1017,7 @@ export default function Contacts() {
                                   {msg.text}
                                 </p>
                               )}
-                              {renderAttachment(msg.attachment, "outgoing")}
+                              {msg.attachment && msg.attachment.url && renderAttachment(msg.attachment, "outgoing")}
                               <div className="absolute bottom-1 right-2 flex items-center gap-1.5 select-none">
                                 {msg.emailReplyStatus && msg.emailReplyStatus !== "not_required" && (
                                   <span className="text-[8px] font-extrabold uppercase text-brand-100 flex items-center bg-brand-650/40 px-1.5 py-0.5 rounded">
@@ -950,8 +1025,9 @@ export default function Contacts() {
                                     {msg.emailReplyStatus === "sent" ? "Email sent" : msg.emailReplyStatus === "failed" ? "Email failed" : "Email pending"}
                                   </span>
                                 )}
-                                <span className="text-[9px] font-bold text-brand-100">
+                                <span className="text-[9px] font-bold text-brand-100 flex items-center gap-1">
                                   {formatTime(msg.createdAt)}
+                                  <span className="text-[10px] font-bold">{msg.read === false ? "✓" : "✓✓"}</span>
                                 </span>
                               </div>
                             </div>
@@ -965,7 +1041,7 @@ export default function Contacts() {
                                   {msg.text}
                                 </p>
                               )}
-                              {renderAttachment(msg.attachment, "incoming")}
+                              {msg.attachment && msg.attachment.url && renderAttachment(msg.attachment, "incoming")}
                               <span className="absolute bottom-1 right-2 text-[9px] font-bold text-slate-400 dark:text-slate-500 select-none">
                                 {formatTime(msg.createdAt)}
                               </span>

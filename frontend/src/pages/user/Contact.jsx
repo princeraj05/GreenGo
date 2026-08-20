@@ -70,6 +70,7 @@ export default function Contact() {
         text: msg.message,
         createdAt: msg.createdAt,
         attachment: msg.attachment || null,
+        read: msg.read,
       });
 
       // Support replies (incoming to customer)
@@ -81,6 +82,7 @@ export default function Contact() {
             text: replyObj.reply,
             createdAt: replyObj.createdAt || msg.createdAt,
             attachment: replyObj.attachment || null,
+            read: replyObj.read,
           });
         });
       } else if (msg.reply) {
@@ -90,6 +92,7 @@ export default function Contact() {
           text: msg.reply,
           createdAt: msg.createdAt, // fallback
           attachment: msg.attachment || null,
+          read: msg.replyRead,
         });
       }
     });
@@ -178,8 +181,20 @@ export default function Contact() {
       });
     });
 
+    socket.on("support:read-status", ({ key, readBy }) => {
+      console.log("[Socket] Customer received read-status:", { key, readBy });
+      if (readBy === "admin") {
+        setContacts((prevContacts) =>
+          prevContacts.map((c) => ({ ...c, read: true }))
+        );
+      }
+    });
+
     return () => {
       if (socket) {
+        socket.off("connect");
+        socket.off("support:new-message");
+        socket.off("support:read-status");
         socket.disconnect();
       }
     };
@@ -191,6 +206,28 @@ export default function Contact() {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
   }, [chatMessages]);
+
+  // Mark all unread support replies as read automatically
+  useEffect(() => {
+    if (!contacts || contacts.length === 0) return;
+
+    const hasUnreadIncoming = contacts.some(c => 
+      (c.replies && c.replies.some(r => r.read === false)) ||
+      (c.reply && c.replyRead === false)
+    );
+
+    if (hasUnreadIncoming) {
+      API.patch("/api/contact/read")
+        .then(() => {
+          setContacts(prev => prev.map(c => {
+            const updatedReplies = c.replies ? c.replies.map(r => ({ ...r, read: true })) : [];
+            return { ...c, replies: updatedReplies, replyRead: true };
+          }));
+          window.dispatchEvent(new Event("support-read"));
+        })
+        .catch(console.error);
+    }
+  }, [contacts]);
 
   /* --- EVENT HANDLERS --- */
 
@@ -227,7 +264,7 @@ export default function Contact() {
   };
 
   const renderAttachment = (attachment, type) => {
-    if (!attachment) return null;
+    if (!attachment || !attachment.url) return null;
     const isImage = attachment.type === "image" || attachment.mimeType?.startsWith("image/");
     if (isImage) {
       return (
@@ -323,9 +360,9 @@ export default function Contact() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto w-full animate-fade-in pb-10 px-4 md:px-0 bg-transparent">
+    <div className="max-w-4xl mx-auto w-full animate-fade-in pb-1 bg-transparent flex flex-col h-[calc(100vh-11.5rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] md:h-[700px]">
       {/* Chat Title / Heading */}
-      <div className="mb-6 md:mb-8 flex items-center justify-between">
+      <div className="mb-4 flex items-center justify-between shrink-0">
         <div>
           <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-2.5">
             <MessageCircle className="w-6 h-6 md:w-8 md:h-8 text-brand-500" />
@@ -338,7 +375,7 @@ export default function Contact() {
       </div>
 
       {/* --- COMBINED CHAT WINDOW CONTAINER (WhatsApp/Instagram Style) --- */}
-      <div className="bg-white dark:bg-slate-950 flex flex-col h-[550px] md:h-[650px] transition-colors w-full">
+      <div className="bg-white dark:bg-slate-950 flex flex-col flex-1 border border-slate-250 dark:border-slate-800/60 rounded-2xl overflow-hidden shadow-sm relative w-full">
         
         {/* Chat Window Header */}
         <div className="bg-slate-50 dark:bg-slate-900/80 border-b border-slate-250 dark:border-slate-800/60 p-4 flex items-center justify-between transition-colors">
@@ -416,9 +453,10 @@ export default function Contact() {
                               {msg.text}
                             </p>
                           )}
-                          {renderAttachment(msg.attachment, "outgoing")}
-                          <span className="absolute bottom-1 right-2 text-[9px] font-bold text-brand-100 select-none">
+                          {msg.attachment && msg.attachment.url && renderAttachment(msg.attachment, "outgoing")}
+                          <span className="absolute bottom-1 right-2 text-[9px] font-bold text-brand-100 select-none flex items-center gap-1">
                             {formatTime(msg.createdAt)}
+                            <span className="text-[10px] font-bold">{msg.read === false ? "✓" : "✓✓"}</span>
                           </span>
                         </div>
                       ) : (
@@ -439,7 +477,7 @@ export default function Contact() {
                               {msg.text}
                             </p>
                           )}
-                          {renderAttachment(msg.attachment, "incoming")}
+                          {msg.attachment && msg.attachment.url && renderAttachment(msg.attachment, "incoming")}
                           <span className="absolute bottom-1 right-2 text-[9px] font-bold text-slate-400 dark:text-slate-500 select-none">
                             {formatTime(msg.createdAt)}
                           </span>

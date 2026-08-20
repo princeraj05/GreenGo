@@ -7,11 +7,15 @@ import {
   replyToContact,
   initiateContact,
   sendAdminEmail,
+  markCustomerMessagesAsRead,
 } from "../controllers/adminContactController.js";
 import { protect } from "../middleware/authMiddleware.js";
 import { adminOnly } from "../middleware/adminMiddleware.js";
 
 const router = express.Router();
+
+// mark customer messages as read
+router.patch("/read", protect, adminOnly, markCustomerMessagesAsRead);
 
 // get all user contacts
 router.get("/", protect, adminOnly, getAllContacts);

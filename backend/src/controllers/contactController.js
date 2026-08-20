@@ -7,6 +7,8 @@ export const createContact = async (req, res) => {
     const { name, email, subject, message, attachment } = req.body;
     const uid = req.user?.id || req.user?._id || req.user?.uid || null;
 
+    const hasAttachment = attachment && attachment.url;
+
     const contact = await Contact.create({
       uid,
       source: uid ? "user" : "public",
@@ -14,13 +16,13 @@ export const createContact = async (req, res) => {
       email,
       subject: subject || "",
       message: message || "",
-      attachment: attachment || null,
+      attachment: hasAttachment ? attachment : undefined,
       emailReplyStatus: uid ? "not_required" : "pending",
     });
 
     const displayMsg = message 
       ? message 
-      : attachment 
+      : hasAttachment 
         ? `[Attachment: ${attachment.fileName || "File"}]`
         : "";
 
@@ -69,5 +71,50 @@ export const getMyContacts = async (req, res) => {
     res.json(contacts);
   } catch (err) {
     res.status(500).json({ message: "Failed to load contacts" });
+  }
+};
+
+export const markAllRepliesAsRead = async (req, res) => {
+  try {
+    const uid = req.user?.id || req.user?._id || req.user?.uid;
+    if (!uid) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    const contacts = await Contact.find({ uid });
+
+    let updatedAny = false;
+    for (const contact of contacts) {
+      let contactUpdated = false;
+
+      if (contact.replies && contact.replies.length > 0) {
+        contact.replies.forEach((r) => {
+          if (r.read !== true) {
+            r.read = true;
+            contactUpdated = true;
+          }
+        });
+      }
+
+      if (contact.reply && contact.replyRead !== true) {
+        contact.replyRead = true;
+        contactUpdated = true;
+      }
+
+      if (contactUpdated) {
+        await contact.save();
+        updatedAny = true;
+      }
+    }
+
+    const io = req.app.get("io");
+    if (io) {
+      io.to("admins").emit("support:read-status", { key: String(uid).toLowerCase(), readBy: "user" });
+    }
+
+    res.json({ success: true, message: "Messages marked as read" });
+  } catch (err) {
+    console.error("Failed to mark replies as read:", err);
+    res.status(500).json({ success: false, message: "Failed to mark messages as read" });
   }
 };

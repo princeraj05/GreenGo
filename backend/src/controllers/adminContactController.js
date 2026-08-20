@@ -65,13 +65,15 @@ export const replyToContact = async (req, res) => {
       });
     }
 
+    const hasAttachment = attachment && attachment.url;
+
     const newReplyObj = {
       reply: cleanReply,
       repliedAt: new Date(),
       replyDelivery: shouldSendEmail ? "email" : "chat",
       emailReplyStatus: shouldSendEmail ? "pending" : "not_required",
       emailReplyError: "",
-      attachment: attachment,
+      attachment: hasAttachment ? attachment : undefined,
     };
 
     contact.replies.push(newReplyObj);
@@ -197,13 +199,15 @@ export const initiateContact = async (req, res) => {
       contact.replies = [];
     }
 
+    const hasAttachment = attachment && attachment.url;
+
     contact.replies.push({
       reply: cleanMessage,
       repliedAt: new Date(),
       replyDelivery: "chat",
       emailReplyStatus: "not_required",
       emailReplyError: "",
-      attachment: attachment || null,
+      attachment: hasAttachment ? attachment : undefined,
     });
 
     contact.reply = cleanMessage;
@@ -290,5 +294,48 @@ export const sendAdminEmail = async (req, res) => {
   } catch (err) {
     console.error("Failed to send admin email:", err);
     res.status(500).json({ message: "Failed to send email. Check SMTP settings." });
+  }
+};
+
+export const markCustomerMessagesAsRead = async (req, res) => {
+  try {
+    const { key } = req.body;
+    if (!key) {
+      return res.status(400).json({ success: false, message: "key is required" });
+    }
+
+    const isValidObjectId = (id) => /^[0-9a-fA-F]{24}$/.test(id);
+
+    const contacts = await Contact.find({
+      $or: [
+        { uid: key },
+        { email: new RegExp(`^${key}$`, "i") },
+        { _id: isValidObjectId(key) ? key : null }
+      ]
+    });
+
+    let updatedAny = false;
+    for (const contact of contacts) {
+      if (contact.read !== true) {
+        contact.read = true;
+        await contact.save();
+        updatedAny = true;
+      }
+    }
+
+    const io = req.app.get("io");
+    if (io) {
+      const contactWithUid = contacts.find(c => c.uid);
+      const targetUid = contactWithUid ? contactWithUid.uid : (isValidObjectId(key) ? key : null);
+      if (targetUid) {
+        io.to(`user:${targetUid}`).emit("support:read-status", { key, readBy: "admin" });
+      }
+      io.to("admins").emit("support:read-status", { key, readBy: "admin" });
+    }
+
+    res.json({ success: true, message: "Conversation marked as read" });
+  } catch (err) {
+    console.error("Failed to mark customer messages as read:", err);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };

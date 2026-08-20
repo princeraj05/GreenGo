@@ -21,8 +21,10 @@ const contactSchema = new mongoose.Schema(
       size: { type: Number },
       uploadedAt: { type: Date, default: Date.now }
     },
+    read: { type: Boolean, default: false },
 
     reply: { type: String, default: "" },
+    replyRead: { type: Boolean, default: false },
     repliedAt: { type: Date },
     replyDelivery: {
       type: String,
@@ -58,6 +60,7 @@ const contactSchema = new mongoose.Schema(
           size: { type: Number },
           uploadedAt: { type: Date, default: Date.now }
         },
+        read: { type: Boolean, default: false },
       },
     ],
     status: {
