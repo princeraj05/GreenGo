@@ -150,10 +150,11 @@ export const replyToContact = async (req, res) => {
 
     const io = req.app.get("io");
     if (io) {
+      const contactObj = contact.toObject ? contact.toObject() : contact;
       if (contact.uid) {
-        io.to(`user:${contact.uid}`).emit("support:new-message", contact);
+        io.to(`user:${contact.uid}`).emit("support:new-message", contactObj);
       }
-      io.to("admins").emit("support:new-message", contact);
+      io.to("admins").emit("support:new-message", contactObj);
     }
 
     res.json({
@@ -239,8 +240,9 @@ export const initiateContact = async (req, res) => {
 
     const io = req.app.get("io");
     if (io) {
-      io.to(`user:${user._id}`).emit("support:new-message", contact);
-      io.to("admins").emit("support:new-message", contact);
+      const contactObj = contact.toObject ? contact.toObject() : contact;
+      io.to(`user:${user._id}`).emit("support:new-message", contactObj);
+      io.to("admins").emit("support:new-message", contactObj);
     }
 
     res.json({ success: true, contact });

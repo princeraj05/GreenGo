@@ -48,7 +48,7 @@ export const createContact = async (req, res) => {
 
     const io = req.app.get("io");
     if (io) {
-      io.to("admins").emit("support:new-message", contact);
+      io.to("admins").emit("support:new-message", contact.toObject ? contact.toObject() : contact);
     }
 
     res.json({

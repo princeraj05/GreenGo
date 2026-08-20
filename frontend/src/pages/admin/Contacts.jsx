@@ -187,15 +187,16 @@ export default function Contacts() {
     loadContacts();
     loadAllUsers();
 
-    let socket;
+    let activeSocket = null;
     const initSocket = async () => {
       const token = await getToken();
       if (!token) return;
 
-      socket = io(getApiUrl(), {
+      const socket = io(getApiUrl(), {
         auth: { token },
         transports: ["websocket", "polling"],
       });
+      activeSocket = socket;
       socketRef.current = socket;
 
       socket.on("connect", () => {
@@ -281,13 +282,13 @@ export default function Contacts() {
     initSocket();
 
     return () => {
-      if (socketRef.current) {
-        socketRef.current.off("connect");
-        socketRef.current.off("disconnect");
-        socketRef.current.off("support:new-message");
-        socketRef.current.off("support:delivered-status");
-        socketRef.current.off("support:read-status");
-        socketRef.current.disconnect();
+      if (activeSocket) {
+        activeSocket.off("connect");
+        activeSocket.off("disconnect");
+        activeSocket.off("support:new-message");
+        activeSocket.off("support:delivered-status");
+        activeSocket.off("support:read-status");
+        activeSocket.disconnect();
       }
     };
   }, []);
