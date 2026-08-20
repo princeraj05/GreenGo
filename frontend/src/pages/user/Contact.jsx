@@ -707,7 +707,7 @@ export default function Contact() {
         </div>
 
         {/* Input Bar (WhatsApp/Instagram Style) */}
-        <div className="bg-[#f0f2f5] dark:bg-[#111b21] border-t border-slate-100 dark:border-slate-900/60 p-3 flex flex-col gap-2 shrink-0 relative transition-colors">
+        <div className="bg-[#efeae2] dark:bg-[#0b141a] px-4 pb-4 pt-0.5 flex flex-col gap-2 shrink-0 relative transition-colors">
           {/* File Preview Bar */}
           {selectedFile && (
             <div className="flex items-center justify-between p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 animate-fade-in shadow-sm">
