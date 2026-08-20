@@ -55,6 +55,7 @@ export default function Contact() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [filePreview, setFilePreview] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(false);
+  const [supportTyping, setSupportTyping] = useState(false);
   const fileInputRef = useRef(null);
 
   // Flatten customer messages and support agent replies sequentially
@@ -190,11 +191,17 @@ export default function Contact() {
       }
     });
 
+    socket.on("support:typing", ({ typing }) => {
+      console.log("[Socket] Customer received support typing status:", typing);
+      setSupportTyping(typing);
+    });
+
     return () => {
       if (socket) {
         socket.off("connect");
         socket.off("support:new-message");
         socket.off("support:read-status");
+        socket.off("support:typing");
         socket.disconnect();
       }
     };
@@ -361,19 +368,6 @@ export default function Contact() {
 
   return (
     <div className="max-w-4xl mx-auto w-full animate-fade-in pb-1 bg-transparent flex flex-col h-[calc(100vh-11.5rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] md:h-[700px]">
-      {/* Chat Title / Heading */}
-      <div className="mb-4 flex items-center justify-between shrink-0">
-        <div>
-          <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-2.5">
-            <MessageCircle className="w-6 h-6 md:w-8 md:h-8 text-brand-500" />
-            Support
-          </h2>
-          <p className="text-slate-500 dark:text-slate-400 mt-1 text-xs sm:text-sm font-medium">
-            We're here to help. Chat with our support team.
-          </p>
-        </div>
-      </div>
-
       {/* --- COMBINED CHAT WINDOW CONTAINER (WhatsApp/Instagram Style) --- */}
       <div className="bg-white dark:bg-slate-950 flex flex-col flex-1 border border-slate-250 dark:border-slate-800/60 rounded-2xl overflow-hidden shadow-sm relative w-full">
         
@@ -488,14 +482,10 @@ export default function Contact() {
                 );
               });
 
-              // Add typing indicator at the end of mapped list if applicable
-              const lastContact = contacts[contacts.length - 1];
-              const showTyping = lastContact && !lastContact.reply && (!lastContact.replies || lastContact.replies.length === 0);
-
               return (
                 <>
                   {mapped}
-                  {showTyping && (
+                  {supportTyping && (
                     <div className="flex justify-start mt-3 animate-fade-in">
                       <div className="bg-white dark:bg-[#202c33] text-slate-500 dark:text-slate-400 p-3 rounded-2xl rounded-tl-none shadow-sm flex items-center gap-2 border border-slate-200/50 dark:border-none transition-colors">
                         <div className="flex items-center gap-1">

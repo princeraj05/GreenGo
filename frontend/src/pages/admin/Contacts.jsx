@@ -161,6 +161,25 @@ export default function Contacts() {
   }
 
   const socketRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
+
+  const handleAdminTyping = () => {
+    if (!socketRef.current || !selectedConversation) return;
+
+    const targetUserId = selectedConversation.messages.find(m => m.uid)?.uid;
+    if (!targetUserId) return;
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    } else {
+      socketRef.current.emit("support:typing", { targetUserId, typing: true });
+    }
+
+    typingTimeoutRef.current = setTimeout(() => {
+      socketRef.current.emit("support:typing", { targetUserId, typing: false });
+      typingTimeoutRef.current = null;
+    }, 3000);
+  };
 
   // Load support submissions and user list on initial mount
   useEffect(() => {
@@ -637,6 +656,16 @@ export default function Contacts() {
     } finally {
       setSending(false);
       setUploadProgress(false);
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = null;
+      }
+      if (selectedConversation && socketRef.current) {
+        const targetUserId = selectedConversation.messages.find(m => m.uid)?.uid;
+        if (targetUserId) {
+          socketRef.current.emit("support:typing", { targetUserId, typing: false });
+        }
+      }
     }
   };
 
@@ -1125,9 +1154,10 @@ export default function Contacts() {
                     <input
                       type="text"
                       value={replyText[selectedConversation.key] || ""}
-                      onChange={(event) =>
-                        setReplyText({ ...replyText, [selectedConversation.key]: event.target.value })
-                      }
+                      onChange={(event) => {
+                        setReplyText({ ...replyText, [selectedConversation.key]: event.target.value });
+                        handleAdminTyping();
+                      }}
                       onKeyDown={handleKeyDown}
                       placeholder={uploadProgress ? "Uploading attachment..." : `Type a message...`}
                       disabled={uploadProgress}

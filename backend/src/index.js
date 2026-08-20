@@ -218,6 +218,18 @@ io.on("connection", (socket) => {
     console.log(`[Socket] Admin joined admins room: user=${socket.user.id || socket.user._id}`);
   }
 
+  socket.on("support:typing", (data) => {
+    if (socket.user.role === "admin") {
+      const { targetUserId, typing } = data;
+      if (targetUserId) {
+        io.to(`user:${targetUserId}`).emit("support:typing", { typing });
+      }
+    } else {
+      const { typing } = data;
+      io.to("admins").emit("support:typing", { userId: socket.user.id || socket.user._id, typing });
+    }
+  });
+
   socket.on("disconnect", () => {
     console.log(`[Socket] Disconnected: user=${socket.user.id || socket.user._id}`);
   });
