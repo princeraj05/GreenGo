@@ -246,10 +246,12 @@ export default function Contacts() {
       };
     }
     
-    const found = conversations.find((conversation) => conversation.key === selectedKey);
-    if (found) return found;
+    if (selectedKey) {
+      const found = conversations.find((conversation) => conversation.key === selectedKey);
+      if (found) return found;
+    }
 
-    return conversations[0] || null;
+    return null;
   }, [conversations, selectedKey, selectedUser]);
 
   // Set of active conversation keys to quickly check if a user already has an active thread
@@ -322,7 +324,8 @@ export default function Contacts() {
     const u = users.find((usr) => usr._id === userId);
     if (u) {
       const key = String(u.email || u.uid || u._id || "unknown").toLowerCase();
-      setSearchParams({ user: u._id, chat: key });
+      const shouldReplace = !!(chatParam || userParam);
+      setSearchParams({ user: u._id, chat: key }, { replace: shouldReplace });
     } else {
       setSearchParams({}, { replace: true });
     }
@@ -353,7 +356,8 @@ export default function Contacts() {
 
         if (res.data?.contact) {
           const key = String(res.data.contact.email || res.data.contact.uid || res.data.contact._id).toLowerCase();
-          setSearchParams({ chat: key });
+          const shouldReplace = !!(chatParam || userParam);
+          setSearchParams({ chat: key }, { replace: shouldReplace });
         }
       } else {
         const target =
@@ -512,7 +516,8 @@ export default function Contacts() {
                           setSelectedKey(c.key);
                           setSelectedUser(null);
                           setSearch("");
-                          setSearchParams({ chat: c.key });
+                          const shouldReplace = !!(chatParam || userParam);
+                          setSearchParams({ chat: c.key }, { replace: shouldReplace });
                         }}
                         className={`w-full text-left px-4 py-3.5 flex items-center gap-3 transition-colors ${
                           isSelected
