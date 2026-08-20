@@ -439,9 +439,9 @@ export default function Contact() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto w-full animate-fade-in pb-1 bg-transparent flex flex-col h-[calc(100vh-11.5rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] md:h-[700px]">
+    <div className="w-[calc(100%+2rem)] sm:w-[calc(100%+3rem)] lg:w-[calc(100%+4rem)] -mx-4 sm:-mx-6 lg:-mx-8 -mt-4 sm:-mt-6 lg:-mt-8 -mb-[calc(5.5rem+env(safe-area-inset-bottom))] md:-mb-8 flex flex-col h-[calc(100vh-9.5rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] md:h-screen max-w-none animate-fade-in bg-transparent pb-1">
       {/* --- COMBINED CHAT WINDOW CONTAINER (WhatsApp/Instagram Style) --- */}
-      <div className="bg-white dark:bg-slate-950 flex flex-col flex-1 border border-slate-200/50 dark:border-slate-800/60 rounded-2xl overflow-hidden shadow-sm relative w-full">
+      <div className="bg-white dark:bg-slate-950 flex flex-col flex-1 border border-slate-200/50 dark:border-slate-800/60 md:rounded-2xl rounded-none overflow-hidden shadow-sm relative w-full">
         
         {/* Chat Window Header */}
         <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50 p-4 transition-colors dark:border-slate-800/60 dark:bg-slate-900/80 md:p-5">
