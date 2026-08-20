@@ -89,8 +89,11 @@ export const markAllRepliesAsRead = async (req, res) => {
 
       if (contact.replies && contact.replies.length > 0) {
         contact.replies.forEach((r) => {
-          if (r.read !== true) {
+          if (r.read !== true || r.status !== "read") {
             r.read = true;
+            r.status = "read";
+            r.readAt = r.readAt || new Date();
+            r.deliveredAt = r.deliveredAt || new Date();
             contactUpdated = true;
           }
         });

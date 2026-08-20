@@ -22,6 +22,9 @@ const contactSchema = new mongoose.Schema(
       uploadedAt: { type: Date, default: Date.now }
     },
     read: { type: Boolean, default: false },
+    messageStatus: { type: String, enum: ["sent", "delivered", "read"], default: "sent" },
+    readAt: { type: Date, default: null },
+    deliveredAt: { type: Date, default: null },
 
     reply: { type: String, default: "" },
     replyRead: { type: Boolean, default: false },
@@ -61,6 +64,9 @@ const contactSchema = new mongoose.Schema(
           uploadedAt: { type: Date, default: Date.now }
         },
         read: { type: Boolean, default: false },
+        status: { type: String, enum: ["sent", "delivered", "read"], default: "sent" },
+        readAt: { type: Date, default: null },
+        deliveredAt: { type: Date, default: null },
       },
     ],
     status: {

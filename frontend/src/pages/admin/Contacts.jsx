@@ -162,6 +162,7 @@ export default function Contacts() {
 
   const socketRef = useRef(null);
   const typingTimeoutRef = useRef(null);
+  const emittedReadMessageIds = useRef(new Set());
 
   const handleAdminTyping = () => {
     if (!socketRef.current || !selectedConversation) return;
@@ -201,6 +202,11 @@ export default function Contacts() {
         console.log("[Socket] Admin connected to support real-time");
       });
 
+      socket.on("disconnect", () => {
+        console.log("[Socket] Admin disconnected from support real-time");
+        emittedReadMessageIds.current.clear();
+      });
+
       socket.on("support:new-message", (incomingContact) => {
         console.log("[Socket] Admin received support message:", incomingContact);
 
@@ -214,31 +220,61 @@ export default function Contacts() {
             return [incomingContact, ...prevContacts];
           }
         });
+
+        // Immediate delivery confirmation if it is a customer message (user-message)
+        if (incomingContact.messageStatus === "sent") {
+          socket.emit("support:mark-as-delivered", {
+            messageId: incomingContact._id,
+            conversationKey: String(incomingContact.uid || incomingContact.email || incomingContact._id).toLowerCase(),
+            messageType: "user-message"
+          });
+        }
       });
-      socket.on("support:read-status", ({ key, readBy }) => {
-        console.log("[Socket] Admin received read-status:", { key, readBy });
-        if (readBy === "user") {
-          setContacts((prevContacts) =>
-            prevContacts.map((c) => {
-              const contactKey = String(c.email || c.uid || c._id || "unknown").toLowerCase();
-              if (contactKey === key) {
-                const updatedReplies = c.replies ? c.replies.map((r) => ({ ...r, read: true })) : [];
+
+      socket.on("support:delivered-status", ({ messageId, conversationKey, messageType }) => {
+        console.log("[Socket] Admin received delivered-status:", { messageId, conversationKey, messageType });
+        setContacts((prevContacts) =>
+          prevContacts.map((c) => {
+            const contactKey = String(c.email || c.uid || c._id || "unknown").toLowerCase();
+            if (contactKey === conversationKey) {
+              if (messageType === "user-message" && c._id === messageId) {
+                return { ...c, messageStatus: "delivered", deliveredAt: new Date() };
+              } else if (messageType === "admin-reply" && c.replies && c.replies.length > 0) {
+                const updatedReplies = c.replies.map((r) => {
+                  if (r._id === messageId) {
+                    return { ...r, status: "delivered", deliveredAt: new Date() };
+                  }
+                  return r;
+                });
+                return { ...c, replies: updatedReplies };
+              }
+            }
+            return c;
+          })
+        );
+      });
+
+      socket.on("support:read-status", ({ messageId, conversationKey, messageType, readBy, readAt }) => {
+        console.log("[Socket] Admin received read-status:", { messageId, conversationKey, messageType, readBy, readAt });
+        setContacts((prevContacts) =>
+          prevContacts.map((c) => {
+            const contactKey = String(c.email || c.uid || c._id || "unknown").toLowerCase();
+            if (contactKey === conversationKey) {
+              if (messageType === "user-message" && c._id === messageId) {
+                return { ...c, messageStatus: "read", read: true, readAt: readAt };
+              } else if (messageType === "admin-reply" && c.replies && c.replies.length > 0) {
+                const updatedReplies = c.replies.map((r) => {
+                  if (r._id === messageId) {
+                    return { ...r, status: "read", read: true, readAt: readAt };
+                  }
+                  return r;
+                });
                 return { ...c, replies: updatedReplies, replyRead: true };
               }
-              return c;
-            })
-          );
-        } else if (readBy === "admin") {
-          setContacts((prevContacts) =>
-            prevContacts.map((c) => {
-              const contactKey = String(c.email || c.uid || c._id || "unknown").toLowerCase();
-              if (contactKey === key) {
-                return { ...c, read: true };
-              }
-              return c;
-            })
-          );
-        }
+            }
+            return c;
+          })
+        );
       });
     };
 
@@ -247,7 +283,9 @@ export default function Contacts() {
     return () => {
       if (socketRef.current) {
         socketRef.current.off("connect");
+        socketRef.current.off("disconnect");
         socketRef.current.off("support:new-message");
+        socketRef.current.off("support:delivered-status");
         socketRef.current.off("support:read-status");
         socketRef.current.disconnect();
       }
@@ -359,6 +397,7 @@ export default function Contacts() {
         createdAt: msg.createdAt,
         name: selectedConversation.name,
         attachment: msg.attachment || null,
+        messageStatus: msg.messageStatus || "sent",
       });
 
       // Admin replies (outgoing from admin)
@@ -372,6 +411,7 @@ export default function Contacts() {
             emailReplyStatus: replyObj.emailReplyStatus,
             attachment: replyObj.attachment || null,
             read: replyObj.read,
+            status: replyObj.status || (replyObj.read ? "read" : "sent"),
           });
         });
       } else if (msg.reply) {
@@ -383,6 +423,7 @@ export default function Contacts() {
           emailReplyStatus: msg.emailReplyStatus,
           attachment: msg.attachment || null,
           read: msg.replyRead,
+          status: msg.replyRead ? "read" : "sent",
         });
       }
     });
@@ -429,33 +470,22 @@ export default function Contacts() {
     }
   }, [selectedConversation?.messages]);
 
-  // Automatically mark customer messages as read when selecting a conversation
+  // Automatically mark customer messages as read when selecting/viewing a conversation
   useEffect(() => {
-    if (!selectedConversation || selectedConversation.isNewConversation) return;
+    if (!selectedConversation || selectedConversation.isNewConversation || !socketRef.current) return;
 
-    const hasUnreadCustomer = selectedConversation.messages.some(m => m.read === false);
-
-    if (hasUnreadCustomer) {
-      const key = selectedConversation.key;
-      const token = getToken();
-      
-      API.patch(
-        "/api/admin/contacts/read",
-        { key },
-        { headers: { Authorization: `Bearer ${token}` } }
-      ).then(() => {
-        setContacts((prev) =>
-          prev.map((c) => {
-            const contactKey = String(c.email || c.uid || c._id || "unknown").toLowerCase();
-            if (contactKey === key) {
-              return { ...c, read: true };
-            }
-            return c;
-          })
-        );
-      }).catch(console.error);
-    }
-  }, [selectedConversation]);
+    selectedConversation.messages.forEach((m) => {
+      if (m.messageStatus !== "read" && !emittedReadMessageIds.current.has(m._id)) {
+        emittedReadMessageIds.current.add(m._id);
+        socketRef.current.emit("support:mark-as-read", {
+          messageId: m._id,
+          conversationKey: selectedConversation.key,
+          messageType: "user-message",
+          readBy: "admin",
+        });
+      }
+    });
+  }, [selectedConversation, selectedConversation?.messages]);
 
   // Sync URL search parameters with selection states
   useEffect(() => {
@@ -1043,6 +1073,13 @@ export default function Contacts() {
                               const hasAttachment = msg.attachment && !!msg.attachment.url;
                               const isImage = hasAttachment && (msg.attachment.type === "image" || msg.attachment.mimeType?.startsWith("image/"));
 
+                              const isMsgRead = msg.status === "read" || msg.read === true;
+                              const bubbleBgClass = isMsgRead ? "bg-emerald-600" : "bg-brand-500";
+                              const docBgClass = isMsgRead 
+                                ? `bg-emerald-600 hover:bg-emerald-700 border-emerald-500 text-white` 
+                                : `bg-brand-500 hover:bg-brand-600 border-brand-400 text-white`;
+                              const tickColorClass = isMsgRead ? "text-sky-300 font-extrabold" : "text-slate-300/70";
+
                               const renderEmailStatus = () => {
                                 if (!msg.emailReplyStatus || msg.emailReplyStatus === "not_required") return null;
                                 return (
@@ -1056,7 +1093,7 @@ export default function Contacts() {
                               if (hasAttachment && !hasText) {
                                 if (isImage) {
                                   return (
-                                    <div className={`relative max-w-[85%] sm:max-w-[75%] p-1 bg-brand-500 shadow-sm ${
+                                    <div className={`relative max-w-[85%] sm:max-w-[75%] p-1 ${bubbleBgClass} shadow-sm ${
                                       isFirstInGroup ? "rounded-2xl rounded-tr-none" : "rounded-2xl"
                                     }`}>
                                       <img 
@@ -1069,7 +1106,7 @@ export default function Contacts() {
                                         {renderEmailStatus()}
                                         <span className="text-[9px] font-bold text-white flex items-center gap-1">
                                           {formatTime(msg.createdAt)}
-                                          <span className="text-[10px] font-bold">{msg.read === false ? "✓" : "✓✓"}</span>
+                                          <span className={`text-[10px] ${tickColorClass}`}>✓✓</span>
                                         </span>
                                       </div>
                                     </div>
@@ -1082,7 +1119,7 @@ export default function Contacts() {
                                       rel="noopener noreferrer" 
                                       className={`relative flex items-center gap-3 p-3 transition-colors w-64 text-left border shadow-sm ${
                                         isFirstInGroup ? "rounded-2xl rounded-tr-none" : "rounded-2xl"
-                                      } bg-brand-500 hover:bg-brand-600 border-brand-400 text-white`}
+                                      } ${docBgClass}`}
                                     >
                                       <div className="w-10 h-10 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 bg-brand-400/20 text-brand-100">
                                         {msg.attachment.fileName?.split('.').pop().toUpperCase() || "DOC"}
@@ -1099,7 +1136,7 @@ export default function Contacts() {
                                         {renderEmailStatus()}
                                         <span className="text-[9px] font-bold text-brand-100 flex items-center gap-1">
                                           {formatTime(msg.createdAt)}
-                                          <span className="text-[10px] font-bold">{msg.read === false ? "✓" : "✓✓"}</span>
+                                          <span className={`text-[10px] ${tickColorClass}`}>✓✓</span>
                                         </span>
                                       </div>
                                     </a>
@@ -1108,7 +1145,7 @@ export default function Contacts() {
                               }
 
                               return (
-                                <div className={`relative max-w-[85%] sm:max-w-[75%] px-3.5 pt-2 pb-5 bg-brand-500 text-white shadow-sm ${
+                                <div className={`relative max-w-[85%] sm:max-w-[75%] px-3.5 pt-2 pb-5 ${bubbleBgClass} text-white shadow-sm ${
                                   isFirstInGroup ? "rounded-2xl rounded-tr-none" : "rounded-2xl"
                                 }`}>
                                   {msg.text && (
@@ -1121,7 +1158,7 @@ export default function Contacts() {
                                     {renderEmailStatus()}
                                     <span className="text-[9px] font-bold text-brand-100 flex items-center gap-1">
                                       {formatTime(msg.createdAt)}
-                                      <span className="text-[10px] font-bold">{msg.read === false ? "✓" : "✓✓"}</span>
+                                      <span className={`text-[10px] ${tickColorClass}`}>✓✓</span>
                                     </span>
                                   </div>
                                 </div>

@@ -316,8 +316,11 @@ export const markCustomerMessagesAsRead = async (req, res) => {
 
     let updatedAny = false;
     for (const contact of contacts) {
-      if (contact.read !== true) {
+      if (contact.read !== true || contact.messageStatus !== "read") {
         contact.read = true;
+        contact.messageStatus = "read";
+        contact.readAt = contact.readAt || new Date();
+        contact.deliveredAt = contact.deliveredAt || new Date();
         await contact.save();
         updatedAny = true;
       }

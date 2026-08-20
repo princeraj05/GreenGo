@@ -33,6 +33,7 @@ import adminAnalyticsRoutes from "./routes/adminAnalyticsRoutes.js";
 import couponRoutes from "./routes/couponRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import reviewRoutes from "./routes/reviewRoutes.js";
+import Contact from "./models/Contact.js";
 
 dotenv.config();
 connectDB();
@@ -217,6 +218,214 @@ io.on("connection", (socket) => {
     socket.join("admins");
     console.log(`[Socket] Admin joined admins room: user=${socket.user.id || socket.user._id}`);
   }
+
+  // Delivery Catch-up logic on connection
+  const userId = socket.user.id || socket.user._id;
+  const userRole = socket.user.role;
+
+  if (userRole === "customer") {
+    Contact.find({ uid: userId })
+      .then(async (contacts) => {
+        for (const contact of contacts) {
+          let docUpdated = false;
+          if (contact.replies && contact.replies.length > 0) {
+            contact.replies.forEach((r) => {
+              if (r.status === "sent") {
+                r.status = "delivered";
+                r.deliveredAt = new Date();
+                docUpdated = true;
+                
+                // Emit delivered status to admins
+                io.to("admins").emit("support:delivered-status", {
+                  messageId: r._id,
+                  conversationKey: String(userId).toLowerCase(),
+                  messageType: "admin-reply"
+                });
+                // Emit to self user room to keep multiple tabs in sync
+                socket.emit("support:delivered-status", {
+                  messageId: r._id,
+                  conversationKey: String(userId).toLowerCase(),
+                  messageType: "admin-reply"
+                });
+              }
+            });
+          }
+          if (docUpdated) {
+            await contact.save();
+          }
+        }
+      })
+      .catch((err) => console.error("[Socket] Catch-up delivery customer failed:", err));
+  } else if (userRole === "admin") {
+    Contact.find({ messageStatus: "sent" })
+      .then(async (contacts) => {
+        for (const contact of contacts) {
+          contact.messageStatus = "delivered";
+          contact.deliveredAt = new Date();
+          await contact.save();
+
+          const clientKey = String(contact.uid || contact.email || contact._id).toLowerCase();
+          // Emit delivered status to sender/customer
+          if (contact.uid) {
+            io.to(`user:${contact.uid}`).emit("support:delivered-status", {
+              messageId: contact._id,
+              conversationKey: clientKey,
+              messageType: "user-message"
+            });
+          }
+          // Emit to admins
+          io.to("admins").emit("support:delivered-status", {
+            messageId: contact._id,
+            conversationKey: clientKey,
+            messageType: "user-message"
+          });
+        }
+      })
+      .catch((err) => console.error("[Socket] Catch-up delivery admin failed:", err));
+  }
+
+  // Socket delivery marking
+  socket.on("support:mark-as-delivered", async (data) => {
+    try {
+      const { messageId, conversationKey, messageType } = data;
+      if (!messageId) return;
+
+      const currentUserId = socket.user.id || socket.user._id;
+      const currentUserRole = socket.user.role;
+
+      if (messageType === "user-message" && currentUserRole === "admin") {
+        const contact = await Contact.findById(messageId);
+        if (!contact) return;
+
+        if (contact.messageStatus === "sent") {
+          contact.messageStatus = "delivered";
+          contact.deliveredAt = new Date();
+          await contact.save();
+
+          const clientKey = String(contact.uid || contact.email || contact._id).toLowerCase();
+          if (contact.uid) {
+            io.to(`user:${contact.uid}`).emit("support:delivered-status", {
+              messageId: contact._id,
+              conversationKey: clientKey,
+              messageType: "user-message"
+            });
+          }
+          io.to("admins").emit("support:delivered-status", {
+            messageId: contact._id,
+            conversationKey: clientKey,
+            messageType: "user-message"
+          });
+        }
+      } else if (messageType === "admin-reply" && currentUserRole === "customer") {
+        const contact = await Contact.findOne({ "replies._id": messageId });
+        if (!contact) return;
+
+        if (String(contact.uid) !== String(currentUserId)) return;
+
+        const reply = contact.replies.id(messageId);
+        if (reply && reply.status === "sent") {
+          reply.status = "delivered";
+          reply.deliveredAt = new Date();
+          await contact.save();
+
+          const clientKey = String(currentUserId).toLowerCase();
+          io.to("admins").emit("support:delivered-status", {
+            messageId: reply._id,
+            conversationKey: clientKey,
+            messageType: "admin-reply"
+          });
+          socket.emit("support:delivered-status", {
+            messageId: reply._id,
+            conversationKey: clientKey,
+            messageType: "admin-reply"
+          });
+        }
+      }
+    } catch (err) {
+      console.error("[Socket] support:mark-as-delivered error:", err);
+    }
+  });
+
+  // Socket read marking
+  socket.on("support:mark-as-read", async (data) => {
+    try {
+      const { messageId, conversationKey, messageType, readBy } = data;
+      if (!messageId) return;
+
+      const currentUserId = socket.user.id || socket.user._id;
+      const currentUserRole = socket.user.role;
+
+      if (readBy === "admin" && currentUserRole === "admin" && messageType === "user-message") {
+        const contact = await Contact.findById(messageId);
+        if (!contact) return;
+
+        if (contact.messageStatus === "read") return;
+
+        contact.messageStatus = "read";
+        contact.read = true;
+        contact.readAt = new Date();
+        if (!contact.deliveredAt) {
+          contact.deliveredAt = new Date();
+        }
+        await contact.save();
+
+        const clientKey = String(contact.uid || contact.email || contact._id).toLowerCase();
+        if (contact.uid) {
+          io.to(`user:${contact.uid}`).emit("support:read-status", {
+            messageId: contact._id,
+            conversationKey: clientKey,
+            messageType: "user-message",
+            readBy: "admin",
+            readAt: contact.readAt
+          });
+        }
+        io.to("admins").emit("support:read-status", {
+          messageId: contact._id,
+          conversationKey: clientKey,
+          messageType: "user-message",
+          readBy: "admin",
+          readAt: contact.readAt
+        });
+      } else if (readBy === "user" && currentUserRole === "customer" && messageType === "admin-reply") {
+        const contact = await Contact.findOne({ "replies._id": messageId });
+        if (!contact) return;
+
+        if (String(contact.uid) !== String(currentUserId)) return;
+
+        const reply = contact.replies.id(messageId);
+        if (!reply) return;
+
+        if (reply.status === "read") return;
+
+        reply.status = "read";
+        reply.read = true;
+        reply.readAt = new Date();
+        contact.replyRead = true;
+        if (!reply.deliveredAt) {
+          reply.deliveredAt = new Date();
+        }
+        await contact.save();
+
+        const clientKey = String(currentUserId).toLowerCase();
+        io.to("admins").emit("support:read-status", {
+          messageId: reply._id,
+          conversationKey: clientKey,
+          messageType: "admin-reply",
+          readBy: "user",
+          readAt: reply.readAt
+        });
+        socket.emit("support:read-status", {
+          messageId: reply._id,
+          conversationKey: clientKey,
+          messageType: "admin-reply",
+          readBy: "user",
+          readAt: reply.readAt
+        });
+      }
+    } catch (err) {
+      console.error("[Socket] support:mark-as-read error:", err);
+    }
+  });
 
   socket.on("support:typing", (data) => {
     if (socket.user.role === "admin") {

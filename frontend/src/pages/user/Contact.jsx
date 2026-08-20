@@ -72,6 +72,7 @@ export default function Contact() {
         createdAt: msg.createdAt,
         attachment: msg.attachment || null,
         read: msg.read,
+        messageStatus: msg.messageStatus || "sent",
       });
 
       // Support replies (incoming to customer)
@@ -84,6 +85,7 @@ export default function Contact() {
             createdAt: replyObj.createdAt || msg.createdAt,
             attachment: replyObj.attachment || null,
             read: replyObj.read,
+            status: replyObj.status || "sent",
           });
         });
       } else if (msg.reply) {
@@ -94,6 +96,7 @@ export default function Contact() {
           createdAt: msg.createdAt, // fallback
           attachment: msg.attachment || null,
           read: msg.replyRead,
+          status: msg.replyRead ? "read" : "sent",
         });
       }
     });
@@ -107,6 +110,8 @@ export default function Contact() {
   const chatContainerRef = useRef(null);
   // socketRef: Keeps track of the active Socket.IO connection
   const socketRef = useRef(null);
+  // Track emitted read message IDs to prevent duplicate emissions
+  const emittedReadMessageIds = useRef(new Set());
 
   /* --- DATA FETCHING & EFFECTS --- */
 
@@ -167,6 +172,11 @@ export default function Contact() {
       console.log("[Socket] Customer connected to support real-time");
     });
 
+    socket.on("disconnect", () => {
+      console.log("[Socket] Customer disconnected from support real-time");
+      emittedReadMessageIds.current.clear();
+    });
+
     socket.on("support:new-message", (incomingContact) => {
       console.log("[Socket] Customer received support message:", incomingContact);
 
@@ -180,15 +190,68 @@ export default function Contact() {
           return [...prevContacts, incomingContact];
         }
       });
+
+      // Immediate delivery confirmation
+      if (incomingContact.replies && incomingContact.replies.length > 0) {
+        incomingContact.replies.forEach((r) => {
+          if (r.status === "sent") {
+            socket.emit("support:mark-as-delivered", {
+              messageId: r._id,
+              conversationKey: String(incomingContact.uid || "").toLowerCase(),
+              messageType: "admin-reply"
+            });
+          }
+        });
+      }
     });
 
-    socket.on("support:read-status", ({ key, readBy }) => {
-      console.log("[Socket] Customer received read-status:", { key, readBy });
-      if (readBy === "admin") {
-        setContacts((prevContacts) =>
-          prevContacts.map((c) => ({ ...c, read: true }))
-        );
-      }
+    socket.on("support:delivered-status", ({ messageId, conversationKey, messageType }) => {
+      console.log("[Socket] Customer received delivered-status:", { messageId, conversationKey, messageType });
+      setContacts((prevContacts) =>
+        prevContacts.map((c) => {
+          if (messageType === "user-message" && c._id === messageId) {
+            return {
+              ...c,
+              messageStatus: "delivered",
+              deliveredAt: new Date()
+            };
+          } else if (messageType === "admin-reply" && c.replies && c.replies.length > 0) {
+            const updatedReplies = c.replies.map((r) => {
+              if (r._id === messageId) {
+                return { ...r, status: "delivered", deliveredAt: new Date() };
+              }
+              return r;
+            });
+            return { ...c, replies: updatedReplies };
+          }
+          return c;
+        })
+      );
+    });
+
+    socket.on("support:read-status", ({ messageId, conversationKey, messageType, readBy, readAt }) => {
+      console.log("[Socket] Customer received read-status:", { messageId, conversationKey, messageType, readBy, readAt });
+      setContacts((prevContacts) =>
+        prevContacts.map((c) => {
+          if (messageType === "user-message" && c._id === messageId) {
+            return {
+              ...c,
+              messageStatus: "read",
+              read: true,
+              readAt: readAt
+            };
+          } else if (messageType === "admin-reply" && c.replies && c.replies.length > 0) {
+            const updatedReplies = c.replies.map((r) => {
+              if (r._id === messageId) {
+                return { ...r, status: "read", read: true, readAt: readAt };
+              }
+              return r;
+            });
+            return { ...c, replies: updatedReplies, replyRead: true };
+          }
+          return c;
+        })
+      );
     });
 
     socket.on("support:typing", ({ typing }) => {
@@ -199,7 +262,9 @@ export default function Contact() {
     return () => {
       if (socket) {
         socket.off("connect");
+        socket.off("disconnect");
         socket.off("support:new-message");
+        socket.off("support:delivered-status");
         socket.off("support:read-status");
         socket.off("support:typing");
         socket.disconnect();
@@ -214,26 +279,25 @@ export default function Contact() {
     }
   }, [chatMessages]);
 
-  // Mark all unread support replies as read automatically
+  // Mark all unread support replies as read automatically using Socket.IO
   useEffect(() => {
-    if (!contacts || contacts.length === 0) return;
+    if (!contacts || contacts.length === 0 || !socketRef.current) return;
 
-    const hasUnreadIncoming = contacts.some(c => 
-      (c.replies && c.replies.some(r => r.read === false)) ||
-      (c.reply && c.replyRead === false)
-    );
-
-    if (hasUnreadIncoming) {
-      API.patch("/api/contact/read")
-        .then(() => {
-          setContacts(prev => prev.map(c => {
-            const updatedReplies = c.replies ? c.replies.map(r => ({ ...r, read: true })) : [];
-            return { ...c, replies: updatedReplies, replyRead: true };
-          }));
-          window.dispatchEvent(new Event("support-read"));
-        })
-        .catch(console.error);
-    }
+    contacts.forEach((c) => {
+      if (c.replies && c.replies.length > 0) {
+        c.replies.forEach((r) => {
+          if (r.status !== "read" && !emittedReadMessageIds.current.has(r._id)) {
+            emittedReadMessageIds.current.add(r._id);
+            socketRef.current.emit("support:mark-as-read", {
+              messageId: r._id,
+              conversationKey: String(c.uid || "").toLowerCase(),
+              messageType: "admin-reply",
+              readBy: "user",
+            });
+          }
+        });
+      }
+    });
   }, [contacts]);
 
   /* --- EVENT HANDLERS --- */
@@ -444,10 +508,17 @@ export default function Contact() {
                           const hasAttachment = msg.attachment && !!msg.attachment.url;
                           const isImage = hasAttachment && (msg.attachment.type === "image" || msg.attachment.mimeType?.startsWith("image/"));
 
+                          const isMsgRead = msg.messageStatus === "read" || msg.read === true;
+                          const bubbleBgClass = isMsgRead ? "bg-emerald-600" : "bg-brand-500";
+                          const docBgClass = isMsgRead 
+                            ? `bg-emerald-600 hover:bg-emerald-700 border-emerald-500 text-white` 
+                            : `bg-brand-500 hover:bg-brand-600 border-brand-400 text-white`;
+                          const tickColorClass = isMsgRead ? "text-sky-300 font-extrabold" : "text-slate-300/70";
+
                           if (hasAttachment && !hasText) {
                             if (isImage) {
                               return (
-                                <div className={`relative max-w-[85%] sm:max-w-[75%] p-1 bg-brand-500 shadow-sm ${
+                                <div className={`relative max-w-[85%] sm:max-w-[75%] p-1 ${bubbleBgClass} shadow-sm ${
                                   isFirstInGroup ? "rounded-2xl rounded-tr-none" : "rounded-2xl"
                                 }`}>
                                   <img 
@@ -458,7 +529,7 @@ export default function Contact() {
                                   />
                                   <span className="absolute bottom-2.5 right-3 text-[9px] font-bold text-white bg-black/35 rounded-md px-1.5 py-0.5 select-none flex items-center gap-1 backdrop-blur-[1px]">
                                     {formatTime(msg.createdAt)}
-                                    <span className="text-[10px] font-bold">{msg.read === false ? "✓" : "✓✓"}</span>
+                                    <span className={`text-[10px] ${tickColorClass}`}>✓✓</span>
                                   </span>
                                 </div>
                               );
@@ -471,7 +542,7 @@ export default function Contact() {
                                   rel="noopener noreferrer" 
                                   className={`relative flex items-center gap-3 p-3 transition-colors w-64 text-left border shadow-sm ${
                                     isFirstInGroup ? "rounded-2xl rounded-tr-none" : "rounded-2xl"
-                                  } bg-brand-500 hover:bg-brand-600 border-brand-400 text-white`}
+                                  } ${docBgClass}`}
                                 >
                                   <div className="w-10 h-10 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 bg-brand-400/20 text-brand-100">
                                     {msg.attachment.fileName?.split('.').pop().toUpperCase() || "DOC"}
@@ -486,7 +557,7 @@ export default function Contact() {
                                   </div>
                                   <span className="absolute bottom-1.5 right-2.5 text-[9px] font-bold text-brand-100 select-none flex items-center gap-1">
                                     {formatTime(msg.createdAt)}
-                                    <span className="text-[10px] font-bold">{msg.read === false ? "✓" : "✓✓"}</span>
+                                    <span className={`text-[10px] ${tickColorClass}`}>✓✓</span>
                                   </span>
                                 </a>
                               );
@@ -495,7 +566,7 @@ export default function Contact() {
 
                           // Standard message bubble for text-only or text+attachment
                           return (
-                            <div className={`relative max-w-[85%] sm:max-w-[75%] px-3.5 pt-2 pb-5 bg-brand-500 text-white shadow-sm ${
+                            <div className={`relative max-w-[85%] sm:max-w-[75%] px-3.5 pt-2 pb-5 ${bubbleBgClass} text-white shadow-sm ${
                               isFirstInGroup ? "rounded-2xl rounded-tr-none" : "rounded-2xl"
                             }`}>
                               {msg.text && (
@@ -506,7 +577,7 @@ export default function Contact() {
                               {hasAttachment && renderAttachment(msg.attachment, "outgoing")}
                               <span className="absolute bottom-1 right-2 text-[9px] font-bold text-brand-100 select-none flex items-center gap-1">
                                 {formatTime(msg.createdAt)}
-                                <span className="text-[10px] font-bold">{msg.read === false ? "✓" : "✓✓"}</span>
+                                <span className={`text-[10px] ${tickColorClass}`}>✓✓</span>
                               </span>
                             </div>
                           );
