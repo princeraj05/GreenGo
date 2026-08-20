@@ -83,10 +83,10 @@ export default function Contact() {
             _id: replyObj._id || `${msg._id}-reply-${idx}`,
             type: "incoming",
             text: replyObj.reply,
-            createdAt: replyObj.createdAt || msg.createdAt,
+            createdAt: replyObj.repliedAt || replyObj.createdAt || msg.createdAt,
             attachment: replyObj.attachment || null,
             read: replyObj.read,
-            status: replyObj.status || "sent",
+            status: replyObj.status || (replyObj.read ? "read" : "sent"),
           });
         });
       } else if (msg.reply) {
@@ -94,7 +94,7 @@ export default function Contact() {
           _id: `${msg._id}-reply`,
           type: "incoming",
           text: msg.reply,
-          createdAt: msg.createdAt, // fallback
+          createdAt: msg.repliedAt || msg.createdAt,
           attachment: msg.attachment || null,
           read: msg.replyRead,
           status: msg.replyRead ? "read" : "sent",
@@ -441,14 +441,14 @@ export default function Contact() {
   return (
     <div className="max-w-4xl mx-auto w-full animate-fade-in pb-1 bg-transparent flex flex-col h-[calc(100vh-11.5rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] md:h-[700px]">
       {/* --- COMBINED CHAT WINDOW CONTAINER (WhatsApp/Instagram Style) --- */}
-      <div className="bg-white dark:bg-slate-950 flex flex-col flex-1 border border-slate-250 dark:border-slate-800/60 rounded-2xl overflow-hidden shadow-sm relative w-full">
+      <div className="bg-white dark:bg-slate-950 flex flex-col flex-1 border border-slate-200/50 dark:border-slate-800/60 rounded-2xl overflow-hidden shadow-sm relative w-full">
         
         {/* Chat Window Header */}
-        <div className="bg-slate-50 dark:bg-slate-900/80 border-b border-slate-250 dark:border-slate-800/60 p-4 flex items-center justify-between transition-colors">
+        <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50 p-4 transition-colors dark:border-slate-800/60 dark:bg-slate-900/80 md:p-5">
           <div className="flex items-center gap-3">
             {/* Avatar */}
             <div className="relative">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-brand-500 to-brand-600 flex items-center justify-center text-white font-bold shadow-sm shrink-0">
+              <div className="w-10 h-10 rounded-full bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-450 flex items-center justify-center font-bold text-sm shrink-0 shadow-sm border border-brand-100/50 dark:border-brand-900/30">
                 GG
               </div>
               <span className={`absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-white dark:ring-slate-900 transition-colors ${adminOnline ? "bg-emerald-500" : "bg-slate-400"}`}></span>
@@ -456,9 +456,9 @@ export default function Contact() {
             
             {/* Active support representative name & status */}
             <div className="flex flex-col">
-              <span className="font-extrabold text-slate-900 dark:text-white text-xs sm:text-sm leading-tight">
+              <h3 className="text-sm font-extrabold text-slate-900 dark:text-white leading-tight">
                 GreenGo Support
-              </span>
+              </h3>
               <span className={`text-[10px] font-semibold flex items-center gap-1 transition-colors ${adminOnline ? "text-emerald-500" : "text-slate-400 dark:text-slate-500"}`}>
                 {adminOnline ? "🟢 Online" : "⚪ Offline"}
               </span>
@@ -782,7 +782,7 @@ export default function Contact() {
                 value={form.message}
                 onChange={(event) => setForm({ ...form, message: event.target.value })}
                 placeholder={uploadProgress ? "Uploading attachment..." : "Type a message..."}
-                className="w-full rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#2a3942] px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-900 dark:text-white outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-1 focus:ring-brand-500 focus:border-brand-500 disabled:opacity-65"
+                className="w-full rounded-full border border-slate-200 dark:border-slate-800/80 bg-white dark:bg-[#2a3942] px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-900 dark:text-white outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-1 focus:ring-brand-500 focus:border-brand-500 disabled:opacity-65"
                 disabled={loading || uploadProgress}
               />
             </div>
@@ -801,12 +801,12 @@ export default function Contact() {
             <button
               type="submit"
               disabled={loading || (!form.message.trim() && !selectedFile)}
-              className="bg-brand-500 hover:bg-brand-600 active:scale-95 text-white p-2.5 rounded-full shadow-md transition-all shrink-0 flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-500 hover:bg-brand-600 text-white shadow-md transition-all active:scale-[0.95] disabled:cursor-not-allowed disabled:opacity-60 shrink-0"
             >
               {loading ? (
-                <RefreshCw className="w-4.5 h-4.5 animate-spin" />
+                <RefreshCw className="h-4.5 h-4.5 animate-spin" />
               ) : (
-                <Send className="w-4.5 h-4.5" />
+                <Send className="h-4 w-4" />
               )}
             </button>
           </form>
