@@ -533,7 +533,7 @@ export default function Contacts() {
     const isImage = attachment.type === "image" || attachment.mimeType?.startsWith("image/");
     if (isImage) {
       return (
-        <div className="mt-1 rounded-lg overflow-hidden max-w-xs border border-black/10 dark:border-white/10 shadow-sm bg-white dark:bg-slate-900">
+        <div className="mt-1.5 rounded-xl overflow-hidden max-w-xs border border-black/[0.06] dark:border-white/[0.06] bg-transparent">
           <img 
             src={attachment.url} 
             alt={attachment.fileName || "Image"} 
@@ -549,16 +549,16 @@ export default function Contacts() {
         href={attachment.url} 
         target="_blank" 
         rel="noopener noreferrer" 
-        className={`mt-1.5 flex items-center gap-3 p-3 rounded-xl border transition-colors w-64 text-left ${
+        className={`mt-1.5 flex items-center gap-3 p-2.5 rounded-xl border transition-colors w-64 text-left ${
           isOutgoing 
-            ? "bg-brand-600/40 border-brand-400/35 hover:bg-brand-600/60 text-white" 
-            : "bg-slate-50 dark:bg-slate-900 border-slate-200/60 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-100"
+            ? "bg-brand-600/30 border-brand-400/20 hover:bg-brand-600/40 text-white" 
+            : "bg-slate-50/50 dark:bg-slate-900/45 border-slate-200/40 dark:border-slate-800/40 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 text-slate-800 dark:text-slate-100"
         }`}
       >
         <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 ${
           isOutgoing
             ? "bg-brand-400/20 text-brand-100"
-            : "bg-red-50 dark:bg-red-950/20 text-red-500 dark:text-red-450"
+            : "bg-red-50 dark:bg-red-950/20 text-red-500 dark:text-red-400"
         }`}>
           {attachment.fileName?.split('.').pop().toUpperCase() || "DOC"}
         </div>
@@ -1038,43 +1038,166 @@ export default function Contacts() {
                         <div className={`flex ${msg.type === "outgoing" ? "justify-end" : "justify-start"} ${mtClass} animate-fade-in`}>
                           {msg.type === "outgoing" ? (
                             /* Outgoing Admin Message (RIGHT) */
-                            <div className={`relative max-w-[85%] sm:max-w-[75%] px-3.5 pt-2 pb-5 bg-brand-500 text-white shadow-sm ${
-                              isFirstInGroup ? "rounded-2xl rounded-tr-none" : "rounded-2xl"
-                            }`}>
-                              {msg.text && (
-                                <p className="text-xs sm:text-sm font-medium leading-relaxed break-words pr-12">
-                                  {msg.text}
-                                </p>
-                              )}
-                              {msg.attachment && msg.attachment.url && renderAttachment(msg.attachment, "outgoing")}
-                              <div className="absolute bottom-1 right-2 flex items-center gap-1.5 select-none">
-                                {msg.emailReplyStatus && msg.emailReplyStatus !== "not_required" && (
+                            (() => {
+                              const hasText = !!msg.text;
+                              const hasAttachment = msg.attachment && !!msg.attachment.url;
+                              const isImage = hasAttachment && (msg.attachment.type === "image" || msg.attachment.mimeType?.startsWith("image/"));
+
+                              const renderEmailStatus = () => {
+                                if (!msg.emailReplyStatus || msg.emailReplyStatus === "not_required") return null;
+                                return (
                                   <span className="text-[8px] font-extrabold uppercase text-brand-100 flex items-center bg-brand-650/40 px-1.5 py-0.5 rounded">
                                     <CheckCircle2 className="mr-0.5 inline h-2.5 w-2.5" />
                                     {msg.emailReplyStatus === "sent" ? "Email sent" : msg.emailReplyStatus === "failed" ? "Email failed" : "Email pending"}
                                   </span>
-                                )}
-                                <span className="text-[9px] font-bold text-brand-100 flex items-center gap-1">
-                                  {formatTime(msg.createdAt)}
-                                  <span className="text-[10px] font-bold">{msg.read === false ? "✓" : "✓✓"}</span>
-                                </span>
-                              </div>
-                            </div>
+                                );
+                              };
+
+                              if (hasAttachment && !hasText) {
+                                if (isImage) {
+                                  return (
+                                    <div className={`relative max-w-[85%] sm:max-w-[75%] p-1 bg-brand-500 shadow-sm ${
+                                      isFirstInGroup ? "rounded-2xl rounded-tr-none" : "rounded-2xl"
+                                    }`}>
+                                      <img 
+                                        src={msg.attachment.url} 
+                                        alt={msg.attachment.fileName || "Image"} 
+                                        className="w-full h-auto max-h-60 object-cover rounded-xl cursor-pointer hover:opacity-95 transition-opacity"
+                                        onClick={() => window.open(msg.attachment.url, "_blank")}
+                                      />
+                                      <div className="absolute bottom-2.5 right-3 flex items-center gap-1.5 select-none bg-black/35 rounded-md px-1.5 py-0.5 backdrop-blur-[1px]">
+                                        {renderEmailStatus()}
+                                        <span className="text-[9px] font-bold text-white flex items-center gap-1">
+                                          {formatTime(msg.createdAt)}
+                                          <span className="text-[10px] font-bold">{msg.read === false ? "✓" : "✓✓"}</span>
+                                        </span>
+                                      </div>
+                                    </div>
+                                  );
+                                } else {
+                                  return (
+                                    <a 
+                                      href={msg.attachment.url} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer" 
+                                      className={`relative flex items-center gap-3 p-3 transition-colors w-64 text-left border shadow-sm ${
+                                        isFirstInGroup ? "rounded-2xl rounded-tr-none" : "rounded-2xl"
+                                      } bg-brand-500 hover:bg-brand-600 border-brand-400 text-white`}
+                                    >
+                                      <div className="w-10 h-10 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 bg-brand-400/20 text-brand-100">
+                                        {msg.attachment.fileName?.split('.').pop().toUpperCase() || "DOC"}
+                                      </div>
+                                      <div className="min-w-0 flex-1 pb-3">
+                                        <p className="text-xs font-bold truncate text-white">
+                                          {msg.attachment.fileName || "attachment"}
+                                        </p>
+                                        <p className="text-[10px] font-semibold uppercase mt-0.5 text-brand-200">
+                                          {msg.attachment.fileName?.split('.').pop() || "FILE"} • {msg.attachment.size ? (msg.attachment.size / (1024 * 1024)).toFixed(1) : "0.1"} MB
+                                        </p>
+                                      </div>
+                                      <div className="absolute bottom-1.5 right-2.5 flex items-center gap-1.5 select-none">
+                                        {renderEmailStatus()}
+                                        <span className="text-[9px] font-bold text-brand-100 flex items-center gap-1">
+                                          {formatTime(msg.createdAt)}
+                                          <span className="text-[10px] font-bold">{msg.read === false ? "✓" : "✓✓"}</span>
+                                        </span>
+                                      </div>
+                                    </a>
+                                  );
+                                }
+                              }
+
+                              return (
+                                <div className={`relative max-w-[85%] sm:max-w-[75%] px-3.5 pt-2 pb-5 bg-brand-500 text-white shadow-sm ${
+                                  isFirstInGroup ? "rounded-2xl rounded-tr-none" : "rounded-2xl"
+                                }`}>
+                                  {msg.text && (
+                                    <p className="text-xs sm:text-sm font-medium leading-relaxed break-words pr-12">
+                                      {msg.text}
+                                    </p>
+                                  )}
+                                  {hasAttachment && renderAttachment(msg.attachment, "outgoing")}
+                                  <div className="absolute bottom-1 right-2 flex items-center gap-1.5 select-none">
+                                    {renderEmailStatus()}
+                                    <span className="text-[9px] font-bold text-brand-100 flex items-center gap-1">
+                                      {formatTime(msg.createdAt)}
+                                      <span className="text-[10px] font-bold">{msg.read === false ? "✓" : "✓✓"}</span>
+                                    </span>
+                                  </div>
+                                </div>
+                              );
+                            })()
                           ) : (
                             /* Incoming Customer Message (LEFT) */
-                            <div className={`relative max-w-[85%] sm:max-w-[75%] px-3.5 pt-2 pb-5 bg-white dark:bg-[#202c33] text-slate-800 dark:text-slate-100 border border-slate-200/50 dark:border-none shadow-sm ${
-                              isFirstInGroup ? "rounded-2xl rounded-tl-none" : "rounded-2xl"
-                            }`}>
-                              {msg.text && (
-                                <p className="text-xs sm:text-sm font-medium leading-relaxed break-words pr-12">
-                                  {msg.text}
-                                </p>
-                              )}
-                              {msg.attachment && msg.attachment.url && renderAttachment(msg.attachment, "incoming")}
-                              <span className="absolute bottom-1 right-2 text-[9px] font-bold text-slate-400 dark:text-slate-500 select-none">
-                                {formatTime(msg.createdAt)}
-                              </span>
-                            </div>
+                            (() => {
+                              const hasText = !!msg.text;
+                              const hasAttachment = msg.attachment && !!msg.attachment.url;
+                              const isImage = hasAttachment && (msg.attachment.type === "image" || msg.attachment.mimeType?.startsWith("image/"));
+
+                              if (hasAttachment && !hasText) {
+                                if (isImage) {
+                                  return (
+                                    <div className={`relative max-w-[85%] sm:max-w-[75%] p-1 bg-white dark:bg-[#202c33] text-slate-800 dark:text-slate-100 border border-slate-200/50 dark:border-none shadow-sm transition-colors ${
+                                      isFirstInGroup ? "rounded-2xl rounded-tl-none" : "rounded-2xl"
+                                    }`}>
+                                      <img 
+                                        src={msg.attachment.url} 
+                                        alt={msg.attachment.fileName || "Image"} 
+                                        className="w-full h-auto max-h-60 object-cover rounded-xl cursor-pointer hover:opacity-95 transition-opacity"
+                                        onClick={() => window.open(msg.attachment.url, "_blank")}
+                                      />
+                                      <span className="absolute bottom-2.5 right-3 text-[9px] font-bold text-white bg-black/45 rounded-md px-1.5 py-0.5 select-none backdrop-blur-[1px]">
+                                        {formatTime(msg.createdAt)}
+                                      </span>
+                                    </div>
+                                  );
+                                } else {
+                                  return (
+                                    <div className={`relative max-w-[85%] sm:max-w-[75%] p-1.5 bg-white dark:bg-[#202c33] text-slate-800 dark:text-slate-100 border border-slate-200/50 dark:border-none shadow-sm transition-colors ${
+                                      isFirstInGroup ? "rounded-2xl rounded-tl-none" : "rounded-2xl"
+                                    }`}>
+                                      <a 
+                                        href={msg.attachment.url} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer" 
+                                        className="flex items-center gap-3 p-2.5 rounded-xl border border-slate-200/40 dark:border-slate-800/40 bg-slate-50/50 dark:bg-slate-900/45 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-colors w-64 text-left"
+                                      >
+                                        <div className="w-10 h-10 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 bg-red-50 dark:bg-red-950/20 text-red-500 dark:text-red-400">
+                                          {msg.attachment.fileName?.split('.').pop().toUpperCase() || "DOC"}
+                                        </div>
+                                        <div className="min-w-0 flex-grow pb-3">
+                                          <p className="text-xs font-bold truncate text-slate-850 dark:text-slate-200">
+                                            {msg.attachment.fileName || "attachment"}
+                                          </p>
+                                          <p className="text-[10px] font-semibold uppercase mt-0.5 text-slate-400 dark:text-slate-500">
+                                            {msg.attachment.fileName?.split('.').pop() || "FILE"} • {msg.attachment.size ? (msg.attachment.size / (1024 * 1024)).toFixed(1) : "0.1"} MB
+                                          </p>
+                                        </div>
+                                        <span className="absolute bottom-1.5 right-2.5 text-[9px] font-bold text-slate-400 dark:text-slate-500 select-none">
+                                          {formatTime(msg.createdAt)}
+                                        </span>
+                                      </a>
+                                    </div>
+                                  );
+                                }
+                              }
+
+                              return (
+                                <div className={`relative max-w-[85%] sm:max-w-[75%] px-3.5 pt-2 pb-5 bg-white dark:bg-[#202c33] text-slate-800 dark:text-slate-100 border border-slate-200/50 dark:border-none shadow-sm transition-colors ${
+                                  isFirstInGroup ? "rounded-2xl rounded-tl-none" : "rounded-2xl"
+                                }`}>
+                                  {msg.text && (
+                                    <p className="text-xs sm:text-sm font-medium leading-relaxed break-words pr-12">
+                                      {msg.text}
+                                    </p>
+                                  )}
+                                  {hasAttachment && renderAttachment(msg.attachment, "incoming")}
+                                  <span className="absolute bottom-1 right-2 text-[9px] font-bold text-slate-400 dark:text-slate-500 select-none">
+                                    {formatTime(msg.createdAt)}
+                                  </span>
+                                </div>
+                              );
+                            })()
                           )}
                         </div>
                       </div>
