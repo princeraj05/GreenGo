@@ -418,23 +418,23 @@ export default function Contacts() {
 
     if (hasUnreadCustomer) {
       const key = selectedConversation.key;
-      getToken().then((token) => {
-        API.patch(
-          "/api/admin/contacts/read",
-          { key },
-          { headers: { Authorization: `Bearer ${token}` } }
-        ).then(() => {
-          setContacts((prev) =>
-            prev.map((c) => {
-              const contactKey = String(c.email || c.uid || c._id || "unknown").toLowerCase();
-              if (contactKey === key) {
-                return { ...c, read: true };
-              }
-              return c;
-            })
-          );
-        }).catch(console.error);
-      });
+      const token = getToken();
+      
+      API.patch(
+        "/api/admin/contacts/read",
+        { key },
+        { headers: { Authorization: `Bearer ${token}` } }
+      ).then(() => {
+        setContacts((prev) =>
+          prev.map((c) => {
+            const contactKey = String(c.email || c.uid || c._id || "unknown").toLowerCase();
+            if (contactKey === key) {
+              return { ...c, read: true };
+            }
+            return c;
+          })
+        );
+      }).catch(console.error);
     }
   }, [selectedConversation]);
 
