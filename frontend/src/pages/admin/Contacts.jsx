@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CheckCircle2, MessageCircle, Search, Send, Mail, Phone, User, ArrowLeft } from "lucide-react";
+import { CheckCircle2, MessageCircle, Search, Send, Mail, Phone, User, ArrowLeft, Paperclip, Smile } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import io from "socket.io-client";
 import { getApiUrl } from "../../utils/getApiUrl";
@@ -28,6 +28,25 @@ function getEmailStatusText(message) {
   if (message.emailReplyStatus === "sent") return "Email sent";
   if (message.emailReplyStatus === "failed") return "Email failed";
   return "Email pending";
+}
+
+/**
+ * Helper to determine date separator text (e.g. Today, Yesterday, or standard date format).
+ */
+function getDateSeparatorText(dateString) {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+
+  if (date.toDateString() === today.toDateString()) {
+    return "Today";
+  } else if (date.toDateString() === yesterday.toDateString()) {
+    return "Yesterday";
+  } else {
+    return date.toLocaleDateString([], { month: "long", day: "numeric", year: "numeric" });
+  }
 }
 
 /**
@@ -253,6 +272,47 @@ export default function Contacts() {
 
     return null;
   }, [conversations, selectedKey, selectedUser]);
+
+  // Flatten messages into a sequential list of incoming (customer) and outgoing (admin) messages
+  const chatMessages = useMemo(() => {
+    if (!selectedConversation || !selectedConversation.messages) return [];
+    
+    const list = [];
+    selectedConversation.messages.forEach((msg) => {
+      // Customer message (incoming to admin)
+      list.push({
+        _id: msg._id,
+        type: "incoming",
+        text: msg.message,
+        createdAt: msg.createdAt,
+        name: selectedConversation.name,
+      });
+
+      // Admin replies (outgoing from admin)
+      if (msg.replies && msg.replies.length > 0) {
+        msg.replies.forEach((replyObj, idx) => {
+          list.push({
+            _id: replyObj._id || `${msg._id}-reply-${idx}`,
+            type: "outgoing",
+            text: replyObj.reply,
+            createdAt: replyObj.repliedAt || msg.createdAt,
+            emailReplyStatus: replyObj.emailReplyStatus,
+          });
+        });
+      } else if (msg.reply) {
+        list.push({
+          _id: `${msg._id}-reply`,
+          type: "outgoing",
+          text: msg.reply,
+          createdAt: msg.repliedAt || msg.createdAt,
+          emailReplyStatus: msg.emailReplyStatus,
+        });
+      }
+    });
+
+    // Sort by createdAt
+    return list.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+  }, [selectedConversation]);
 
   // Set of active conversation keys to quickly check if a user already has an active thread
   const conversationsKeys = useMemo(() => {
@@ -710,7 +770,7 @@ export default function Contacts() {
             </div>
 
             {/* Chat History Messages */}
-            <div ref={chatContainerRef} className="scrollbar-thin flex-1 space-y-4 overflow-y-auto bg-slate-50/50 p-4 dark:bg-slate-950/25 md:space-y-5 md:p-6">
+            <div ref={chatContainerRef} className="scrollbar-thin flex-1 overflow-y-auto bg-[#efeae2] dark:bg-[#0b141a] p-4 md:p-6 space-y-1">
               {!selectedConversation ? (
                 <div className="flex h-full flex-col items-center justify-center gap-2 text-xs font-medium text-slate-400 dark:text-slate-500 sm:text-sm">
                   <MessageCircle className="h-8 w-8" />
@@ -722,104 +782,116 @@ export default function Contacts() {
                   <span>No prior messages. Send a message to start a conversation with {selectedConversation.name}.</span>
                 </div>
               ) : (
-                selectedConversation.messages.map((contact, cIdx) => (
-                  <div key={contact._id} className="flex animate-fade-in flex-col gap-3 md:gap-4">
-                    
-                    {/* Outgoing from user */}
-                    <div className="flex justify-end">
-                      <div className="max-w-[85%] rounded-2xl rounded-tr-sm bg-brand-500 p-3.5 text-white shadow-md shadow-brand-500/10 sm:max-w-[80%]">
-                        <div className="mb-1 flex items-center justify-end gap-1.5">
-                          <span className="text-[10px] font-bold text-brand-100">
-                            {selectedConversation.name}
-                          </span>
-                        </div>
-                        <p className="text-xs font-medium leading-relaxed sm:text-sm">{contact.message}</p>
-                        <p className="mt-1 text-right text-[9px] font-semibold text-brand-100">
-                          {formatTime(contact.createdAt || Date.now())}
-                        </p>
-                      </div>
-                    </div>
- 
-                    {/* Replies from support */}
-                    {contact.replies && contact.replies.length > 0 ? (
-                      contact.replies.map((replyObj, idx) => (
-                        <div key={replyObj._id || idx} className="flex justify-start">
-                          <div className="max-w-[85%] rounded-2xl rounded-tl-sm border border-slate-200/80 bg-white p-3.5 text-slate-800 shadow-sm transition-colors dark:border-slate-800/80 dark:bg-slate-900 dark:text-slate-200 sm:max-w-[80%]">
-                            <div className="mb-1.5 flex items-center gap-1.5">
-                              <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-600 text-[8px] font-black text-white shadow-sm">
-                                A
-                              </div>
-                              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">Admin Support</span>
-                            </div>
-                            <p className="mt-1 text-xs font-medium leading-relaxed sm:text-sm">{replyObj.reply}</p>
-                            <div className="mt-2 flex flex-wrap items-center gap-2">
-                              {replyObj.emailReplyStatus && replyObj.emailReplyStatus !== "not_required" && (
-                                <span className="rounded-full bg-emerald-50 px-2 py-1 text-[9px] font-black uppercase text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300">
-                                  <CheckCircle2 className="mr-1 inline h-3 w-3" />
-                                  {getEmailStatusText(replyObj)}
-                                </span>
-                              )}
-                              <span className="text-[9px] font-bold text-slate-400">
-                                {formatTime(replyObj.repliedAt || contact.createdAt)}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      ))
-                    ) : contact.reply ? (
-                      <div className="flex justify-start">
-                        <div className="max-w-[85%] rounded-2xl rounded-tl-sm border border-slate-200/80 bg-white p-3.5 text-slate-800 shadow-sm transition-colors dark:border-slate-800/80 dark:bg-slate-900 dark:text-slate-200 sm:max-w-[80%]">
-                          <div className="mb-1.5 flex items-center gap-1.5">
-                            <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-600 text-[8px] font-black text-white shadow-sm">
-                              A
-                            </div>
-                            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">Admin Support</span>
-                          </div>
-                          <p className="mt-1 text-xs font-medium leading-relaxed sm:text-sm">{contact.reply}</p>
-                          <div className="mt-2 flex flex-wrap items-center gap-2">
-                            {contact.emailReplyStatus && contact.emailReplyStatus !== "not_required" && (
-                              <span className="rounded-full bg-emerald-50 px-2 py-1 text-[9px] font-black uppercase text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300">
-                                  <CheckCircle2 className="mr-1 inline h-3 w-3" />
-                                  {getEmailStatusText(contact)}
-                                </span>
-                            )}
-                            <span className="text-[9px] font-bold text-slate-400">
-                              {formatTime(contact.repliedAt || contact.createdAt)}
+                (() => {
+                  let prevDate = null;
+                  return chatMessages.map((msg, idx) => {
+                    const messageDate = new Date(msg.createdAt).toDateString();
+                    const showDateSeparator = messageDate !== prevDate;
+                    prevDate = messageDate;
+
+                    const isFirstInGroup = idx === 0 || chatMessages[idx - 1].type !== msg.type || showDateSeparator;
+                    const mtClass = isFirstInGroup ? "mt-3" : "mt-1";
+
+                    return (
+                      <div key={msg._id} className="flex flex-col">
+                        {showDateSeparator && (
+                          <div className="flex justify-center my-4 animate-fade-in">
+                            <span className="bg-white/90 dark:bg-slate-800/90 text-slate-500 dark:text-slate-400 px-3 py-1 rounded-lg text-[10px] font-bold shadow-sm uppercase tracking-wider">
+                              {getDateSeparatorText(msg.createdAt)}
                             </span>
                           </div>
+                        )}
+
+                        <div className={`flex ${msg.type === "outgoing" ? "justify-end" : "justify-start"} ${mtClass} animate-fade-in`}>
+                          {msg.type === "outgoing" ? (
+                            /* Outgoing Admin Message (RIGHT) */
+                            <div className={`relative max-w-[85%] sm:max-w-[75%] px-3.5 pt-2 pb-5 bg-brand-500 text-white shadow-sm ${
+                              isFirstInGroup ? "rounded-2xl rounded-tr-none" : "rounded-2xl"
+                            }`}>
+                              <p className="text-xs sm:text-sm font-medium leading-relaxed break-words pr-12">
+                                {msg.text}
+                              </p>
+                              <div className="absolute bottom-1 right-2 flex items-center gap-1.5 select-none">
+                                {msg.emailReplyStatus && msg.emailReplyStatus !== "not_required" && (
+                                  <span className="text-[8px] font-extrabold uppercase text-brand-100 flex items-center bg-brand-650/40 px-1.5 py-0.5 rounded">
+                                    <CheckCircle2 className="mr-0.5 inline h-2.5 w-2.5" />
+                                    {msg.emailReplyStatus === "sent" ? "Email sent" : msg.emailReplyStatus === "failed" ? "Email failed" : "Email pending"}
+                                  </span>
+                                )}
+                                <span className="text-[9px] font-bold text-brand-100">
+                                  {formatTime(msg.createdAt)}
+                                </span>
+                              </div>
+                            </div>
+                          ) : (
+                            /* Incoming Customer Message (LEFT) */
+                            <div className={`relative max-w-[85%] sm:max-w-[75%] px-3.5 pt-2 pb-5 bg-white dark:bg-[#202c33] text-slate-800 dark:text-slate-100 border border-slate-200/50 dark:border-none shadow-sm ${
+                              isFirstInGroup ? "rounded-2xl rounded-tl-none" : "rounded-2xl"
+                            }`}>
+                              <p className="text-xs sm:text-sm font-medium leading-relaxed break-words pr-12">
+                                {msg.text}
+                              </p>
+                              <span className="absolute bottom-1 right-2 text-[9px] font-bold text-slate-400 dark:text-slate-500 select-none">
+                                {formatTime(msg.createdAt)}
+                              </span>
+                            </div>
+                          )}
                         </div>
                       </div>
-                    ) : null}
-                  </div>
-                ))
+                    );
+                  });
+                })()
               )}
             </div>
 
             {/* Chat Reply Area */}
             {selectedConversation && (
-              <div className="p-4 border-t border-slate-100 bg-slate-50 dark:border-slate-800/60 dark:bg-slate-900/40 pb-[calc(1rem+env(safe-area-inset-bottom))] lg:pb-4">
+              <div className="p-3 bg-[#f0f2f5] dark:bg-[#111b21] border-t border-slate-200/50 dark:border-slate-800/80 pb-[calc(0.75rem+env(safe-area-inset-bottom))] lg:pb-3 flex flex-col gap-2 shrink-0">
                 {error && (
-                  <p className="mb-3 rounded-xl border border-red-100 bg-red-50 px-4 py-2.5 text-[11px] font-bold text-red-600 dark:border-red-900/40 dark:bg-red-950/20 dark:text-red-300">
+                  <p className="w-full rounded-xl border border-red-100 bg-red-50 px-4 py-2 text-[11px] font-bold text-red-600 dark:border-red-900/40 dark:bg-red-950/20 dark:text-red-300">
                     {error}
                   </p>
                 )}
-                <div className="flex items-center gap-3">
+                
+                <div className="flex items-center gap-2">
+                  {/* Emoji Button */}
+                  <button
+                    type="button"
+                    onClick={() => alert("Emoji picker coming soon!")}
+                    className="text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white p-2 transition-colors shrink-0"
+                    aria-label="Emojis"
+                  >
+                    <Smile className="h-5.5 w-5.5" />
+                  </button>
+
                   <div className="flex-1">
-                    <textarea
+                    <input
+                      type="text"
                       value={replyText[selectedConversation.key] || ""}
                       onChange={(event) =>
                         setReplyText({ ...replyText, [selectedConversation.key]: event.target.value })
                       }
                       onKeyDown={handleKeyDown}
-                      className="w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-3 text-xs font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/10 dark:border-slate-800 dark:bg-slate-900 dark:text-white dark:placeholder:text-slate-500 h-16 scrollbar-thin"
-                      placeholder={`Reply to ${selectedConversation.name}...`}
+                      placeholder={`Type a message...`}
+                      className="w-full rounded-full border border-slate-200 dark:border-slate-800/80 bg-white dark:bg-[#2a3942] px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-900 dark:text-white outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-1 focus:ring-brand-500 focus:border-brand-500"
                     />
                   </div>
+
+                  {/* Attachment Button */}
+                  <button
+                    type="button"
+                    onClick={() => alert("File attachment coming soon!")}
+                    className="text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white p-2 transition-colors shrink-0"
+                    aria-label="Add attachment"
+                  >
+                    <Paperclip className="h-5.5 w-5.5 rotate-45" />
+                  </button>
+
                   <button
                     type="button"
                     disabled={sending || !replyText[selectedConversation.key]?.trim()}
                     onClick={sendReply}
-                    className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-r from-brand-500 to-brand-600 text-white shadow-md shadow-brand-500/20 transition-all hover:from-brand-650 hover:to-brand-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 shrink-0"
+                    className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-500 hover:bg-brand-600 text-white shadow-md transition-all active:scale-[0.95] disabled:cursor-not-allowed disabled:opacity-60 shrink-0"
                   >
                     {sending ? (
                       <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />

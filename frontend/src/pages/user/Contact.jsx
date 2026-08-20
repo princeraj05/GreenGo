@@ -1,9 +1,36 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { MessageCircle, RefreshCw, Send } from "lucide-react";
+import { MessageCircle, RefreshCw, Send, Paperclip, Smile } from "lucide-react";
 import io from "socket.io-client";
 import { getApiUrl } from "../../utils/getApiUrl";
 import API from "../../api/axios";
+
+/**
+ * Helper to format datetime stamps to readable 2-digit locale time strings.
+ */
+function formatTime(date) {
+  if (!date) return "";
+  return new Date(date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+/**
+ * Helper to determine date separator text (e.g. Today, Yesterday, or standard date format).
+ */
+function getDateSeparatorText(dateString) {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+
+  if (date.toDateString() === today.toDateString()) {
+    return "Today";
+  } else if (date.toDateString() === yesterday.toDateString()) {
+    return "Yesterday";
+  } else {
+    return date.toLocaleDateString([], { month: "long", day: "numeric", year: "numeric" });
+  }
+}
 
 /**
  * Contact Component
@@ -21,6 +48,44 @@ export default function Contact() {
   const [contacts, setContacts] = useState([]);
   // loading: Disables the submit action while backend processes the contact request
   const [loading, setLoading] = useState(false);
+
+  // Flatten customer messages and support agent replies sequentially
+  const chatMessages = useMemo(() => {
+    if (!contacts) return [];
+    
+    const list = [];
+    contacts.forEach((msg) => {
+      // Customer message (outgoing from customer)
+      list.push({
+        _id: msg._id,
+        type: "outgoing",
+        text: msg.message,
+        createdAt: msg.createdAt,
+      });
+
+      // Support replies (incoming to customer)
+      if (msg.replies && msg.replies.length > 0) {
+        msg.replies.forEach((replyObj, idx) => {
+          list.push({
+            _id: replyObj._id || `${msg._id}-reply-${idx}`,
+            type: "incoming",
+            text: replyObj.reply,
+            createdAt: replyObj.createdAt || msg.createdAt,
+          });
+        });
+      } else if (msg.reply) {
+        list.push({
+          _id: `${msg._id}-reply`,
+          type: "incoming",
+          text: msg.reply,
+          createdAt: msg.createdAt, // fallback
+        });
+      }
+    });
+
+    // Sort by createdAt
+    return list.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+  }, [contacts]);
 
   /* --- REFS --- */
   // chatContainerRef: Scroll container of the support message stream
@@ -114,7 +179,7 @@ export default function Contact() {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
-  }, [contacts]);
+  }, [chatMessages]);
 
   /* --- EVENT HANDLERS --- */
 
@@ -192,70 +257,83 @@ export default function Contact() {
         {/* Message Stream */}
         <div 
           ref={chatContainerRef} 
-          className="flex-1 p-4 md:p-6 overflow-y-auto space-y-4 bg-slate-50/20 dark:bg-slate-950/10 scrollbar-thin"
+          className="flex-1 p-4 md:p-6 overflow-y-auto space-y-1 bg-[#efeae2] dark:bg-[#0b141a] scrollbar-thin"
         >
-          {contacts.length === 0 ? (
+          {chatMessages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 gap-2 font-medium text-xs sm:text-sm">
               <span>💬</span>
               <span>No messages yet. Send a message to start the conversation!</span>
             </div>
           ) : (
-            contacts.map((contact, cIdx) => (
-              <div key={contact._id || cIdx} className="flex flex-col gap-3 md:gap-4 animate-fade-in">
-                
-                {/* Outgoing User Message */}
-                <div className="flex justify-end">
-                  <div className="bg-brand-500 text-white p-3.5 rounded-2xl rounded-tr-none max-w-[85%] sm:max-w-[80%] shadow-sm">
-                    <p className="text-xs sm:text-sm leading-relaxed font-medium">{contact.message}</p>
-                    <p className="text-[9px] text-brand-100 text-right mt-1 font-semibold">
-                      {new Date(contact.createdAt || Date.now()).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </p>
-                  </div>
-                </div>
+            (() => {
+              let prevDate = null;
+              const mapped = chatMessages.map((msg, idx) => {
+                const messageDate = new Date(msg.createdAt).toDateString();
+                const showDateSeparator = messageDate !== prevDate;
+                prevDate = messageDate;
 
-                {/* Support Agent Replies */}
-                {contact.replies && contact.replies.length > 0 ? (
-                  contact.replies.map((replyObj, idx) => (
-                    <div key={replyObj._id || idx} className="flex justify-start">
-                      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 text-slate-800 dark:text-slate-200 p-3.5 rounded-2xl rounded-tl-none max-w-[85%] sm:max-w-[80%] shadow-sm transition-colors">
-                        <div className="flex items-center gap-1.5 mb-1.5">
-                          <div className="w-4.5 h-4.5 rounded-full bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white text-[8px] font-black shadow-sm shrink-0">
-                            GG
-                          </div>
-                          <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">GreenGo Support</span>
-                        </div>
-                        <p className="text-xs sm:text-sm leading-relaxed mt-1 font-medium">{replyObj.reply}</p>
-                        {replyObj.createdAt && (
-                          <p className="text-[9px] text-slate-400 dark:text-slate-500 text-right mt-1 font-semibold">
-                            {new Date(replyObj.createdAt).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
+                const isFirstInGroup = idx === 0 || chatMessages[idx - 1].type !== msg.type || showDateSeparator;
+                const mtClass = isFirstInGroup ? "mt-3" : "mt-1";
+
+                return (
+                  <div key={msg._id} className="flex flex-col">
+                    {showDateSeparator && (
+                      <div className="flex justify-center my-4 animate-fade-in">
+                        <span className="bg-white/90 dark:bg-slate-800/90 text-slate-500 dark:text-slate-400 px-3 py-1 rounded-lg text-[10px] font-bold shadow-sm uppercase tracking-wider">
+                          {getDateSeparatorText(msg.createdAt)}
+                        </span>
+                      </div>
+                    )}
+
+                    <div className={`flex ${msg.type === "outgoing" ? "justify-end" : "justify-start"} ${mtClass} animate-fade-in`}>
+                      {msg.type === "outgoing" ? (
+                        /* Outgoing User Message (RIGHT) */
+                        <div className={`relative max-w-[85%] sm:max-w-[75%] px-3.5 pt-2 pb-5 bg-brand-500 text-white shadow-sm ${
+                          isFirstInGroup ? "rounded-2xl rounded-tr-none" : "rounded-2xl"
+                        }`}>
+                          <p className="text-xs sm:text-sm font-medium leading-relaxed break-words pr-12">
+                            {msg.text}
                           </p>
-                        )}
-                      </div>
-                    </div>
-                  ))
-                ) : contact.reply ? (
-                  <div className="flex justify-start">
-                    <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 text-slate-800 dark:text-slate-200 p-3.5 rounded-2xl rounded-tl-none max-w-[85%] sm:max-w-[80%] shadow-sm transition-colors">
-                      <div className="flex items-center gap-1.5 mb-1.5">
-                        <div className="w-4.5 h-4.5 rounded-full bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white text-[8px] font-black shadow-sm shrink-0">
-                          GG
+                          <span className="absolute bottom-1 right-2 text-[9px] font-bold text-brand-100 select-none">
+                            {formatTime(msg.createdAt)}
+                          </span>
                         </div>
-                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">GreenGo Support</span>
-                      </div>
-                      <p className="text-xs sm:text-sm leading-relaxed mt-1 font-medium">{contact.reply}</p>
+                      ) : (
+                        /* Incoming Support Agent Message (LEFT) */
+                        <div className={`relative max-w-[85%] sm:max-w-[75%] px-3.5 pt-2 pb-5 bg-white dark:bg-[#202c33] text-slate-800 dark:text-slate-100 border border-slate-200/50 dark:border-none shadow-sm transition-colors ${
+                          isFirstInGroup ? "rounded-2xl rounded-tl-none" : "rounded-2xl"
+                        }`}>
+                          {isFirstInGroup && (
+                            <div className="flex items-center gap-1.5 mb-1.5 select-none">
+                              <div className="w-4 h-4 rounded-full bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white text-[8px] font-black shadow-sm shrink-0">
+                                GG
+                              </div>
+                              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">GreenGo Support</span>
+                            </div>
+                          )}
+                          <p className="text-xs sm:text-sm font-medium leading-relaxed break-words pr-12">
+                            {msg.text}
+                          </p>
+                          <span className="absolute bottom-1 right-2 text-[9px] font-bold text-slate-400 dark:text-slate-500 select-none">
+                            {formatTime(msg.createdAt)}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
-                ) : (
-                  /* Typing placeholder animation when reply is absent and it's the last message */
-                  cIdx === contacts.length - 1 && (
-                    <div className="flex justify-start">
-                      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 text-slate-500 dark:text-slate-400 p-3 rounded-2xl rounded-tl-none shadow-sm flex items-center gap-2 transition-colors">
+                );
+              });
+
+              // Add typing indicator at the end of mapped list if applicable
+              const lastContact = contacts[contacts.length - 1];
+              const showTyping = lastContact && !lastContact.reply && (!lastContact.replies || lastContact.replies.length === 0);
+
+              return (
+                <>
+                  {mapped}
+                  {showTyping && (
+                    <div className="flex justify-start mt-3 animate-fade-in">
+                      <div className="bg-white dark:bg-[#202c33] text-slate-500 dark:text-slate-400 p-3 rounded-2xl rounded-tl-none shadow-sm flex items-center gap-2 border border-slate-200/50 dark:border-none transition-colors">
                         <div className="flex items-center gap-1">
                           <span className="w-1.5 h-1.5 bg-brand-500 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
                           <span className="w-1.5 h-1.5 bg-brand-500 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
@@ -264,33 +342,55 @@ export default function Contact() {
                         <span className="text-[10px] font-semibold tracking-wide">Support is typing...</span>
                       </div>
                     </div>
-                  )
-                )}
-
-              </div>
-            ))
+                  )}
+                </>
+              );
+            })()
           )}
         </div>
 
         {/* Input Bar (WhatsApp/Instagram Style) */}
         <form
           onSubmit={handleSubmit}
-          className="p-3 bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-900/60 flex items-center gap-2.5 transition-colors"
+          className="p-3 bg-[#f0f2f5] dark:bg-[#111b21] border-t border-slate-100 dark:border-slate-900/60 flex items-center gap-2 transition-colors shrink-0"
         >
-          <input
-            required
-            type="text"
-            name="message"
-            value={form.message}
-            onChange={(event) => setForm({ ...form, message: event.target.value })}
-            placeholder="Type a message..."
-            className="flex-1 px-4 py-3 rounded-full border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-brand-500/10 focus:border-brand-500 transition-all outline-none text-xs sm:text-sm font-medium"
-            disabled={loading}
-          />
+          {/* Emoji Button */}
+          <button
+            type="button"
+            onClick={() => alert("Emoji picker coming soon!")}
+            className="text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white p-2 transition-colors shrink-0"
+            aria-label="Emojis"
+          >
+            <Smile className="h-5.5 w-5.5" />
+          </button>
+
+          <div className="flex-1">
+            <input
+              required
+              type="text"
+              name="message"
+              value={form.message}
+              onChange={(event) => setForm({ ...form, message: event.target.value })}
+              placeholder="Type a message..."
+              className="w-full rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#2a3942] px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-900 dark:text-white outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-1 focus:ring-brand-500 focus:border-brand-500"
+              disabled={loading}
+            />
+          </div>
+
+          {/* Attachment Button */}
+          <button
+            type="button"
+            onClick={() => alert("File attachment coming soon!")}
+            className="text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white p-2 transition-colors shrink-0"
+            aria-label="Add attachment"
+          >
+            <Paperclip className="h-5.5 w-5.5 rotate-45" />
+          </button>
+
           <button
             type="submit"
             disabled={loading || !form.message.trim()}
-            className="bg-brand-500 hover:bg-brand-600 active:scale-95 text-white p-3 rounded-full shadow-md transition-all shrink-0 flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed"
+            className="bg-brand-500 hover:bg-brand-600 active:scale-95 text-white p-2.5 rounded-full shadow-md transition-all shrink-0 flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {loading ? (
               <RefreshCw className="w-4.5 h-4.5 animate-spin" />
