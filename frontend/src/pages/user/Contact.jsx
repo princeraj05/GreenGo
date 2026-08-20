@@ -56,6 +56,7 @@ export default function Contact() {
   const [filePreview, setFilePreview] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(false);
   const [supportTyping, setSupportTyping] = useState(false);
+  const [adminOnline, setAdminOnline] = useState(false);
   const fileInputRef = useRef(null);
 
   // Flatten customer messages and support agent replies sequentially
@@ -170,11 +171,17 @@ export default function Contact() {
 
     socket.on("connect", () => {
       console.log("[Socket] Customer connected to support real-time");
+      socket.emit("support:get-admin-presence");
     });
 
     socket.on("disconnect", () => {
       console.log("[Socket] Customer disconnected from support real-time");
       emittedReadMessageIds.current.clear();
+    });
+
+    socket.on("support:admin-presence", ({ online }) => {
+      console.log("[Socket] Customer received admin-presence:", online);
+      setAdminOnline(online);
     });
 
     socket.on("support:new-message", (incomingContact) => {
@@ -263,6 +270,7 @@ export default function Contact() {
       if (socket) {
         socket.off("connect");
         socket.off("disconnect");
+        socket.off("support:admin-presence");
         socket.off("support:new-message");
         socket.off("support:delivered-status");
         socket.off("support:read-status");
@@ -443,7 +451,7 @@ export default function Contact() {
               <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-brand-500 to-brand-600 flex items-center justify-center text-white font-bold shadow-sm shrink-0">
                 GG
               </div>
-              <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900"></span>
+              <span className={`absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-white dark:ring-slate-900 transition-colors ${adminOnline ? "bg-emerald-500" : "bg-slate-400"}`}></span>
             </div>
             
             {/* Active support representative name & status */}
@@ -451,8 +459,8 @@ export default function Contact() {
               <span className="font-extrabold text-slate-900 dark:text-white text-xs sm:text-sm leading-tight">
                 GreenGo Support
               </span>
-              <span className="text-[10px] text-emerald-500 font-semibold flex items-center gap-1">
-                Online
+              <span className={`text-[10px] font-semibold flex items-center gap-1 transition-colors ${adminOnline ? "text-emerald-500" : "text-slate-400 dark:text-slate-500"}`}>
+                {adminOnline ? "🟢 Online" : "⚪ Offline"}
               </span>
             </div>
           </div>

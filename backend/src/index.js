@@ -207,6 +207,19 @@ io.use((socket, next) => {
   }
 });
 
+// Global tracking for admin presence
+let wasAdminOnline = false;
+
+const checkAdminPresence = () => {
+  let adminCount = 0;
+  for (const [id, s] of io.of("/").sockets) {
+    if (s.user && s.user.role === "admin") {
+      adminCount++;
+    }
+  }
+  return adminCount > 0;
+};
+
 io.on("connection", (socket) => {
   console.log(`[Socket] Connected: user=${socket.user.id || socket.user._id}, role=${socket.user.role}`);
 
@@ -217,6 +230,23 @@ io.on("connection", (socket) => {
   if (socket.user.role === "admin") {
     socket.join("admins");
     console.log(`[Socket] Admin joined admins room: user=${socket.user.id || socket.user._id}`);
+  }
+
+  // Emit current admin presence to newly connected socket
+  socket.emit("support:admin-presence", { online: checkAdminPresence() });
+
+  // Listen for admin presence requests
+  socket.on("support:get-admin-presence", () => {
+    socket.emit("support:admin-presence", { online: checkAdminPresence() });
+  });
+
+  // If this connection makes admin presence online, broadcast it
+  if (socket.user.role === "admin") {
+    const isOnline = checkAdminPresence();
+    if (isOnline !== wasAdminOnline) {
+      wasAdminOnline = isOnline;
+      io.emit("support:admin-presence", { online: isOnline });
+    }
   }
 
   // Delivery Catch-up logic on connection
@@ -441,6 +471,17 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     console.log(`[Socket] Disconnected: user=${socket.user.id || socket.user._id}`);
+
+    if (socket.user.role === "admin") {
+      // Grace period of 1s to prevent flickering
+      setTimeout(() => {
+        const isOnline = checkAdminPresence();
+        if (isOnline !== wasAdminOnline) {
+          wasAdminOnline = isOnline;
+          io.emit("support:admin-presence", { online: isOnline });
+        }
+      }, 1000);
+    }
   });
 });
 
