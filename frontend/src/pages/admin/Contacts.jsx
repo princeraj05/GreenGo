@@ -5,6 +5,7 @@ import io from "socket.io-client";
 import { getApiUrl } from "../../utils/getApiUrl";
 import API from "../../api/axios";
 import { getToken } from "../../utils/getToken";
+import EmojiPicker from "../../components/ui/EmojiPicker";
 
 /**
  * Helper to format datetime stamps to readable 2-digit locale time strings.
@@ -63,6 +64,13 @@ export default function Contacts() {
   
   // Entire list of messages fetched from the database
   const [contacts, setContacts] = useState([]);
+
+  // File upload & Emoji picker states
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [filePreview, setFilePreview] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(false);
+  const fileInputRef = useRef(null);
 
   // All users fetched from database
   const [users, setUsers] = useState([]);
@@ -286,6 +294,7 @@ export default function Contacts() {
         text: msg.message,
         createdAt: msg.createdAt,
         name: selectedConversation.name,
+        attachment: msg.attachment || null,
       });
 
       // Admin replies (outgoing from admin)
@@ -297,6 +306,7 @@ export default function Contacts() {
             text: replyObj.reply,
             createdAt: replyObj.repliedAt || msg.createdAt,
             emailReplyStatus: replyObj.emailReplyStatus,
+            attachment: replyObj.attachment || null,
           });
         });
       } else if (msg.reply) {
@@ -306,6 +316,7 @@ export default function Contacts() {
           text: msg.reply,
           createdAt: msg.repliedAt || msg.createdAt,
           emailReplyStatus: msg.emailReplyStatus,
+          attachment: msg.attachment || null,
         });
       }
     });
@@ -391,6 +402,84 @@ export default function Contacts() {
     }
   };
 
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      alert("File size exceeds 10MB limit.");
+      return;
+    }
+
+    const ext = file.name.split('.').pop().toLowerCase();
+    const allowed = ["jpg", "jpeg", "png", "webp", "pdf", "doc", "docx", "xls", "xlsx", "txt"];
+    if (!allowed.includes(ext)) {
+      alert("Unsupported file type.");
+      return;
+    }
+
+    setSelectedFile(file);
+    if (file.type.startsWith("image/")) {
+      setFilePreview(URL.createObjectURL(file));
+    } else {
+      setFilePreview(null);
+    }
+  };
+
+  const handleCancelFile = () => {
+    setSelectedFile(null);
+    setFilePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const renderAttachment = (attachment, type) => {
+    if (!attachment) return null;
+    const isImage = attachment.type === "image" || attachment.mimeType?.startsWith("image/");
+    if (isImage) {
+      return (
+        <div className="mt-1 rounded-lg overflow-hidden max-w-xs border border-black/10 dark:border-white/10 shadow-sm bg-white dark:bg-slate-900">
+          <img 
+            src={attachment.url} 
+            alt={attachment.fileName || "Image"} 
+            className="w-full h-auto max-h-60 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+            onClick={() => window.open(attachment.url, "_blank")}
+          />
+        </div>
+      );
+    }
+    const isOutgoing = type === "outgoing";
+    return (
+      <a 
+        href={attachment.url} 
+        target="_blank" 
+        rel="noopener noreferrer" 
+        className={`mt-1.5 flex items-center gap-3 p-3 rounded-xl border transition-colors w-64 text-left ${
+          isOutgoing 
+            ? "bg-brand-600/40 border-brand-400/35 hover:bg-brand-600/60 text-white" 
+            : "bg-slate-50 dark:bg-slate-900 border-slate-200/60 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-100"
+        }`}
+      >
+        <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 ${
+          isOutgoing
+            ? "bg-brand-400/20 text-brand-100"
+            : "bg-red-50 dark:bg-red-950/20 text-red-500 dark:text-red-450"
+        }`}>
+          {attachment.fileName?.split('.').pop().toUpperCase() || "DOC"}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className={`text-xs font-bold truncate ${isOutgoing ? "text-white" : "text-slate-850 dark:text-slate-200"}`}>
+            {attachment.fileName || "attachment"}
+          </p>
+          <p className={`text-[10px] font-semibold uppercase mt-0.5 ${isOutgoing ? "text-brand-200" : "text-slate-400 dark:text-slate-500"}`}>
+            {attachment.fileName?.split('.').pop() || "FILE"} • {attachment.size ? (attachment.size / (1024 * 1024)).toFixed(1) : "0.1"} MB
+          </p>
+        </div>
+      </a>
+    );
+  };
+
   /**
    * Sends the admin's reply message to the server for the current conversation.
    */
@@ -398,20 +487,47 @@ export default function Contacts() {
     if (!selectedConversation) return;
 
     const reply = (replyText[selectedConversation.key] || "").trim();
-    if (!reply) return;
+    if (!reply && !selectedFile) return;
 
     try {
       setSending(true);
       setError("");
       const token = await getToken();
 
+      let uploadedAttachment = null;
+      if (selectedFile) {
+        setUploadProgress(true);
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+
+        const uploadRes = await API.post("/api/contact/upload", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        if (uploadRes.data?.success) {
+          uploadedAttachment = uploadRes.data.attachment;
+        } else {
+          throw new Error(uploadRes.data?.message || "Upload failed");
+        }
+      }
+
       if (selectedConversation.isNewConversation) {
         const res = await API.post(
           "/api/admin/contacts/initiate",
-          { userId: selectedConversation.userId, message: reply },
+          { 
+            userId: selectedConversation.userId, 
+            message: reply,
+            attachment: uploadedAttachment 
+          },
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setReplyText((prev) => ({ ...prev, [selectedConversation.key]: "" }));
+        setSelectedFile(null);
+        setFilePreview(null);
+        if (fileInputRef.current) fileInputRef.current.value = "";
         await loadContacts();
 
         if (res.data?.contact) {
@@ -428,17 +544,24 @@ export default function Contacts() {
 
         await API.post(
           `/api/admin/contacts/${target._id}/reply`,
-          { reply },
+          { 
+            reply,
+            attachment: uploadedAttachment 
+          },
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setReplyText((prev) => ({ ...prev, [selectedConversation.key]: "" }));
+        setSelectedFile(null);
+        setFilePreview(null);
+        if (fileInputRef.current) fileInputRef.current.value = "";
         await loadContacts();
       }
     } catch (err) {
       console.log(err);
-      setError(err.response?.data?.message || "Failed to send reply");
+      setError(err.response?.data?.message || err.message || "Failed to send reply");
     } finally {
       setSending(false);
+      setUploadProgress(false);
     }
   };
 
@@ -535,37 +658,43 @@ export default function Contacts() {
 
       {/* --- APP MESSAGE TAB --- */}
       {activeTab === "appMessage" && (
-        <div className="flex flex-col lg:flex-row gap-6 lg:h-[600px] md:lg:h-[650px] animate-fade-in w-full relative">
+        <div className="flex flex-col lg:flex-row gap-0 lg:h-[700px] animate-fade-in w-full relative">
           {/* --- LEFT SIDEBAR: ACTIVE CHATS & SEARCH --- */}
           <div 
-            className={`w-full lg:w-80 xl:w-96 flex flex-col rounded-3xl border border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-950 shadow-premium overflow-hidden h-[300px] lg:h-full shrink-0 ${
+            className={`w-full lg:w-80 xl:w-96 flex flex-col bg-transparent h-[300px] lg:h-full shrink-0 border-r border-slate-200/80 dark:border-slate-800/80 pr-2 ${
               selectedConversation ? "hidden lg:flex" : "flex"
             }`}
           >
             {/* Search header */}
-            <div className="p-4 border-b border-slate-100 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-900/40">
+            <div className="py-2.5 pb-4 bg-transparent">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <input
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
                   placeholder="Search chats or customers..."
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-4 text-xs font-semibold text-slate-900 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-2 focus:ring-brand-500/10 dark:border-slate-800 dark:bg-slate-900 dark:text-white dark:focus:bg-slate-950"
+                  className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-4 text-xs font-semibold text-slate-900 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/10 dark:border-slate-800 dark:bg-slate-900 dark:text-white dark:focus:bg-slate-950"
                 />
               </div>
             </div>
 
             {/* Scrollable Conversation List */}
-            <div ref={conversationListRef} className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60">
+            <div ref={conversationListRef} className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60 scrollbar-thin">
               {/* Active Conversations */}
               {filteredConversations.length > 0 && (
                 <div>
-                  <div className="px-4 py-2 text-[9px] font-extrabold uppercase tracking-wider text-slate-400 bg-slate-50/20 dark:bg-slate-950/20">
+                  <div className="px-1 py-2 text-[9px] font-extrabold uppercase tracking-wider text-slate-400 bg-transparent">
                     Conversations
                   </div>
                   {filteredConversations.map((c) => {
                     const isSelected = selectedConversation?.key === c.key;
-                    const lastMsg = c.latest?.message || c.latest?.reply || "";
+                    const lastMsg = c.latest?.message 
+                      ? c.latest.message 
+                      : c.latest?.attachment 
+                        ? (c.latest.attachment.type === "image" ? "📷 Image" : `📄 ${c.latest.attachment.fileName || "File"}`)
+                        : c.latest?.reply 
+                          ? c.latest.reply 
+                          : "";
                     return (
                       <button
                         key={c.key}
@@ -579,10 +708,10 @@ export default function Contacts() {
                           const shouldReplace = !!(chatParam || userParam);
                           setSearchParams({ chat: c.key }, { replace: shouldReplace });
                         }}
-                        className={`w-full text-left px-4 py-3.5 flex items-center gap-3 transition-colors ${
+                        className={`w-full text-left px-3 py-3.5 flex items-center gap-3 transition-colors border-b border-slate-100 dark:border-slate-800/60 ${
                           isSelected
-                            ? "bg-brand-50/60 dark:bg-brand-950/20 border-l-4 border-brand-500"
-                            : "hover:bg-slate-50 dark:hover:bg-slate-900/50 border-l-4 border-transparent"
+                            ? "bg-slate-200/50 dark:bg-slate-900 border-l-4 border-brand-500"
+                            : "hover:bg-slate-100/50 dark:hover:bg-slate-900/35 border-l-4 border-transparent"
                         }`}
                       >
                         <div className="w-10 h-10 rounded-full bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-450 flex items-center justify-center font-bold text-sm shrink-0 shadow-sm border border-brand-100/50 dark:border-brand-900/30">
@@ -617,7 +746,7 @@ export default function Contacts() {
               {/* Start New Chat List */}
               {filteredNewUsers.length > 0 && (
                 <div>
-                  <div className="px-4 py-2 text-[9px] font-extrabold uppercase tracking-wider text-slate-400 bg-slate-50/20 dark:bg-slate-950/20">
+                  <div className="px-1 py-2 text-[9px] font-extrabold uppercase tracking-wider text-slate-400 bg-transparent">
                     Start New Chat
                   </div>
                   {filteredNewUsers.map((u) => {
@@ -633,10 +762,10 @@ export default function Contacts() {
                           handleUserSelect(u._id);
                           setSearch("");
                         }}
-                        className={`w-full text-left px-4 py-3.5 flex items-center gap-3 transition-colors ${
+                        className={`w-full text-left px-3 py-3.5 flex items-center gap-3 transition-colors border-b border-slate-100 dark:border-slate-800/60 ${
                           isSelected
-                            ? "bg-brand-50/60 dark:bg-brand-950/20 border-l-4 border-brand-500"
-                            : "hover:bg-slate-50 dark:hover:bg-slate-900/50 border-l-4 border-transparent"
+                            ? "bg-slate-200/50 dark:bg-slate-900 border-l-4 border-brand-500"
+                            : "hover:bg-slate-100/50 dark:hover:bg-slate-900/35 border-l-4 border-transparent"
                         }`}
                       >
                         <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-450 flex items-center justify-center font-bold text-sm shrink-0 border border-slate-200/50 dark:border-slate-800/50">
@@ -667,7 +796,7 @@ export default function Contacts() {
           {/* --- RIGHT SIDEBAR: LIVE CHAT WINDOW --- */}
           {/* On mobile, this will overlay as a full-screen screen when a chat is open. */}
           <div 
-            className={`fixed inset-0 z-[900] bg-white dark:bg-slate-950 flex flex-col transition-all duration-300 ease-in-out lg:relative lg:inset-auto lg:z-auto lg:flex-1 lg:rounded-3xl lg:border lg:border-slate-100 lg:dark:border-slate-800/60 lg:shadow-premium lg:h-full ${
+            className={`fixed inset-0 z-[900] bg-white dark:bg-slate-950 flex flex-col transition-all duration-300 ease-in-out lg:relative lg:inset-auto lg:z-auto lg:flex-1 lg:h-full lg:border-l lg:border-slate-200/80 lg:dark:border-slate-800/80 ${
               selectedConversation 
                 ? "translate-x-0 opacity-100" 
                 : "translate-x-full opacity-0 pointer-events-none lg:opacity-100 lg:translate-x-0 lg:flex"
@@ -808,9 +937,12 @@ export default function Contacts() {
                             <div className={`relative max-w-[85%] sm:max-w-[75%] px-3.5 pt-2 pb-5 bg-brand-500 text-white shadow-sm ${
                               isFirstInGroup ? "rounded-2xl rounded-tr-none" : "rounded-2xl"
                             }`}>
-                              <p className="text-xs sm:text-sm font-medium leading-relaxed break-words pr-12">
-                                {msg.text}
-                              </p>
+                              {msg.text && (
+                                <p className="text-xs sm:text-sm font-medium leading-relaxed break-words pr-12">
+                                  {msg.text}
+                                </p>
+                              )}
+                              {renderAttachment(msg.attachment, "outgoing")}
                               <div className="absolute bottom-1 right-2 flex items-center gap-1.5 select-none">
                                 {msg.emailReplyStatus && msg.emailReplyStatus !== "not_required" && (
                                   <span className="text-[8px] font-extrabold uppercase text-brand-100 flex items-center bg-brand-650/40 px-1.5 py-0.5 rounded">
@@ -828,9 +960,12 @@ export default function Contacts() {
                             <div className={`relative max-w-[85%] sm:max-w-[75%] px-3.5 pt-2 pb-5 bg-white dark:bg-[#202c33] text-slate-800 dark:text-slate-100 border border-slate-200/50 dark:border-none shadow-sm ${
                               isFirstInGroup ? "rounded-2xl rounded-tl-none" : "rounded-2xl"
                             }`}>
-                              <p className="text-xs sm:text-sm font-medium leading-relaxed break-words pr-12">
-                                {msg.text}
-                              </p>
+                              {msg.text && (
+                                <p className="text-xs sm:text-sm font-medium leading-relaxed break-words pr-12">
+                                  {msg.text}
+                                </p>
+                              )}
+                              {renderAttachment(msg.attachment, "incoming")}
                               <span className="absolute bottom-1 right-2 text-[9px] font-bold text-slate-400 dark:text-slate-500 select-none">
                                 {formatTime(msg.createdAt)}
                               </span>
@@ -846,18 +981,64 @@ export default function Contacts() {
 
             {/* Chat Reply Area */}
             {selectedConversation && (
-              <div className="p-3 bg-[#f0f2f5] dark:bg-[#111b21] border-t border-slate-200/50 dark:border-slate-800/80 pb-[calc(0.75rem+env(safe-area-inset-bottom))] lg:pb-3 flex flex-col gap-2 shrink-0">
+              <div className="p-3 bg-[#f0f2f5] dark:bg-[#111b21] border-t border-slate-200/50 dark:border-slate-800/80 pb-[calc(0.75rem+env(safe-area-inset-bottom))] lg:pb-3 flex flex-col gap-2 shrink-0 relative">
                 {error && (
                   <p className="w-full rounded-xl border border-red-100 bg-red-50 px-4 py-2 text-[11px] font-bold text-red-600 dark:border-red-900/40 dark:bg-red-950/20 dark:text-red-300">
                     {error}
                   </p>
                 )}
+
+                {/* File Preview Bar */}
+                {selectedFile && (
+                  <div className="flex items-center justify-between p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 animate-fade-in shadow-sm">
+                    <div className="flex items-center gap-2 min-w-0">
+                      {filePreview ? (
+                        <img src={filePreview} alt="Preview" className="w-10 h-10 object-cover rounded-lg shrink-0" />
+                      ) : (
+                        <div className="w-10 h-10 bg-brand-500/10 text-brand-500 rounded-lg flex items-center justify-center shrink-0 font-extrabold text-xs">
+                          {selectedFile.name.split('.').pop().toUpperCase()}
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-bold text-slate-850 dark:text-slate-200 truncate">{selectedFile.name}</p>
+                        <p className="text-[10px] text-slate-400 dark:text-slate-500">{(selectedFile.size / (1024 * 1024)).toFixed(2)} MB</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleCancelFile}
+                      className="w-6 h-6 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-850 text-slate-500 dark:text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
+
+                {/* Emoji Picker Popover */}
+                {showEmojiPicker && (
+                  <EmojiPicker
+                    onSelectEmoji={(emoji) => {
+                      const currentText = replyText[selectedConversation.key] || "";
+                      setReplyText({ ...replyText, [selectedConversation.key]: currentText + emoji });
+                    }}
+                    onClose={() => setShowEmojiPicker(false)}
+                  />
+                )}
+
+                {/* Hidden File Input */}
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileSelect}
+                  className="hidden"
+                  accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.xls,.xlsx,.txt"
+                />
                 
                 <div className="flex items-center gap-2">
                   {/* Emoji Button */}
                   <button
                     type="button"
-                    onClick={() => alert("Emoji picker coming soon!")}
+                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                     className="text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white p-2 transition-colors shrink-0"
                     aria-label="Emojis"
                   >
@@ -872,16 +1053,18 @@ export default function Contacts() {
                         setReplyText({ ...replyText, [selectedConversation.key]: event.target.value })
                       }
                       onKeyDown={handleKeyDown}
-                      placeholder={`Type a message...`}
-                      className="w-full rounded-full border border-slate-200 dark:border-slate-800/80 bg-white dark:bg-[#2a3942] px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-900 dark:text-white outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-1 focus:ring-brand-500 focus:border-brand-500"
+                      placeholder={uploadProgress ? "Uploading attachment..." : `Type a message...`}
+                      disabled={uploadProgress}
+                      className="w-full rounded-full border border-slate-200 dark:border-slate-800/80 bg-white dark:bg-[#2a3942] px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-900 dark:text-white outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-1 focus:ring-brand-500 focus:border-brand-500 disabled:opacity-65"
                     />
                   </div>
 
                   {/* Attachment Button */}
                   <button
                     type="button"
-                    onClick={() => alert("File attachment coming soon!")}
-                    className="text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white p-2 transition-colors shrink-0"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadProgress}
+                    className="text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white p-2 transition-colors shrink-0 disabled:opacity-50"
                     aria-label="Add attachment"
                   >
                     <Paperclip className="h-5.5 w-5.5 rotate-45" />
@@ -889,7 +1072,7 @@ export default function Contacts() {
 
                   <button
                     type="button"
-                    disabled={sending || !replyText[selectedConversation.key]?.trim()}
+                    disabled={sending || (!replyText[selectedConversation.key]?.trim() && !selectedFile)}
                     onClick={sendReply}
                     className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-500 hover:bg-brand-600 text-white shadow-md transition-all active:scale-[0.95] disabled:cursor-not-allowed disabled:opacity-60 shrink-0"
                   >

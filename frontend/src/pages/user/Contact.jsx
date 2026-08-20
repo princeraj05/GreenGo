@@ -4,6 +4,7 @@ import { MessageCircle, RefreshCw, Send, Paperclip, Smile } from "lucide-react";
 import io from "socket.io-client";
 import { getApiUrl } from "../../utils/getApiUrl";
 import API from "../../api/axios";
+import EmojiPicker from "../../components/ui/EmojiPicker";
 
 /**
  * Helper to format datetime stamps to readable 2-digit locale time strings.
@@ -49,6 +50,13 @@ export default function Contact() {
   // loading: Disables the submit action while backend processes the contact request
   const [loading, setLoading] = useState(false);
 
+  // File upload & Emoji picker states
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [filePreview, setFilePreview] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(false);
+  const fileInputRef = useRef(null);
+
   // Flatten customer messages and support agent replies sequentially
   const chatMessages = useMemo(() => {
     if (!contacts) return [];
@@ -61,6 +69,7 @@ export default function Contact() {
         type: "outgoing",
         text: msg.message,
         createdAt: msg.createdAt,
+        attachment: msg.attachment || null,
       });
 
       // Support replies (incoming to customer)
@@ -71,6 +80,7 @@ export default function Contact() {
             type: "incoming",
             text: replyObj.reply,
             createdAt: replyObj.createdAt || msg.createdAt,
+            attachment: replyObj.attachment || null,
           });
         });
       } else if (msg.reply) {
@@ -79,6 +89,7 @@ export default function Contact() {
           type: "incoming",
           text: msg.reply,
           createdAt: msg.createdAt, // fallback
+          attachment: msg.attachment || null,
         });
       }
     });
@@ -183,22 +194,131 @@ export default function Contact() {
 
   /* --- EVENT HANDLERS --- */
 
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      alert("File size exceeds 10MB limit.");
+      return;
+    }
+
+    const ext = file.name.split('.').pop().toLowerCase();
+    const allowed = ["jpg", "jpeg", "png", "webp", "pdf", "doc", "docx", "xls", "xlsx", "txt"];
+    if (!allowed.includes(ext)) {
+      alert("Unsupported file type.");
+      return;
+    }
+
+    setSelectedFile(file);
+    if (file.type.startsWith("image/")) {
+      setFilePreview(URL.createObjectURL(file));
+    } else {
+      setFilePreview(null);
+    }
+  };
+
+  const handleCancelFile = () => {
+    setSelectedFile(null);
+    setFilePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const renderAttachment = (attachment, type) => {
+    if (!attachment) return null;
+    const isImage = attachment.type === "image" || attachment.mimeType?.startsWith("image/");
+    if (isImage) {
+      return (
+        <div className="mt-1 rounded-lg overflow-hidden max-w-xs border border-black/10 dark:border-white/10 shadow-sm bg-white dark:bg-slate-900">
+          <img 
+            src={attachment.url} 
+            alt={attachment.fileName || "Image"} 
+            className="w-full h-auto max-h-60 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+            onClick={() => window.open(attachment.url, "_blank")}
+          />
+        </div>
+      );
+    }
+    const isOutgoing = type === "outgoing";
+    return (
+      <a 
+        href={attachment.url} 
+        target="_blank" 
+        rel="noopener noreferrer" 
+        className={`mt-1.5 flex items-center gap-3 p-3 rounded-xl border transition-colors w-64 text-left ${
+          isOutgoing 
+            ? "bg-brand-600 border-brand-400 hover:bg-brand-700 text-white" 
+            : "bg-slate-50 dark:bg-slate-900 border-slate-200/60 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-100"
+        }`}
+      >
+        <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 ${
+          isOutgoing
+            ? "bg-brand-400/20 text-brand-100"
+            : "bg-red-50 dark:bg-red-950/20 text-red-500 dark:text-red-400"
+        }`}>
+          {attachment.fileName?.split('.').pop().toUpperCase() || "DOC"}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className={`text-xs font-bold truncate ${isOutgoing ? "text-white" : "text-slate-850 dark:text-slate-200"}`}>
+            {attachment.fileName || "attachment"}
+          </p>
+          <p className={`text-[10px] font-semibold uppercase mt-0.5 ${isOutgoing ? "text-brand-200" : "text-slate-400 dark:text-slate-500"}`}>
+            {attachment.fileName?.split('.').pop() || "FILE"} • {attachment.size ? (attachment.size / (1024 * 1024)).toFixed(1) : "0.1"} MB
+          </p>
+        </div>
+      </a>
+    );
+  };
+
   /**
    * handleSubmit: Submits contact message to database and refreshes local inbox logs.
    */
   const handleSubmit = async (event) => {
     event.preventDefault();
+    if (!form.message.trim() && !selectedFile) return;
+
     setLoading(true);
+    setUploadProgress(true);
+    let uploadedAttachment = null;
 
     try {
-      await API.post("/api/contact", form);
+      const token = localStorage.getItem("token");
+      if (selectedFile) {
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+
+        const uploadRes = await API.post("/api/contact/upload", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        if (uploadRes.data?.success) {
+          uploadedAttachment = uploadRes.data.attachment;
+        } else {
+          throw new Error(uploadRes.data?.message || "Upload failed");
+        }
+      }
+
+      await API.post("/api/contact", {
+        ...form,
+        attachment: uploadedAttachment
+      });
+
       setForm({ ...form, message: "" });
+      setSelectedFile(null);
+      setFilePreview(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
       await loadMyContacts();
     } catch (err) {
       console.error("Failed to submit support request:", err);
-      alert("Failed to send support message. Please try again.");
+      alert(err.message || "Failed to send support message. Please try again.");
     } finally {
       setLoading(false);
+      setUploadProgress(false);
     }
   };
 
@@ -218,10 +338,10 @@ export default function Contact() {
       </div>
 
       {/* --- COMBINED CHAT WINDOW CONTAINER (WhatsApp/Instagram Style) --- */}
-      <div className="bg-white dark:bg-slate-950 rounded-3xl border border-slate-100 dark:border-slate-800/60 shadow-premium overflow-hidden flex flex-col h-[500px] md:h-[600px] transition-colors">
+      <div className="bg-white dark:bg-slate-950 flex flex-col h-[550px] md:h-[650px] transition-colors w-full">
         
         {/* Chat Window Header */}
-        <div className="bg-slate-50 dark:bg-slate-900/80 border-b border-slate-100 dark:border-slate-800/60 p-4 flex items-center justify-between transition-colors">
+        <div className="bg-slate-50 dark:bg-slate-900/80 border-b border-slate-250 dark:border-slate-800/60 p-4 flex items-center justify-between transition-colors">
           <div className="flex items-center gap-3">
             {/* Avatar */}
             <div className="relative">
@@ -291,9 +411,12 @@ export default function Contact() {
                         <div className={`relative max-w-[85%] sm:max-w-[75%] px-3.5 pt-2 pb-5 bg-brand-500 text-white shadow-sm ${
                           isFirstInGroup ? "rounded-2xl rounded-tr-none" : "rounded-2xl"
                         }`}>
-                          <p className="text-xs sm:text-sm font-medium leading-relaxed break-words pr-12">
-                            {msg.text}
-                          </p>
+                          {msg.text && (
+                            <p className="text-xs sm:text-sm font-medium leading-relaxed break-words pr-12">
+                              {msg.text}
+                            </p>
+                          )}
+                          {renderAttachment(msg.attachment, "outgoing")}
                           <span className="absolute bottom-1 right-2 text-[9px] font-bold text-brand-100 select-none">
                             {formatTime(msg.createdAt)}
                           </span>
@@ -311,9 +434,12 @@ export default function Contact() {
                               <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">GreenGo Support</span>
                             </div>
                           )}
-                          <p className="text-xs sm:text-sm font-medium leading-relaxed break-words pr-12">
-                            {msg.text}
-                          </p>
+                          {msg.text && (
+                            <p className="text-xs sm:text-sm font-medium leading-relaxed break-words pr-12">
+                              {msg.text}
+                            </p>
+                          )}
+                          {renderAttachment(msg.attachment, "incoming")}
                           <span className="absolute bottom-1 right-2 text-[9px] font-bold text-slate-400 dark:text-slate-500 select-none">
                             {formatTime(msg.createdAt)}
                           </span>
@@ -350,55 +476,102 @@ export default function Contact() {
         </div>
 
         {/* Input Bar (WhatsApp/Instagram Style) */}
-        <form
-          onSubmit={handleSubmit}
-          className="p-3 bg-[#f0f2f5] dark:bg-[#111b21] border-t border-slate-100 dark:border-slate-900/60 flex items-center gap-2 transition-colors shrink-0"
-        >
-          {/* Emoji Button */}
-          <button
-            type="button"
-            onClick={() => alert("Emoji picker coming soon!")}
-            className="text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white p-2 transition-colors shrink-0"
-            aria-label="Emojis"
-          >
-            <Smile className="h-5.5 w-5.5" />
-          </button>
+        <div className="bg-[#f0f2f5] dark:bg-[#111b21] border-t border-slate-100 dark:border-slate-900/60 p-3 flex flex-col gap-2 shrink-0 relative transition-colors">
+          {/* File Preview Bar */}
+          {selectedFile && (
+            <div className="flex items-center justify-between p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 animate-fade-in shadow-sm">
+              <div className="flex items-center gap-2 min-w-0">
+                {filePreview ? (
+                  <img src={filePreview} alt="Preview" className="w-10 h-10 object-cover rounded-lg shrink-0" />
+                ) : (
+                  <div className="w-10 h-10 bg-brand-500/10 text-brand-500 rounded-lg flex items-center justify-center shrink-0 font-extrabold text-xs">
+                    {selectedFile.name.split('.').pop().toUpperCase()}
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold text-slate-850 dark:text-slate-200 truncate">{selectedFile.name}</p>
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500">{(selectedFile.size / (1024 * 1024)).toFixed(2)} MB</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleCancelFile}
+                className="w-6 h-6 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-850 text-slate-500 dark:text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+          )}
 
-          <div className="flex-1">
-            <input
-              required
-              type="text"
-              name="message"
-              value={form.message}
-              onChange={(event) => setForm({ ...form, message: event.target.value })}
-              placeholder="Type a message..."
-              className="w-full rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#2a3942] px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-900 dark:text-white outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-1 focus:ring-brand-500 focus:border-brand-500"
-              disabled={loading}
+          {/* Emoji Picker Popover */}
+          {showEmojiPicker && (
+            <EmojiPicker
+              onSelectEmoji={(emoji) => {
+                setForm((prev) => ({ ...prev, message: prev.message + emoji }));
+              }}
+              onClose={() => setShowEmojiPicker(false)}
             />
-          </div>
+          )}
 
-          {/* Attachment Button */}
-          <button
-            type="button"
-            onClick={() => alert("File attachment coming soon!")}
-            className="text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white p-2 transition-colors shrink-0"
-            aria-label="Add attachment"
-          >
-            <Paperclip className="h-5.5 w-5.5 rotate-45" />
-          </button>
+          {/* Hidden File Input */}
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileSelect}
+            className="hidden"
+            accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.xls,.xlsx,.txt"
+          />
 
-          <button
-            type="submit"
-            disabled={loading || !form.message.trim()}
-            className="bg-brand-500 hover:bg-brand-600 active:scale-95 text-white p-2.5 rounded-full shadow-md transition-all shrink-0 flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed"
+          <form
+            onSubmit={handleSubmit}
+            className="flex items-center gap-2 transition-colors w-full"
           >
-            {loading ? (
-              <RefreshCw className="w-4.5 h-4.5 animate-spin" />
-            ) : (
-              <Send className="w-4.5 h-4.5" />
-            )}
-          </button>
-        </form>
+            {/* Emoji Button */}
+            <button
+              type="button"
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+              className="text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white p-2 transition-colors shrink-0"
+              aria-label="Emojis"
+            >
+              <Smile className="h-5.5 w-5.5" />
+            </button>
+
+            <div className="flex-1">
+              <input
+                type="text"
+                name="message"
+                value={form.message}
+                onChange={(event) => setForm({ ...form, message: event.target.value })}
+                placeholder={uploadProgress ? "Uploading attachment..." : "Type a message..."}
+                className="w-full rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#2a3942] px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-900 dark:text-white outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-1 focus:ring-brand-500 focus:border-brand-500 disabled:opacity-65"
+                disabled={loading || uploadProgress}
+              />
+            </div>
+
+            {/* Attachment Button */}
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={loading || uploadProgress}
+              className="text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white p-2 transition-colors shrink-0 disabled:opacity-50"
+              aria-label="Add attachment"
+            >
+              <Paperclip className="h-5.5 w-5.5 rotate-45" />
+            </button>
+
+            <button
+              type="submit"
+              disabled={loading || (!form.message.trim() && !selectedFile)}
+              className="bg-brand-500 hover:bg-brand-600 active:scale-95 text-white p-2.5 rounded-full shadow-md transition-all shrink-0 flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <RefreshCw className="w-4.5 h-4.5 animate-spin" />
+              ) : (
+                <Send className="w-4.5 h-4.5" />
+              )}
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );

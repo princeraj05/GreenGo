@@ -38,9 +38,10 @@ export const getAllContacts = async (req, res) => {
 export const replyToContact = async (req, res) => {
   try {
     const cleanReply = String(req.body.reply || "").trim();
+    const attachment = req.body.attachment || null;
 
-    if (!cleanReply) {
-      return res.status(400).json({ message: "Reply is required" });
+    if (!cleanReply && !attachment) {
+      return res.status(400).json({ message: "Reply or attachment is required" });
     }
 
     const contact = await Contact.findById(req.params.id);
@@ -70,6 +71,7 @@ export const replyToContact = async (req, res) => {
       replyDelivery: shouldSendEmail ? "email" : "chat",
       emailReplyStatus: shouldSendEmail ? "pending" : "not_required",
       emailReplyError: "",
+      attachment: attachment,
     };
 
     contact.replies.push(newReplyObj);
@@ -86,7 +88,7 @@ export const replyToContact = async (req, res) => {
           to: contact.email,
           name: contact.name,
           subject: contact.subject,
-          reply: cleanReply,
+          reply: cleanReply || (attachment ? `[Attachment: ${attachment.fileName || "File"}]` : ""),
           originalMessage: contact.message,
         });
         contact.emailReplyStatus = "sent";
@@ -125,16 +127,21 @@ export const replyToContact = async (req, res) => {
     await contact.save();
 
     if (contact.uid) {
+      const displayReply = cleanReply 
+        ? cleanReply 
+        : attachment 
+          ? `[Attachment: ${attachment.fileName || "File"}]`
+          : "";
       await Notification.create({
         userId: contact.uid,
         title: "Support reply",
-        message: `Admin replied to your message: ${cleanReply.slice(0, 120)}${cleanReply.length > 120 ? "..." : ""}`,
+        message: `Admin replied to your message: ${displayReply.slice(0, 120)}${displayReply.length > 120 ? "..." : ""}`,
         type: "info",
       });
       sendPushToUser(
         contact.uid,
         "Support reply",
-        `Admin replied to your message: ${cleanReply.slice(0, 120)}${cleanReply.length > 120 ? "..." : ""}`,
+        `Admin replied to your message: ${displayReply.slice(0, 120)}${displayReply.length > 120 ? "..." : ""}`,
         { contactId: String(contact._id) }
       );
     }
@@ -161,11 +168,11 @@ export const replyToContact = async (req, res) => {
 
 export const initiateContact = async (req, res) => {
   try {
-    const { userId, message } = req.body;
+    const { userId, message, attachment } = req.body;
     const cleanMessage = String(message || "").trim();
 
-    if (!userId || !cleanMessage) {
-      return res.status(400).json({ message: "userId and message are required" });
+    if (!userId || (!cleanMessage && !attachment)) {
+      return res.status(400).json({ message: "userId and message or attachment are required" });
     }
 
     const user = await User.findById(userId);
@@ -196,6 +203,7 @@ export const initiateContact = async (req, res) => {
       replyDelivery: "chat",
       emailReplyStatus: "not_required",
       emailReplyError: "",
+      attachment: attachment || null,
     });
 
     contact.reply = cleanMessage;
@@ -205,17 +213,23 @@ export const initiateContact = async (req, res) => {
 
     await contact.save();
 
+    const displayMsg = cleanMessage 
+      ? cleanMessage 
+      : attachment 
+        ? `[Attachment: ${attachment.fileName || "File"}]`
+        : "";
+
     await Notification.create({
       userId: String(user._id),
       title: "Support reply",
-      message: `${cleanMessage.slice(0, 120)}${cleanMessage.length > 120 ? "..." : ""}`,
+      message: `${displayMsg.slice(0, 120)}${displayMsg.length > 120 ? "..." : ""}`,
       type: "info",
     });
 
     sendPushToUser(
       String(user._id),
       "Support reply",
-      `${cleanMessage.slice(0, 120)}${cleanMessage.length > 120 ? "..." : ""}`,
+      `${displayMsg.slice(0, 120)}${displayMsg.length > 120 ? "..." : ""}`,
       { contactId: String(contact._id) }
     );
 

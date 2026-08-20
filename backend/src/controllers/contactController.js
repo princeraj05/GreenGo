@@ -4,7 +4,7 @@ import { sendPushToAdmins } from "../utils/pushNotification.js";
 
 export const createContact = async (req, res) => {
   try {
-    const { name, email, subject, message } = req.body;
+    const { name, email, subject, message, attachment } = req.body;
     const uid = req.user?.id || req.user?._id || req.user?.uid || null;
 
     const contact = await Contact.create({
@@ -13,13 +13,20 @@ export const createContact = async (req, res) => {
       name,
       email,
       subject: subject || "",
-      message,
+      message: message || "",
+      attachment: attachment || null,
       emailReplyStatus: uid ? "not_required" : "pending",
     });
 
+    const displayMsg = message 
+      ? message 
+      : attachment 
+        ? `[Attachment: ${attachment.fileName || "File"}]`
+        : "";
+
     await createAdminNotification({
       title: uid ? "New User Message" : "New Public Message",
-      message: `${name || "Guest"} (${email || "No email"}): ${subject || "Message"} - ${String(message || "").slice(0, 120)}`,
+      message: `${name || "Guest"} (${email || "No email"}): ${subject || "Message"} - ${String(displayMsg).slice(0, 120)}`,
       type: "info",
       actionPath: "/admin/contacts",
       data: {
@@ -33,7 +40,7 @@ export const createContact = async (req, res) => {
     });
     sendPushToAdmins(
       uid ? "New User Message" : "New Public Message",
-      `${name || "Guest"}: ${subject || "Message"} - ${String(message || "").slice(0, 100)}`,
+      `${name || "Guest"}: ${subject || "Message"} - ${String(displayMsg).slice(0, 100)}`,
       { contactId: String(contact._id) }
     );
 

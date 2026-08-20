@@ -12,9 +12,17 @@ const contactSchema = new mongoose.Schema(
     name: { type: String, required: true },
     email: { type: String, required: true },
     subject: { type: String, default: "" },
-    message: { type: String, required: true },
+    message: { type: String, default: "" },
+    attachment: {
+      type: { type: String, enum: ["image", "file"], default: "file" },
+      url: { type: String },
+      fileName: { type: String },
+      mimeType: { type: String },
+      size: { type: Number },
+      uploadedAt: { type: Date, default: Date.now }
+    },
 
-    reply: { type: String },
+    reply: { type: String, default: "" },
     repliedAt: { type: Date },
     replyDelivery: {
       type: String,
@@ -29,7 +37,7 @@ const contactSchema = new mongoose.Schema(
     emailReplyError: { type: String, default: "" },
     replies: [
       {
-        reply: { type: String, required: true },
+        reply: { type: String, default: "" },
         repliedAt: { type: Date, default: Date.now },
         replyDelivery: {
           type: String,
@@ -42,6 +50,14 @@ const contactSchema = new mongoose.Schema(
           default: "",
         },
         emailReplyError: { type: String, default: "" },
+        attachment: {
+          type: { type: String, enum: ["image", "file"], default: "file" },
+          url: { type: String },
+          fileName: { type: String },
+          mimeType: { type: String },
+          size: { type: Number },
+          uploadedAt: { type: Date, default: Date.now }
+        },
       },
     ],
     status: {

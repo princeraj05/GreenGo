@@ -55,3 +55,66 @@ export const upload = multer({
   },
   fileFilter
 });
+
+const chatStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: async (req, file) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    const cleanName = path.basename(file.originalname, ext)
+      .replace(/[^a-zA-Z0-9]/g, "_")
+      .substring(0, 50);
+    const publicId = `${Date.now()}_${cleanName}`;
+    const isImage = ["image/jpeg", "image/png", "image/webp", "image/jpg"].includes(file.mimetype);
+
+    if (isImage) {
+      return {
+        folder: "greengo_support_attachments",
+        format: "webp",
+        resource_type: "image",
+        public_id: publicId
+      };
+    } else {
+      return {
+        folder: "greengo_support_attachments",
+        resource_type: "raw",
+        public_id: `${publicId}${ext}`
+      };
+    }
+  }
+});
+
+const chatFileFilter = (req, file, cb) => {
+  const ext = path.extname(file.originalname).toLowerCase();
+  const allowedExtensions = [".jpg", ".jpeg", ".png", ".webp", ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".txt"];
+  
+  if (!allowedExtensions.includes(ext)) {
+    return cb(new Error("File extension not supported. Supported extensions: JPG, JPEG, PNG, WEBP, PDF, DOC, DOCX, XLS, XLSX, TXT."), false);
+  }
+
+  const allowedMimeTypes = [
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+    "image/jpg",
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "text/plain"
+  ];
+
+  if (!allowedMimeTypes.includes(file.mimetype)) {
+    return cb(new Error("MIME type not supported."), false);
+  }
+
+  cb(null, true);
+};
+
+export const chatUpload = multer({
+  storage: chatStorage,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB Limit
+  },
+  fileFilter: chatFileFilter
+});
